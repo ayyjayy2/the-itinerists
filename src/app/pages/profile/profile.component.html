@@ -54,14 +54,33 @@
       </button>
     </div>
 
-    <!-- Username -->
+    <!-- Account actions -->
     <div class="card section-card">
-      <h2>Username</h2>
+      <h2>Account</h2>
+      <div class="account-actions">
+        <button class="btn btn-secondary" (click)="openUsernameModal()">Change Username</button>
+        <button class="btn btn-secondary" (click)="openPasswordModal()">Change Password</button>
+      </div>
+    </div>
+
+  } @else {
+    <div class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Loading profile…</p>
+    </div>
+  }
+</div>
+
+<!-- Username modal -->
+@if (showUsernameModal()) {
+  <div class="modal-backdrop" (click)="closeUsernameModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>Change Username</h2>
+      <p class="modal-hint">This is how you log in. Changing it takes effect immediately.</p>
 
       <div class="form-group">
-        <label for="username">Username</label>
-        <div class="input-hint">This is how you log in. Changing it takes effect immediately.</div>
-        <input id="username" type="text" [(ngModel)]="username" autocapitalize="none" placeholder="e.g. makaela" />
+        <label for="modal-username">New Username</label>
+        <input id="modal-username" type="text" [(ngModel)]="username" autocapitalize="none" placeholder="e.g. makaela" />
       </div>
 
       @if (usernameError()) {
@@ -71,18 +90,25 @@
         <div class="alert alert-success">Username updated!</div>
       }
 
-      <button class="btn btn-primary" (click)="saveUsername()" [disabled]="usernameSaving()">
-        {{ usernameSaving() ? 'Saving…' : 'Save Username' }}
-      </button>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="closeUsernameModal()" [disabled]="usernameSaving()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveUsername()" [disabled]="usernameSaving()">
+          {{ usernameSaving() ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
     </div>
+  </div>
+}
 
-    <!-- Change password -->
-    <div class="card section-card">
+<!-- Password modal -->
+@if (showPasswordModal()) {
+  <div class="modal-backdrop" (click)="closePasswordModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
       <h2>Change Password</h2>
 
       <div class="form-group">
         <label>Current Password</label>
-        <input type="password" [(ngModel)]="currentPassword" autocomplete="current-password" placeholder="Enter current password" />
+        <input type="password" [(ngModel)]="currentPassword" autocomplete="off" placeholder="Enter current password" />
       </div>
       <div class="form-group">
         <label>New Password</label>
@@ -97,18 +123,15 @@
         <div class="alert alert-error">{{ passwordError() }}</div>
       }
       @if (passwordSuccess()) {
-        <div class="alert alert-success">Password changed successfully!</div>
+        <div class="alert alert-success">Password changed!</div>
       }
 
-      <button class="btn btn-primary" (click)="changePassword()" [disabled]="passwordSaving()">
-        {{ passwordSaving() ? 'Updating…' : 'Change Password' }}
-      </button>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="closePasswordModal()" [disabled]="passwordSaving()">Cancel</button>
+        <button class="btn btn-primary" (click)="changePassword()" [disabled]="passwordSaving()">
+          {{ passwordSaving() ? 'Updating…' : 'Update Password' }}
+        </button>
+      </div>
     </div>
-
-  } @else {
-    <div class="loading-overlay">
-      <div class="spinner"></div>
-      <p>Loading profile…</p>
-    </div>
-  }
-</div>
+  </div>
+}

@@ -33,6 +33,9 @@ export class ProfileComponent implements OnInit {
   newPassword     = '';
   confirmPassword = '';
 
+  showUsernameModal = signal(false);
+  showPasswordModal = signal(false);
+
   usernameSaving  = signal(false);
   usernameSuccess = signal(false);
   usernameError   = signal('');
@@ -58,18 +61,38 @@ export class ProfileComponent implements OnInit {
   selectEmoji(emoji: string): void { this.avatarEmoji = emoji; }
   selectColor(color: string): void  { this.color = color; }
 
+  openUsernameModal(): void {
+    this.username = this.firestoreUser()?.username ?? '';
+    this.usernameError.set('');
+    this.usernameSuccess.set(false);
+    this.showUsernameModal.set(true);
+  }
+
+  closeUsernameModal(): void { this.showUsernameModal.set(false); }
+
+  openPasswordModal(): void {
+    this.currentPassword = '';
+    this.newPassword     = '';
+    this.confirmPassword = '';
+    this.passwordError.set('');
+    this.passwordSuccess.set(false);
+    this.showPasswordModal.set(true);
+  }
+
+  closePasswordModal(): void { this.showPasswordModal.set(false); }
+
   async saveUsername(): Promise<void> {
     const uid = this.firestoreUser()?.uid;
     const normalized = this.username.toLowerCase().trim();
     if (!uid || !normalized) return;
-    if (normalized === this.firestoreUser()?.username) return;
+    if (normalized === this.firestoreUser()?.username) { this.closeUsernameModal(); return; }
     this.usernameSaving.set(true);
     this.usernameError.set('');
     this.usernameSuccess.set(false);
     try {
       await this.authService.updateUsername(uid, normalized);
       this.usernameSuccess.set(true);
-      setTimeout(() => this.usernameSuccess.set(false), 3000);
+      setTimeout(() => { this.usernameSuccess.set(false); this.closeUsernameModal(); }, 1500);
     } catch (err: any) {
       this.usernameError.set(err?.message ?? 'Failed to update username.');
     } finally {
@@ -114,7 +137,7 @@ export class ProfileComponent implements OnInit {
       this.newPassword     = '';
       this.confirmPassword = '';
       this.passwordSuccess.set(true);
-      setTimeout(() => this.passwordSuccess.set(false), 3000);
+      setTimeout(() => { this.passwordSuccess.set(false); this.closePasswordModal(); }, 1500);
     } catch (err: any) {
       if (err?.code === 'auth/wrong-password' || err?.code === 'auth/invalid-credential') {
         this.passwordError.set('Current password is incorrect.');
