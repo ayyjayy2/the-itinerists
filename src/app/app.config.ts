@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideFirebaseApp, initializeApp, getApp } from '@angular/fire/app';
-import { provideFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from '@angular/fire/firestore';
+import { provideFirestore, initializeFirestore, memoryLocalCache } from '@angular/fire/firestore';
 import { provideStorage, getStorage } from '@angular/fire/storage';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 
@@ -18,12 +18,11 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => initializeFirestore(getApp(), {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+      localCache: memoryLocalCache(),
     })),
     provideStorage(() => getStorage()),
     provideAuth(() => getAuth()),
 
-    // Route all uncaught Angular errors through the structured logger.
     { provide: ErrorHandler, useClass: AppErrorHandler },
 
     provideServiceWorker('ngsw-worker.js', {
