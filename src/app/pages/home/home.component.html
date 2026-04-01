@@ -36,7 +36,7 @@
   </div>
 
   <div class="links-grid">
-    @for (link of quickLinks; track link.path) {
+    @for (link of quickLinks(); track link.path) {
       <a class="link-card" [routerLink]="link.path" [style.--card-accent]="link.color">
         <span class="link-icon">{{ link.icon }}</span>
         <span class="link-label">{{ link.label }}</span>
