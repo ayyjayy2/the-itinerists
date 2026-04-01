@@ -137,7 +137,9 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  async logout(): Promise<void> {
+  showLogoutConfirm = signal(false);
+
+  async confirmLogout(): Promise<void> {
     await this.authService.logout();
     this.router.navigate(['/login']);
   }
