@@ -1,40 +1,73 @@
-import { Injectable, signal } from '@angular/core';
-import { TripUser } from '../models/trip.models';
-
-const SESSION_KEY = 'ireland_session_user';   // sessionStorage — tab-specific
-const HINT_KEY    = 'ireland_last_user_hint'; // localStorage — pre-highlights user-select
+import { Injectable, signal, inject, computed } from '@angular/core';
+import { Auth, authState } from '@angular/fire/auth';
+import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
+import { TripUser, FirestoreUser } from '../models/trip.models';
+import { firstValueFrom } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private _currentUser = signal<TripUser | null>(this.loadFromStorage());
+  private auth      = inject(Auth);
+  private firestore = inject(Firestore);
 
-  readonly currentUser = this._currentUser.asReadonly();
+  private _firestoreUser = signal<FirestoreUser | null>(null);
+  private _authReady     = signal(false);
 
-  setUser(user: TripUser): void {
-    this._currentUser.set(user);
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
-    localStorage.setItem(HINT_KEY, user.name);
-  }
+  readonly firestoreUser = this._firestoreUser.asReadonly();
+  readonly authReady     = this._authReady.asReadonly();
 
-  clearUser(): void {
-    this._currentUser.set(null);
-    sessionStorage.removeItem(SESSION_KEY);
-  }
+  /** Matches the existing TripUser shape so all pages continue to work unchanged. */
+  readonly currentUser = computed<TripUser | null>(() => {
+    const u = this._firestoreUser();
+    if (!u) return null;
+    return {
+      uid:         u.uid,
+      name:        u.displayName,
+      color:       u.color,
+      avatarEmoji: u.avatarEmoji,
+    };
+  });
+
+  readonly isAdmin = computed(() => this._firestoreUser()?.isAdmin ?? false);
 
   hasUser(): boolean {
-    return this._currentUser() !== null;
+    return this._firestoreUser() !== null;
   }
 
-  getLastUserHint(): string | null {
-    return localStorage.getItem(HINT_KEY);
-  }
+  /** Promise that resolves once the first Firebase Auth state has been determined. */
+  readonly authReadyPromise: Promise<void>;
 
-  private loadFromStorage(): TripUser | null {
-    try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
+  constructor() {
+    let resolveReady!: () => void;
+    this.authReadyPromise = new Promise(res => resolveReady = res);
+
+    // Listen to Firebase Auth state
+    authState(this.auth).subscribe(firebaseUser => {
+      if (!firebaseUser) {
+        this._firestoreUser.set(null);
+        this._authReady.set(true);
+        resolveReady();
+        return;
+      }
+
+      // Auth user is present — load their Firestore profile
+      onSnapshot(doc(this.firestore, 'users', firebaseUser.uid), snap => {
+        if (snap.exists()) {
+          const data = snap.data() as FirestoreUser;
+          if (data.isDisabled) {
+            // Treat disabled accounts as logged out
+            this._firestoreUser.set(null);
+          } else {
+            this._firestoreUser.set(data);
+          }
+        } else {
+          this._firestoreUser.set(null);
+        }
+        if (!this._authReady()) {
+          this._authReady.set(true);
+          resolveReady();
+        }
+      });
+    });
   }
 }

@@ -1,17 +1,5 @@
 import { Routes } from '@angular/router';
-import { inject } from '@angular/core';
-import { UserService } from './services/user.service';
-import { Router } from '@angular/router';
-
-const requireUser = () => {
-  const userService = inject(UserService);
-  const router = inject(Router);
-  if (!userService.hasUser()) {
-    router.navigate(['/select-user']);
-    return false;
-  }
-  return true;
-};
+import { authGuard, adminGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -20,63 +8,67 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'select-user',
-    loadComponent: () => import('./pages/user-select/user-select.component').then(m => m.UserSelectComponent)
+    path: 'login',
+    loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'join',
+    loadComponent: () => import('./pages/join/join.component').then(m => m.JoinComponent)
   },
   {
     path: 'home',
     loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent),
-    canActivate: [requireUser]
+    canActivate: [authGuard]
   },
   {
     path: 'flights',
     loadComponent: () => import('./pages/flights/flights.component').then(m => m.FlightsComponent),
-    canActivate: [requireUser]
+    canActivate: [authGuard]
   },
   {
     path: 'itinerary',
     loadComponent: () => import('./pages/itinerary/itinerary.component').then(m => m.ItineraryComponent),
-    canActivate: [requireUser]
+    canActivate: [authGuard]
   },
   {
     path: 'accommodations',
     loadComponent: () => import('./pages/accommodations/accommodations.component').then(m => m.AccommodationsComponent),
-    canActivate: [requireUser]
+    canActivate: [authGuard]
   },
   {
     path: 'finance',
     loadComponent: () => import('./pages/finance/finance.component').then(m => m.FinanceComponent),
-    canActivate: [requireUser]
+    canActivate: [authGuard]
   },
   {
     path: 'expenses',
     loadComponent: () => import('./pages/expenses/expenses.component').then(m => m.ExpensesComponent),
-    canActivate: [requireUser]
+    canActivate: [authGuard]
   },
   {
     path: 'recs',
     loadComponent: () => import('./pages/recs/recs.component').then(m => m.RecsComponent),
-    canActivate: [requireUser]
-  },
-  {
-    path: 'rental-car',
-    loadComponent: () => import('./pages/rental-car/rental-car.component').then(m => m.RentalCarComponent),
-    canActivate: [requireUser]
+    canActivate: [authGuard]
   },
   {
     path: 'packing',
     loadComponent: () => import('./pages/packing-list/packing-list.component').then(m => m.PackingListComponent),
-    canActivate: [requireUser]
+    canActivate: [authGuard]
   },
   {
     path: 'outfits',
     loadComponent: () => import('./pages/outfits/outfits.component').then(m => m.OutfitsComponent),
-    canActivate: [requireUser]
+    canActivate: [authGuard]
   },
   {
-    path: 'map',
-    loadComponent: () => import('./pages/map/map.component').then(m => m.MapComponent),
-    canActivate: [requireUser]
+    path: 'profile',
+    loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'admin',
+    loadComponent: () => import('./pages/admin/admin.component').then(m => m.AdminComponent),
+    canActivate: [adminGuard]
   },
   {
     path: '**',

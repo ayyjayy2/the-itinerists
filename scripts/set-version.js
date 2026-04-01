@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const VERSION_NUMBER = '0.0.6'; // bump this manually on each release
+const VERSION_NUMBER = '0.0.1'; // bump this manually on each release
 
 const now = new Date();
 const month = now.toLocaleString('en-US', { month: 'short' });

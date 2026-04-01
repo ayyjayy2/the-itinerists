@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "ireland-stpatricks": {
+    "savannah-getaway": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,7 +20,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/ireland-stpatricks",
+            "outputPath": "dist/savannah-getaway",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -76,10 +76,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "ireland-stpatricks:build:production"
+              "buildTarget": "savannah-getaway:build:production"
             },
             "development": {
-              "buildTarget": "ireland-stpatricks:build:development"
+              "buildTarget": "savannah-getaway:build:development"
             }
           },
           "defaultConfiguration": "development"

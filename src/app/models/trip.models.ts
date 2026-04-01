@@ -5,6 +5,33 @@ export interface TripUser {
   color: string;       // hex color for avatar background
   avatarEmoji: string;
   isBirthday?: boolean;
+  uid?: string;        // Firebase Auth UID (present when using real auth)
+}
+
+export interface FirestoreUser {
+  uid: string;
+  displayName: string;
+  username: string;
+  avatarEmoji: string;
+  color: string;
+  isAdmin: boolean;
+  isDisabled?: boolean;
+  createdAt: number;   // unix ms
+}
+
+export interface InviteCode {
+  code: string;
+  createdBy: string;   // uid
+  createdAt: number;
+  expiresAt: number;
+  usedBy: string | null;
+}
+
+export interface TripConfig {
+  startDate: string;   // YYYY-MM-DD
+  endDate: string;
+  location: string;
+  locationLabel: string;
 }
 
 // ── Currency ──────────────────────────────────────────────────────────────────
