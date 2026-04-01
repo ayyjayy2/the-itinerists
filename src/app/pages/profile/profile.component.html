@@ -12,28 +12,6 @@
       </div>
     </div>
 
-    <!-- Username -->
-    <div class="card section-card">
-      <h2>Username</h2>
-
-      <div class="form-group">
-        <label for="username">Username</label>
-        <div class="input-hint">This is how you log in. Changing it takes effect immediately.</div>
-        <input id="username" type="text" [(ngModel)]="username" autocapitalize="none" placeholder="e.g. makaela" />
-      </div>
-
-      @if (usernameError()) {
-        <div class="alert alert-error">{{ usernameError() }}</div>
-      }
-      @if (usernameSuccess()) {
-        <div class="alert alert-success">Username updated!</div>
-      }
-
-      <button class="btn btn-primary" (click)="saveUsername()" [disabled]="usernameSaving()">
-        {{ usernameSaving() ? 'Saving…' : 'Save Username' }}
-      </button>
-    </div>
-
     <!-- Display info -->
     <div class="card section-card">
       <h2>Display Info</h2>
@@ -73,6 +51,28 @@
 
       <button class="btn btn-primary" (click)="saveProfile()" [disabled]="profileSaving()">
         {{ profileSaving() ? 'Saving…' : 'Save Changes' }}
+      </button>
+    </div>
+
+    <!-- Username -->
+    <div class="card section-card">
+      <h2>Username</h2>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <div class="input-hint">This is how you log in. Changing it takes effect immediately.</div>
+        <input id="username" type="text" [(ngModel)]="username" autocapitalize="none" placeholder="e.g. makaela" />
+      </div>
+
+      @if (usernameError()) {
+        <div class="alert alert-error">{{ usernameError() }}</div>
+      }
+      @if (usernameSuccess()) {
+        <div class="alert alert-success">Username updated!</div>
+      }
+
+      <button class="btn btn-primary" (click)="saveUsername()" [disabled]="usernameSaving()">
+        {{ usernameSaving() ? 'Saving…' : 'Save Username' }}
       </button>
     </div>
 
