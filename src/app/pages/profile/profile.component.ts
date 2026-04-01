@@ -2,6 +2,7 @@ import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../services/user.service';
+import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
 
 const EMOJI_OPTIONS = [
@@ -16,13 +17,23 @@ const EMOJI_OPTIONS = [
   styleUrl: './profile.component.scss'
 })
 export class ProfileComponent implements OnInit {
-  private userService = inject(UserService);
-  private authService = inject(AuthService);
+  private userService  = inject(UserService);
+  private usersService = inject(UsersService);
+  private authService  = inject(AuthService);
 
   readonly emojiOptions = EMOJI_OPTIONS;
   readonly colorOptions = ['#F4C2C2','#88C9A1','#D4B5F5','#F9E4B7','#F5B5D4','#B5D5F5','#F5D4B5','#B5F5D4'];
 
   firestoreUser = this.userService.firestoreUser;
+
+  readonly takenEmojis = computed(() => {
+    const myUid = this.firestoreUser()?.uid;
+    return new Set(
+      this.usersService.allUsers()
+        .filter(u => u.uid !== myUid)
+        .map(u => u.avatarEmoji)
+    );
+  });
 
   displayName = '';
   username    = '';
@@ -58,7 +69,10 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  selectEmoji(emoji: string): void { this.avatarEmoji = emoji; }
+  selectEmoji(emoji: string): void {
+    if (this.takenEmojis().has(emoji)) return;
+    this.avatarEmoji = emoji;
+  }
   selectColor(color: string): void  { this.color = color; }
 
   openUsernameModal(): void {

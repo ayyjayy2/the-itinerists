@@ -55,11 +55,18 @@
   transition: all 0.15s;
   font-family: var(--font);
 
-  &:hover { border-color: var(--primary); transform: scale(1.1); }
+  &:hover:not(:disabled) { border-color: var(--primary); transform: scale(1.1); }
+
   &.selected {
     border-color: var(--primary-dark);
     background: rgba(139, 175, 124, 0.15);
     box-shadow: 0 0 0 2px rgba(139, 175, 124, 0.3);
+  }
+
+  &.taken, &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    filter: grayscale(0.4);
   }
 }
 

@@ -26,7 +26,11 @@
         <label>Emoji</label>
         <div class="emoji-grid">
           @for (emoji of emojiOptions; track emoji) {
-            <button type="button" class="emoji-btn" [class.selected]="avatarEmoji === emoji" (click)="selectEmoji(emoji)">
+            <button type="button" class="emoji-btn"
+              [class.selected]="avatarEmoji === emoji"
+              [class.taken]="takenEmojis().has(emoji)"
+              [disabled]="takenEmojis().has(emoji)"
+              (click)="selectEmoji(emoji)">
               {{ emoji }}
             </button>
           }
