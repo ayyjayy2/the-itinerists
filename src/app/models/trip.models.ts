@@ -68,6 +68,24 @@ export const DEFAULT_RATES: ExchangeRates = {
 
 // ── Flights ───────────────────────────────────────────────────────────────────
 
+/** Stored in Firestore `flights` collection — one doc per flight leg. */
+export interface FlightDoc {
+  id: string;
+  uid: string;           // the user this flight belongs to
+  addedByUid: string;    // who entered it
+  section: 'ARRIVALS' | 'DEPARTURES';
+  airline: string;
+  flightNumber: string;
+  from: string;          // IATA code
+  to: string;            // IATA code
+  departureDate: string; // YYYY-MM-DD
+  departureTime: string; // e.g. "8:30 AM"
+  arrivalDate: string;   // YYYY-MM-DD
+  arrivalTime: string;   // e.g. "11:45 AM"
+  notes: string;
+  createdAt: number;
+}
+
 export interface Flight {
   person: string;
   section: string;        // 'ARRIVALS' | 'DEPARTURES'

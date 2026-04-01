@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { DataService } from '../../services/data.service';
 import { FlightCountdownService } from '../../services/flight-countdown.service';
+import { FlightsService } from '../../services/flights.service';
 import { TripConfigService } from '../../services/trip-config.service';
 
 interface QuickLink {
@@ -24,6 +25,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   userService       = inject(UserService);
   dataService       = inject(DataService);
   flightCountdown   = inject(FlightCountdownService);
+  flightsService    = inject(FlightsService);
   tripConfigService = inject(TripConfigService);
 
   currentUser = this.userService.currentUser;
@@ -49,10 +51,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   );
 
   readonly flightLabel = computed(() => {
-    const name    = this.currentUser()?.name ?? '';
-    const flights = this.dataService.data()?.flights ?? [];
+    const uid     = this.currentUser()?.uid ?? '';
+    const flights = this.flightsService.flights();
     this.now(); // subscribe to timer ticks
-    return this.flightCountdown.getCountdown(name, flights);
+    return this.flightCountdown.getCountdownForUid(uid, flights);
   });
 
   readonly countdown = computed(() => {

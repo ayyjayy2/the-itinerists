@@ -2,21 +2,15 @@
 
   <div class="page-header">
     <h2>✈️ Flights</h2>
-    <button class="btn btn-ghost btn-sm" (click)="refresh()">↻ Refresh</button>
+    <button class="btn btn-primary btn-sm" (click)="openAddModal()">+ Add Flight</button>
   </div>
-
-  @if (dataService.loading()) {
-    <div class="loading-overlay"><div class="spinner"></div><p>Loading flights…</p></div>
-  } @else if (dataService.isStale()) {
-    <div class="stale-banner">⚠️ Offline — cached data <button (click)="refresh()">Retry</button></div>
-  }
 
   <!-- Filters -->
   <div class="filter-bar">
     <div class="section-tabs">
-      <button class="tab" [class.active]="sectionFilter() === 'All'"       (click)="setSectionFilter('All')">All</button>
-      <button class="tab" [class.active]="sectionFilter() === 'ARRIVALS'"  (click)="setSectionFilter('ARRIVALS')">↓ Arrivals</button>
-      <button class="tab" [class.active]="sectionFilter() === 'DEPARTURES'"(click)="setSectionFilter('DEPARTURES')">↑ Departures</button>
+      <button class="tab" [class.active]="sectionFilter() === 'All'"        (click)="setSectionFilter('All')">All</button>
+      <button class="tab" [class.active]="sectionFilter() === 'ARRIVALS'"   (click)="setSectionFilter('ARRIVALS')">↓ Arrivals</button>
+      <button class="tab" [class.active]="sectionFilter() === 'DEPARTURES'" (click)="setSectionFilter('DEPARTURES')">↑ Departures</button>
     </div>
   </div>
 
@@ -25,10 +19,11 @@
     <button [class.active]="!showMineOnly()" (click)="showMineOnly.set(false)">All</button>
   </div>
 
-  @if (allJourneys().length === 0 && !dataService.loading()) {
+  @if (allJourneys().length === 0) {
     <div class="empty-state">
       <span class="empty-icon">✈️</span>
-      <p>No flights yet — add them to your Google Sheet!</p>
+      <p>No flights yet.</p>
+      <button class="btn btn-primary" (click)="openAddModal()">Add your first flight</button>
     </div>
   }
 
@@ -36,10 +31,9 @@
   @if (arrivals().length > 0) {
     <div class="section-header arrivals">
       <span class="section-icon">🛬</span>
-      <span>Arrivals to Ireland</span>
+      <span>Arrivals to {{ destination() }}</span>
     </div>
-
-    @for (journey of arrivals(); track journey.groupName + journey.section) {
+    @for (journey of arrivals(); track journey.uid + journey.section) {
       <ng-container *ngTemplateOutlet="journeyCard; context: { journey }"></ng-container>
     }
   }
@@ -50,8 +44,7 @@
       <span class="section-icon">🛫</span>
       <span>Departures</span>
     </div>
-
-    @for (journey of departures(); track journey.groupName + journey.section) {
+    @for (journey of departures(); track journey.uid + journey.section) {
       <ng-container *ngTemplateOutlet="journeyCard; context: { journey }"></ng-container>
     }
   }
@@ -62,25 +55,24 @@
 <ng-template #journeyCard let-journey="journey">
   <div class="journey-card card" [class.mine]="journey.isMyJourney">
 
-    <!-- Header -->
     <div class="journey-header">
       <div class="journey-group">
-        <span class="group-icon">{{ groupIcon(journey.groupName) }}</span>
         <span class="group-name">{{ journey.groupName }}</span>
         @if (journey.isMyJourney) {
           <span class="chip chip-primary">You</span>
         }
       </div>
-      <span class="section-badge" [class.dep]="journey.section === 'DEPARTURES'">
-        {{ journey.section === 'ARRIVALS' ? '↓ Arrival' : '↑ Departure' }}
-      </span>
+      <div class="journey-header-right">
+        <span class="section-badge" [class.dep]="journey.section === 'DEPARTURES'">
+          {{ journey.section === 'ARRIVALS' ? '↓ Arrival' : '↑ Departure' }}
+        </span>
+        <button class="delete-btn" title="Delete" (click)="deleteJourney(journey.legIds)">🗑</button>
+      </div>
     </div>
 
     <!-- Route visualization -->
     <div class="route">
       @for (stop of journey.stops; track $index) {
-
-        <!-- Stop -->
         <div class="stop" [class.layover]="stop.arrivalTime && stop.departureTime">
           <div class="iata">{{ stop.iata }}</div>
           <div class="stop-times">
@@ -104,8 +96,6 @@
             }
           </div>
         </div>
-
-        <!-- Segment line (between stops) -->
         @if ($index < journey.segments.length) {
           <div class="segment">
             <span class="seg-carrier">{{ journey.segments[$index].carrier }}</span>
@@ -115,11 +105,9 @@
             }
           </div>
         }
-
       }
     </div>
 
-    <!-- Notes -->
     @if (journey.notes.length > 0) {
       <div class="journey-notes">
         @for (note of journey.notes; track note) {
@@ -129,3 +117,97 @@
     }
   </div>
 </ng-template>
+
+<!-- ── Add Flight modal ── -->
+@if (showAddModal()) {
+  <div class="modal-backdrop" (click)="closeAddModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>Add Flight</h2>
+
+      <!-- Section toggle -->
+      <div class="form-group">
+        <label>Type</label>
+        <div class="toggle-group">
+          <button type="button" class="toggle-btn" [class.active]="form.section === 'ARRIVALS'"   (click)="form.section = 'ARRIVALS'">🛬 Arrival</button>
+          <button type="button" class="toggle-btn" [class.active]="form.section === 'DEPARTURES'" (click)="form.section = 'DEPARTURES'">🛫 Departure</button>
+        </div>
+      </div>
+
+      <!-- Assign to -->
+      <div class="form-group">
+        <label>For</label>
+        <select [(ngModel)]="form.assignedUid" name="assignedUid">
+          <option value="" disabled>Select traveller</option>
+          @for (u of tripUsers(); track u.uid) {
+            <option [value]="u.uid">{{ u.name }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Route -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>From <span class="label-hint">(IATA)</span></label>
+          <input type="text" [(ngModel)]="form.from" maxlength="4" placeholder="e.g. ORD" style="text-transform:uppercase" />
+        </div>
+        <div class="form-group">
+          <label>To <span class="label-hint">(IATA)</span></label>
+          <input type="text" [(ngModel)]="form.to" maxlength="4" placeholder="e.g. SAV" style="text-transform:uppercase" />
+        </div>
+      </div>
+
+      <!-- Airline & flight # -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Airline</label>
+          <input type="text" [(ngModel)]="form.airline" placeholder="e.g. Delta" />
+        </div>
+        <div class="form-group">
+          <label>Flight # <span class="label-hint">(optional)</span></label>
+          <input type="text" [(ngModel)]="form.flightNumber" placeholder="e.g. DL 123" />
+        </div>
+      </div>
+
+      <!-- Departure -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Departure Date</label>
+          <input type="date" [(ngModel)]="form.departureDate" />
+        </div>
+        <div class="form-group">
+          <label>Departure Time</label>
+          <input type="text" [(ngModel)]="form.departureTime" placeholder="e.g. 8:30 AM" />
+        </div>
+      </div>
+
+      <!-- Arrival -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Arrival Date</label>
+          <input type="date" [(ngModel)]="form.arrivalDate" />
+        </div>
+        <div class="form-group">
+          <label>Arrival Time</label>
+          <input type="text" [(ngModel)]="form.arrivalTime" placeholder="e.g. 11:45 AM" />
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label>Notes <span class="label-hint">(optional)</span></label>
+        <input type="text" [(ngModel)]="form.notes" placeholder="e.g. Window seat confirmed" />
+      </div>
+
+      @if (formError()) {
+        <div class="alert alert-error">{{ formError() }}</div>
+      }
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="closeAddModal()" [disabled]="saving()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveFlight()" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Add Flight' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
