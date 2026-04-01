@@ -25,12 +25,17 @@ export class ProfileComponent implements OnInit {
   firestoreUser = this.userService.firestoreUser;
 
   displayName = '';
+  username    = '';
   avatarEmoji = '';
   color       = '';
 
   currentPassword = '';
   newPassword     = '';
   confirmPassword = '';
+
+  usernameSaving  = signal(false);
+  usernameSuccess = signal(false);
+  usernameError   = signal('');
 
   profileSaving  = signal(false);
   profileSuccess = signal(false);
@@ -44,6 +49,7 @@ export class ProfileComponent implements OnInit {
     const u = this.firestoreUser();
     if (u) {
       this.displayName = u.displayName;
+      this.username    = u.username;
       this.avatarEmoji = u.avatarEmoji;
       this.color       = u.color;
     }
@@ -51,6 +57,25 @@ export class ProfileComponent implements OnInit {
 
   selectEmoji(emoji: string): void { this.avatarEmoji = emoji; }
   selectColor(color: string): void  { this.color = color; }
+
+  async saveUsername(): Promise<void> {
+    const uid = this.firestoreUser()?.uid;
+    const normalized = this.username.toLowerCase().trim();
+    if (!uid || !normalized) return;
+    if (normalized === this.firestoreUser()?.username) return;
+    this.usernameSaving.set(true);
+    this.usernameError.set('');
+    this.usernameSuccess.set(false);
+    try {
+      await this.authService.updateUsername(uid, normalized);
+      this.usernameSuccess.set(true);
+      setTimeout(() => this.usernameSuccess.set(false), 3000);
+    } catch (err: any) {
+      this.usernameError.set(err?.message ?? 'Failed to update username.');
+    } finally {
+      this.usernameSaving.set(false);
+    }
+  }
 
   async saveProfile(): Promise<void> {
     const uid = this.firestoreUser()?.uid;
