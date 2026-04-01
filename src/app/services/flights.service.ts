@@ -1,5 +1,5 @@
 import { Injectable, signal, inject, Injector, runInInjectionContext } from '@angular/core';
-import { Firestore, collection, doc, onSnapshot, setDoc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
 import { FlightDoc } from '../models/trip.models';
 
 @Injectable({ providedIn: 'root' })
@@ -28,6 +28,10 @@ export class FlightsService {
   async addFlight(data: Omit<FlightDoc, 'id'>): Promise<void> {
     const ref = doc(collection(this.firestore, 'flights'));
     await setDoc(ref, { ...data, id: ref.id });
+  }
+
+  async updateFlight(id: string, data: Partial<Omit<FlightDoc, 'id'>>): Promise<void> {
+    await updateDoc(doc(this.firestore, 'flights', id), { ...data });
   }
 
   async deleteFlight(id: string): Promise<void> {
