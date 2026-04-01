@@ -38,8 +38,9 @@
   font-weight: 700;
   white-space: nowrap;
 
-  &.live { background: var(--primary); color: #1a4a2e; }
-  &.done { background: var(--border);  color: var(--text-muted); }
+  &.live  { background: var(--primary); color: #1a4a2e; }
+  &.done  { background: var(--border);  color: var(--text-muted); }
+  &.unset { background: var(--border);  color: var(--text-muted); font-style: italic; }
 }
 
 .section-title {

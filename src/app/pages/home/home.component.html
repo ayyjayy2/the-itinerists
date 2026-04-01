@@ -10,11 +10,14 @@
       }
       <div>
         <h1>Hey, {{ currentUser()?.name ?? 'traveller' }}! 👋</h1>
-        <p>Ready for Savannah?</p>
+        <p>Ready for {{ locationLabel() }}?</p>
       </div>
     </div>
-    <div class="countdown-badge" [class.live]="countdown().type === 'live'" [class.done]="countdown().type === 'done'">
-      {{ flightCountdownLabel() || countdown().label }}
+    <div class="countdown-badge"
+      [class.live]="countdown().type === 'live'"
+      [class.done]="countdown().type === 'done'"
+      [class.unset]="countdown().type === 'unset'">
+      {{ flightLabel() || countdown().label }}
     </div>
   </div>
 
@@ -41,6 +44,5 @@
       </a>
     }
   </div>
-
 
 </div>
