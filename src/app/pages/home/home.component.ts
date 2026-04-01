@@ -27,11 +27,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   tripConfigService = inject(TripConfigService);
 
   currentUser = this.userService.currentUser;
+  isAdmin     = this.userService.isAdmin;
 
   private now = signal(Date.now());
   private countdownTimer: ReturnType<typeof setInterval> | null = null;
 
-  readonly quickLinks: QuickLink[] = [
+  private readonly baseLinks: QuickLink[] = [
     { path: '/flights',        label: 'Flights',      icon: '✈️',  description: 'Arrivals & departures', color: '#B5D5F5' },
     { path: '/itinerary',      label: 'Itinerary',    icon: '📅',  description: 'Day-by-day plans',      color: '#F9E4B7' },
     { path: '/accommodations', label: 'Stays',        icon: '🏨',  description: 'Hotels & check-in',     color: '#D4B5F5' },
@@ -41,6 +42,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     { path: '/outfits',        label: 'Outfits',      icon: '👗',  description: 'Plan your looks',       color: '#F5B5D4' },
     { path: '/profile',        label: 'Profile',      icon: '👤',  description: 'Settings & account',    color: '#F5D4B5' },
   ];
+
+  readonly quickLinks = computed(() => this.isAdmin()
+    ? [...this.baseLinks, { path: '/admin', label: 'Admin', icon: '⚙️', description: 'Trip & members', color: '#D4B5F5' }]
+    : this.baseLinks
+  );
 
   readonly flightLabel = computed(() => {
     const name    = this.currentUser()?.name ?? '';
