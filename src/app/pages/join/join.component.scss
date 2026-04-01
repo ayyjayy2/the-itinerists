@@ -89,6 +89,27 @@
   }
 }
 
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input { padding-right: 2.5rem; }
+}
+
+.eye-btn {
+  position: absolute;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.6;
+  &:hover { opacity: 1; }
+}
+
 // ── Emoji picker ──────────────────────────────────────────────────────────────
 .emoji-grid {
   display: flex;

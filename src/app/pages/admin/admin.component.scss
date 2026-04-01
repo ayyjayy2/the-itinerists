@@ -1,0 +1,114 @@
+.section-card {
+  margin-bottom: 1.5rem;
+
+  h2 { margin-bottom: 0.5rem; }
+}
+
+.section-hint {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.alert {
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin: 0.75rem 0;
+
+  &-error   { background: var(--highlight); color: #7a2020; }
+  &-success { background: var(--primary);   color: #1a4a2e; }
+}
+
+// ── Invite box ────────────────────────────────────────────────────────────────
+.invite-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.9rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.invite-url {
+  font-size: 0.8rem;
+  color: var(--primary-dark);
+  word-break: break-all;
+  flex: 1;
+  font-family: monospace;
+}
+
+// ── Members list ──────────────────────────────────────────────────────────────
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+
+  &.disabled {
+    opacity: 0.5;
+  }
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.member-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.member-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.member-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.badge-admin {
+  background: var(--primary);
+  color: #1a4a2e;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.1rem 0.45rem;
+  border-radius: 99px;
+}
+
+.badge-disabled {
+  background: var(--highlight);
+  color: #7a2020;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.1rem 0.45rem;
+  border-radius: 99px;
+}

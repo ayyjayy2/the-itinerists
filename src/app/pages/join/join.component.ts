@@ -38,6 +38,7 @@ export class JoinComponent implements OnInit {
   confirmPass   = '';
   color         = '#F4C2C2';
 
+  showPassword  = signal(false);
   loading       = signal(false);
   error         = signal('');
   step          = signal<'validating' | 'form' | 'invalid'>('validating');

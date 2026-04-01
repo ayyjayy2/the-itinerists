@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   createUserWithEmailAndPassword,
+  updateEmail,
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
@@ -115,6 +116,26 @@ export class AuthService {
 
   async updateProfile(uid: string, updates: Partial<Pick<FirestoreUser, 'displayName' | 'avatarEmoji' | 'color'>>): Promise<void> {
     await updateDoc(doc(this.firestore, 'users', uid), { ...updates });
+  }
+
+  async updateUsername(uid: string, newUsername: string): Promise<void> {
+    const normalized = newUsername.toLowerCase().trim();
+
+    // Check uniqueness
+    const usersRef  = collection(this.firestore, 'users');
+    const q         = query(usersRef, where('username', '==', normalized));
+    const existing  = await getDocs(q);
+    if (!existing.empty && existing.docs[0].id !== uid) {
+      throw new Error('That username is already taken.');
+    }
+
+    // Update Firebase Auth email
+    const user = this.auth.currentUser;
+    if (!user) throw new Error('No authenticated user.');
+    await updateEmail(user, toEmail(normalized));
+
+    // Update Firestore
+    await updateDoc(doc(this.firestore, 'users', uid), { username: normalized });
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {

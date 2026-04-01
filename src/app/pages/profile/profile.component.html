@@ -1,0 +1,141 @@
+<div class="page-container">
+  <h1>Profile Settings</h1>
+
+  @if (firestoreUser(); as user) {
+
+    <!-- Preview -->
+    <div class="card profile-preview">
+      <div class="avatar-preview" [style.background]="color">{{ avatarEmoji }}</div>
+      <div>
+        <div class="preview-name">{{ displayName || user.displayName }}</div>
+        <div class="preview-username">&#64;{{ user.username }}</div>
+      </div>
+    </div>
+
+    <!-- Display info -->
+    <div class="card section-card">
+      <h2>Display Info</h2>
+
+      <div class="form-group">
+        <label>Name</label>
+        <div class="input-hint">This is your display name — what others see in the app.</div>
+        <input type="text" [(ngModel)]="displayName" placeholder="Your display name" />
+      </div>
+
+      <div class="form-group">
+        <label>Emoji</label>
+        <div class="emoji-grid">
+          @for (emoji of emojiOptions; track emoji) {
+            <button type="button" class="emoji-btn"
+              [class.selected]="avatarEmoji === emoji"
+              [class.taken]="takenEmojis().has(emoji)"
+              [disabled]="takenEmojis().has(emoji)"
+              (click)="selectEmoji(emoji)">
+              {{ emoji }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Color</label>
+        <div class="color-grid">
+          @for (c of colorOptions; track c) {
+            <button type="button" class="color-btn" [class.selected]="color === c" [style.background]="c" (click)="selectColor(c)"></button>
+          }
+        </div>
+      </div>
+
+      @if (profileError()) {
+        <div class="alert alert-error">{{ profileError() }}</div>
+      }
+      @if (profileSuccess()) {
+        <div class="alert alert-success">Profile updated!</div>
+      }
+
+      <button class="btn btn-primary" (click)="saveProfile()" [disabled]="profileSaving()">
+        {{ profileSaving() ? 'Saving…' : 'Save Changes' }}
+      </button>
+    </div>
+
+    <!-- Account actions -->
+    <div class="card section-card">
+      <h2>Account</h2>
+      <div class="account-actions">
+        <button class="btn btn-secondary" (click)="openUsernameModal()">Change Username</button>
+        <button class="btn btn-secondary" (click)="openPasswordModal()">Change Password</button>
+      </div>
+    </div>
+
+  } @else {
+    <div class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Loading profile…</p>
+    </div>
+  }
+</div>
+
+<!-- Username modal -->
+@if (showUsernameModal()) {
+  <div class="modal-backdrop" (click)="closeUsernameModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>Change Username</h2>
+      <p class="modal-hint">This is how you log in. Changing it takes effect immediately.</p>
+
+      <div class="form-group">
+        <label for="modal-username">New Username</label>
+        <input id="modal-username" type="text" [(ngModel)]="username" autocapitalize="none" placeholder="e.g. makaela" />
+      </div>
+
+      @if (usernameError()) {
+        <div class="alert alert-error">{{ usernameError() }}</div>
+      }
+      @if (usernameSuccess()) {
+        <div class="alert alert-success">Username updated!</div>
+      }
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="closeUsernameModal()" [disabled]="usernameSaving()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveUsername()" [disabled]="usernameSaving()">
+          {{ usernameSaving() ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Password modal -->
+@if (showPasswordModal()) {
+  <div class="modal-backdrop" (click)="closePasswordModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>Change Password</h2>
+
+      <div class="form-group">
+        <label>Current Password</label>
+        <input type="password" [(ngModel)]="currentPassword" autocomplete="off" placeholder="Enter current password" />
+      </div>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" [(ngModel)]="newPassword" autocomplete="new-password" placeholder="At least 6 characters" />
+      </div>
+      <div class="form-group">
+        <label>Confirm New Password</label>
+        <input type="password" [(ngModel)]="confirmPassword" autocomplete="new-password" placeholder="Re-enter new password" />
+      </div>
+
+      @if (passwordError()) {
+        <div class="alert alert-error">{{ passwordError() }}</div>
+      }
+      @if (passwordSuccess()) {
+        <div class="alert alert-success">Password changed!</div>
+      }
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="closePasswordModal()" [disabled]="passwordSaving()">Cancel</button>
+        <button class="btn btn-primary" (click)="changePassword()" [disabled]="passwordSaving()">
+          {{ passwordSaving() ? 'Updating…' : 'Update Password' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
