@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // App logs: write-only from the client.
+    // The app writes structured error/traffic logs here; nothing should be able
+    // to read, modify, or delete them via the client SDK.
+    // To view logs, use the Firebase Console or Admin SDK.
+    match /_appLogs/{log} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    // All other documents: open read/write until Firebase Auth is added.
+    // TODO (IRE-10): lock down to allowlisted emails once Google OAuth is wired up.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+
+  }
+}

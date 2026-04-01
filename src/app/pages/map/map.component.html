@@ -1,0 +1,122 @@
+<div class="map-page">
+
+  <div class="map-header">
+    <h2>🗺️ Trip Map</h2>
+    <div class="scope-tabs map-scope">
+      <button [class.active]="!showAll()" (click)="setScope(false)">My Trip</button>
+      <button [class.active]="showAll()"  (click)="setScope(true)">All</button>
+    </div>
+    <div class="map-status">
+      @if (loading()) {
+        <span class="status-chip">Loading…</span>
+      } @else if (geocodedCount() < totalLocations()) {
+        <span class="status-chip">Pinning… {{ geocodedCount() }}/{{ totalLocations() }}</span>
+      } @else {
+        <span class="status-chip status-done">{{ totalLocations() }} locations</span>
+      }
+    </div>
+    <button class="btn btn-primary btn-sm add-pin-btn" (click)="openAddForm()">+ Add Pin</button>
+  </div>
+
+  <!-- Day filter chips -->
+  @if (availableDays().length > 0) {
+    <div class="day-chips">
+      <button class="day-chip" [class.active]="selectedDay() === null" (click)="setDay(null)">
+        All Days
+      </button>
+      @for (day of availableDays(); track day.date) {
+        <button class="day-chip" [class.active]="selectedDay() === day.date" (click)="setDay(day.date)">
+          {{ day.label }}
+        </button>
+      }
+    </div>
+  }
+
+  <div class="map-wrap">
+    <div class="map-container" id="trip-map"></div>
+    @if (!mapReady() || updating()) {
+      <div class="map-loading" [class.map-loading--overlay]="mapReady()">
+        <div class="map-spinner"></div>
+        <p>{{ !mapReady()
+              ? (loading() ? 'Loading data…' : 'Locating ' + geocodedCount() + ' / ' + totalLocations() + ' pins…')
+              : 'Updating map…' }}</p>
+      </div>
+    }
+  </div>
+
+  <div class="map-legend">
+    <span class="legend-item"><span class="dot" style="background:#10B981"></span>Sightseeing</span>
+    <span class="legend-item"><span class="dot" style="background:#F59E0B"></span>Food</span>
+    <span class="legend-item"><span class="dot" style="background:#F97316"></span>Activity</span>
+    <span class="legend-item"><span class="dot" style="background:#A78BFA"></span>Drink</span>
+    <span class="legend-item"><span class="legend-house">🏠</span>Stay</span>
+    <span class="legend-item"><span class="legend-flight"></span>Flight</span>
+    <span class="legend-item"><span class="dot dot-star">⭐</span>Custom pin</span>
+  </div>
+
+</div>
+
+<!-- Add Pin modal -->
+@if (showAddForm()) {
+  <div class="modal-backdrop" (click)="closeAddForm()">
+    <div class="modal-card card" (click)="$event.stopPropagation()">
+      <h3>📍 Add a Pin</h3>
+
+      <div class="form-group">
+        <label>Address / Location</label>
+        <input type="text" [(ngModel)]="addForm.address"
+               placeholder="e.g. Cliffs of Moher, Co. Clare">
+      </div>
+      <div class="form-group">
+        <label>Display Name</label>
+        <input type="text" [(ngModel)]="addForm.name"
+               placeholder="What do you want to call this pin?">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select [(ngModel)]="addForm.category">
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <input type="text" [(ngModel)]="addForm.notes" placeholder="Optional note…">
+      </div>
+
+      <div class="form-group">
+        <label>Visible to</label>
+        <div class="people-picker">
+          <button class="people-btn" [class.selected]="isAllForWho()" (click)="toggleAllForWho()">
+            Everyone
+          </button>
+          @for (user of tripUsers(); track user.name) {
+            <button class="people-btn"
+                    [class.selected]="addForWhoMap[user.name]"
+                    [style.background]="addForWhoMap[user.name] ? user.color : ''"
+                    [style.border-color]="addForWhoMap[user.name] ? user.color : ''"
+                    [style.color]="addForWhoMap[user.name] ? '#1a4a2e' : ''"
+                    (click)="addForWhoMap[user.name] = !addForWhoMap[user.name]">
+              {{ user.avatarEmoji }} {{ user.name }}
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (addError()) {
+        <p class="add-error">{{ addError() }}</p>
+      }
+
+      <div class="form-actions">
+        <button class="btn btn-ghost" (click)="closeAddForm()" [disabled]="addSearching()">Cancel</button>
+        <button class="btn btn-primary" (click)="savePin()"
+                [disabled]="!addForm.address || !addForm.name || addSearching()">
+          {{ addSearching() ? 'Finding location…' : 'Save Pin' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

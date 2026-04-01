@@ -1,0 +1,244 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>🧾 My Expenses</h2>
+      <p class="user-sub">{{ currentUser()?.name }}'s personal log</p>
+    </div>
+    <div class="header-actions">
+      <div class="totals-row">
+        @for (t of totals(); track t.code) {
+          <span class="total-chip" [class.total-empty]="t.amount === 0">
+            {{ t.symbol }}{{ t.amount | number:'1.2-2' }} <span class="total-code">{{ t.code }}</span>
+          </span>
+        }
+      </div>
+      <button class="btn btn-ghost btn-sm icon-btn" (click)="showCurrencyPicker.set(!showCurrencyPicker())" title="Display currency">⚙️</button>
+    </div>
+  </div>
+
+  <!-- Currency picker -->
+  @if (showCurrencyPicker()) {
+    <div class="currency-picker card">
+      <p class="currency-picker-label">Display currencies</p>
+      <div class="currency-toggles">
+        @for (c of currencies; track c.code) {
+          <button class="currency-toggle"
+            [class.active]="isCurrencySelected(c.code)"
+            [class.last-active]="isCurrencySelected(c.code) && selectedCurrencies().size === 1"
+            (click)="toggleCurrency(c.code)">
+            <span class="ctoggle-label">{{ c.label }}</span>
+            <span class="ctoggle-check">{{ isCurrencySelected(c.code) ? '✓' : '+' }}</span>
+          </button>
+        }
+      </div>
+      <div class="currency-picker-actions">
+        <button class="btn btn-primary btn-sm" (click)="saveCurrencyPicker()">Save</button>
+      </div>
+    </div>
+  }
+
+  <!-- Add form toggle -->
+  @if (!showForm()) {
+    <button class="btn btn-primary add-btn" (click)="showForm.set(true)">+ Add Expense</button>
+  } @else {
+    <div class="add-form card">
+      <h3>New Expense</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" [(ngModel)]="form.date">
+        </div>
+        <div class="form-group">
+          <label>Currency</label>
+          <select [(ngModel)]="form.currency">
+            @for (c of currencies; track c.code) {
+              <option [value]="c.code">{{ c.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Vendor <span class="label-optional">(optional)</span></label>
+        <input type="text" [(ngModel)]="form.vendor" placeholder="e.g. Temple Bar">
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" [(ngModel)]="form.description" placeholder="e.g. Guinness">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Amount</label>
+          <input type="number" [(ngModel)]="form.amount" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select [(ngModel)]="form.category">
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-ghost" (click)="showForm.set(false)">Cancel</button>
+        <button class="btn btn-primary" (click)="addExpense()" [disabled]="!form.description || !form.amount">Add</button>
+      </div>
+    </div>
+  }
+
+  <!-- Category filter — always shows all categories -->
+  <div class="filter-chips">
+    <button class="chip cat-all" [class.cat-active]="categoryFilter() === 'All'" (click)="setFilter('All')">All</button>
+    @for (cat of categories; track cat) {
+      <button class="chip" [ngClass]="[catClass(cat), categoryFilter() === cat ? 'cat-active' : '']" (click)="setFilter(cat)">{{ cat }}</button>
+    }
+  </div>
+
+  <!-- Expense list -->
+  @if (loading()) {
+    <div class="empty-state"><p>Loading…</p></div>
+  } @else if (filtered().length === 0) {
+    <div class="empty-state">
+      <span class="empty-icon">🧾</span>
+      <p>No expenses yet in this category.</p>
+    </div>
+  } @else {
+    <div class="expense-list">
+      @for (exp of filtered(); track exp.id) {
+        <div class="expense-row card">
+          <div class="exp-left">
+            <span class="exp-date">{{ formatDate(exp.date) }}</span>
+            <span class="exp-meta">
+              @if (exp.vendor) { <span class="exp-vendor">{{ exp.vendor }}</span> }
+              <span class="exp-desc" [class.exp-desc-sub]="exp.vendor">{{ exp.description }}</span>
+            </span>
+            <span class="chip" [ngClass]="catClass(exp.category)">{{ exp.category }}</span>
+          </div>
+          <div class="exp-right">
+            <div class="exp-amounts">
+              @for (cfg of selectedCurrencyConfigs(); track cfg.code) {
+                <span class="exp-amount">{{ cfg.symbol }}{{ toCode(exp.amount, exp.currency, cfg.code) | number:'1.2-2' }} <span class="exp-code">{{ cfg.code }}</span></span>
+              }
+            </div>
+            <button class="btn btn-ghost btn-sm edit-btn" (click)="openEdit(exp)">✏️</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Edit modal -->
+  @if (editingExpense(); as exp) {
+    <div class="modal-backdrop" (click)="closeEdit()">
+      <div class="modal-card card" (click)="$event.stopPropagation()">
+        <h3>{{ exp.isPersonal ? 'Edit Expense' : 'Expense Details' }}</h3>
+
+        @if (exp.isPersonal) {
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" [(ngModel)]="editForm.date">
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <select [(ngModel)]="editForm.currency">
+                @for (c of currencies; track c.code) {
+                  <option [value]="c.code">{{ c.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Vendor <span class="label-optional">(optional)</span></label>
+            <input type="text" [(ngModel)]="editForm.vendor" placeholder="e.g. Temple Bar">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" [(ngModel)]="editForm.description">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Amount</label>
+              <input type="number" [(ngModel)]="editForm.amount" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select [(ngModel)]="editForm.category">
+                @for (cat of categories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-actions modal-actions">
+            <button class="btn btn-danger" (click)="remove(exp.id)">Delete</button>
+            <div class="modal-actions-right">
+              <button class="btn btn-ghost" (click)="closeEdit()">Cancel</button>
+              <button class="btn btn-primary" (click)="saveEdit()" [disabled]="!editForm.description || !editForm.amount">Save</button>
+            </div>
+          </div>
+        } @else {
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" [(ngModel)]="financeEditDraft.date">
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <select [(ngModel)]="financeEditDraft.currency">
+                @for (c of currencies; track c.code) {
+                  <option [value]="c.code">{{ c.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Vendor</label>
+            <input type="text" [(ngModel)]="financeEditDraft.vendor" placeholder="e.g. Guinness Storehouse">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" [(ngModel)]="financeEditDraft.description">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Amount</label>
+              <input type="number" [(ngModel)]="financeEditDraft.amount" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select [(ngModel)]="financeEditDraft.category">
+                @for (cat of categories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Paid by</label>
+              <input type="text" [(ngModel)]="financeEditDraft.paidBy">
+            </div>
+            <div class="form-group">
+              <label>Split among</label>
+              <input type="text" [(ngModel)]="financeEditDraft.splitAmong" placeholder="All, or comma-separated names">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <input type="text" [(ngModel)]="financeEditDraft.notes" placeholder="e.g. $42.50/pp × 4">
+          </div>
+          <p class="shared-note">Shared expenses can't be deleted here — remove them from the Finance tab.</p>
+          <div class="form-actions">
+            <button class="btn btn-ghost" (click)="closeEdit()">Cancel</button>
+            <button class="btn btn-primary" (click)="saveFinanceEdit()" [disabled]="!financeEditDraft.description || !financeEditDraft.amount">Save</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,131 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <h2>✈️ Flights</h2>
+    <button class="btn btn-ghost btn-sm" (click)="refresh()">↻ Refresh</button>
+  </div>
+
+  @if (dataService.loading()) {
+    <div class="loading-overlay"><div class="spinner"></div><p>Loading flights…</p></div>
+  } @else if (dataService.isStale()) {
+    <div class="stale-banner">⚠️ Offline — cached data <button (click)="refresh()">Retry</button></div>
+  }
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <div class="section-tabs">
+      <button class="tab" [class.active]="sectionFilter() === 'All'"       (click)="setSectionFilter('All')">All</button>
+      <button class="tab" [class.active]="sectionFilter() === 'ARRIVALS'"  (click)="setSectionFilter('ARRIVALS')">↓ Arrivals</button>
+      <button class="tab" [class.active]="sectionFilter() === 'DEPARTURES'"(click)="setSectionFilter('DEPARTURES')">↑ Departures</button>
+    </div>
+  </div>
+
+  <div class="scope-tabs">
+    <button [class.active]="showMineOnly()"  (click)="showMineOnly.set(true)">My Trip</button>
+    <button [class.active]="!showMineOnly()" (click)="showMineOnly.set(false)">All</button>
+  </div>
+
+  @if (allJourneys().length === 0 && !dataService.loading()) {
+    <div class="empty-state">
+      <span class="empty-icon">✈️</span>
+      <p>No flights yet — add them to your Google Sheet!</p>
+    </div>
+  }
+
+  <!-- ── ARRIVALS ── -->
+  @if (arrivals().length > 0) {
+    <div class="section-header arrivals">
+      <span class="section-icon">🛬</span>
+      <span>Arrivals to Ireland</span>
+    </div>
+
+    @for (journey of arrivals(); track journey.groupName + journey.section) {
+      <ng-container *ngTemplateOutlet="journeyCard; context: { journey }"></ng-container>
+    }
+  }
+
+  <!-- ── DEPARTURES ── -->
+  @if (departures().length > 0) {
+    <div class="section-header departures">
+      <span class="section-icon">🛫</span>
+      <span>Departures</span>
+    </div>
+
+    @for (journey of departures(); track journey.groupName + journey.section) {
+      <ng-container *ngTemplateOutlet="journeyCard; context: { journey }"></ng-container>
+    }
+  }
+
+</div>
+
+<!-- ── Journey card template ── -->
+<ng-template #journeyCard let-journey="journey">
+  <div class="journey-card card" [class.mine]="journey.isMyJourney">
+
+    <!-- Header -->
+    <div class="journey-header">
+      <div class="journey-group">
+        <span class="group-icon">{{ groupIcon(journey.groupName) }}</span>
+        <span class="group-name">{{ journey.groupName }}</span>
+        @if (journey.isMyJourney) {
+          <span class="chip chip-primary">You</span>
+        }
+      </div>
+      <span class="section-badge" [class.dep]="journey.section === 'DEPARTURES'">
+        {{ journey.section === 'ARRIVALS' ? '↓ Arrival' : '↑ Departure' }}
+      </span>
+    </div>
+
+    <!-- Route visualization -->
+    <div class="route">
+      @for (stop of journey.stops; track $index) {
+
+        <!-- Stop -->
+        <div class="stop" [class.layover]="stop.arrivalTime && stop.departureTime">
+          <div class="iata">{{ stop.iata }}</div>
+          <div class="stop-times">
+            @if (stop.arrivalTime) {
+              <div class="time arr">
+                <span class="t-arrow">↓</span>
+                <span class="t-val">{{ stop.arrivalTime }}</span>
+                @if (stop.arrivalDate) {
+                  <span class="t-date">{{ formatShortDate(stop.arrivalDate) }}</span>
+                }
+              </div>
+            }
+            @if (stop.departureTime) {
+              <div class="time dep">
+                <span class="t-arrow">↑</span>
+                <span class="t-val">{{ stop.departureTime }}</span>
+                @if (stop.departureDate) {
+                  <span class="t-date">{{ formatShortDate(stop.departureDate) }}</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Segment line (between stops) -->
+        @if ($index < journey.segments.length) {
+          <div class="segment">
+            <span class="seg-carrier">{{ journey.segments[$index].carrier }}</span>
+            <div class="seg-line"><span class="seg-plane">✈</span></div>
+            @if (journey.segments[$index].flightNumber) {
+              <span class="seg-fn">{{ journey.segments[$index].flightNumber }}</span>
+            }
+          </div>
+        }
+
+      }
+    </div>
+
+    <!-- Notes -->
+    @if (journey.notes.length > 0) {
+      <div class="journey-notes">
+        @for (note of journey.notes; track note) {
+          @if (note) { <p class="journey-note">📌 {{ note }}</p> }
+        }
+      </div>
+    }
+  </div>
+</ng-template>

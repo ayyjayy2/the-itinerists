@@ -1,0 +1,242 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.map-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.map-header {
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 1.25rem;
+  background: var(--card-bg);
+  border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0;
+  gap: 0.75rem;
+
+  h2 { margin: 0; flex-shrink: 0; }
+}
+
+.map-scope {
+  border-bottom: none;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.map-status { flex-shrink: 0; }
+
+.add-pin-btn { margin-left: auto; flex-shrink: 0; }
+
+.status-chip {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 99px;
+  padding: 0.25rem 0.75rem;
+  white-space: nowrap;
+
+  &.status-done {
+    background: rgba(136, 201, 161, 0.15);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+  }
+}
+
+.day-chips {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.5rem 1.25rem;
+  overflow-x: auto;
+  background: var(--card-bg);
+  border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.day-chip {
+  flex-shrink: 0;
+  padding: 0.3rem 0.85rem;
+  border-radius: 99px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  &:hover { border-color: var(--primary); color: var(--text); }
+  &.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #1a4a2e;
+  }
+}
+
+.map-wrap {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+
+  // Leaflet popup font override
+  :global(.leaflet-popup-content) {
+    margin: 10px 12px;
+  }
+}
+
+.map-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.88);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  z-index: 500;
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.01em;
+  }
+
+  // Lighter overlay for day-switch updates — existing pins still visible beneath
+  &--overlay {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(1px);
+    justify-content: flex-end;
+    padding-bottom: 1.5rem;
+    gap: 0.5rem;
+
+    .map-spinner {
+      width: 24px;
+      height: 24px;
+      border-width: 2.5px;
+    }
+
+    p {
+      font-size: 0.78rem;
+    }
+  }
+}
+
+.map-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3.5px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  padding: 0.6rem 1.25rem;
+  background: var(--card-bg);
+  border-top: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.dot-star {
+  font-size: 10px;
+  line-height: 1;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.add-error {
+  font-size: 0.82rem;
+  color: #991b1b;
+  background: #fee2e2;
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+// Modal (reuse expense modal styles since they're in global scope via app)
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  h3 { margin-bottom: 1rem; }
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.8);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.legend-house {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.legend-flight {
+  display: inline-block;
+  width: 18px;
+  height: 2px;
+  background: repeating-linear-gradient(
+    to right,
+    #94A3B8 0px, #94A3B8 3px,
+    transparent 3px, transparent 7px
+  );
+  flex-shrink: 0;
+  align-self: center;
+}

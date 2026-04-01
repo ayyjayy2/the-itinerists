@@ -1,0 +1,95 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>☘️ Irish Tips & Recs</h2>
+    @if (dataService.isStale()) {
+      <button class="btn btn-ghost btn-sm" (click)="refresh()">↻ Refresh</button>
+    }
+  </div>
+
+  @if (dataService.loading()) {
+    <div class="loading-overlay"><div class="spinner"></div><p>Loading recs…</p></div>
+  }
+
+  <!-- Add form toggle -->
+  @if (!showForm()) {
+    <button class="btn btn-primary add-btn" (click)="showForm.set(true)">+ Add Rec</button>
+  } @else {
+    <div class="add-form card">
+      <h3>New Rec</h3>
+
+      <div class="form-group">
+        <label>Category</label>
+        @if (!useCustomCategory) {
+          <div class="category-row">
+            <select [(ngModel)]="form.category">
+              @for (cat of formCategories(); track cat) {
+                <option [value]="cat">{{ categoryIcon(cat) }} {{ cat }}</option>
+              }
+            </select>
+            <button class="btn btn-ghost btn-sm" type="button" (click)="toggleCustomCategory(true)">+ New</button>
+          </div>
+        } @else {
+          <div class="category-row">
+            <input type="text" [(ngModel)]="customCategory" placeholder="New category name">
+            <button class="btn btn-ghost btn-sm" type="button" (click)="toggleCustomCategory(false)">Cancel</button>
+          </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label>Title <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="form.title" placeholder="e.g. Soda Bread">
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea [(ngModel)]="form.description" placeholder="e.g. A must-try Irish staple — dense, slightly tangy, goes great with butter." rows="2"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Extra / Pro tip</label>
+        <input type="text" [(ngModel)]="form.extra" placeholder="e.g. Best found at local bakeries, not supermarkets">
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-ghost" (click)="showForm.set(false)">Cancel</button>
+        <button class="btn btn-primary" (click)="addRec()" [disabled]="!form.title.trim()">Add</button>
+      </div>
+    </div>
+  }
+
+  <!-- Category filter -->
+  <div class="filter-chips">
+    @for (cat of categories(); track cat) {
+      <button class="chip" [class.chip-primary]="selectedCategory() === cat" (click)="setCategory(cat)">
+        {{ categoryIcon(cat) }} {{ cat }}
+      </button>
+    }
+  </div>
+
+  @if (allRecs().length === 0 && !dataService.loading()) {
+    <div class="empty-state">
+      <span class="empty-icon">☘️</span>
+      <p>No recs yet — add the first one!</p>
+    </div>
+  }
+
+  @for (group of groupedByCat(); track group[0]) {
+    <div class="rec-group">
+      <h3 class="rec-group-title">{{ categoryIcon(group[0]) }} {{ group[0] }}</h3>
+      <div class="rec-cards">
+        @for (rec of group[1]; track rec.title) {
+          <div class="rec-card card">
+            <div class="rec-title">{{ rec.title }}</div>
+            @if (rec.description) {
+              <p class="rec-desc">{{ rec.description }}</p>
+            }
+            @if (rec.extra) {
+              <p class="rec-extra">{{ rec.extra }}</p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

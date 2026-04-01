@@ -1,0 +1,186 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>🧳 Packing List</h2>
+    <div class="pack-stats">
+      <span class="chip chip-primary">{{ packedCount() }} packed</span>
+      <span class="chip">{{ unpackedCount() }} to go</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="packing-tabs">
+    <button class="tab-btn" [class.active]="tab() === 'list'" (click)="setTab('list')">My List</button>
+    <button class="tab-btn" [class.active]="tab() === 'suggestions'" (click)="setTab('suggestions')">
+      Inbox
+      @if (inbox().length > 0) { <span class="badge">{{ inbox().length }}</span> }
+    </button>
+    <button class="tab-btn" [class.active]="tab() === 'send'" (click)="setTab('send')">Suggest</button>
+  </div>
+
+  <!-- ── My List Tab ── -->
+  @if (tab() === 'list') {
+    <!-- Category filter chips -->
+    <div class="category-chips">
+      <button class="chip" [class.chip-primary]="selectedCategory() === 'All'" (click)="setCategory('All')">All</button>
+      @for (cat of categories(); track cat) {
+        <button class="chip" [class.chip-primary]="selectedCategory() === cat" (click)="setCategory(cat)">{{ cat }}</button>
+      }
+      @if (addingCategory()) {
+        <div class="new-cat-row">
+          <input
+            type="text"
+            class="new-cat-input"
+            [ngModel]="newCategoryName()"
+            (ngModelChange)="newCategoryName.set($event)"
+            placeholder="Category name…"
+            (keydown.enter)="addCategory()"
+            autofocus
+          >
+          <button class="btn btn-primary btn-sm" (click)="addCategory()" [disabled]="!newCategoryName().trim()">Add</button>
+          <button class="btn btn-ghost btn-sm" (click)="cancelAddCategory()">✕</button>
+        </div>
+      } @else {
+        <button class="chip new-cat-chip" (click)="addingCategory.set(true)">+ Category</button>
+      }
+    </div>
+
+    <!-- Add item -->
+    <div class="add-item-row">
+      <select
+        class="cat-select"
+        [ngModel]="newItemCategory()"
+        (ngModelChange)="newItemCategory.set($event)"
+      >
+        @for (cat of categories(); track cat) {
+          <option [value]="cat">{{ cat }}</option>
+        }
+      </select>
+      <input
+        type="text"
+        [ngModel]="newItem()"
+        (ngModelChange)="newItem.set($event)"
+        placeholder="Add an item…"
+        (keydown.enter)="addItem()"
+      >
+      <button class="btn btn-primary" (click)="addItem()" [disabled]="!newItem().trim()">Add</button>
+    </div>
+
+    @if (filteredItems().length === 0 && items().length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">🧳</span>
+        <p>Your list is empty — start adding items!</p>
+      </div>
+    } @else if (filteredItems().length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">🗂️</span>
+        <p>No items in <strong>{{ selectedCategory() }}</strong> yet.</p>
+      </div>
+    } @else {
+      <!-- Progress bar -->
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="filteredItems().length ? (filteredPackedCount() / filteredItems().length * 100) : 0"></div>
+      </div>
+
+      <div class="items-list">
+        <!-- Unpacked -->
+        @for (item of filteredItems(); track item.id) {
+          @if (!item.packed) {
+            <div class="packing-item">
+              <button class="check-btn" (click)="toggle(item.id)" aria-label="Mark as packed">
+                <span class="check-circle"></span>
+              </button>
+              <span class="item-label">{{ item.label }}</span>
+              @if (selectedCategory() === 'All' && item.category) {
+                <span class="item-category">{{ item.category }}</span>
+              }
+              <button class="remove-btn" (click)="remove(item.id)" aria-label="Remove">✕</button>
+            </div>
+          }
+        }
+
+        <!-- Packed section -->
+        @if (filteredPackedCount() > 0) {
+          <div class="packed-header">✅ Packed ({{ filteredPackedCount() }})</div>
+          @for (item of filteredItems(); track item.id) {
+            @if (item.packed) {
+              <div class="packing-item packed">
+                <button class="check-btn packed" (click)="toggle(item.id)">
+                  <span class="check-circle packed">✓</span>
+                </button>
+                <span class="item-label">{{ item.label }}</span>
+                @if (selectedCategory() === 'All' && item.category) {
+                  <span class="item-category">{{ item.category }}</span>
+                }
+                <button class="remove-btn" (click)="remove(item.id)">✕</button>
+              </div>
+            }
+          }
+        }
+      </div>
+    }
+  }
+
+  <!-- ── Suggestions Inbox Tab ── -->
+  @if (tab() === 'suggestions') {
+    @if (inbox().length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">📬</span>
+        <p>No suggestions yet! Others can send you packing ideas.</p>
+      </div>
+    } @else {
+      <div class="suggestions-list">
+        @for (s of inbox(); track s.id) {
+          <div class="suggestion-card card">
+            <div class="sug-info">
+              <span class="sug-from">From {{ s.from }}</span>
+              <span class="sug-date">{{ formatTime(s.sentAt) }}</span>
+            </div>
+            <div class="sug-item">{{ s.item }}</div>
+            <div class="sug-actions">
+              <button class="btn btn-primary btn-sm" (click)="accept(s.id)">✓ Add to list</button>
+              <button class="btn btn-ghost btn-sm" (click)="decline(s.id)">✕ Decline</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ── Send Suggestion Tab ── -->
+  @if (tab() === 'send') {
+    <div class="send-form card">
+      <h3>Suggest an item to someone</h3>
+      <p class="send-hint">Remind your travel companion to pack something!</p>
+
+      <div class="form-group">
+        <label>Send to</label>
+        <select [ngModel]="sendToUser()" (ngModelChange)="sendToUser.set($event)">
+          <option value="">Select person…</option>
+          @for (u of otherUsers(); track u.name) {
+            <option [value]="u.name">{{ u.avatarEmoji }} {{ u.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Item</label>
+        <input
+          type="text"
+          [ngModel]="sendItem()"
+          (ngModelChange)="sendItem.set($event)"
+          placeholder="e.g. rain jacket"
+          (keydown.enter)="sendSuggestion()"
+        >
+      </div>
+
+      <button
+        class="btn btn-primary"
+        (click)="sendSuggestion()"
+        [disabled]="!sendToUser() || !sendItem().trim() || sending()"
+      >
+        @if (sending()) { Sending… } @else { Send Suggestion }
+      </button>
+    </div>
+  }
+
+</div>

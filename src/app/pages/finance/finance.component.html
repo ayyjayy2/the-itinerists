@@ -1,0 +1,582 @@
+<div class="page-container">
+
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <h2>💶 Finance</h2>
+  </div>
+
+  @if (dataService.loading()) {
+    <div class="loading-overlay"><div class="spinner"></div><p>Loading finances…</p></div>
+  }
+
+  <!-- ── Balance Banners (always visible, not affected by user filter) ── -->
+  @if (settlementsStatus() === 'owed') {
+
+    @if (personNetBreakdown().owed.length === 0 && personNetBreakdown().owing.length === 0) {
+      <div class="balance-banner banner-settled">
+        <div class="banner-settled-text">🎉 You're all settled up!</div>
+      </div>
+    }
+
+    @if (personNetBreakdown().owed.length > 0) {
+      <div class="balance-banner banner-positive">
+        <div class="banner-label">You are still owed</div>
+        <div class="banner-amounts">
+          @for (c of activeCurrencies(); track c.code) {
+            <span class="banner-amount">{{ c.symbol }}{{ fromEur(totalOwedToMeEur(), c.code) | number:'1.2-2' }}<span class="b-code"> {{ c.code }}</span></span>
+          }
+        </div>
+        <div class="banner-persons">
+          @for (p of personNetBreakdown().owed; track p.name) {
+            <div class="banner-person">
+              <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
+              <span class="banner-person-amounts">
+                @for (c of activeCurrencies(); track c.code) {
+                  <span>{{ c.symbol }}{{ fromEur(p.amountEur, c.code) | number:'1.2-2' }}<span class="b-code"> {{ c.code }}</span></span>
+                }
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (personNetBreakdown().owing.length > 0) {
+      <div class="balance-banner banner-negative">
+        <div class="banner-label">You still owe</div>
+        <div class="banner-amounts">
+          @for (c of activeCurrencies(); track c.code) {
+            <span class="banner-amount">{{ c.symbol }}{{ fromEur(totalIOweEur(), c.code) | number:'1.2-2' }}<span class="b-code"> {{ c.code }}</span></span>
+          }
+        </div>
+        <div class="banner-persons">
+          @for (p of personNetBreakdown().owing; track p.name) {
+            <div class="banner-person">
+              <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
+              <span class="banner-person-amounts">
+                @for (c of activeCurrencies(); track c.code) {
+                  <span>{{ c.symbol }}{{ fromEur(p.amountEur, c.code) | number:'1.2-2' }}<span class="b-code"> {{ c.code }}</span></span>
+                }
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  }
+
+  @if (settlementsScope() === 'mine') {
+    @if (settlementsStatus() === 'paid') {
+      <div class="balance-banner"
+        [class.banner-negative]="paidBalanceEur() < 0"
+        [class.banner-positive]="paidBalanceEur() > 0"
+        [class.banner-settled]="paidBalanceEur() === 0">
+        @if (paidBalanceEur() < 0) {
+          <div class="banner-label">You've paid out</div>
+          <div class="banner-amounts">
+            @for (c of activeCurrencies(); track c.code) {
+              <span class="banner-amount">{{ c.symbol }}{{ fromEur(-paidBalanceEur(), c.code) | number:'1.2-2' }}<span class="b-code"> {{ c.code }}</span></span>
+            }
+          </div>
+        } @else if (paidBalanceEur() > 0) {
+          <div class="banner-label">You've been paid back</div>
+          <div class="banner-amounts">
+            @for (c of activeCurrencies(); track c.code) {
+              <span class="banner-amount">{{ c.symbol }}{{ fromEur(paidBalanceEur(), c.code) | number:'1.2-2' }}<span class="b-code"> {{ c.code }}</span></span>
+            }
+          </div>
+        } @else {
+          <div class="banner-settled-text">Nothing settled yet.</div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ── Group Summary Toggle ── -->
+  <button class="group-summary-toggle" (click)="showGroupSummary.set(!showGroupSummary())">
+    <span>👥 Group Summary</span>
+    <span class="gs-caret">{{ showGroupSummary() ? '▲' : '▼' }}</span>
+  </button>
+
+  @if (showGroupSummary()) {
+    <div class="group-summary card">
+      @for (u of allUsersNetBalance(); track u.name) {
+        <div class="gs-user-block" [class.gs-expanded]="expandedGroupUsers().has(u.name)">
+          <!-- Summary row (clickable) -->
+          <button class="gs-row" (click)="toggleGroupUser(u.name)"
+                  [class.gs-positive]="u.amountEur > 0.005"
+                  [class.gs-negative]="u.amountEur < -0.005">
+            <span class="gs-name">{{ u.emoji }} {{ u.name }}</span>
+            <span class="gs-status">
+              @if (u.amountEur > 0.005) {
+                <span class="gs-tag gs-tag-owed">is owed</span>
+                @for (c of activeCurrencies(); track c.code) {
+                  <span class="gs-amount">{{ c.symbol }}{{ fromEur(u.amountEur, c.code) | number:'1.2-2' }}<span class="gs-code"> {{ c.code }}</span></span>
+                }
+              } @else if (u.amountEur < -0.005) {
+                <span class="gs-tag gs-tag-owes">owes</span>
+                @for (c of activeCurrencies(); track c.code) {
+                  <span class="gs-amount">{{ c.symbol }}{{ fromEur(-u.amountEur, c.code) | number:'1.2-2' }}<span class="gs-code"> {{ c.code }}</span></span>
+                }
+              } @else {
+                <span class="gs-settled">✓ settled</span>
+              }
+              <span class="gs-chevron">{{ expandedGroupUsers().has(u.name) ? '▲' : '▼' }}</span>
+            </span>
+          </button>
+
+          <!-- Detail breakdown -->
+          @if (expandedGroupUsers().has(u.name)) {
+            <div class="gs-details">
+              @let details = userDebtDetails(u.name);
+              @if (details.length === 0) {
+                <div class="gs-detail-empty">All settled up ✓</div>
+              }
+              @for (d of details; track d.counterpart) {
+                <div class="gs-detail-row" [class.gs-detail-owes]="d.direction === 'owes'" [class.gs-detail-owed]="d.direction === 'owed'">
+                  <span class="gs-detail-label">
+                    @if (d.direction === 'owes') {
+                      <span>owes {{ d.emoji }} {{ d.counterpart }}</span>
+                    } @else {
+                      <span>{{ d.emoji }} {{ d.counterpart }} owes them</span>
+                    }
+                  </span>
+                  <span class="gs-detail-amounts">
+                    @for (c of activeCurrencies(); track c.code) {
+                      <span>{{ c.symbol }}{{ fromEur(d.amountEur, c.code) | number:'1.2-2' }}<span class="gs-code"> {{ c.code }}</span></span>
+                    }
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="scope-tabs">
+    <button [class.active]="settlementsScope() === 'mine'" (click)="settlementsScope.set('mine')">My Trip</button>
+    <button [class.active]="settlementsScope() === 'all'"  (click)="settlementsScope.set('all')">All</button>
+    <div class="scope-tabs-actions">
+      <button class="btn btn-ghost btn-sm icon-btn" (click)="showCurrencyPanel.set(!showCurrencyPanel())" title="Currency settings">⚙️</button>
+      <button #addBtnRef class="btn btn-primary btn-sm" (click)="startAdd()">+ Add</button>
+    </div>
+  </div>
+
+  <!-- ── Currency Panel ── -->
+  @if (showCurrencyPanel()) {
+    <div class="currency-panel card">
+      <div class="currency-panel-header">
+        <span class="currency-panel-title">Currencies</span>
+      </div>
+      <div class="currency-toggles">
+        @for (c of allCurrencies; track c.code) {
+          <button class="currency-toggle" [class.active]="isCurrencyEnabled(c.code)"
+            [class.last-active]="isCurrencyEnabled(c.code) && activeCurrencies().length === 1"
+            (click)="toggleCurrency(c.code)">
+            <span>{{ c.flag }}</span>
+            <span class="ctoggle-code">{{ c.code }}</span>
+            <span class="ctoggle-check">{{ isCurrencyEnabled(c.code) ? '✓' : '+' }}</span>
+          </button>
+        }
+      </div>
+      @if (showRateEditor()) {
+        <div class="rate-editor">
+          <p class="rate-editor-title">Exchange Rates <span class="rate-note">(1 EUR = X)</span></p>
+          <div class="rate-fields">
+            <div class="rate-field"><label>🇺🇸 USD</label><input type="number" [(ngModel)]="rateForm.USD" step="0.001" min="0.01"></div>
+            <div class="rate-field"><label>🏴󠁧󠁢󠁮󠁩󠁲󠁿 GBP</label><input type="number" [(ngModel)]="rateForm.GBP" step="0.001" min="0.01"></div>
+            <div class="rate-field"><label>🇮🇸 ISK</label><input type="number" [(ngModel)]="rateForm.ISK" step="0.1" min="0.1"></div>
+          </div>
+          <div class="rate-actions">
+            <button class="btn btn-ghost btn-sm" (click)="resetRates()">Reset</button>
+            <button class="btn btn-primary btn-sm" (click)="saveRates()">Save</button>
+          </div>
+        </div>
+      }
+      <div class="currency-panel-save">
+        <button class="btn btn-ghost btn-sm" (click)="showRateEditor.set(!showRateEditor())">⚙️ Rates</button>
+        <button class="btn btn-primary btn-sm" (click)="showCurrencyPanel.set(false)">Save</button>
+      </div>
+    </div>
+  }
+
+  <!-- ── Add Expense Modal ── -->
+  @if (showAddForm()) {
+    <div class="modal-backdrop" (click)="cancelAdd()">
+      <div class="modal-card card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h4>New Expense</h4>
+          <button class="modal-close" (click)="cancelAdd()" aria-label="Close">✕</button>
+        </div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Date</label>
+            <input type="date" [(ngModel)]="newEntry.date" />
+          </div>
+          <div class="form-field">
+            <label>Vendor <span class="required-star">*</span></label>
+            <input type="text" [(ngModel)]="newEntry.vendor" placeholder="e.g. Guinness Storehouse"
+                   [class.field-error]="addFormSubmitted() && !newEntry.vendor" />
+          </div>
+          <div class="form-field form-field-full">
+            <label>Description <span class="label-optional">(optional)</span></label>
+            <input type="text" [(ngModel)]="newEntry.description" placeholder="What was this for?" />
+          </div>
+          <div class="form-field">
+            <label>Amount <span class="required-star">*</span></label>
+            <div class="amount-row">
+              <select [(ngModel)]="newEntry.currency">
+                @for (c of allCurrencies; track c.code) { <option [value]="c.code">{{ c.flag }} {{ c.code }}</option> }
+              </select>
+              <input type="number" [(ngModel)]="newEntry.amount" min="0" step="0.01" placeholder="0.00"
+                     [class.field-error]="addFormSubmitted() && !newEntry.amount" />
+            </div>
+          </div>
+          <div class="form-field">
+            <label>Category</label>
+            <select [(ngModel)]="newEntry.category">
+              <option value="">— none —</option>
+              <option>Activity</option><option>Lodging</option><option>Food</option>
+              <option>Transport</option><option>Shopping</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Paid By</label>
+            <select [(ngModel)]="newEntry.paidBy">
+              @for (u of financeUsers(); track u.name) { <option [value]="u.name">{{ u.avatarEmoji }} {{ u.name }}</option> }
+            </select>
+          </div>
+          <div class="form-field form-field-full">
+            <label>Split Among</label>
+            <div class="people-picker">
+              <button type="button" class="people-btn" [class.selected]="isAllSplitSelected(addSplitMap)" (click)="toggleAllSplit(addSplitMap)">All</button>
+              @for (u of financeUsers(); track u.name) {
+                <button type="button" class="people-btn" [class.selected]="addSplitMap[u.name]" (click)="addSplitMap[u.name] = !addSplitMap[u.name]">
+                  {{ u.avatarEmoji }} {{ u.name }}
+                </button>
+              }
+            </div>
+          </div>
+          <!-- Split mode toggle -->
+          <div class="form-field form-field-full">
+            <label>Split type</label>
+            <div class="split-mode-toggle">
+              <button type="button" [class.active]="splitMode() === 'equal'"      (click)="splitMode.set('equal')">Equal</button>
+              <button type="button" [class.active]="splitMode() === 'individual'" (click)="splitMode.set('individual')">Individual</button>
+            </div>
+          </div>
+
+          <!-- Individual amount inputs -->
+          @if (splitMode() === 'individual') {
+            <div class="form-field form-field-full">
+              <label>Amount per person</label>
+              <div class="indiv-splits">
+                @for (u of financeUsers(); track u.name) {
+                  @if (addSplitMap[u.name]) {
+                    <div class="indiv-split-row">
+                      <span class="indiv-name">{{ u.avatarEmoji }} {{ u.name }}</span>
+                      <div class="amount-row">
+                        <span class="indiv-currency">{{ newEntry.currency }}</span>
+                        <input type="number" [(ngModel)]="addIndivSplits[u.name]" min="0" step="0.01" placeholder="0.00">
+                      </div>
+                    </div>
+                  }
+                }
+                <div class="indiv-total" [class.indiv-mismatch]="!splitIsValid" [class.indiv-match]="splitIsValid && addIndivTotal > 0">
+                  Total entered: {{ addIndivTotal | number:'1.2-2' }} / {{ (newEntry.amount ?? 0) | number:'1.2-2' }} {{ newEntry.currency }}
+                  @if (!splitIsValid) { <span class="indiv-warn">⚠ Amounts must equal the total</span> }
+                  @if (splitIsValid && addIndivTotal > 0) { <span class="indiv-ok">✓</span> }
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="form-field form-field-full">
+            <label>Notes</label>
+            <input type="text" [(ngModel)]="newEntry.notes" placeholder="Optional" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" (click)="cancelAdd()">Cancel</button>
+          <button class="btn btn-primary" (click)="saveAdd()" [disabled]="!splitIsValid">Add Expense</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Filter Bar (Owed/Paid + User Filter) ── -->
+  <div class="filter-bar">
+    <div class="status-tabs">
+      <button [class.active]="settlementsStatus() === 'owed'" (click)="settlementsStatus.set('owed')">Owed</button>
+      <button [class.active]="settlementsStatus() === 'paid'" (click)="settlementsStatus.set('paid')">Paid</button>
+    </div>
+    <div class="user-dropdown-wrap">
+      <button class="user-dropdown-trigger" (click)="showUserDropdown.set(!showUserDropdown())">
+        <span>{{ userFilterLabel() }}</span>
+        <span class="dropdown-caret">{{ showUserDropdown() ? '▴' : '▾' }}</span>
+      </button>
+      @if (showUserDropdown()) {
+        <div class="dropdown-backdrop" (click)="showUserDropdown.set(false)"></div>
+        <div class="user-dropdown-panel">
+          <button class="dropdown-option" [class.selected]="isAllPeopleSelected()" (click)="toggleAllPeople()">
+            <span class="dropdown-check">{{ isAllPeopleSelected() ? '✓' : '' }}</span>
+            All people
+          </button>
+          @for (u of financeUsers(); track u.name) {
+            <button class="dropdown-option" [class.selected]="isUserSelected(u.name)" (click)="toggleUserFilter(u.name)">
+              <span class="dropdown-check">{{ isUserSelected(u.name) ? '✓' : '' }}</span>
+              {{ u.avatarEmoji }} {{ u.name }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ── Search ── -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
+           placeholder="Search vendor, description, person…" />
+    @if (searchQuery()) {
+      <button class="search-clear" (click)="searchQuery.set('')">✕</button>
+    }
+  </div>
+
+  <!-- ── Debt Cards ── -->
+  <div class="debts-list">
+    @if (filteredSettlementItems().length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">{{ settlementsStatus() === 'paid' ? '📭' : '🎉' }}</span>
+        <p>{{ settlementsStatus() === 'paid' ? 'No settled payments yet.' : 'All caught up!' }}</p>
+      </div>
+    }
+
+    @for (d of filteredSettlementItems(); track debtKey(d)) {
+      <div class="debt-card card" [class.card-paid]="settlementsStatus() === 'paid'">
+
+        <!-- Header -->
+        <div class="debt-header">
+          <div class="debt-people">
+            <div class="debt-avatar" [style.background]="getUserColor(d.from)">{{ getUserEmoji(d.from) }}</div>
+            <div class="debt-middle">
+              <span class="debt-from">{{ d.from }}</span>
+              <span class="debt-owes-label">owes</span>
+              <span class="debt-to">{{ d.to }}</span>
+            </div>
+            <div class="debt-avatar" [style.background]="getUserColor(d.to)">{{ getUserEmoji(d.to) }}</div>
+          </div>
+          <div class="debt-right">
+            <div class="debt-amounts">
+              @for (c of activeCurrencies(); track c.code) {
+                <div class="debt-amount">{{ c.symbol }}{{ fromEur(d.amountEur, c.code) | number:'1.2-2' }}<span class="d-code"> {{ c.code }}</span></div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Item breakdown — always visible -->
+        <div class="debt-items">
+          @for (item of d.items; track item.date + item.description) {
+            <div class="debt-item" [class.item-paid]="isItemPaid(d.from, d.to, item.date, item.description)">
+              <div class="di-info">
+                <span class="di-label">{{ item.label }}</span>
+                @if (item.description && item.description !== item.label) {
+                  <span class="di-desc">{{ item.description }}</span>
+                }
+                <span class="di-date">{{ formatDate(item.date) }}</span>
+              </div>
+              <div class="di-right">
+                <span class="di-amount">{{ item.symbol }}{{ item.amount | number:'1.2-2' }}/pp</span>
+                <button
+                  class="di-check"
+                  [class.is-checked]="isItemPaid(d.from, d.to, item.date, item.description)"
+                  (click)="toggleItemPaid(d.from, d.to, item.date, item.description)"
+                  [title]="isItemPaid(d.from, d.to, item.date, item.description) ? 'Mark unpaid' : 'Mark paid'"
+                >{{ isItemPaid(d.from, d.to, item.date, item.description) ? '✓' : '○' }}</button>
+              </div>
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+  </div>
+
+  <!-- ── Expense Log ── -->
+  <div class="expenses-section">
+    <button class="expenses-toggle" (click)="showExpenses.set(!showExpenses())">
+      <span>{{ showExpenses() ? '▾' : '▸' }} Expenses ({{ entries().length }})</span>
+    </button>
+
+    @if (showExpenses()) {
+      @if (enrichedEntries().length === 0) {
+        <p class="empty-expenses">No expenses to show.</p>
+      } @else {
+        <div class="expenses-table">
+          <div class="table-header">
+            <span>Date</span>
+            <span>Description</span>
+            <span>Paid By</span>
+            <span class="r">Total</span>
+            <span class="r">/pp</span>
+            <span></span>
+          </div>
+
+          @for (entry of enrichedEntries(); track entry.description + entry.date) {
+            <div class="table-row" [class.is-editing]="isEditingEntry(entry)">
+              <span class="date-cell">{{ formatDate(entry.date) }}</span>
+              <div class="desc-cell">
+                @if (entry.vendor) { <span class="entry-vendor">{{ entry.vendor }}</span> }
+                <span>{{ entry.description }}</span>
+                @if (entry.notes) { <span class="entry-notes">{{ entry.notes }}</span> }
+                <div class="desc-chips">
+                  @if (entry.category) { <span class="chip chip-muted">{{ entry.category }}</span> }
+                  <span class="chip" [class.chip-primary]="entry.splitAmong === 'All'" [class.chip-highlight]="entry.splitAmong !== 'All'">
+                    {{ entry.splitAmong === 'All' ? 'Everyone' : entry.splitAmong }}
+                  </span>
+                  @if (entry.link) {
+                    <a class="entry-link" [href]="entry.link.startsWith('http') ? entry.link : 'https://' + entry.link" target="_blank" rel="noopener">🔗</a>
+                  }
+                </div>
+              </div>
+              <span class="paidby-cell">{{ entry.paidBy }}</span>
+              <span class="amount-cell r">{{ entry.nativeSymbol }}{{ entry.amount | number:'1.2-2' }}</span>
+              <span class="pp-cell r">
+                @if (entry.isIndivSplit) {
+                  <span class="pp-custom">custom</span>
+                } @else if (entry.amount > 0) {
+                  {{ entry.nativeSymbol }}{{ entry.ppAmount | number:'1.2-2' }}<span class="pp-split">/{{ entry.ppCount }}</span>
+                } @else {
+                  <span class="pp-tbd">TBD</span>
+                }
+              </span>
+              <button class="edit-row-btn" (click)="startEditEntry(entry)" title="Edit">✏️</button>
+            </div>
+
+            @if (isEditingEntry(entry)) {
+              <div class="inline-entry-form">
+                <h4>Edit Expense</h4>
+                <div class="form-grid">
+                  <div class="form-field"><label>Date</label><input type="date" [(ngModel)]="editEntryDraft.date" /></div>
+                  <div class="form-field">
+                    <label>Vendor <span class="required-star">*</span></label>
+                    <input type="text" [(ngModel)]="editEntryDraft.vendor"
+                           [class.field-error]="editFormSubmitted() && !editEntryDraft.vendor" />
+                  </div>
+                  <div class="form-field form-field-full"><label>Description</label><input type="text" [(ngModel)]="editEntryDraft.description" /></div>
+                  <div class="form-field">
+                    <label>Amount <span class="required-star">*</span></label>
+                    <div class="amount-row">
+                      <select [(ngModel)]="editEntryDraft.currency">
+                        @for (c of allCurrencies; track c.code) { <option [value]="c.code">{{ c.flag }} {{ c.code }}</option> }
+                      </select>
+                      <input type="number" [(ngModel)]="editEntryDraft.amount" min="0" step="0.01"
+                             [class.field-error]="editFormSubmitted() && !editEntryDraft.amount" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>Category</label>
+                    <select [(ngModel)]="editEntryDraft.category">
+                      <option value="">— none —</option>
+                      <option>Activity</option><option>Lodging</option><option>Food</option>
+                      <option>Transport</option><option>Shopping</option><option>Other</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label>Paid By</label>
+                    <select [(ngModel)]="editEntryDraft.paidBy">
+                      @for (u of financeUsers(); track u.name) { <option [value]="u.name">{{ u.avatarEmoji }} {{ u.name }}</option> }
+                    </select>
+                  </div>
+                  <div class="form-field form-field-full">
+                    <label>Split Among</label>
+                    <div class="people-picker">
+                      <button type="button" class="people-btn" [class.selected]="isAllSplitSelected(editSplitMap)" (click)="toggleAllSplit(editSplitMap)">All</button>
+                      @for (u of financeUsers(); track u.name) {
+                        <button type="button" class="people-btn" [class.selected]="editSplitMap[u.name]" (click)="editSplitMap[u.name] = !editSplitMap[u.name]">
+                          {{ u.avatarEmoji }} {{ u.name }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                  <!-- Split type toggle -->
+                  <div class="form-field form-field-full">
+                    <label>Split type</label>
+                    <div class="split-mode-toggle">
+                      <button type="button" [class.active]="editSplitMode() === 'equal'"      (click)="editSplitMode.set('equal')">Equal</button>
+                      <button type="button" [class.active]="editSplitMode() === 'individual'" (click)="editSplitMode.set('individual')">Individual</button>
+                    </div>
+                  </div>
+
+                  <!-- Individual amount inputs -->
+                  @if (editSplitMode() === 'individual') {
+                    <div class="form-field form-field-full">
+                      <label>Amount per person</label>
+                      <div class="indiv-splits">
+                        @for (u of financeUsers(); track u.name) {
+                          @if (editSplitMap[u.name]) {
+                            <div class="indiv-split-row">
+                              <span class="indiv-name">{{ u.avatarEmoji }} {{ u.name }}</span>
+                              <div class="amount-row">
+                                <span class="indiv-currency">{{ editEntryDraft.currency }}</span>
+                                <input type="number" [(ngModel)]="editIndivSplits[u.name]" min="0" step="0.01" placeholder="0.00">
+                              </div>
+                            </div>
+                          }
+                        }
+                        <div class="indiv-total" [class.indiv-mismatch]="!editSplitIsValid" [class.indiv-match]="editSplitIsValid && editIndivTotal > 0">
+                          Total entered: {{ editIndivTotal | number:'1.2-2' }} / {{ (editEntryDraft.amount ?? 0) | number:'1.2-2' }} {{ editEntryDraft.currency }}
+                          @if (!editSplitIsValid) { <span class="indiv-warn">⚠ Amounts must equal the total</span> }
+                          @if (editSplitIsValid && editIndivTotal > 0) { <span class="indiv-ok">✓</span> }
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <div class="form-field form-field-full"><label>Notes</label><input type="text" [(ngModel)]="editEntryDraft.notes" /></div>
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-danger btn-sm" (click)="deleteEntry(entry.date, entry.description)">🗑 Delete</button>
+                  <div class="form-actions-right">
+                    <button class="btn btn-ghost" (click)="cancelEditEntry()">Cancel</button>
+                    <button class="btn btn-primary" (click)="saveEditEntry(entry.date, entry.description)" [disabled]="!editSplitIsValid">Save</button>
+                  </div>
+                </div>
+              </div>
+            }
+          }
+
+          <!-- Totals row -->
+          @if (enrichedEntries().length > 0) {
+            <div class="table-totals-row">
+              <span class="totals-label">{{ enrichedEntries().length }} expense{{ enrichedEntries().length !== 1 ? 's' : '' }}</span>
+              <div class="totals-amounts">
+                @for (t of expenseTotals(); track t.code) {
+                  <span class="totals-amount">{{ t.symbol }}{{ t.total | number:'1.2-2' }}<span class="totals-code"> {{ t.code }}</span></span>
+                }
+                @if (expenseTotals().length > 1) {
+                  <span class="totals-eur">≈ €{{ expenseTotalEur() | number:'1.2-2' }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+</div>
+
+<!-- ── Floating Add Button ── -->
+@if (showFab()) {
+  <button class="fab" (click)="startAdd()" title="Add expense">+</button>
+}
+
+<!-- ── Toast ── -->
+@if (toast()) {
+  <div class="toast">{{ toast() }}</div>
+}

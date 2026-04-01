@@ -1,0 +1,691 @@
+import {
+  Component, AfterViewInit, OnDestroy,
+  inject, signal, computed, effect, NgZone
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import * as L from 'leaflet';
+import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
+import { DataService } from '../../services/data.service';
+import { UserService } from '../../services/user.service';
+import { Flight, ItineraryItem, MapPin, TripUser } from '../../models/trip.models';
+
+// Bump this to wipe the geocache and re-resolve all locations with new strategy
+const GEOCACHE_KEY         = 'ireland_geocache';
+const GEOCACHE_VERSION_KEY = 'ireland_geocache_version';
+const GEOCACHE_VERSION     = '4';
+
+// Nominatim viewbox covering Ireland → Iceland (biases toward trip region, bounded=0 allows US)
+const NOMINATIM_VIEWBOX = 'viewbox=-26,51,-4,70&bounded=0';
+
+const CAT_COLOR: Record<string, string> = {
+  food:          '#F59E0B',
+  drink:         '#A78BFA',
+  sightseeing:   '#10B981',
+  transport:     '#60A5FA',
+  accommodation: '#F472B6',
+  lodging:       '#F472B6',
+  hotel:         '#F472B6',
+  activity:      '#F97316',
+  shopping:      '#EC4899',
+  other:         '#94A3B8',
+};
+const CATEGORIES = ['Food', 'Drink', 'Sightseeing', 'Activity', 'Transport',
+                    'Accommodation', 'Shopping', 'Other'];
+
+function catColor(cat: string): string {
+  return CAT_COLOR[cat.toLowerCase()] ?? CAT_COLOR['other'];
+}
+
+/** True if the location string describes a route rather than a single point. */
+function isRoute(loc: string): boolean {
+  return !!loc && (loc.includes(' to ') || loc.includes('→'));
+}
+
+function isBlankLoc(loc: string): boolean { return !loc; }
+
+/** Parse "A to B" or "A → B" into [A, B]. Works on both location and activity strings. */
+function parseRoute(loc: string): [string, string] | null {
+  if (loc.includes('→')) {
+    const p = loc.split('→').map(s => s.trim());
+    return p.length === 2 ? [p[0], p[1]] : null;
+  }
+  if (loc.includes(' to ')) {
+    const i = loc.indexOf(' to ');
+    return [loc.slice(0, i).trim(), loc.slice(i + 4).trim()];
+  }
+  return null;
+}
+
+/**
+ * Returns the route string for a transport item.
+ * Prefers location if it's a route; falls back to activity (e.g. "Drive A → B").
+ * Returns null if neither contains a parseable route.
+ */
+function resolveRouteString(item: { location: string; activity: string; category: string }): string | null {
+  if (isRoute(item.location)) return item.location;
+  if (item.category.toLowerCase() === 'transport' && isRoute(item.activity)) return item.activity;
+  return null;
+}
+
+
+function itinPinIcon(color: string, num?: number): L.DivIcon {
+  const hasNum  = num !== undefined;
+  const radius  = hasNum ? 5.5 : 4.5;
+  const fSize   = (num ?? 0) > 9 ? 6.5 : 8;
+  const numSvg  = hasNum
+    ? `<text x="12" y="12" text-anchor="middle" dominant-baseline="central"
+             font-family="Nunito,sans-serif" font-size="${fSize}" font-weight="800"
+             fill="${color}">${num}</text>`
+    : '';
+  return L.divIcon({
+    className: '',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 20 12 20S24 21 24 12C24 5.37 18.63 0 12 0z"
+        fill="${color}" stroke="white" stroke-width="1.5"/>
+      <circle cx="12" cy="12" r="${radius}" fill="white" opacity="${hasNum ? '1' : '0.85'}"/>
+      ${numSvg}
+    </svg>`,
+    iconSize: [24, 32], iconAnchor: [12, 32], popupAnchor: [0, -34],
+  });
+}
+
+function accomPinIcon(color: string): L.DivIcon {
+  return L.divIcon({
+    className: '',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="30" viewBox="0 0 28 30">
+      <path d="M14 1 L1 13 L4 13 L4 29 L24 29 L24 13 L27 13 Z"
+        fill="${color}" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+      <rect x="11" y="19" width="6" height="10" fill="white" opacity="0.9" rx="1"/>
+    </svg>`,
+    iconSize: [28, 30], iconAnchor: [14, 30], popupAnchor: [0, -32],
+  });
+}
+
+function flightPinIcon(): L.DivIcon {
+  return L.divIcon({
+    className: '',
+    html: `<div style="font-size:16px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))">✈️</div>`,
+    iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -12],
+  });
+}
+
+function customPinIcon(color: string): L.DivIcon {
+  return L.divIcon({
+    className: '',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+      <polygon points="14,2 17.5,10.5 27,11.5 20,18 22,27 14,22.5 6,27 8,18 1,11.5 10.5,10.5"
+        fill="${color}" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>`,
+    iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -16],
+  });
+}
+
+
+@Component({
+  selector: 'app-map',
+  imports: [CommonModule, FormsModule],
+  templateUrl: './map.component.html',
+  styleUrl: './map.component.scss',
+})
+export class MapComponent implements AfterViewInit, OnDestroy {
+  private dataService = inject(DataService);
+  private userService = inject(UserService);
+  private ngZone      = inject(NgZone);
+  private firestore   = inject(Firestore);
+
+  currentUser  = this.userService.currentUser;
+  showAll      = signal(false);
+  selectedDay  = signal<string | null>(null);
+  loading      = signal(true);
+  geocodedCount  = signal(0);
+  totalLocations = signal(0);
+  mapReady  = signal(false);
+  updating  = signal(false);
+
+  categories = CATEGORIES;
+
+  availableDays = computed(() => {
+    const data     = this.dataService.data();
+    const userName = this.currentUser()?.name ?? '';
+    if (!data) return [];
+    const items = this.showAll()
+      ? data.itinerary
+      : data.itinerary.filter(i => this.matches(i.forWho, userName));
+    const seen = new Set<string>();
+    const days: { date: string; label: string }[] = [];
+    for (const item of items) {
+      if (!isBlankLoc(item.location) && !seen.has(item.date)) {
+        seen.add(item.date);
+        days.push({ date: item.date, label: item.dayLabel });
+      }
+    }
+    return days;
+  });
+
+  tripUsers = computed((): TripUser[] => this.dataService.data()?.users ?? []);
+
+  // ── Add-pin form ─────────────────────────────────────────────────────────────
+  showAddForm  = signal(false);
+  addSearching = signal(false);
+  addError     = signal('');
+  addForm = { address: '', name: '', category: 'Sightseeing', notes: '' };
+  addForWhoMap: Record<string, boolean> = {};
+
+  private map: L.Map | null = null;
+  private flightLayer = L.layerGroup();
+  private routeLayer  = L.layerGroup();
+  private accomLayer  = L.layerGroup();
+  private itinLayer   = L.layerGroup();
+  private customLayer = L.layerGroup();
+
+  private geocodedLocations = new Map<string, { lat: number; lng: number }>();
+  // Only successful geocodes are stored here (no null caching)
+  private geocache: Record<string, { lat: number; lng: number }> = {};
+  private destroyed     = false;
+  private geocodingBusy = false;
+
+  constructor() {
+    effect(() => {
+      if (!this.mapReady()) return;
+      this.dataService.data();
+      this.showAll();
+      this.selectedDay();
+      this.ngZone.runOutsideAngular(() => this.geocodeNewAndUpdateAll());
+    });
+  }
+
+  ngAfterViewInit(): void {
+    this.ngZone.runOutsideAngular(() => this.boot());
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    this.map?.remove();
+    this.map = null;
+  }
+
+  setScope(all: boolean): void { this.showAll.set(all); this.selectedDay.set(null); }
+  setDay(date: string | null): void { this.selectedDay.set(date); }
+
+  openAddForm(): void {
+    this.addForm = { address: '', name: '', category: 'Sightseeing', notes: '' };
+    this.addForWhoMap = {};
+    for (const u of this.tripUsers()) this.addForWhoMap[u.name] = true;
+    this.addError.set('');
+    this.showAddForm.set(true);
+  }
+  closeAddForm(): void { this.showAddForm.set(false); }
+  isAllForWho(): boolean { return this.tripUsers().every(u => this.addForWhoMap[u.name]); }
+  toggleAllForWho(): void {
+    const all = this.isAllForWho();
+    for (const u of this.tripUsers()) this.addForWhoMap[u.name] = !all;
+  }
+
+  async savePin(): Promise<void> {
+    if (!this.addForm.address || !this.addForm.name) return;
+    this.addSearching.set(true);
+    this.addError.set('');
+    const coords = await this.geocodeWithFallback(this.addForm.address);
+    this.addSearching.set(false);
+    if (!coords) { this.addError.set('Location not found — try a more specific address.'); return; }
+
+    const selected = this.tripUsers().filter(u => this.addForWhoMap[u.name]).map(u => u.name);
+    this.dataService.addMapPin({
+      id:       crypto.randomUUID(),
+      name:     this.addForm.name,
+      lat:      coords.lat,
+      lng:      coords.lng,
+      category: this.addForm.category,
+      notes:    this.addForm.notes || undefined,
+      addedBy:  this.currentUser()?.name ?? '',
+      forWho:   selected.length === this.tripUsers().length ? 'All' : selected.join(', '),
+    });
+    this.showAddForm.set(false);
+    this.ngZone.runOutsideAngular(() => {
+      if (this.map) this.map.setView([coords.lat, coords.lng], 14);
+    });
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────────────────────
+
+  private async boot(): Promise<void> {
+    const el = document.getElementById('trip-map');
+    if (!el) return;
+    this.map = L.map(el, { zoomControl: true }).setView([53.8, -7.8], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+      maxZoom: 18,
+    }).addTo(this.map);
+    this.flightLayer.addTo(this.map);
+    this.routeLayer.addTo(this.map);
+    this.accomLayer.addTo(this.map);
+    this.itinLayer.addTo(this.map);
+    this.customLayer.addTo(this.map);
+
+    await this.waitForData();
+    if (this.destroyed) return;
+    this.loadCache();
+    await this.loadFirestoreCache();
+    await this.geocodeInitial();
+    if (this.destroyed) return;
+    this.ngZone.run(() => this.mapReady.set(true));
+  }
+
+  private waitForData(): Promise<void> {
+    return new Promise(resolve => {
+      const check = () => {
+        if (this.destroyed || this.dataService.data()) { resolve(); return; }
+        setTimeout(check, 150);
+      };
+      check();
+    });
+  }
+
+  // ── Geocoding ─────────────────────────────────────────────────────────────────
+
+  private loadCache(): void {
+    // Bust stale cache when geocoding strategy changes
+    if (localStorage.getItem(GEOCACHE_VERSION_KEY) !== GEOCACHE_VERSION) {
+      localStorage.removeItem(GEOCACHE_KEY);
+      localStorage.setItem(GEOCACHE_VERSION_KEY, GEOCACHE_VERSION);
+    }
+    try {
+      const raw = localStorage.getItem(GEOCACHE_KEY);
+      this.geocache = raw ? JSON.parse(raw) : {};
+    } catch { this.geocache = {}; }
+    for (const [loc, coords] of Object.entries(this.geocache)) {
+      this.geocodedLocations.set(loc, coords);
+    }
+  }
+
+  private saveCache(): void {
+    localStorage.setItem(GEOCACHE_KEY, JSON.stringify(this.geocache));
+  }
+
+  /** Pull the shared geocache from Firestore. One read per session;
+   *  any locations already resolved by another user are used immediately,
+   *  cutting Nominatim calls to near-zero after the first full load. */
+  private async loadFirestoreCache(): Promise<void> {
+    try {
+      const snap = await getDoc(doc(this.firestore, 'geocache', 'trip_locations'));
+      if (!snap.exists()) return;
+      const entries = snap.data()['entries'] as Record<string, { lat: number; lng: number }> ?? {};
+      let addedNew = false;
+      for (const [loc, coords] of Object.entries(entries)) {
+        if (!this.geocache[loc]) {
+          this.geocache[loc] = coords;
+          this.geocodedLocations.set(loc, coords);
+          addedNew = true;
+        }
+      }
+      if (addedNew) this.saveCache(); // keep localStorage in sync
+    } catch { /* offline or permission error — fall back to local cache */ }
+  }
+
+  /** Write a single newly-resolved coordinate to the shared Firestore cache.
+   *  Fire-and-forget; failures are silently ignored. */
+  private saveToFirestoreCache(location: string, coords: { lat: number; lng: number }): void {
+    setDoc(
+      doc(this.firestore, 'geocache', 'trip_locations'),
+      { entries: { [location]: coords } },
+      { merge: true },
+    ).catch(() => { /* ignore write failures */ });
+  }
+
+  private async fetchGeocode(query: string): Promise<{ lat: number; lng: number } | null> {
+    try {
+      const url  = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en&${NOMINATIM_VIEWBOX}`;
+      const res  = await fetch(url);
+      const data = await res.json();
+      return data[0] ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
+    } catch { return null; }
+  }
+
+  /**
+   * Tries multiple simplified forms of `location` until one geocodes:
+   * 1. Strip parenthetical codes like (DUB), (RDU)
+   * 2. Last 2 comma parts (city, country)
+   * 3. Last 1 comma part (city)
+   * Caches successful result under the original key.
+   */
+  private async geocodeWithFallback(location: string): Promise<{ lat: number; lng: number } | null> {
+    if (this.geocache[location]) return this.geocache[location];
+
+    const cleaned = location.replace(/\s*\([A-Z0-9]{2,5}\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+    const parts   = cleaned.split(',').map(s => s.trim()).filter(Boolean);
+    const attempts = [cleaned];
+    if (parts.length >= 3) attempts.push(parts.slice(-2).join(', '));
+    if (parts.length >= 2) attempts.push(parts[parts.length - 1]);
+
+    for (let i = 0; i < attempts.length; i++) {
+      if (i > 0) await new Promise(r => setTimeout(r, 1100));
+      const coords = await this.fetchGeocode(attempts[i]);
+      if (coords) {
+        this.geocache[location] = coords;
+        this.geocodedLocations.set(location, coords);
+        this.saveCache();
+        this.saveToFirestoreCache(location, coords); // share with all users
+        return coords;
+      }
+    }
+    return null;
+  }
+
+  /** Collect every unique location string we need to geocode. */
+  private allNeededLocations(): string[] {
+    const data = this.dataService.data();
+    if (!data) return [];
+    const set = new Set<string>();
+
+    // Itinerary: single-place items
+    for (const i of data.itinerary) {
+      if (!isBlankLoc(i.location) && !resolveRouteString(i)) set.add(i.location);
+    }
+    // Itinerary: route endpoints
+    for (const i of data.itinerary) {
+      const routeStr = resolveRouteString(i);
+      if (routeStr) {
+        const r = parseRoute(routeStr);
+        if (r) { set.add(r[0]); set.add(r[1]); }
+      }
+    }
+    // Accommodations
+    for (const a of data.accommodations ?? []) {
+      if (a.address) set.add(a.address);
+    }
+    // Flights: departure and arrival airports
+    for (const f of data.flights ?? []) {
+      if (f.from) set.add(f.from);
+      if (f.to)   set.add(f.to);
+    }
+    return [...set];
+  }
+
+  private async geocodeInitial(): Promise<void> {
+    const locs    = this.allNeededLocations();
+    const toFetch = locs.filter(l => !this.geocache[l]);
+    this.ngZone.run(() => {
+      this.totalLocations.set(locs.length);
+      this.geocodedCount.set(locs.length - toFetch.length);
+      this.loading.set(false);
+    });
+    for (const loc of locs) {
+      if (this.destroyed) return;
+      const wasCached = !!this.geocache[loc];
+      if (!wasCached) {
+        await this.geocodeWithFallback(loc);
+        this.ngZone.run(() => this.geocodedCount.update(n => n + 1));
+        await new Promise(r => setTimeout(r, 1100));
+      }
+    }
+  }
+
+  private async geocodeNewAndUpdateAll(): Promise<void> {
+    if (this.geocodingBusy) { this.updateAll(); return; }
+    this.geocodingBusy = true;
+    this.ngZone.run(() => this.updating.set(true));
+    try {
+      const newLocs = this.allNeededLocations().filter(l => !this.geocodedLocations.has(l));
+      for (const loc of newLocs) {
+        if (this.destroyed) return;
+        await this.geocodeWithFallback(loc);
+        await new Promise(r => setTimeout(r, 1100));
+      }
+    } finally {
+      this.geocodingBusy = false;
+      this.updateAll();
+      this.ngZone.run(() => this.updating.set(false));
+    }
+  }
+
+  // ── Rendering ─────────────────────────────────────────────────────────────────
+
+  private matches(forWho: string, userName: string): boolean {
+    return forWho === 'All' || forWho.split(',').map(s => s.trim()).includes(userName);
+  }
+
+  private formatDate(d: string): string {
+    if (!d) return '';
+    return new Date(d + 'T00:00').toLocaleDateString('en-IE', {
+      weekday: 'short', month: 'short', day: 'numeric',
+    });
+  }
+
+  private updateAll(): void {
+    this.updateFlightMarkers();
+    this.updateItinMarkers();
+    this.updateRouteLines();
+    this.updateAccomMarkers();
+    this.updateCustomMarkers();
+  }
+
+  private updateFlightMarkers(): void {
+    if (!this.map) return;
+    this.flightLayer.clearLayers();
+    const data     = this.dataService.data();
+    const userName = this.currentUser()?.name ?? '';
+    const day      = this.selectedDay();
+    if (!data) return;
+
+    const flights: Flight[] = (data.flights ?? []).filter(f => {
+      if (!this.showAll() && f.person !== userName) return false;
+      if (day && f.departureDate !== day && f.arrivalDate !== day) return false;
+      return true;
+    });
+
+    // Group by unique route to avoid drawing duplicate lines for shared flights
+    const drawnRoutes = new Set<string>();
+
+    for (const flight of flights) {
+      const fromCoords = this.geocodedLocations.get(flight.from);
+      const toCoords   = this.geocodedLocations.get(flight.to);
+      if (!fromCoords || !toCoords) continue;
+
+      const routeKey = `${flight.from}→${flight.to}`;
+
+      if (!drawnRoutes.has(routeKey)) {
+        drawnRoutes.add(routeKey);
+        const from: [number, number] = [fromCoords.lat, fromCoords.lng];
+        const to:   [number, number] = [toCoords.lat,   toCoords.lng];
+        L.polyline([from, to], {
+          color: '#94A3B8', weight: 1.5, dashArray: '3 7', opacity: 0.55,
+        }).addTo(this.flightLayer);
+      }
+
+      // Pin at arrival airport with full flight details
+      const popup = `
+        <div style="min-width:180px;max-width:230px;font-family:'Nunito',sans-serif;">
+          <div style="font-weight:800;font-size:13px;margin-bottom:6px;color:#1a4a2e;
+                      padding-bottom:5px;border-bottom:2px solid #94A3B8;">
+            ✈️ ${flight.airline} ${flight.flightNumber}
+          </div>
+          <div style="font-size:11px;color:#555;line-height:1.6;">
+            <b>From:</b> ${flight.from}<br>
+            <b>To:</b> ${flight.to}<br>
+            <b>Departs:</b> ${this.formatDate(flight.departureDate)} ${flight.departureTime}<br>
+            <b>Arrives:</b> ${this.formatDate(flight.arrivalDate)} ${flight.arrivalTime}
+          </div>
+          ${flight.notes ? `<div style="font-size:11px;color:#888;margin-top:4px;">${flight.notes}</div>` : ''}
+        </div>`;
+
+      if (toCoords) {
+        L.marker([toCoords.lat, toCoords.lng], { icon: flightPinIcon() })
+          .bindPopup(popup, { maxWidth: 240 })
+          .addTo(this.flightLayer);
+      }
+    }
+  }
+
+  private updateItinMarkers(): void {
+    if (!this.map) return;
+    this.itinLayer.clearLayers();
+    const data      = this.dataService.data();
+    const userName  = this.currentUser()?.name ?? '';
+    const day       = this.selectedDay();
+
+    const myTrip = !this.showAll();
+
+    const items: ItineraryItem[] = (data?.itinerary ?? []).filter(item => {
+      if (isBlankLoc(item.location)) return false;
+      if (day && item.date !== day) return false;
+      // My Trip always filters by forWho regardless of whether a day is selected.
+      if (myTrip && !this.matches(item.forWho, userName)) return false;
+      return true;
+    });
+
+    // When a day is selected, assign sequential numbers (1, 2, 3…) to each
+    // unique pin location in the order they first appear in the itinerary.
+    const locationOrder = new Map<string, number>();
+    if (day) {
+      let counter = 1;
+      for (const item of items) {
+        const routeStr = resolveRouteString(item);
+        const pinLoc   = routeStr ? (parseRoute(routeStr)?.[1] ?? null) : item.location;
+        if (pinLoc && !locationOrder.has(pinLoc)) locationOrder.set(pinLoc, counter++);
+      }
+    }
+
+    const byLoc = new Map<string, ItineraryItem[]>();
+    for (const item of items) {
+      const routeStr = resolveRouteString(item);
+      if (routeStr) {
+        // Pin at the destination (TO part of the route)
+        const parsed = parseRoute(routeStr);
+        const pinLoc = parsed ? parsed[1] : null;
+        if (!pinLoc) continue;
+        const arr = byLoc.get(pinLoc);
+        if (arr) arr.push(item); else byLoc.set(pinLoc, [item]);
+      } else {
+        const arr = byLoc.get(item.location);
+        if (arr) arr.push(item); else byLoc.set(item.location, [item]);
+      }
+    }
+
+    const bounds: [number, number][] = [];
+    for (const [location, locItems] of byLoc) {
+      const coords = this.geocodedLocations.get(location);
+      if (!coords) continue;
+
+      const rows = locItems.map(it => `
+        <div style="margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid #eee;">
+          <div style="font-size:11px;color:#888;margin-bottom:2px;">
+            ${this.formatDate(it.date)}${it.time ? ' · ' + it.time : ''}
+          </div>
+          <div style="font-weight:700;font-size:13px;line-height:1.3;">${it.activity}</div>
+          ${it.notes ? `<div style="font-size:11px;color:#666;margin-top:2px;">${it.notes}</div>` : ''}
+        </div>`).join('');
+
+      const num = day ? locationOrder.get(location) : undefined;
+      L.marker([coords.lat, coords.lng], { icon: itinPinIcon(catColor(locItems[0]?.category ?? ''), num) })
+        .bindPopup(`
+          <div style="min-width:190px;max-width:250px;font-family:'Nunito',sans-serif;">
+            <div style="font-weight:800;font-size:13px;margin-bottom:8px;color:#1a4a2e;
+                        padding-bottom:6px;border-bottom:2px solid #88C9A1;">📍 ${location}</div>
+            ${rows}
+          </div>`, { maxWidth: 260 })
+        .addTo(this.itinLayer);
+      bounds.push([coords.lat, coords.lng]);
+    }
+    this.fitBoundsIfNeeded(bounds);
+  }
+
+  private updateRouteLines(): void {
+    if (!this.map) return;
+    // Route lines replaced by numbered pins — nothing to draw.
+    this.routeLayer.clearLayers();
+  }
+
+  private updateAccomMarkers(): void {
+    if (!this.map) return;
+    this.accomLayer.clearLayers();
+    const data     = this.dataService.data();
+    const userName = this.currentUser()?.name ?? '';
+    if (!data) return;
+
+    const day = this.selectedDay();
+    const accoms = (data.accommodations ?? []).filter(a => {
+      if (!this.showAll() && !this.matches(a.forWho, userName)) return false;
+      if (day && !(a.checkIn <= day && day < a.checkOut)) return false;
+      return true;
+    });
+
+    for (const acc of accoms) {
+      if (!acc.address) continue;
+      const coords = this.geocodedLocations.get(acc.address);
+      if (!coords) continue;
+
+      const popup = `
+        <div style="min-width:180px;max-width:230px;font-family:'Nunito',sans-serif;">
+          <div style="font-weight:800;font-size:13px;margin-bottom:6px;color:#1a4a2e;
+                      padding-bottom:5px;border-bottom:2px solid #F472B6;">
+            🏠 ${acc.name}
+          </div>
+          <div style="font-size:11px;color:#888;">
+            Check-in: ${this.formatDate(acc.checkIn)}<br>
+            Check-out: ${this.formatDate(acc.checkOut)}
+          </div>
+          ${acc.bookingRef ? `<div style="font-size:11px;color:#666;margin-top:4px;">Ref: ${acc.bookingRef}</div>` : ''}
+          ${acc.notes ? `<div style="font-size:11px;color:#666;margin-top:4px;">${acc.notes}</div>` : ''}
+        </div>`;
+
+      L.marker([coords.lat, coords.lng], { icon: accomPinIcon('#F472B6') })
+        .bindPopup(popup, { maxWidth: 240 })
+        .addTo(this.accomLayer);
+    }
+  }
+
+  private updateCustomMarkers(): void {
+    if (!this.map) return;
+    this.customLayer.clearLayers();
+    const data     = this.dataService.data();
+    const userName = this.currentUser()?.name ?? '';
+    const users    = data?.users ?? [];
+    const pins     = (data?.mapPins ?? []).filter(p =>
+      this.showAll() || this.matches(p.forWho, userName)
+    );
+
+    for (const pin of pins) {
+      const adderColor = users.find(u => u.name === pin.addedBy)?.color ?? '#88C9A1';
+      const popupId    = `del-pin-${pin.id}`;
+      const canDelete  = pin.addedBy === userName;
+
+      const popup = `
+        <div style="min-width:180px;max-width:230px;font-family:'Nunito',sans-serif;">
+          <div style="font-weight:800;font-size:13px;margin-bottom:6px;color:#1a4a2e;
+                      padding-bottom:6px;border-bottom:2px solid ${adderColor};">
+            ⭐ ${pin.name}
+          </div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px;">
+            ${pin.category}${pin.addedBy ? ' · Added by ' + pin.addedBy : ''}
+          </div>
+          ${pin.notes ? `<div style="font-size:12px;color:#555;margin-bottom:6px;">${pin.notes}</div>` : ''}
+          ${canDelete
+            ? `<button id="${popupId}" style="background:#fee2e2;border:none;border-radius:6px;
+                padding:4px 10px;font-size:11px;font-weight:700;color:#991b1b;cursor:pointer;
+                font-family:'Nunito',sans-serif;">Remove pin</button>`
+            : ''}
+        </div>`;
+
+      const marker = L.marker([pin.lat, pin.lng], { icon: customPinIcon(adderColor) })
+        .bindPopup(popup, { maxWidth: 250 });
+      if (canDelete) {
+        marker.on('popupopen', () => {
+          document.getElementById(popupId)?.addEventListener('click', () => {
+            this.ngZone.run(() => this.dataService.removeMapPin(pin.id));
+            marker.closePopup();
+          });
+        });
+      }
+      marker.addTo(this.customLayer);
+    }
+  }
+
+  private fitBoundsIfNeeded(bounds: [number, number][]): void {
+    if (!this.map) return;
+    if (bounds.length > 1)
+      this.map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
+    else if (bounds.length === 1)
+      this.map.setView(bounds[0], 13);
+  }
+}

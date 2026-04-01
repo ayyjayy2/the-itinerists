@@ -1,0 +1,46 @@
+<div class="page-container">
+
+  <!-- Hero greeting -->
+  <div class="hero-card card">
+    <div class="hero-left">
+      @if (currentUser()) {
+        <div class="hero-avatar" [style.background]="currentUser()!.color">
+          {{ currentUser()!.avatarEmoji }}
+        </div>
+      }
+      <div>
+        <h1>Hey, {{ currentUser()?.name ?? 'traveller' }}! 👋</h1>
+        <p>Ready for Ireland?</p>
+      </div>
+    </div>
+    <div class="countdown-badge" [class.live]="countdown().type === 'live'" [class.done]="countdown().type === 'done'">
+      {{ flightCountdownLabel() || countdown().label }}
+    </div>
+  </div>
+
+  <!-- Stale banner -->
+  @if (isStale()) {
+    <div class="stale-banner">
+      ⚠️ Showing cached data
+      <button (click)="refresh()">Refresh</button>
+    </div>
+  }
+
+  <!-- Quick links grid -->
+  <div class="section-title">
+    <h2>Quick Access</h2>
+    @if (isLoading()) { <div class="spinner"></div> }
+  </div>
+
+  <div class="links-grid">
+    @for (link of quickLinks; track link.path) {
+      <a class="link-card" [routerLink]="link.path" [style.--card-accent]="link.color">
+        <span class="link-icon">{{ link.icon }}</span>
+        <span class="link-label">{{ link.label }}</span>
+        <span class="link-desc">{{ link.description }}</span>
+      </a>
+    }
+  </div>
+
+
+</div>

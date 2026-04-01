@@ -1,0 +1,95 @@
+<!-- Full-screen user select: no chrome -->
+@if (isSelectUserPage()) {
+  <router-outlet />
+} @else {
+  <div class="app-shell">
+
+    <!-- ── Sidebar (desktop persistent / mobile drawer) ── -->
+    <nav class="sidebar" [class.open]="sidebarOpen" [class.collapsed]="navCollapsed">
+      <div class="sidebar-inner">
+      <div class="sidebar-brand">
+        <span class="brand-flag">🍀</span>
+        <span class="brand-text">Ireland Trip</span>
+      </div>
+
+      <div class="sidebar-nav">
+        @for (item of navItems; track item.path) {
+          <a
+            class="nav-item"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [title]="navCollapsed ? item.label : ''"
+            (click)="closeSidebar()"
+          >
+            <span class="nav-icon">{{ item.icon }}</span>
+            <span class="nav-label">{{ item.label }}</span>
+          </a>
+        }
+      </div>
+
+      <div class="sidebar-footer">
+        <!-- Desktop collapse toggle -->
+        <button class="collapse-btn" (click)="toggleCollapse()" [title]="navCollapsed ? 'Expand menu' : 'Collapse menu'">
+          <span class="collapse-icon">{{ navCollapsed ? '›' : '‹' }}</span>
+          <span class="collapse-label">Collapse</span>
+        </button>
+
+        <button class="sidebar-refresh" (click)="hardRefresh()" [title]="navCollapsed ? 'Refresh' : ''">
+          <span class="sidebar-refresh-icon">↻</span>
+          <span class="sidebar-refresh-label">Refresh</span>
+        </button>
+
+        <div class="sidebar-version">🍀 Layn's Leaf {{ version }}<br><span class="sidebar-build-date">{{ buildDate }}</span></div>
+
+        @if (currentUser()) {
+          <div class="sidebar-user" (click)="switchUser()" [title]="navCollapsed ? currentUser()!.name : ''">
+            <div class="avatar" [style.background]="currentUser()!.color">
+              {{ currentUser()!.avatarEmoji }}
+            </div>
+            <div class="user-info">
+              <span class="user-name">{{ currentUser()!.name }}</span>
+              <span class="user-switch">Tap to switch</span>
+            </div>
+          </div>
+        }
+      </div>
+      </div><!-- /.sidebar-inner -->
+    </nav>
+
+    <!-- Mobile sidebar overlay -->
+    @if (sidebarOpen) {
+      <div class="sidebar-overlay" (click)="closeSidebar()"></div>
+    }
+
+    <!-- ── Main content area ── -->
+    <div class="main-area">
+      <header class="app-header">
+        <button class="menu-btn" (click)="toggleSidebar()" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+
+        <a class="header-title" routerLink="/home">
+          <span>🍀</span>
+          <span>Ireland</span>
+        </a>
+
+        <div class="header-right">
+          <button class="refresh-btn" (click)="hardRefresh()" title="Hard refresh">↻</button>
+          @if (currentUser()) {
+            <button class="user-chip" (click)="switchUser()">
+              <div class="avatar-sm" [style.background]="currentUser()!.color">
+                {{ currentUser()!.avatarEmoji }}
+              </div>
+              <span class="chip-name">{{ currentUser()!.name }}</span>
+            </button>
+          }
+        </div>
+      </header>
+
+      <main class="page-content">
+        <router-outlet />
+      </main>
+    </div>
+
+  </div>
+}

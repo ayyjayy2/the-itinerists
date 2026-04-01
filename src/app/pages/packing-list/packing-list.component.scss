@@ -1,0 +1,247 @@
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.pack-stats {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.packing-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  background: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &.active {
+    background: var(--card-bg);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+}
+
+.category-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.1rem;
+  align-items: center;
+
+  &::-webkit-scrollbar { display: none; }
+
+  .chip {
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+.new-cat-chip {
+  border-style: dashed;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.new-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.new-cat-input {
+  width: 130px;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.add-item-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+
+  input { flex: 1; min-width: 0; }
+
+  .cat-select {
+    flex-shrink: 0;
+    max-width: 120px;
+    font-size: 0.85rem;
+  }
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.packing-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--card-bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+
+  &.packed {
+    opacity: 0.6;
+    .item-label { text-decoration: line-through; }
+  }
+}
+
+.check-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.check-circle {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  transition: all 0.15s;
+
+  &.packed {
+    background: var(--primary);
+    border-color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.item-label {
+  flex: 1;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.item-category {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 0.1rem 0.4rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 0.2rem;
+  opacity: 0.5;
+  flex-shrink: 0;
+
+  &:hover { opacity: 1; color: #c0392b; }
+}
+
+.packed-header {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0.75rem 0 0.4rem;
+}
+
+// Suggestions
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.suggestion-card {
+  padding: 1rem;
+}
+
+.sug-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+
+  .sug-from { font-weight: 700; font-size: 0.85rem; }
+  .sug-date { font-size: 0.78rem; color: var(--text-muted); }
+}
+
+.sug-item {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.sug-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+// Send form
+.send-form {
+  h3 { margin-bottom: 0.35rem; }
+  .send-hint { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+}

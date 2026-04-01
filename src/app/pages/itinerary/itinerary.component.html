@@ -1,0 +1,259 @@
+<div class="page-container">
+
+  <!-- ── Header: title + List / Calendar ── -->
+  <div class="page-header">
+    <h2>📅 Itinerary</h2>
+    <div class="view-toggle">
+      <button class="btn btn-sm" [class.btn-primary]="view() === 'list'"     [class.btn-ghost]="view() !== 'list'"     (click)="setView('list')">List</button>
+      <button class="btn btn-sm" [class.btn-primary]="view() === 'calendar'" [class.btn-ghost]="view() !== 'calendar'" (click)="setView('calendar')">Calendar</button>
+    </div>
+  </div>
+
+  @if (dataService.loading()) {
+    <div class="loading-overlay"><div class="spinner"></div><p>Loading itinerary…</p></div>
+  } @else if (dataService.isStale()) {
+    <div class="stale-banner">⚠️ Offline — cached data <button (click)="refresh()">Retry</button></div>
+  }
+
+  <!-- ── Scope tabs: child of each view ── -->
+  <div class="scope-tabs">
+    <button [class.active]="!showAll()" (click)="showAll.set(false)">My Trip</button>
+    <button [class.active]="showAll()"  (click)="showAll.set(true)">All</button>
+  </div>
+
+  <!-- Day filter chips -->
+  <div class="filter-chips">
+    <button class="chip" [class.chip-primary]="selectedDate() === 'All'" (click)="setDate('All')">All Days</button>
+    @for (date of visibleDates(); track date) {
+      <button class="chip" [class.chip-primary]="selectedDate() === date" (click)="setDate(date)">
+        {{ dayLabels()[date] || date }}
+      </button>
+    }
+  </div>
+
+  <!-- ── List View ── -->
+  @if (view() === 'list') {
+    @if (groupedByDay().length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">📅</span>
+        <p>No items to show. Switch to <strong>All</strong> or select a different day.</p>
+      </div>
+    } @else {
+      @for (group of groupedByDay(); track group[0]) {
+        <div class="day-group">
+
+          <div class="day-header">
+            <div class="day-header-row">
+              <h3>{{ dayLabels()[group[0]] || group[0] }}</h3>
+              <span class="day-date">{{ formatDate(group[0]) }}</span>
+            </div>
+            @if (liveWeatherByDate()[group[0]]; as w) {
+              <div class="day-weather">{{ weatherEmoji(w.code) }} {{ w.minF }}–{{ w.maxF }}°F · {{ w.city }} <span class="live-badge">live</span></div>
+            } @else if (weatherByDate()[group[0]]) {
+              <div class="day-weather">🌡️ {{ weatherByDate()[group[0]] }}</div>
+            }
+          </div>
+
+          <div class="items-list"
+               cdkDropList
+               [cdkDropListData]="group[1]"
+               (cdkDropListDropped)="onDrop($event, group[0])">
+            @for (item of group[1]; track item.date + item.activity) {
+
+              <div class="itinerary-item card" cdkDrag [cdkDragDisabled]="isEditing(item)" [class.editing]="isEditing(item)">
+
+                @if (!isEditing(item)) {
+                  <!-- ── Display mode ── -->
+                  <div class="drag-handle" cdkDragHandle title="Drag to reorder">⠿</div>
+                  <div class="item-left">
+                    @if (item.time) {
+                      <span class="item-time">{{ item.time }}</span>
+                      @if (item.endTime) {
+                        <span class="item-time item-time-end">– {{ item.endTime }}</span>
+                      }
+                    }
+                    <span class="item-dot" [style.background]="categoryColor(item.category)"></span>
+                  </div>
+
+                  <div class="item-body">
+                    <div class="item-title">{{ item.activity }}</div>
+                    @if (item.location) {
+                      <div class="item-location">📍 {{ item.location }}</div>
+                    }
+                    @if (item.notes) {
+                      <div class="item-notes">{{ item.notes }}</div>
+                    }
+                  </div>
+
+                  <div class="item-right">
+                    <div class="item-tags">
+                      @if (item.category) {
+                        <span class="chip chip-muted">{{ item.category }}</span>
+                      }
+                      @if (item.forWho !== 'All') {
+                        <span class="chip chip-highlight">{{ item.forWho }}</span>
+                      }
+                    </div>
+                    <button class="edit-btn" (click)="startEdit(item)" title="Edit">✏️</button>
+                  </div>
+
+                } @else {
+                  <!-- ── Edit mode ── -->
+                  <div class="edit-form">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>Start time</label>
+                        <input type="time" [(ngModel)]="draft.time" />
+                      </div>
+                      <div class="form-group">
+                        <label>End time</label>
+                        <input type="time" [(ngModel)]="draft.endTime" />
+                      </div>
+                      <div class="form-group">
+                        <label>Category</label>
+                        <select [(ngModel)]="draft.category">
+                          @for (cat of categories; track cat) {
+                            <option [value]="cat">{{ cat }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Activity</label>
+                      <input type="text" [(ngModel)]="draft.activity" />
+                    </div>
+
+                    <div class="form-group">
+                      <label>Location</label>
+                      <input type="text" [(ngModel)]="draft.location" />
+                    </div>
+
+                    <div class="form-group">
+                      <label>Notes</label>
+                      <textarea [(ngModel)]="draft.notes" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                      <label>For Who</label>
+                      <div class="people-picker">
+                        <button type="button" class="people-btn" [class.selected]="isAllForWhoSelected(editForWhoMap)" (click)="toggleAllForWho(editForWhoMap)">All</button>
+                        @for (user of users(); track user.name) {
+                          <button type="button" class="people-btn" [class.selected]="editForWhoMap[user.name]" (click)="editForWhoMap[user.name] = !editForWhoMap[user.name]">
+                            {{ user.avatarEmoji }} {{ user.name }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="edit-actions">
+                      <button class="btn btn-danger btn-sm" (click)="deleteItem(item)">Delete</button>
+                      <span class="actions-spacer"></span>
+                      <button class="btn btn-ghost btn-sm"   (click)="cancelEdit()">Cancel</button>
+                      <button class="btn btn-primary btn-sm" (click)="saveEdit(item)">Save</button>
+                    </div>
+                  </div>
+                }
+
+              </div>
+
+            }
+
+            <!-- ── Add event for this day ── -->
+            @if (addingToDate() === group[0]) {
+              <div class="add-item-card card">
+                <p class="add-form-title">New event · {{ dayLabels()[group[0]] }}</p>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Start time</label>
+                    <input type="time" [(ngModel)]="newDraft.time" />
+                  </div>
+                  <div class="form-group">
+                    <label>End time</label>
+                    <input type="time" [(ngModel)]="newDraft.endTime" />
+                  </div>
+                  <div class="form-group">
+                    <label>Category</label>
+                    <select [(ngModel)]="newDraft.category">
+                      @for (cat of categories; track cat) {
+                        <option [value]="cat">{{ cat }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Activity <span class="required">*</span></label>
+                  <input type="text" [(ngModel)]="newDraft.activity" placeholder="What's happening?" />
+                </div>
+
+                <div class="form-group">
+                  <label>Location</label>
+                  <input type="text" [(ngModel)]="newDraft.location" placeholder="Where?" />
+                </div>
+
+                <div class="form-group">
+                  <label>Notes</label>
+                  <textarea [(ngModel)]="newDraft.notes" rows="2" placeholder="Any details…"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label>For Who</label>
+                  <div class="people-picker">
+                    <button type="button" class="people-btn" [class.selected]="isAllForWhoSelected(addForWhoMap)" (click)="toggleAllForWho(addForWhoMap)">All</button>
+                    @for (user of users(); track user.name) {
+                      <button type="button" class="people-btn" [class.selected]="addForWhoMap[user.name]" (click)="addForWhoMap[user.name] = !addForWhoMap[user.name]">
+                        {{ user.avatarEmoji }} {{ user.name }}
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <div class="edit-actions">
+                  <button class="btn btn-ghost btn-sm" (click)="cancelAdd()">Cancel</button>
+                  <button class="btn btn-primary btn-sm" (click)="saveAdd()">Add Event</button>
+                </div>
+              </div>
+            } @else {
+              <button class="add-day-btn" (click)="startAdd(group[0])">
+                <span>+</span> Add event
+              </button>
+            }
+
+          </div>
+        </div>
+      }
+    }
+  }
+
+  <!-- ── Calendar View ── -->
+  @if (view() === 'calendar') {
+    <div class="calendar-grid">
+      @for (day of calendarDays(); track day.date) {
+        <div class="cal-day" [class.selected]="day.isSelected" (click)="openDay(day.date)">
+          <div class="cal-day-label">{{ day.label }}</div>
+          <div class="cal-day-date">{{ formatDate(day.date) }}</div>
+          @if (liveWeatherByDate()[day.date]; as w) {
+            <div class="cal-weather">{{ weatherEmoji(w.code) }} {{ w.minF }}–{{ w.maxF }}°F · {{ w.city }} <span class="live-badge">live</span></div>
+          } @else if (weatherByDate()[day.date]) {
+            <div class="cal-weather">🌡️ {{ weatherByDate()[day.date] }}</div>
+          }
+          <div class="cal-count">{{ day.items.length }} event{{ day.items.length !== 1 ? 's' : '' }}</div>
+          <div class="cal-preview">
+            @for (item of day.items.slice(0, 3); track item.activity) {
+              <div class="cal-item" [style.background]="categoryColor(item.category)">
+                @if (item.time) { <span class="cal-item-time">{{ item.time }}</span> · }{{ item.activity }}
+              </div>
+            }
+            @if (day.items.length > 3) {
+              <div class="cal-more">+{{ day.items.length - 3 }} more</div>
+            }
+          </div>
+          <div class="cal-edit-hint">Tap to view &amp; edit →</div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

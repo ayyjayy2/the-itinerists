@@ -1,0 +1,79 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>🏨 Accommodations</h2>
+    @if (dataService.isStale()) {
+      <button class="btn btn-ghost btn-sm" (click)="refresh()">↻ Refresh</button>
+    }
+  </div>
+
+  @if (dataService.loading()) {
+    <div class="loading-overlay"><div class="spinner"></div><p>Loading stays…</p></div>
+  } @else if (dataService.isStale()) {
+    <div class="stale-banner">⚠️ Offline — cached data <button (click)="refresh()">Retry</button></div>
+  }
+
+  @if (allAccommodations().length === 0) {
+    <div class="empty-state">
+      <span class="empty-icon">🏨</span>
+      <p>No accommodations yet — add them to your Google Sheet!</p>
+    </div>
+  } @else {
+    <div class="scope-tabs">
+      <button [class.active]="!showAll()" (click)="showAll.set(false)">My Trip</button>
+      <button [class.active]="showAll()"  (click)="showAll.set(true)">All</button>
+    </div>
+
+    @if (displayedAccommodations().length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">🏨</span>
+        <p>No stays for your trip. Switch to <strong>All</strong> to see everyone's accommodations.</p>
+      </div>
+    } @else {
+      <div class="stays-list">
+        @for (stay of displayedAccommodations(); track stay.name) {
+          <div class="stay-card card" [class.mine]="isForMe(stay.forWho)">
+            <div class="stay-header">
+              <div>
+                <h3>{{ stay.name }}</h3>
+                @if (stay.address) {
+                  <p class="stay-address">📍 {{ stay.address }}</p>
+                }
+              </div>
+              <div class="stay-nights">
+                <span class="nights-count">{{ nightsBetween(stay.checkIn, stay.checkOut) }}</span>
+                <span class="nights-label">nights</span>
+              </div>
+            </div>
+
+            <div class="stay-dates">
+              <div class="date-block">
+                <span class="date-label">Check-in</span>
+                <span class="date-value">{{ formatDate(stay.checkIn) }}</span>
+              </div>
+              <div class="date-arrow">→</div>
+              <div class="date-block">
+                <span class="date-label">Check-out</span>
+                <span class="date-value">{{ formatDate(stay.checkOut) }}</span>
+              </div>
+            </div>
+
+            <div class="stay-footer">
+              @if (stay.bookingRef) {
+                <span class="chip chip-muted">Ref: {{ stay.bookingRef }}</span>
+              }
+              @if (stay.forWho !== 'All') {
+                <span class="chip chip-highlight">{{ stay.forWho }}</span>
+              } @else {
+                <span class="chip chip-primary">Everyone</span>
+              }
+            </div>
+
+            @if (stay.notes) {
+              <p class="stay-notes">📌 {{ stay.notes }}</p>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

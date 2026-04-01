@@ -1,0 +1,125 @@
+.hero-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, #f0faf5, #fff9ee);
+}
+
+.hero-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  h1 { font-size: 1.3rem; }
+  p  { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.15rem; }
+}
+
+.hero-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+}
+
+.countdown-badge {
+  background: var(--accent);
+  color: #7a6200;
+  padding: 0.4rem 1rem;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.live { background: var(--primary); color: #1a4a2e; }
+  &.done { background: var(--border);  color: var(--text-muted); }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.85rem;
+}
+
+.link-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 1.1rem;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: all 0.18s;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--card-accent);
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.link-icon {
+  font-size: 1.6rem;
+  margin-bottom: 0.1rem;
+}
+
+.link-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.link-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.map-section-title {
+  margin-top: 1.5rem;
+}
+
+.map-expand-link {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  text-decoration: none;
+  margin-left: auto;
+  &:hover { text-decoration: underline; }
+}
+
+.home-map-wrap {
+  height: 380px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow);
+}

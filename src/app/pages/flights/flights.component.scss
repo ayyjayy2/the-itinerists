@@ -1,0 +1,221 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+// ── Filter bar ────────────────────────────────────────────────────────────────
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.section-tabs {
+  display: flex;
+  background: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+}
+
+.tab {
+  padding: 0.4rem 0.85rem;
+  border: none;
+  background: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  font-family: var(--font);
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  &.active {
+    background: var(--card-bg);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+}
+
+// ── Section headers ────────────────────────────────────────────────────────────
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0.5rem 0.25rem;
+  margin: 1rem 0 0.6rem;
+  border-bottom: 2px solid var(--border);
+
+  .section-icon { font-size: 1.1rem; }
+
+  &.arrivals   { color: var(--primary-dark);  border-color: var(--primary);  }
+  &.departures { color: #9b7400;              border-color: var(--accent-dark); }
+}
+
+// ── Journey card ──────────────────────────────────────────────────────────────
+.journey-card {
+  margin-bottom: 0.85rem;
+  padding: 1rem 1.25rem;
+  transition: box-shadow 0.15s;
+
+  &.mine {
+    border-left: 3px solid var(--primary);
+    background: linear-gradient(135deg, rgba(136,201,161,0.06), #fff);
+  }
+}
+
+.journey-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.journey-group {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  .group-icon { font-size: 1rem; }
+  .group-name { font-weight: 700; font-size: 0.95rem; }
+}
+
+.section-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+  background: var(--primary);
+  color: #1a4a2e;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.dep {
+    background: var(--accent);
+    color: #7a6200;
+  }
+}
+
+// ── Route visualization ────────────────────────────────────────────────────────
+.route {
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.stop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 72px;
+  flex-shrink: 0;
+
+  .iata {
+    font-size: 1.3rem;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 0.35rem;
+  }
+}
+
+.stop-times {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+// Layover stop: add a visual divider between arrival and departure times
+.stop.layover .stop-times {
+  gap: 0.1rem;
+
+  .arr { border-bottom: 1px dashed var(--border); padding-bottom: 0.25rem; margin-bottom: 0.1rem; }
+}
+
+.time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  .t-arrow { font-size: 0.62rem; color: var(--text-muted); line-height: 1; }
+  .t-val   { font-size: 0.82rem; font-weight: 700; line-height: 1.3; }
+  .t-date  { font-size: 0.67rem; color: var(--text-muted); line-height: 1.2; }
+
+  &.arr .t-val { color: var(--primary-dark); }
+  &.dep .t-val { color: var(--text); }
+}
+
+// ── Segment (connecting line between stops) ────────────────────────────────────
+.segment {
+  flex: 1;
+  min-width: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.2rem;
+  padding-top: 0.25rem; // visually align with IATA text
+}
+
+.seg-carrier {
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.25;
+  max-width: 90px;
+}
+
+.seg-line {
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  .seg-plane {
+    font-size: 0.78rem;
+    background: var(--card-bg);
+    padding: 0 3px;
+    line-height: 1;
+  }
+}
+
+.seg-fn {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+// ── Notes ─────────────────────────────────────────────────────────────────────
+.journey-notes {
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+
+.journey-note {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+
+  &:not(:last-child) { margin-bottom: 0.2rem; }
+}

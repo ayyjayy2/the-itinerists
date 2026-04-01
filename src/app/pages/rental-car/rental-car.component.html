@@ -1,0 +1,193 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>🚗 Rental Car</h2>
+    @if (dataService.isStale()) {
+      <button class="btn btn-ghost btn-sm" (click)="refresh()">↻ Refresh</button>
+    }
+  </div>
+
+  @if (dataService.loading()) {
+    <div class="loading-overlay"><div class="spinner"></div><p>Loading rental info…</p></div>
+  } @else if (dataService.isStale()) {
+    <div class="stale-banner">⚠️ Offline — cached data <button (click)="refresh()">Retry</button></div>
+  }
+
+  <!-- Add form toggle -->
+  @if (!showAddForm()) {
+    <button class="btn btn-primary add-btn" (click)="showAddForm.set(true)">+ Add Rental Car</button>
+  } @else {
+    <div class="add-form card">
+      <h3>New Rental Car</h3>
+      <ng-container *ngTemplateOutlet="carFormFields; context: { form: addForm }"></ng-container>
+      <div class="form-actions">
+        <button class="btn btn-ghost" (click)="showAddForm.set(false)">Cancel</button>
+        <button class="btn btn-primary" (click)="addCar()" [disabled]="!addForm.company.trim()">Add</button>
+      </div>
+    </div>
+  }
+
+  @if (cars().length === 0 && !dataService.loading()) {
+    <div class="empty-state">
+      <span class="empty-icon">🚗</span>
+      <p>No rental car info yet — add one above!</p>
+    </div>
+  } @else {
+    @for (car of cars(); track car.confirmationNumber || car.company; let i = $index) {
+
+      @if (editingIndex() === i) {
+        <!-- Inline edit form -->
+        <div class="add-form card">
+          <h3>Edit Rental Car</h3>
+          <ng-container *ngTemplateOutlet="carFormFields; context: { form: editForm }"></ng-container>
+          <div class="form-actions">
+            <button class="btn btn-danger btn-sm" (click)="deleteRentalCar(i)">🗑 Delete</button>
+            <div class="form-actions-right">
+              <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
+              <button class="btn btn-primary" (click)="saveEdit(i)" [disabled]="!editForm.company.trim()">Save</button>
+            </div>
+          </div>
+        </div>
+
+      } @else {
+        <!-- Card view -->
+        <div class="car-card card">
+          <div class="car-header">
+            <div class="car-company">{{ car.company }}</div>
+            <div class="car-header-right">
+              <div class="car-header-chips">
+                @if (car.confirmationNumber) {
+                  <span class="chip chip-accent">Conf: {{ car.confirmationNumber }}</span>
+                }
+                @if (car.location) {
+                  <span class="chip chip-muted">📍 {{ car.location }}</span>
+                }
+              </div>
+              <button class="btn btn-ghost btn-sm edit-btn" (click)="startEdit(i)">✏️ Edit</button>
+            </div>
+          </div>
+
+          @if (car.rentalName || car.passengers) {
+            <div class="car-meta">
+              @if (car.rentalName) {
+                <span class="meta-item"><span class="meta-label">In name of:</span> {{ car.rentalName }}</span>
+              }
+              @if (car.passengers) {
+                <span class="meta-item"><span class="meta-label">Passengers:</span> {{ car.passengers }}</span>
+              }
+            </div>
+          }
+
+          @if (car.platform) {
+            <div class="car-platform">Booked via {{ car.platform }}</div>
+          }
+
+          <div class="journey">
+            <div class="journey-leg">
+              <span class="leg-label">Pick-up</span>
+              <span class="leg-date">{{ formatDate(car.pickupDate) }} {{ car.pickupTime }}</span>
+              <span class="leg-loc">📍 {{ car.pickupLocation }}</span>
+            </div>
+            <div class="journey-arrow">🚗</div>
+            <div class="journey-leg">
+              <span class="leg-label">Drop-off</span>
+              <span class="leg-date">{{ formatDate(car.dropoffDate) }} {{ car.dropoffTime }}</span>
+              <span class="leg-loc">📍 {{ car.dropoffLocation }}</span>
+            </div>
+          </div>
+
+          @if (car.drivers) {
+            <div class="car-drivers">
+              <span class="drivers-label">Drivers:</span>
+              <span>{{ car.drivers }}</span>
+            </div>
+          }
+
+          @if (car.notes) {
+            <p class="car-notes">📌 {{ car.notes }}</p>
+          }
+
+          @if (car.link) {
+            <a class="car-link" [href]="car.link" target="_blank" rel="noopener">🔗 View Booking</a>
+          }
+        </div>
+      }
+    }
+  }
+</div>
+
+<!-- Shared form fields template -->
+<ng-template #carFormFields let-form="form">
+  <div class="form-row">
+    <div class="form-group">
+      <label>Rental Company <span class="required">*</span></label>
+      <input type="text" [(ngModel)]="form.company" placeholder="e.g. Enterprise">
+    </div>
+    <div class="form-group">
+      <label>Confirmation #</label>
+      <input type="text" [(ngModel)]="form.confirmationNumber" placeholder="e.g. ABC123">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Rental In Name Of</label>
+      <input type="text" [(ngModel)]="form.rentalName" placeholder="e.g. Alayna">
+    </div>
+    <div class="form-group">
+      <label>Location / Region</label>
+      <input type="text" [(ngModel)]="form.location" placeholder="e.g. Dublin, Galway">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Passengers</label>
+    <input type="text" [(ngModel)]="form.passengers" placeholder="e.g. Alayna, Dad, Caitlin">
+  </div>
+
+  <div class="form-group">
+    <label>Platform Booked Through</label>
+    <input type="text" [(ngModel)]="form.platform" placeholder="e.g. Expedia, Enterprise.com">
+  </div>
+
+  <div class="form-section-label">Pick-up</div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" [(ngModel)]="form.pickupDate">
+    </div>
+    <div class="form-group">
+      <label>Time</label>
+      <input type="time" [(ngModel)]="form.pickupTime">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Pick-up Location</label>
+    <input type="text" [(ngModel)]="form.pickupLocation" placeholder="e.g. Dublin Airport T1">
+  </div>
+
+  <div class="form-section-label">Drop-off</div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" [(ngModel)]="form.dropoffDate">
+    </div>
+    <div class="form-group">
+      <label>Time</label>
+      <input type="time" [(ngModel)]="form.dropoffTime">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Drop-off Location</label>
+    <input type="text" [(ngModel)]="form.dropoffLocation" placeholder="e.g. Dublin Airport T1">
+  </div>
+
+  <div class="form-group">
+    <label>Notes</label>
+    <textarea [(ngModel)]="form.notes" rows="2" placeholder="e.g. Full coverage insurance included, manual transmission"></textarea>
+  </div>
+
+  <div class="form-group">
+    <label>Link</label>
+    <input type="url" [(ngModel)]="form.link" placeholder="https://...">
+  </div>
+</ng-template>

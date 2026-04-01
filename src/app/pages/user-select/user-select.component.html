@@ -1,0 +1,37 @@
+<div class="select-screen">
+  <div class="select-header">
+    <div class="select-emoji">🍀</div>
+    <h1>Ireland - St. Patrick's</h1>
+    <p class="select-sub">Who are you?</p>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Loading trip data…</p>
+    </div>
+  } @else {
+    <div class="user-grid">
+      @for (user of users(); track user.name) {
+        <button class="user-card" [class.birthday]="user.isBirthday" [class.pre-selected]="isHinted(user)" (click)="selectUser(user)">
+          @if (user.isBirthday) {
+            <div class="birthday-banner">🎂 Birthday Girl!</div>
+          }
+          <div class="user-avatar" [style.background]="user.color">
+            {{ user.avatarEmoji }}
+          </div>
+          <span class="user-name">
+            {{ user.name }}
+            @if (user.isBirthday) { <span class="name-clover">🍀</span> }
+          </span>
+          @if (countdowns()[user.name]) {
+            <span class="user-countdown">{{ countdowns()[user.name] }}</span>
+          }
+        </button>
+      }
+    </div>
+  }
+
+  <p class="select-hint">Your data is private — select your name to continue</p>
+  <p class="version-tag">🍀 Layn's Leaf {{ version }}<br><span class="build-date">{{ buildDate }}</span></p>
+</div>

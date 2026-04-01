@@ -1,0 +1,417 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+
+  .view-toggle { display: flex; gap: 0.3rem; }
+}
+
+
+.filter-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.15rem;
+
+  &::-webkit-scrollbar { display: none; }
+
+  .chip {
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+// ── Day groups ─────────────────────────────────────────────────────────────
+
+.day-group {
+  margin-bottom: 1.75rem;
+}
+
+.day-header {
+  margin-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0.4rem;
+}
+
+.day-header-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+
+  h3 { font-size: 1rem; color: var(--primary-dark); }
+  .day-date { font-size: 0.8rem; color: var(--text-muted); }
+}
+
+.day-weather {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.live-badge {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--primary);
+  color: #1a4a2e;
+  padding: 0.1rem 0.35rem;
+  border-radius: 99px;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+// ── Item card (display mode) ────────────────────────────────────────────────
+
+.itinerary-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+}
+
+// ── Drag handle ─────────────────────────────────────────────────────────────
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  padding: 0 0.1rem;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: grab;
+  opacity: 0.35;
+  touch-action: none;
+  user-select: none;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.7; }
+  &:active { cursor: grabbing; opacity: 1; }
+}
+
+// CDK drag placeholders & preview
+.cdk-drag-preview {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius);
+  opacity: 0.95;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.25;
+  border: 2px dashed var(--primary) !important;
+}
+
+.cdk-drop-list-dragging .itinerary-item:not(.cdk-drag-placeholder) {
+  transition: transform 180ms ease;
+}
+
+.item-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 52px;
+
+  .item-time {
+    font-size: 0.73rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .item-time-end {
+    font-weight: 400;
+    opacity: 0.75;
+  }
+
+  .item-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+}
+
+.item-body {
+  flex: 1;
+  min-width: 0;
+
+  .item-title    { font-weight: 700; font-size: 0.95rem; }
+  .item-location { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; }
+  .item-notes    { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; font-style: italic; }
+}
+
+.item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.item-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-end;
+}
+
+.edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0.25rem 0.45rem;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.78rem;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover, &:active {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+}
+
+// ── Edit / Add form ─────────────────────────────────────────────────────────
+
+.itinerary-item.editing {
+  flex-direction: column;
+  gap: 0;
+}
+
+.edit-form,
+.add-item-card {
+  width: 100%;
+
+  .form-row {
+    display: flex;
+    gap: 0.75rem;
+
+    > .form-group { flex: 1; min-width: 110px; }
+  }
+
+  .form-group {
+    margin-bottom: 0.65rem;
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    textarea { resize: vertical; min-height: 52px; }
+  }
+}
+
+.add-item-card {
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: rgba(136, 201, 161, 0.04);
+  margin-top: 0.4rem;
+}
+
+.add-form-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 0.85rem;
+}
+
+.edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+
+  .actions-spacer { flex: 1; }
+}
+
+.field-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  font-style: italic;
+}
+
+.required {
+  color: var(--highlight-dk);
+  font-style: normal;
+}
+
+// ── Add event button ────────────────────────────────────────────────────────
+
+.add-day-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.45rem 1rem;
+  margin-top: 0.2rem;
+  background: none;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  span { font-size: 1rem; line-height: 1; }
+
+  &:hover {
+    border-color: var(--primary);
+    color: var(--primary-dark);
+    background: rgba(136, 201, 161, 0.05);
+  }
+}
+
+// ── Calendar view ───────────────────────────────────────────────────────────
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.85rem;
+}
+
+.cal-day {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 1rem;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { border-color: var(--primary); transform: translateY(-2px); }
+  &.selected { border-color: var(--primary); background: rgba(136,201,161,0.07); }
+
+  .cal-day-label { font-weight: 800; font-size: 0.95rem; color: var(--primary-dark); }
+  .cal-day-date  { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+  .cal-count     { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+}
+
+.cal-weather {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.cal-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cal-item {
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  .cal-item-time {
+    font-weight: 800;
+    opacity: 0.75;
+  }
+}
+
+.cal-more {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding-left: 0.4rem;
+}
+
+.cal-edit-hint {
+  font-size: 0.68rem;
+  color: var(--primary-dark);
+  margin-top: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.cal-day:hover .cal-edit-hint { opacity: 1; }
+
+// .people-picker and .people-btn live in global styles.scss
+
+@media (max-width: 480px) {
+  .itinerary-item {
+    flex-wrap: wrap;
+    padding: 0.6rem 0.75rem;
+    gap: 0.3rem 0.5rem;
+  }
+
+  .drag-handle { display: none; }
+
+  .item-left {
+    min-width: 44px;
+  }
+
+  .item-body {
+    flex: 1;
+
+    .item-title { font-size: 0.9rem; }
+
+    // Truncate location + notes to 1 line so items stay compact
+    .item-location,
+    .item-notes {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+  }
+
+  // Move tags + edit button to their own row, aligned under body
+  .item-right {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    padding-left: calc(44px + 0.5rem);
+    gap: 0.4rem;
+  }
+
+  .item-tags {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.25rem;
+  }
+
+  // Edit / add form rows stack vertically
+  .edit-form .form-row,
+  .add-item-card .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
