@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
@@ -20,6 +21,7 @@ export class ProfileComponent implements OnInit {
   private userService  = inject(UserService);
   private usersService = inject(UsersService);
   private authService  = inject(AuthService);
+  private router       = inject(Router);
 
   readonly emojiOptions = EMOJI_OPTIONS;
   readonly colorOptions = ['#F4C2C2','#88C9A1','#D4B5F5','#F9E4B7','#F5B5D4','#B5D5F5','#F5D4B5','#B5F5D4'];
@@ -133,6 +135,13 @@ export class ProfileComponent implements OnInit {
     } finally {
       this.profileSaving.set(false);
     }
+  }
+
+  showLogoutConfirm = signal(false);
+
+  async confirmLogout(): Promise<void> {
+    await this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   async changePassword(): Promise<void> {

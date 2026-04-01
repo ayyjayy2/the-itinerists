@@ -67,6 +67,11 @@
       </div>
     </div>
 
+    <!-- Logout -->
+    <div class="logout-section">
+      <button class="btn btn-danger" (click)="showLogoutConfirm.set(true)">Log Out</button>
+    </div>
+
   } @else {
     <div class="loading-overlay">
       <div class="spinner"></div>
@@ -74,6 +79,20 @@
     </div>
   }
 </div>
+
+<!-- Logout confirmation modal -->
+@if (showLogoutConfirm()) {
+  <div class="modal-backdrop" (click)="showLogoutConfirm.set(false)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>Log Out?</h2>
+      <p class="modal-hint">Are you sure you want to log out of your account?</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="showLogoutConfirm.set(false)">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmLogout()">Log Out</button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- Username modal -->
 @if (showUsernameModal()) {
