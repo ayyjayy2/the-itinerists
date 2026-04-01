@@ -1,13 +1,32 @@
 import { Injectable } from '@angular/core';
 import { Flight } from '../models/trip.models';
 
-// UTC offsets for departure/arrival airports after US DST (March 8, 2026)
+// UTC offsets for common US airports (after DST springs forward in March)
 const AIRPORT_UTC_OFFSET: Record<string, number> = {
-  'ORD': -5,  // CDT
-  'IAD': -4,  // EDT
-  'RDU': -4,  // EDT
-  'KEF':  0,  // UTC
-  'DUB':  0,  // GMT (Ireland, pre-summer)
+  'SAV': -4,  // EDT  — Savannah/Hilton Head
+  'ATL': -4,  // EDT  — Atlanta
+  'CLT': -4,  // EDT  — Charlotte
+  'IAD': -4,  // EDT  — Washington Dulles
+  'DCA': -4,  // EDT  — Reagan National
+  'JFK': -4,  // EDT  — New York JFK
+  'LGA': -4,  // EDT  — LaGuardia
+  'BOS': -4,  // EDT  — Boston
+  'RDU': -4,  // EDT  — Raleigh-Durham
+  'MIA': -4,  // EDT  — Miami
+  'MCO': -4,  // EDT  — Orlando
+  'TPA': -4,  // EDT  — Tampa
+  'ORD': -5,  // CDT  — Chicago O'Hare
+  'MDW': -5,  // CDT  — Chicago Midway
+  'BNA': -5,  // CDT  — Nashville
+  'MSP': -5,  // CDT  — Minneapolis
+  'DFW': -5,  // CDT  — Dallas
+  'IAH': -5,  // CDT  — Houston Intercontinental
+  'STL': -5,  // CDT  — St. Louis
+  'DEN': -6,  // MDT  — Denver
+  'PHX': -7,  // MST  — Phoenix (no DST)
+  'LAX': -7,  // PDT  — Los Angeles
+  'SFO': -7,  // PDT  — San Francisco
+  'SEA': -7,  // PDT  — Seattle
 };
 
 @Injectable({ providedIn: 'root' })
@@ -30,7 +49,7 @@ export class FlightCountdownService {
     if (isNaN(depMs) || isNaN(arrMs)) return '';
 
     const now = Date.now();
-    if (now >= arrMs) return '🍀 In Ireland!';
+    if (now >= arrMs) return ''; // trip-live state owned by tripConfig countdown
     if (now >= depMs) return '✈️ In the air!';
 
     const diff  = depMs - now;
@@ -38,9 +57,9 @@ export class FlightCountdownService {
     const hours = Math.floor((diff % 86_400_000) / 3_600_000);
     const mins  = Math.floor((diff % 3_600_000)  / 60_000);
 
-    if (days  > 0) return `✈️ ${days}d ${hours}h`;
-    if (hours > 0) return `✈️ ${hours}h ${mins}m`;
-    return `✈️ ${mins}m`;
+    if (days  > 0) return `✈️ ${days}d ${hours}h until departure`;
+    if (hours > 0) return `✈️ ${hours}h ${mins}m until departure`;
+    return `✈️ ${mins}m until departure`;
   }
 
   /** Fuzzy match: handles "Maddie" → Madeleine, "Makaela & Dad" → Dad, etc.
@@ -65,7 +84,7 @@ export class FlightCountdownService {
     const min = parseInt(m[2], 10);
     if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
     if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
-    const offset = AIRPORT_UTC_OFFSET[airport] ?? 0;
+    const offset = AIRPORT_UTC_OFFSET[airport] ?? -4; // default EDT
     const [y, mo, d] = date.split('-').map(Number);
     return new Date(Date.UTC(y, mo - 1, d, h - offset, min)).getTime();
   }
