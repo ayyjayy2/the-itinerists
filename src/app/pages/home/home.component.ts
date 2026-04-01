@@ -34,13 +34,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     { path: '/flights',        label: 'Flights',      icon: '✈️', description: 'Arrivals & departures', color: '#B5D5F5' },
     { path: '/itinerary',      label: 'Itinerary',    icon: '📅', description: 'Day-by-day plans',      color: '#F9E4B7' },
     { path: '/accommodations', label: 'Stays',        icon: '🏨', description: 'Hotels & check-in',     color: '#D4B5F5' },
-    { path: '/finance',        label: 'Finance',      icon: '💶', description: 'Shared expenses',       color: '#88C9A1' },
+    { path: '/finance',        label: 'Finance',      icon: '💵', description: 'Shared expenses',       color: '#88C9A1' },
     { path: '/expenses',       label: 'My Expenses',  icon: '🧾', description: 'Personal log',          color: '#F4C2C2' },
-    { path: '/recs',           label: 'Recs',         icon: '☘️', description: 'Irish tips & words',    color: '#B5F5D4' },
-    { path: '/rental-car',     label: 'Rental Car',   icon: '🚗', description: 'Car rental info',       color: '#F5D4B5' },
+    { path: '/recs',           label: 'Recs',         icon: '🌸', description: 'Savannah tips & spots', color: '#B5F5D4' },
     { path: '/packing',        label: 'Packing',      icon: '🧳', description: 'Your packing list',     color: '#F9E4B7' },
     { path: '/outfits',        label: 'Outfits',      icon: '👗', description: 'Plan your looks',        color: '#F5B5D4' },
-    { path: '/map',            label: 'Map',          icon: '🗺️', description: 'Interactive trip map',   color: '#B5E8D5' },
   ];
 
   ngOnInit(): void {
@@ -72,7 +70,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         const days = Math.ceil(tripDiff / (1000 * 60 * 60 * 24));
         return { label: `Trip is live! ${days} day${days !== 1 ? 's' : ''} left`, type: 'live' };
       }
-      return { label: 'Ireland trip completed! 🍀', type: 'done' };
+      return { label: 'Savannah getaway complete! 🌿', type: 'done' };
     }
     const days  = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

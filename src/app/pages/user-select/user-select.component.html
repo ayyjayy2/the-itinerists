@@ -1,7 +1,7 @@
 <div class="select-screen">
   <div class="select-header">
-    <div class="select-emoji">🍀</div>
-    <h1>Ireland - St. Patrick's</h1>
+    <div class="select-emoji">🌿</div>
+    <h1>Savannah Getaway</h1>
     <p class="select-sub">Who are you?</p>
   </div>
 
@@ -22,7 +22,7 @@
           </div>
           <span class="user-name">
             {{ user.name }}
-            @if (user.isBirthday) { <span class="name-clover">🍀</span> }
+            @if (user.isBirthday) { <span class="name-clover">🌿</span> }
           </span>
           @if (countdowns()[user.name]) {
             <span class="user-countdown">{{ countdowns()[user.name] }}</span>
@@ -33,5 +33,5 @@
   }
 
   <p class="select-hint">Your data is private — select your name to continue</p>
-  <p class="version-tag">🍀 Layn's Leaf {{ version }}<br><span class="build-date">{{ buildDate }}</span></p>
+  <p class="version-tag">🌿 Layn's Leaf {{ version }}<br><span class="build-date">{{ buildDate }}</span></p>
 </div>

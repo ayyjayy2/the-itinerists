@@ -1,20 +1,20 @@
 @import 'leaflet/dist/leaflet.css';
 
-// ── Irish Theme Variables ─────────────────────────────────────────────────────
+// ── Savannah Theme Variables ──────────────────────────────────────────────────
 :root {
-  --bg:           #F8FBF9;
-  --primary:      #88C9A1;
-  --primary-dark: #5FAA7E;
-  --accent:       #F9E4B7;
-  --accent-dark:  #E8C97A;
-  --highlight:    #F4C2C2;
-  --highlight-dk: #E89898;
+  --bg:           #FAF6EF;
+  --primary:      #8BAF7C;
+  --primary-dark: #6A8F5E;
+  --accent:       #F2C48A;
+  --accent-dark:  #E0A055;
+  --highlight:    #E8B4B8;
+  --highlight-dk: #D4909A;
   --card-bg:      #FFFFFF;
-  --text:         #3A3A3A;
-  --text-muted:   #7A8A80;
-  --border:       #E2EDE8;
-  --shadow:       0 2px 12px rgba(136, 201, 161, 0.18);
-  --shadow-md:    0 4px 24px rgba(136, 201, 161, 0.22);
+  --text:         #3A3020;
+  --text-muted:   #8A7E6A;
+  --border:       #EDE5D8;
+  --shadow:       0 2px 12px rgba(139, 175, 124, 0.18);
+  --shadow-md:    0 4px 24px rgba(139, 175, 124, 0.22);
   --radius:       16px;
   --radius-sm:    8px;
   --radius-lg:    24px;

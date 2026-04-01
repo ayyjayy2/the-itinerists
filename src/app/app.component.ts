@@ -1,10 +1,12 @@
-import { Component, OnInit, inject, computed } from '@angular/core';
+import { Component, OnInit, inject, computed, effect } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
 import { UserService } from './services/user.service';
+import { AuthService } from './services/auth.service';
 import { DataService } from './services/data.service';
+import { UsersService } from './services/users.service';
 import { ExpensesService } from './services/expenses.service';
 import { PackingService } from './services/packing.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../version';
@@ -22,44 +24,56 @@ interface NavItem {
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
-  userService = inject(UserService);
-  dataService = inject(DataService);
+  userService   = inject(UserService);
+  authService   = inject(AuthService);
+  dataService   = inject(DataService);
+  usersService  = inject(UsersService);
   expensesService = inject(ExpensesService);
-  packingService = inject(PackingService);
-  router = inject(Router);
+  packingService  = inject(PackingService);
+  router        = inject(Router);
   private swUpdate = inject(SwUpdate);
 
   readonly version   = APP_VERSION;
   readonly buildDate = APP_BUILD_DATE;
-  sidebarOpen   = false;
-  navCollapsed  = localStorage.getItem('ireland_nav_collapsed') === 'true';
+  sidebarOpen  = false;
+  navCollapsed = localStorage.getItem('savannah_nav_collapsed') === 'true';
 
-  readonly navItems: NavItem[] = [
-    { path: '/home',           label: 'Home',           icon: '🏠' },
-    { path: '/flights',        label: 'Flights',        icon: '✈️' },
-    { path: '/itinerary',      label: 'Itinerary',      icon: '📅' },
-    { path: '/accommodations', label: 'Stays',          icon: '🏨' },
-    { path: '/finance',        label: 'Finance',        icon: '💶' },
-    { path: '/expenses',       label: 'My Expenses',    icon: '🧾' },
-    { path: '/recs',           label: 'Recs',           icon: '☘️' },
-    { path: '/rental-car',     label: 'Rental Car',     icon: '🚗' },
-    { path: '/packing',        label: 'Packing',        icon: '🧳' },
-    { path: '/outfits',        label: 'Outfits',        icon: '👗' },
-    { path: '/map',            label: 'Map',            icon: '🗺️' },
+  readonly baseNavItems: NavItem[] = [
+    { path: '/home',           label: 'Home',            icon: '🏠' },
+    { path: '/flights',        label: 'Flights',         icon: '✈️' },
+    { path: '/itinerary',      label: 'Itinerary',       icon: '📅' },
+    { path: '/accommodations', label: 'Stays',           icon: '🏨' },
+    { path: '/finance',        label: 'Finance',         icon: '💵' },
+    { path: '/expenses',       label: 'My Expenses',     icon: '🧾' },
+    { path: '/recs',           label: 'Recs',            icon: '🌸' },
+    { path: '/packing',        label: 'Packing',         icon: '🧳' },
+    { path: '/outfits',        label: 'Outfits',         icon: '👗' },
+    { path: '/profile',        label: 'Profile',         icon: '👤' },
   ];
 
+  readonly navItems = computed<NavItem[]>(() => {
+    const items = [...this.baseNavItems];
+    if (this.userService.isAdmin()) {
+      items.push({ path: '/admin', label: 'Admin', icon: '⚙️' });
+    }
+    return items;
+  });
+
   currentUser = this.userService.currentUser;
-  isOnSelectUser = computed(() => this.router.url === '/select-user');
+
+  constructor() {
+    // When a user logs in, start all data listeners
+    effect(() => {
+      if (this.userService.currentUser()) {
+        this.dataService.init();
+        this.usersService.init();
+        this.expensesService.init();
+        this.packingService.init();
+      }
+    });
+  }
 
   ngOnInit(): void {
-    if (!this.userService.hasUser()) {
-      this.router.navigate(['/select-user']);
-    } else {
-      this.dataService.init();
-      this.expensesService.init();
-      this.packingService.init();
-    }
-
     // Auto-apply new service worker versions so deploys take effect on next reload
     if (this.swUpdate.isEnabled) {
       this.swUpdate.versionUpdates.pipe(
@@ -68,6 +82,16 @@ export class AppComponent implements OnInit {
         this.swUpdate.activateUpdate().then(() => window.location.reload());
       });
     }
+  }
+
+  isAuthPage(): boolean {
+    return this.router.url.startsWith('/login') || this.router.url.startsWith('/join');
+  }
+
+  async logout(): Promise<void> {
+    await this.authService.logout();
+    this.sidebarOpen = false;
+    this.router.navigate(['/login']);
   }
 
   hardRefresh(): void {
@@ -90,11 +114,6 @@ export class AppComponent implements OnInit {
     }
   }
 
-  switchUser(): void {
-    this.router.navigate(['/select-user']);
-    this.sidebarOpen = false;
-  }
-
   toggleSidebar(): void {
     this.sidebarOpen = !this.sidebarOpen;
   }
@@ -105,10 +124,6 @@ export class AppComponent implements OnInit {
 
   toggleCollapse(): void {
     this.navCollapsed = !this.navCollapsed;
-    localStorage.setItem('ireland_nav_collapsed', String(this.navCollapsed));
-  }
-
-  isSelectUserPage(): boolean {
-    return this.router.url.startsWith('/select-user');
+    localStorage.setItem('savannah_nav_collapsed', String(this.navCollapsed));
   }
 }

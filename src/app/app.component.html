@@ -1,5 +1,5 @@
 <!-- Full-screen user select: no chrome -->
-@if (isSelectUserPage()) {
+@if (isAuthPage()) {
   <router-outlet />
 } @else {
   <div class="app-shell">
@@ -8,12 +8,12 @@
     <nav class="sidebar" [class.open]="sidebarOpen" [class.collapsed]="navCollapsed">
       <div class="sidebar-inner">
       <div class="sidebar-brand">
-        <span class="brand-flag">🍀</span>
-        <span class="brand-text">Ireland Trip</span>
+        <span class="brand-flag">🌿</span>
+        <span class="brand-text">Savannah Trip</span>
       </div>
 
       <div class="sidebar-nav">
-        @for (item of navItems; track item.path) {
+        @for (item of navItems(); track item.path) {
           <a
             class="nav-item"
             [routerLink]="item.path"
@@ -39,16 +39,16 @@
           <span class="sidebar-refresh-label">Refresh</span>
         </button>
 
-        <div class="sidebar-version">🍀 Layn's Leaf {{ version }}<br><span class="sidebar-build-date">{{ buildDate }}</span></div>
+        <div class="sidebar-version">🌿 Layn's Leaf {{ version }}<br><span class="sidebar-build-date">{{ buildDate }}</span></div>
 
         @if (currentUser()) {
-          <div class="sidebar-user" (click)="switchUser()" [title]="navCollapsed ? currentUser()!.name : ''">
+          <div class="sidebar-user" [title]="navCollapsed ? currentUser()!.name : ''">
             <div class="avatar" [style.background]="currentUser()!.color">
               {{ currentUser()!.avatarEmoji }}
             </div>
             <div class="user-info">
               <span class="user-name">{{ currentUser()!.name }}</span>
-              <span class="user-switch">Tap to switch</span>
+              <span class="user-switch" (click)="logout()">Log out</span>
             </div>
           </div>
         }
@@ -69,14 +69,14 @@
         </button>
 
         <a class="header-title" routerLink="/home">
-          <span>🍀</span>
-          <span>Ireland</span>
+          <span>🌿</span>
+          <span>Savannah</span>
         </a>
 
         <div class="header-right">
           <button class="refresh-btn" (click)="hardRefresh()" title="Hard refresh">↻</button>
           @if (currentUser()) {
-            <button class="user-chip" (click)="switchUser()">
+            <button class="user-chip" (click)="logout()">
               <div class="avatar-sm" [style.background]="currentUser()!.color">
                 {{ currentUser()!.avatarEmoji }}
               </div>
