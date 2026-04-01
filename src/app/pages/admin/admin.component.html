@@ -1,0 +1,92 @@
+<div class="page-container">
+  <h1>⚙️ Admin</h1>
+
+  <!-- ── Trip Setup ─────────────────────────────────────────── -->
+  <div class="card section-card">
+    <h2>Trip Setup</h2>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" [(ngModel)]="tripStart" />
+      </div>
+      <div class="form-group">
+        <label>End Date</label>
+        <input type="date" [(ngModel)]="tripEnd" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" [(ngModel)]="tripLocation" placeholder="e.g. Savannah, GA" />
+      </div>
+      <div class="form-group">
+        <label>Label (optional)</label>
+        <input type="text" [(ngModel)]="tripLabel" placeholder="e.g. Savannah Getaway" />
+      </div>
+    </div>
+
+    @if (configError()) {
+      <div class="alert alert-error">{{ configError() }}</div>
+    }
+    @if (configSuccess()) {
+      <div class="alert alert-success">Trip config saved!</div>
+    }
+
+    <button class="btn btn-primary" (click)="saveTripConfig()" [disabled]="configSaving()">
+      {{ configSaving() ? 'Saving…' : 'Save Trip Config' }}
+    </button>
+  </div>
+
+  <!-- ── Invite Members ─────────────────────────────────────── -->
+  <div class="card section-card">
+    <h2>Invite Members</h2>
+    <p class="section-hint">Generate a link to share with someone you'd like to add to the trip. Links expire after 7 days.</p>
+
+    <button class="btn btn-primary" (click)="generateInvite()" [disabled]="inviteLoading()">
+      {{ inviteLoading() ? 'Generating…' : '+ Generate Invite Link' }}
+    </button>
+
+    @if (inviteError()) {
+      <div class="alert alert-error">{{ inviteError() }}</div>
+    }
+
+    @if (inviteLink()) {
+      <div class="invite-box">
+        <span class="invite-url">{{ inviteLink() }}</span>
+        <button class="btn btn-accent btn-sm" (click)="copyInvite()">
+          {{ inviteCopied() ? 'Copied!' : 'Copy' }}
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- ── Manage Members ─────────────────────────────────────── -->
+  <div class="card section-card">
+    <h2>Members</h2>
+
+    @if (removeError()) {
+      <div class="alert alert-error">{{ removeError() }}</div>
+    }
+
+    <div class="members-list">
+      @for (member of members(); track member.uid) {
+        <div class="member-row" [class.disabled]="member.isDisabled">
+          <div class="member-avatar" [style.background]="member.color">{{ member.avatarEmoji }}</div>
+          <div class="member-info">
+            <span class="member-name">{{ member.displayName }}</span>
+            <span class="member-meta">&#64;{{ member.username }}
+              @if (member.isAdmin) { <span class="badge-admin">admin</span> }
+              @if (member.isDisabled) { <span class="badge-disabled">removed</span> }
+            </span>
+          </div>
+          @if (!member.isAdmin && !member.isDisabled) {
+            <button class="btn btn-danger btn-sm" (click)="removeUser(member.uid)">Remove</button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+</div>
