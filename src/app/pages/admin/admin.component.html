@@ -71,8 +71,9 @@
     }
 
     <div class="members-list">
-      @for (member of members(); track member.uid) {
-        <div class="member-row" [class.disabled]="member.isDisabled">
+      @for (member of members(); track member.uid; let i = $index) {
+        @if (!member.isDisabled) {
+        <div class="member-row">
           <div class="member-avatar" [style.background]="member.color">{{ member.avatarEmoji }}</div>
           <div class="member-info">
             <span class="member-name">{{ member.displayName }}</span>
@@ -81,12 +82,32 @@
               @if (member.isDisabled) { <span class="badge-disabled">removed</span> }
             </span>
           </div>
-          @if (!member.isAdmin && !member.isDisabled) {
-            <button class="btn btn-danger btn-sm" (click)="removeUser(member.uid)">Remove</button>
+          @if (!member.isAdmin) {
+            <button class="btn btn-danger btn-sm" (click)="promptRemove(member)">Remove</button>
           }
         </div>
+        }
       }
     </div>
   </div>
 
 </div>
+
+<!-- ── Remove confirmation modal ─────────────────────────────────────────── -->
+@if (memberToRemove(); as member) {
+  <div class="modal-backdrop" (click)="cancelRemove()">
+    <div class="modal-card card" (click)="$event.stopPropagation()">
+      <div class="modal-icon">⚠️</div>
+      <h3>Remove {{ member.displayName }}?</h3>
+      <p class="modal-body">
+        This will remove <strong>{{ member.displayName }}</strong> from the trip.
+        All of their data will be deleted and they will no longer be able to log in.
+        This action cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="cancelRemove()">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmRemove()">Yes, Remove</button>
+      </div>
+    </div>
+  </div>
+}
