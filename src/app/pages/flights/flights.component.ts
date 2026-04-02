@@ -82,7 +82,7 @@ export class FlightsComponent {
   currentUser   = this.userService.currentUser;
   tripUsers     = this.usersService.tripUsers;
   sectionFilter = signal<SectionFilter>('All');
-  showMineOnly  = signal(false);
+  showMineOnly  = signal(true);
 
   // ── Add modal ────────────────────────────────────────────────────────────────
   showAddModal = signal(false);

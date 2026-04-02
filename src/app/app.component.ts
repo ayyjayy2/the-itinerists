@@ -12,6 +12,7 @@ import { PackingService } from './services/packing.service';
 import { TripConfigService } from './services/trip-config.service';
 import { FlightsService } from './services/flights.service';
 import { ItineraryService } from './services/itinerary.service';
+import { StaysService } from './services/stays.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../version';
 
 interface NavItem {
@@ -36,6 +37,7 @@ export class AppComponent implements OnInit {
   tripConfigService = inject(TripConfigService);
   flightsService    = inject(FlightsService);
   itineraryService  = inject(ItineraryService);
+  staysService      = inject(StaysService);
   router        = inject(Router);
   private swUpdate = inject(SwUpdate);
 
@@ -78,6 +80,7 @@ export class AppComponent implements OnInit {
         this.tripConfigService.init();
         this.flightsService.init();
         this.itineraryService.init();
+        this.staysService.init();
       }
     });
   }
