@@ -20,7 +20,7 @@ export class AccommodationsComponent {
   currentUser = this.userService.currentUser;
   readonly tripUsers = this.usersService.tripUsers;
 
-  showAll = signal<boolean>(true);
+  showAll = signal<boolean>(false);
 
   // ── Edit state ──────────────────────────────────────────────────────────────
   editingId    = signal<string | null>(null);
