@@ -8,79 +8,6 @@
   .user-sub { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem; }
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.icon-btn {
-  font-size: 1rem;
-  padding: 0.25rem 0.4rem;
-  opacity: 0.6;
-  &:hover { opacity: 1; }
-}
-
-.currency-picker {
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-
-  .currency-picker-label {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-}
-
-.currency-toggles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.75rem;
-}
-
-.currency-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: var(--radius);
-  border: 1.5px solid var(--border);
-  background: transparent;
-  font-size: 0.85rem;
-  cursor: pointer;
-  color: var(--text);
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover { background: var(--surface-hover, #f1f5f9); }
-
-  &.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #1a4a2e;
-    font-weight: 600;
-  }
-
-  &.last-active { opacity: 0.6; cursor: default; }
-
-  .ctoggle-check { font-size: 0.8rem; opacity: 0.8; }
-}
-
-.currency-picker-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.totals-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: center;
-}
-
 .total-chip {
   background: var(--primary);
   color: #1a4a2e;
@@ -89,6 +16,7 @@
   padding: 0.35rem 0.75rem;
   border-radius: var(--radius);
   white-space: nowrap;
+  align-self: center;
 
   .total-code {
     font-size: 0.72rem;
@@ -96,10 +24,7 @@
     opacity: 0.7;
   }
 
-  &.total-empty {
-    opacity: 0.45;
-    font-size: 0.9rem;
-  }
+  &.total-empty { opacity: 0.45; font-size: 0.9rem; }
 }
 
 .add-btn { margin-bottom: 1rem; }
@@ -112,7 +37,6 @@
 
 .add-form {
   margin-bottom: 1.25rem;
-
   h3 { margin-bottom: 1rem; }
 }
 
@@ -138,11 +62,9 @@
 .cat-transport    { background: #DBEAFE; color: #1E3A8A; }
 .cat-shopping     { background: #FCE7F3; color: #831843; }
 .cat-accommodation{ background: #CCFBF1; color: #134E4A; }
-.cat-lodging      { background: #DCFCE7; color: #14532D; }
 .cat-activity     { background: #FFEDD5; color: #7C2D12; }
 .cat-other        { background: #F1F5F9; color: #475569; }
 
-// Active (selected) filter state — ring + slightly darker bg
 .cat-active {
   outline: 2px solid currentColor;
   outline-offset: 1px;
@@ -196,6 +118,17 @@
   color: var(--text-muted);
 }
 
+.shared-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.1rem 0.4rem;
+  border-radius: 99px;
+}
+
 .exp-right {
   display: flex;
   align-items: center;
@@ -203,23 +136,10 @@
   flex-shrink: 0;
 }
 
-.exp-amounts {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.1rem;
-}
-
 .exp-amount {
   font-weight: 700;
   white-space: nowrap;
   font-size: 0.9rem;
-
-  .exp-code {
-    font-size: 0.7rem;
-    font-weight: 500;
-    opacity: 0.6;
-  }
 }
 
 .edit-btn {
@@ -267,4 +187,3 @@
     gap: 0.5rem;
   }
 }
-

@@ -5,8 +5,8 @@ import { UserService } from './user.service';
 import { sanitizeStrings } from '../utils/sanitize';
 import { ErrorLoggerService } from './error-logger.service';
 
-const STORAGE_KEY_PREFIX  = 'ireland_expenses_';
-const BACKUP_KEY_PREFIX   = 'ireland_expenses_backup_';
+const STORAGE_KEY_PREFIX  = 'savannah_expenses_';
+const BACKUP_KEY_PREFIX   = 'savannah_expenses_backup_';
 
 @Injectable({ providedIn: 'root' })
 export class ExpensesService {
