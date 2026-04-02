@@ -19,23 +19,19 @@ export interface LiveWeather {
   code: number;
 }
 
-const CITY_CONFIGS: { city: string; lat: number; lon: number; dates: string[] }[] = [
-  { city: 'Belfast',   lat: 54.5973, lon: -5.9301, dates: ['2026-03-13', '2026-03-14'] },
-  { city: 'Galway',    lat: 53.2707, lon: -9.0568, dates: ['2026-03-14', '2026-03-15'] },
-  { city: 'Dublin',    lat: 53.3498, lon: -6.2603, dates: ['2026-03-16', '2026-03-17', '2026-03-18', '2026-03-19', '2026-03-22'] },
-  { city: 'Cork',      lat: 51.8985, lon: -8.4756, dates: ['2026-03-19', '2026-03-20'] },
-  { city: 'Killarney', lat: 52.0598, lon: -9.5044, dates: ['2026-03-20', '2026-03-21'] },
-];
+// Savannah, GA coordinates
+const SAVANNAH_LAT = 32.0809;
+const SAVANNAH_LON = -81.0912;
+const SAVANNAH_TZ  = 'America%2FNew_York';
 
-const CACHE_KEY = 'ireland_weather_v1';
+const CACHE_KEY = 'savannah_weather_v1';
 
-/** Cache is valid until the next 7 AM GMT after it was saved. */
+/** Cache is valid until the next 7 AM ET after it was saved. */
 function isCacheValid(timestamp: string): boolean {
   const fetchedAt = new Date(timestamp);
   const now = new Date();
-  // Find the next 7 AM GMT on or after the fetch time
   const next7am = new Date(fetchedAt);
-  next7am.setUTCHours(7, 0, 0, 0);
+  next7am.setUTCHours(11, 0, 0, 0); // 7 AM ET = 11 AM UTC
   if (next7am <= fetchedAt) next7am.setUTCDate(next7am.getUTCDate() + 1);
   return now < next7am;
 }
@@ -47,11 +43,12 @@ export class WeatherService {
   readonly weather = this._weather.asReadonly();
   private _loaded = false;
 
-  load(): void {
+  /** Load Savannah weather for a given date range. */
+  load(startDate?: string, endDate?: string): void {
     if (this._loaded) return;
     this._loaded = true;
 
-    // Return cached data if it's still within today's 7 AM GMT window
+    // Return cached data if still valid
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (raw) {
@@ -61,40 +58,33 @@ export class WeatherService {
           return;
         }
       }
-    } catch { /* ignore parse errors */ }
+    } catch { /* ignore */ }
 
-    // Fetch fresh data and cache it
-    const results: Record<string, LiveWeather> = {};
-    let pending = CITY_CONFIGS.length;
+    if (!startDate || !endDate) return;
 
-    for (const cfg of CITY_CONFIGS) {
-      const url = `https://api.open-meteo.com/v1/forecast` +
-        `?latitude=${cfg.lat}&longitude=${cfg.lon}` +
-        `&daily=temperature_2m_max,temperature_2m_min,weathercode` +
-        `&temperature_unit=fahrenheit&timezone=Europe%2FLondon` +
-        `&start_date=2026-03-13&end_date=2026-03-22`;
+    const url = `https://api.open-meteo.com/v1/forecast` +
+      `?latitude=${SAVANNAH_LAT}&longitude=${SAVANNAH_LON}` +
+      `&daily=temperature_2m_max,temperature_2m_min,weathercode` +
+      `&temperature_unit=fahrenheit&timezone=${SAVANNAH_TZ}` +
+      `&start_date=${startDate}&end_date=${endDate}`;
 
-      this.http.get<any>(url).subscribe({
-        next: (data) => {
-          const { time, temperature_2m_max, temperature_2m_min, weathercode } = data.daily;
-          (time as string[]).forEach((date, i) => {
-            if (cfg.dates.includes(date)) {
-              results[`${date}_${cfg.city}`] = {
-                city: cfg.city,
-                minF: Math.round(temperature_2m_min[i]),
-                maxF: Math.round(temperature_2m_max[i]),
-                code: weathercode[i] as number,
-              };
-            }
-          });
-          this._weather.set({ ...results });
-          if (--pending === 0) {
-            try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: results, timestamp: new Date().toISOString() })); }
-            catch { /* storage full — skip caching */ }
-          }
-        },
-        error: () => { if (--pending === 0) { /* all done, some may have failed */ } }
-      });
-    }
+    this.http.get<any>(url).subscribe({
+      next: (data) => {
+        const results: Record<string, LiveWeather> = {};
+        const { time, temperature_2m_max, temperature_2m_min, weathercode } = data.daily;
+        (time as string[]).forEach((date, i) => {
+          results[date] = {
+            city:  'Savannah',
+            minF:  Math.round(temperature_2m_min[i]),
+            maxF:  Math.round(temperature_2m_max[i]),
+            code:  weathercode[i] as number,
+          };
+        });
+        this._weather.set(results);
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: results, timestamp: new Date().toISOString() })); }
+        catch { /* storage full */ }
+      },
+      error: () => { /* silently fail — no weather shown */ }
+    });
   }
 }

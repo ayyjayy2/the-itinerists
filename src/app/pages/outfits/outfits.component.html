@@ -8,8 +8,11 @@
     </div>
   </div>
 
-  @if (dataService.loading()) {
-    <div class="loading-overlay"><div class="spinner"></div><p>Loading…</p></div>
+  @if (days().length === 0) {
+    <div class="empty-state">
+      <span class="empty-icon">👗</span>
+      <p>Trip dates aren't set yet. Check back once the admin configures the trip.</p>
+    </div>
   }
 
   <!-- ─────────── DAY VIEW ─────────── -->
@@ -18,7 +21,7 @@
     <div class="day-nav">
       <button class="btn btn-ghost btn-sm" (click)="prevDay()" [disabled]="currentDateIndex() === 0">‹ Prev</button>
       <div class="day-nav-label">
-        <span class="day-title">{{ day.dayLabel }}</span>
+        <span class="day-title">{{ effectiveDayLabel(day.date) }}</span>
         <span class="day-date">{{ formatDate(day.date) }}</span>
       </div>
       <button class="btn btn-ghost btn-sm" (click)="nextDay()" [disabled]="currentDateIndex() === days().length - 1">Next ›</button>
@@ -33,20 +36,16 @@
             <div class="travel-sub">Airports &amp; flights — pack cozy &amp; comfortable</div>
           </div>
         </div>
-      } @else {
+      } @else if (day.liveWeather) {
         <div class="weather-row">
-          @if (day.liveWeather) {
-            <div class="weather-live-card">
-              <span class="w-emoji">{{ weatherEmoji(day.liveWeather.code) }}</span>
-              <div class="w-info">
-                <div class="w-temp">{{ day.liveWeather.minF }}–{{ day.liveWeather.maxF }}°F</div>
-                <div class="w-city">{{ day.liveWeather.city }}</div>
-              </div>
-              <span class="live-badge">live</span>
+          <div class="weather-live-card">
+            <span class="w-emoji">{{ weatherEmoji(day.liveWeather.code) }}</span>
+            <div class="w-info">
+              <div class="w-temp">{{ day.liveWeather.minF }}–{{ day.liveWeather.maxF }}°F</div>
+              <div class="w-city">{{ day.liveWeather.city }}</div>
             </div>
-          } @else if (day.staticWeather) {
-            <div class="weather-static">🌍 {{ day.staticWeather }}</div>
-          }
+            <span class="live-badge">live</span>
+          </div>
         </div>
       }
 
@@ -54,8 +53,8 @@
         <div class="activities-section">
           <div class="section-label">Activities</div>
           <div class="activity-pills">
-            @for (act of day.activities; track act.activity) {
-              <span class="activity-pill">{{ act.activity }}</span>
+            @for (act of day.activities; track act) {
+              <span class="activity-pill">{{ act }}</span>
             }
           </div>
         </div>
@@ -71,84 +70,9 @@
       <div class="section-label" style="margin-top: 1rem;">My Outfit</div>
 
       @if (editingDate() === day.date) {
-        <div class="outfit-edit-form card">
-          @if (editPhotoDataUrl) {
-            <div class="photo-preview">
-              <img [src]="editPhotoDataUrl" alt="Outfit photo">
-              <button class="btn btn-ghost btn-sm remove-photo" (click)="editPhotoDataUrl = ''; editForm.photoUrl = ''">✕ Remove</button>
-            </div>
-          }
-          <div class="photo-actions">
-            <input type="file" accept="image/*" #photoInput style="display:none" (change)="uploadPhoto($event, day.date)">
-            @if (uploading()) {
-              <div class="upload-progress">
-                <span class="upload-spinner"></span>
-                <span>Uploading photo…</span>
-                <button class="btn btn-ghost btn-sm" (click)="cancelUpload()">Cancel</button>
-              </div>
-            } @else {
-              <button class="btn btn-ghost btn-sm" (click)="photoInput.click()">
-                📷 {{ editPhotoDataUrl ? 'Change Photo' : 'Upload Photo' }}
-              </button>
-            }
-          </div>
-          <div class="items-label">Outfit Items</div>
-          <div class="item-input-row">
-            <input type="text" [(ngModel)]="editForm.newItem" placeholder="e.g. Chunky knit sweater" (keydown.enter)="addItem()">
-            <button class="btn btn-ghost btn-sm" (click)="addItem()">+ Add</button>
-          </div>
-          @if (editForm.items.length > 0) {
-            <ul class="items-list">
-              @for (item of editForm.items; track item; let i = $index) {
-                <li>
-                  <span>{{ item }}</span>
-                  <button class="remove-item" (click)="removeItem(i)">✕</button>
-                </li>
-              }
-            </ul>
-          }
-          <div class="form-group" style="margin-top: 0.75rem;">
-            <label>Notes</label>
-            <textarea [(ngModel)]="editForm.notes" rows="2" placeholder="e.g. Comfortable shoes — lots of walking today!"></textarea>
-          </div>
-          <div class="form-actions">
-            @if (myOutfitsByDate()[day.date]) {
-              <button class="btn btn-danger btn-sm" (click)="deleteOutfit(day.date)">🗑 Delete</button>
-            }
-            <div class="form-actions-right">
-              <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
-              <button class="btn btn-primary" (click)="saveOutfit(day.date)">Save</button>
-            </div>
-          </div>
-        </div>
-
+        <ng-container *ngTemplateOutlet="editFormTpl; context: { date: day.date }"></ng-container>
       } @else if (myOutfitsByDate()[day.date]) {
-        @let outfit = myOutfitsByDate()[day.date]!;
-        <div class="outfit-display card">
-          @if (outfit.photoUrl === 'stored') {
-            @if (photoCache()[day.date + '_' + currentUser()!.name]) {
-              <div class="outfit-photo">
-                <img [src]="photoCache()[day.date + '_' + currentUser()!.name]" alt="My outfit">
-              </div>
-            }
-          } @else if (outfit.photoUrl) {
-            <div class="outfit-photo">
-              <img [src]="outfit.photoUrl" alt="My outfit">
-            </div>
-          }
-          @if (outfit.items.length > 0) {
-            <ul class="items-list items-list--readonly">
-              @for (item of outfit.items; track item) {
-                <li><span class="item-dot">•</span> {{ item }}</li>
-              }
-            </ul>
-          }
-          @if (outfit.notes) {
-            <p class="outfit-notes">{{ outfit.notes }}</p>
-          }
-          <button class="btn btn-ghost btn-sm edit-outfit-btn" (click)="startEdit(day.date)">✏️ Edit</button>
-        </div>
-
+        <ng-container *ngTemplateOutlet="outfitDisplayTpl; context: { date: day.date }"></ng-container>
       } @else {
         <button class="btn btn-ghost add-outfit-btn" (click)="startEdit(day.date)">+ Plan My Outfit</button>
       }
@@ -162,7 +86,7 @@
         <div class="all-day-row">
           <div class="all-day-header" (click)="goToDay(i)">
             <div class="all-day-label">
-              <span class="day-title">{{ day.dayLabel }}</span>
+              <span class="day-title">{{ effectiveDayLabel(day.date) }}</span>
               <span class="day-date">{{ formatDate(day.date) }}</span>
             </div>
             <div class="all-day-meta">
@@ -170,8 +94,6 @@
                 <span class="weather-mini">✈️ Travel Day</span>
               } @else if (day.liveWeather) {
                 <span class="weather-mini">{{ weatherEmoji(day.liveWeather.code) }} {{ day.liveWeather.minF }}–{{ day.liveWeather.maxF }}°F</span>
-              } @else if (day.staticWeather) {
-                <span class="weather-mini">{{ day.staticWeather }}</span>
               }
               @if (myOutfitsByDate()[day.date]) {
                 <span class="chip chip-primary outfit-status">✓ Planned</span>
@@ -190,20 +112,16 @@
                   <div class="travel-sub">Airports &amp; flights — pack cozy &amp; comfortable</div>
                 </div>
               </div>
-            } @else {
+            } @else if (day.liveWeather) {
               <div class="weather-row">
-                @if (day.liveWeather) {
-                  <div class="weather-live-card">
-                    <span class="w-emoji">{{ weatherEmoji(day.liveWeather.code) }}</span>
-                    <div class="w-info">
-                      <div class="w-temp">{{ day.liveWeather.minF }}–{{ day.liveWeather.maxF }}°F</div>
-                      <div class="w-city">{{ day.liveWeather.city }}</div>
-                    </div>
-                    <span class="live-badge">live</span>
+                <div class="weather-live-card">
+                  <span class="w-emoji">{{ weatherEmoji(day.liveWeather.code) }}</span>
+                  <div class="w-info">
+                    <div class="w-temp">{{ day.liveWeather.minF }}–{{ day.liveWeather.maxF }}°F</div>
+                    <div class="w-city">{{ day.liveWeather.city }}</div>
                   </div>
-                } @else if (day.staticWeather) {
-                  <div class="weather-static">🌍 {{ day.staticWeather }}</div>
-                }
+                  <span class="live-badge">live</span>
+                </div>
               </div>
             }
 
@@ -211,8 +129,8 @@
               <div class="activities-section">
                 <div class="section-label">Activities</div>
                 <div class="activity-pills">
-                  @for (act of day.activities; track act.activity) {
-                    <span class="activity-pill">{{ act.activity }}</span>
+                  @for (act of day.activities; track act) {
+                    <span class="activity-pill">{{ act }}</span>
                   }
                 </div>
               </div>
@@ -228,84 +146,9 @@
             <div class="section-label" style="margin-top: 1rem;">My Outfit</div>
 
             @if (editingDate() === day.date) {
-              <div class="outfit-edit-form card">
-                @if (editPhotoDataUrl) {
-                  <div class="photo-preview">
-                    <img [src]="editPhotoDataUrl" alt="Outfit photo">
-                    <button class="btn btn-ghost btn-sm remove-photo" (click)="editPhotoDataUrl = ''; editForm.photoUrl = ''">✕ Remove</button>
-                  </div>
-                }
-                <div class="photo-actions">
-                  <input type="file" accept="image/*" #photoInput2 style="display:none" (change)="uploadPhoto($event, day.date)">
-                  @if (uploading()) {
-                    <div class="upload-progress">
-                      <span class="upload-spinner"></span>
-                      <span>Uploading photo…</span>
-                      <button class="btn btn-ghost btn-sm" (click)="cancelUpload()">Cancel</button>
-                    </div>
-                  } @else {
-                    <button class="btn btn-ghost btn-sm" (click)="photoInput2.click()">
-                      📷 {{ editPhotoDataUrl ? 'Change Photo' : 'Upload Photo' }}
-                    </button>
-                  }
-                </div>
-                <div class="items-label">Outfit Items</div>
-                <div class="item-input-row">
-                  <input type="text" [(ngModel)]="editForm.newItem" placeholder="e.g. Chunky knit sweater" (keydown.enter)="addItem()">
-                  <button class="btn btn-ghost btn-sm" (click)="addItem()">+ Add</button>
-                </div>
-                @if (editForm.items.length > 0) {
-                  <ul class="items-list">
-                    @for (item of editForm.items; track item; let i = $index) {
-                      <li>
-                        <span>{{ item }}</span>
-                        <button class="remove-item" (click)="removeItem(i)">✕</button>
-                      </li>
-                    }
-                  </ul>
-                }
-                <div class="form-group" style="margin-top: 0.75rem;">
-                  <label>Notes</label>
-                  <textarea [(ngModel)]="editForm.notes" rows="2" placeholder="e.g. Comfortable shoes — lots of walking today!"></textarea>
-                </div>
-                <div class="form-actions">
-                  @if (myOutfitsByDate()[day.date]) {
-                    <button class="btn btn-danger btn-sm" (click)="deleteOutfit(day.date)">🗑 Delete</button>
-                  }
-                  <div class="form-actions-right">
-                    <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
-                    <button class="btn btn-primary" (click)="saveOutfit(day.date)">Save</button>
-                  </div>
-                </div>
-              </div>
-
+              <ng-container *ngTemplateOutlet="editFormTpl; context: { date: day.date }"></ng-container>
             } @else if (myOutfitsByDate()[day.date]) {
-              @let outfit = myOutfitsByDate()[day.date]!;
-              <div class="outfit-display card">
-                @if (outfit.photoUrl === 'stored') {
-                  @if (photoCache()[day.date + '_' + currentUser()!.name]) {
-                    <div class="outfit-photo">
-                      <img [src]="photoCache()[day.date + '_' + currentUser()!.name]" alt="My outfit">
-                    </div>
-                  }
-                } @else if (outfit.photoUrl) {
-                  <div class="outfit-photo">
-                    <img [src]="outfit.photoUrl" alt="My outfit">
-                  </div>
-                }
-                @if (outfit.items.length > 0) {
-                  <ul class="items-list items-list--readonly">
-                    @for (item of outfit.items; track item) {
-                      <li><span class="item-dot">•</span> {{ item }}</li>
-                    }
-                  </ul>
-                }
-                @if (outfit.notes) {
-                  <p class="outfit-notes">{{ outfit.notes }}</p>
-                }
-                <button class="btn btn-ghost btn-sm edit-outfit-btn" (click)="startEdit(day.date)">✏️ Edit</button>
-              </div>
-
+              <ng-container *ngTemplateOutlet="outfitDisplayTpl; context: { date: day.date }"></ng-container>
             } @else {
               <button class="btn btn-ghost add-outfit-btn" (click)="startEdit(day.date)">+ Plan My Outfit</button>
             }
@@ -315,3 +158,86 @@
     </div>
   }
 </div>
+
+<!-- ── Shared edit form template ── -->
+<ng-template #editFormTpl let-date="date">
+  <div class="outfit-edit-form card">
+    @if (editPhotoDataUrl) {
+      <div class="photo-preview">
+        <img [src]="editPhotoDataUrl" alt="Outfit photo">
+        <button class="btn btn-ghost btn-sm remove-photo" (click)="editPhotoDataUrl = ''; editForm.photoUrl = ''">✕ Remove</button>
+      </div>
+    }
+    <div class="photo-actions">
+      <input type="file" accept="image/*" #photoInput style="display:none" (change)="uploadPhoto($event, date)">
+      @if (uploading()) {
+        <div class="upload-progress">
+          <span class="upload-spinner"></span>
+          <span>Uploading photo…</span>
+          <button class="btn btn-ghost btn-sm" (click)="cancelUpload()">Cancel</button>
+        </div>
+      } @else {
+        <button class="btn btn-ghost btn-sm" (click)="photoInput.click()">
+          📷 {{ editPhotoDataUrl ? 'Change Photo' : 'Upload Photo' }}
+        </button>
+      }
+    </div>
+    <div class="items-label">Outfit Items</div>
+    <div class="item-input-row">
+      <input type="text" [(ngModel)]="editForm.newItem" placeholder="e.g. Flowy sundress" (keydown.enter)="addItem()">
+      <button class="btn btn-ghost btn-sm" (click)="addItem()">+ Add</button>
+    </div>
+    @if (editForm.items.length > 0) {
+      <ul class="items-list">
+        @for (item of editForm.items; track item; let i = $index) {
+          <li>
+            <span>{{ item }}</span>
+            <button class="remove-item" (click)="removeItem(i)">✕</button>
+          </li>
+        }
+      </ul>
+    }
+    <div class="form-group" style="margin-top: 0.75rem;">
+      <label>Notes</label>
+      <textarea [(ngModel)]="editForm.notes" rows="2" placeholder="e.g. Comfy shoes — lots of walking the squares!"></textarea>
+    </div>
+    <div class="form-actions">
+      @if (myOutfitsByDate()[date]) {
+        <button class="btn btn-danger btn-sm" (click)="deleteOutfit(date)">🗑 Delete</button>
+      }
+      <div class="form-actions-right">
+        <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveOutfit(date)">Save</button>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<!-- ── Shared outfit display template ── -->
+<ng-template #outfitDisplayTpl let-date="date">
+  @let outfit = myOutfitsByDate()[date]!;
+  <div class="outfit-display card">
+    @if (outfit.photoUrl === 'stored') {
+      @if (photoCache()[date + '_' + currentUser()!.name]) {
+        <div class="outfit-photo">
+          <img [src]="photoCache()[date + '_' + currentUser()!.name]" alt="My outfit">
+        </div>
+      }
+    } @else if (outfit.photoUrl) {
+      <div class="outfit-photo">
+        <img [src]="outfit.photoUrl" alt="My outfit">
+      </div>
+    }
+    @if (outfit.items.length > 0) {
+      <ul class="items-list items-list--readonly">
+        @for (item of outfit.items; track item) {
+          <li><span class="item-dot">•</span> {{ item }}</li>
+        }
+      </ul>
+    }
+    @if (outfit.notes) {
+      <p class="outfit-notes">{{ outfit.notes }}</p>
+    }
+    <button class="btn btn-ghost btn-sm edit-outfit-btn" (click)="startEdit(date)">✏️ Edit</button>
+  </div>
+</ng-template>
