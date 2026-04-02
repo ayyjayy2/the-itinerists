@@ -32,7 +32,7 @@ export class ItineraryComponent implements OnInit {
   view         = signal<ViewMode>('list');
   selectedDate = signal<string>('All');
   currentUser  = this.userService.currentUser;
-  showAll      = signal<boolean>(true);
+  showAll      = signal<boolean>(false);
 
   readonly categories = CATEGORIES;
 
