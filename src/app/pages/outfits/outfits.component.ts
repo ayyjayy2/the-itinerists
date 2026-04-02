@@ -1,82 +1,43 @@
 import { Component, OnInit, inject, signal, computed, NgZone, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../services/data.service';
 import { UserService } from '../../services/user.service';
 import { WeatherService, LiveWeather, weatherEmoji } from '../../services/weather.service';
 import { OutfitPhotoService } from '../../services/outfit-photo.service';
-import { OutfitEntry, ItineraryItem } from '../../models/trip.models';
+import { OutfitsService } from '../../services/outfits.service';
+import { ItineraryService } from '../../services/itinerary.service';
+import { FlightsService } from '../../services/flights.service';
+import { TripConfigService } from '../../services/trip-config.service';
+import { OutfitEntry } from '../../models/trip.models';
 
-const TRIP_DATES = [
-  '2026-03-13','2026-03-14','2026-03-15','2026-03-16',
-  '2026-03-17','2026-03-18','2026-03-19','2026-03-20',
-  '2026-03-21','2026-03-22',
-];
-
-/** Map an activity location string to the nearest weather city. Returns null for non-Irish locations. */
-function detectCity(location: string): string | null {
-  const loc = location.toLowerCase();
-  if (/belfast|causeway|antrim|banbridge|voco/.test(loc)) return 'Belfast';
-  if (/galway/.test(loc)) return 'Galway';
-  if (/killarney|kerry|waterville|horseshoe/.test(loc)) return 'Killarney';
-  if (/cork|stationview/.test(loc)) return 'Cork';
-  if (/wicklow|waterford|cliffs|moher|clare/.test(loc)) return 'Dublin';
-  if (/dublin|arthaus|heuston|skylon/.test(loc)) return 'Dublin';
-  return null;
-}
-
-/** Returns the primary Irish city for a set of activities (uses the last recognizable city). */
-function primaryCityForDate(activities: { location: string }[]): string | null {
-  let city: string | null = null;
-  for (const a of activities) {
-    const c = detectCity(a.location);
-    if (c) city = c;
-  }
-  return city;
-}
-
-function suggestOutfit(
-  minF: number, maxF: number, code: number,
-  activities: string[], date: string, isMale: boolean
-): string {
-  const avg = (minF + maxF) / 2;
+function suggestOutfit(minF: number, maxF: number, code: number, activities: string[]): string {
+  const avg    = (minF + maxF) / 2;
   const isRain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82);
   const actStr = activities.join(' ').toLowerCase();
-  const isOutdoor = /causeway|cliff|hike|tour|giant|walk|wicklow|castle|moher/.test(actStr);
-  const isPub    = /pub|bar|guinness|brew/.test(actStr);
-  const isDining = /dinner|restaurant|dining|bistro/.test(actStr);
+  const isWalk   = /walk|square|park|tour|cemetery|river|stroll/.test(actStr);
+  const isDining = /dinner|restaurant|dining|bistro|grey|lunch/.test(actStr);
+  const isNight  = /ghost|bar|drink|pub|rooftop/.test(actStr);
 
-  if (date === '2026-03-17') {
-    return isMale
-      ? '🍀 St. Paddy\'s: Green shirt or knit, dark jeans, warmest jacket — massive crowds all day!'
-      : '🍀 St. Paddy\'s: Go all green! Emerald dress or shamrock jumper, warm tights, ankle boots, cozy coat for the parade crowd!';
+  if (isRain && avg > 70) return '🌦️ Warm & rainy: light sundress or shorts + breezy top, a packable rain jacket, and waterproof sandals or sneakers.';
+  if (isRain)             return '🌧️ Rain expected: light waterproof layer, jeans or leggings, comfortable sneakers.';
+  if (avg >= 82)          return '🌞 Hot & humid! Flowy sundress or shorts + breathable top, sandals, sun hat, and SPF. Stay hydrated!';
+  if (avg >= 74) {
+    if (isDining) return '✨ Warm dinner night: a cute sundress or linen pants + blouse, strappy sandals, light cardigan for A/C.';
+    if (isNight)  return '🌙 Warm night out: flowy dress or chic shorts + top, sandals, light layer for the bar A/C.';
+    if (isWalk)   return '🌿 Perfect walking weather! Sundress or shorts + tee, comfortable sneakers or sandals, light layer for indoor A/C.';
+    return '🌤️ Beautiful Savannah weather! Light outfit — dress, shorts, or jeans + breezy top. Comfortable shoes for the squares.';
   }
-
-  if (isMale) {
-    if (avg < 40) return '🥶 Very cold: thermal undershirt, thick fleece, waterproof jacket, warm jeans, waterproof boots, beanie & gloves.';
-    if (isRain)   return '🌧️ Rain expected: waterproof jacket essential, jeans, waterproof boots, beanie.';
-    if (avg < 50) return '☁️ Chilly: chunky knit or fleece, dark jeans, boots or trainers, light jacket.';
-    return '🌤️ Mild-ish: jeans, casual shirt or light jumper, comfortable shoes.';
+  if (avg >= 65) {
+    if (isWalk) return '🌸 Lovely day for the squares! Jeans or a midi skirt, a cute top, and comfortable walking shoes. Light jacket for the evening.';
+    return '🌤️ Warm-ish and pleasant. Jeans + a nice top or light dress, comfortable shoes, and a light jacket just in case.';
   }
-
-  if (avg < 40) return '🥶 Very cold: thermal base layer, chunky knit, puffer or wool coat, fleece-lined leggings, waterproof knee boots, chunky scarf, beanie & gloves.';
-  if (isOutdoor && isRain) return '🥾🌧️ Outdoor + rain: waterproof shell jacket essential! Long sleeve + waterproof hiking pants or thick leggings, waterproof boots, gloves & beanie.';
-  if (isOutdoor && avg < 52) return '🥾 Outdoor adventure: layers! Thermal long sleeve + fleece + waterproof jacket, thick leggings or hiking pants, waterproof ankle boots, beanie.';
-  if (isRain && avg < 52) return '🌧️ Cold & rainy: trench coat or waterproof jacket over a chunky knit, dark jeans, ankle rain boots, cute scarf.';
-  if (isRain)   return '🌦️ Rain likely: stylish rain jacket or trench, jeans, waterproof ankle boots, scarf.';
-  if (avg < 45) return '🧥 Cold: chunky knit sweater, thick tights + midi skirt OR warm jeans, knee-high boots, wool coat, scarf & beanie.';
-  if (avg < 52) return '☁️ Chilly: cute knit sweater, dark jeans or leggings, ankle boots, long cardigan, scarf.';
-  if (isDining) return '✨ Dinner night: statement dress or silk blouse + tailored trousers, heeled boots or pointed flats, elegant jacket.';
-  if (isPub)    return '🍺 Pub night: cute jeans or mini skirt, cozy knit or statement top, ankle boots, light jacket.';
-  return '🌤️ Mild for Ireland! Jeans or cute midi skirt, lightweight jumper, trainers or ankle boots, light jacket just in case.';
+  return '🧥 Cooler evening — layer up! Jeans, a cozy top, and a light jacket. Comfortable shoes for walking the cobblestones.';
 }
 
 interface DayData {
   date: string;
-  dayLabel: string;
   liveWeather: LiveWeather | null;
-  staticWeather: string;
-  activities: ItineraryItem[];
+  activities: string[];
   suggestion: string;
   isTravelDay: boolean;
 }
@@ -88,10 +49,13 @@ interface DayData {
   styleUrl: './outfits.component.scss'
 })
 export class OutfitsComponent implements OnInit {
-  dataService    = inject(DataService);
   userService    = inject(UserService);
   weatherService = inject(WeatherService);
   photoService   = inject(OutfitPhotoService);
+  outfitsService = inject(OutfitsService);
+  itineraryService = inject(ItineraryService);
+  flightsService   = inject(FlightsService);
+  tripConfigService = inject(TripConfigService);
   private ngZone = inject(NgZone);
 
   currentUser = this.userService.currentUser;
@@ -101,22 +65,26 @@ export class OutfitsComponent implements OnInit {
   currentDateIndex = signal(0);
   editingDate      = signal<string | null>(null);
 
-  /** Resolved data URLs for outfits stored in Firestore (photoUrl === 'stored'). */
-  photoCache = signal<Record<string, string>>({});
-  /** Data URL shown in the edit form photo preview. */
+  photoCache       = signal<Record<string, string>>({});
   editPhotoDataUrl = '';
 
-  editForm: {
-    items: string[];
-    newItem: string;
-    notes: string;
-    photoUrl: string;
-  } = { items: [], newItem: '', notes: '', photoUrl: '' };
+  editForm: { items: string[]; newItem: string; notes: string; photoUrl: string } =
+    { items: [], newItem: '', notes: '', photoUrl: '' };
+
+  weatherEmoji = weatherEmoji;
 
   constructor() {
-    // Eagerly load any outfit photos stored in Firestore whenever outfits change.
+    // Load weather once trip config dates become available
     effect(() => {
-      const stored = this.dataService.outfits().filter(o => o.photoUrl === 'stored');
+      const cfg = this.tripConfigService.config();
+      if (cfg?.startDate && cfg?.endDate) {
+        this.weatherService.load(cfg.startDate, cfg.endDate);
+      }
+    });
+
+    // Eagerly resolve stored outfit photos from Firestore
+    effect(() => {
+      const stored = this.outfitsService.outfits().filter(o => o.photoUrl === 'stored');
       for (const o of stored) {
         const key = `${o.date}_${o.user}`;
         if (!this.photoCache()[key]) {
@@ -130,112 +98,85 @@ export class OutfitsComponent implements OnInit {
     });
   }
 
-  /** Reactive map of date → OutfitEntry for the current user.
-   *  Reads directly from the outfits signal so the template updates immediately after save. */
-  myOutfitsByDate = computed((): Record<string, OutfitEntry> => {
+  readonly tripDays = computed((): string[] => {
+    const cfg = this.tripConfigService.config();
+    if (!cfg?.startDate || !cfg?.endDate) return [];
+    const days: string[] = [];
+    const cur = new Date(cfg.startDate + 'T00:00');
+    const end = new Date(cfg.endDate   + 'T00:00');
+    while (cur <= end) {
+      days.push(cur.toISOString().slice(0, 10));
+      cur.setDate(cur.getDate() + 1);
+    }
+    return days;
+  });
+
+  effectiveDayLabel(date: string): string {
+    const custom = this.itineraryService.dayLabels()[date];
+    if (custom) return custom;
+    const cfg = this.tripConfigService.config();
+    if (!cfg?.startDate) return date;
+    const diff = Math.round(
+      (new Date(date + 'T00:00').getTime() - new Date(cfg.startDate + 'T00:00').getTime()) / 86_400_000
+    );
+    return `Day ${diff + 1}`;
+  }
+
+  readonly myOutfitsByDate = computed((): Record<string, OutfitEntry> => {
     const user = this.currentUser();
     if (!user) return {};
     const map: Record<string, OutfitEntry> = {};
-    for (const o of this.dataService.outfits()) {
+    for (const o of this.outfitsService.outfits()) {
       if (o.user === user.name) map[o.date] = o;
     }
     return map;
   });
 
-  weatherEmoji = weatherEmoji;
-
-  days = computed((): DayData[] => {
-    const data = this.dataService.data();
+  readonly days = computed((): DayData[] => {
+    const uid     = this.currentUser()?.uid ?? '';
+    const name    = this.currentUser()?.name ?? '';
     const weather = this.weatherService.weather();
-    const user = this.currentUser();
-    if (!data) return [];
+    const flights = this.flightsService.flights();
 
-    const isFlightAct = (a: ItineraryItem) =>
-      a.category === 'Transport' ||
-      /\b(flight|airport|depart|arrive|travel|transit)\b/i.test(a.activity + ' ' + a.location);
-
-    // Build the set of dates on which the user has a flight leg (departure or arrival).
-    const userFlightDates = new Set(
-      data.flights
-        .filter(f => !user || this.matchesFlightPerson(f.person, user.name))
+    const flightDates = new Set(
+      flights
+        .filter(f => f.uid === uid)
         .flatMap(f => [f.departureDate, f.arrivalDate].filter(Boolean))
     );
 
-    return TRIP_DATES.flatMap((date): DayData[] => {
-      const allItems  = data.itinerary.filter(i => i.date === date);
-      const dayLabel  = allItems[0]?.dayLabel ?? date;
+    const staticSuggestion = '🌸 April in Savannah is warm and lovely! Light layers, breathable fabrics, and comfortable walking shoes are your best bet. Live weather will show up within 16 days of the trip.';
+    const travelSuggestion = '✈️ Travel day! Comfy leggings or joggers, an oversized tee or soft knit, slip-on shoes, and a warm wrap for the cabin.';
+
+    return this.tripDays().map((date): DayData => {
+      const allItems  = this.itineraryService.items().filter(i => i.date === date);
       const userItems = allItems.filter(i =>
-        i.forWho === 'All' || !user || i.forWho.split(',').map(s => s.trim()).includes(user.name)
+        i.forWho === 'All' || i.forWho.split(',').map(s => s.trim()).includes(name)
       );
+      const hasFlight = flightDates.has(date);
 
-      const hasFlight = userFlightDates.has(date);
+      const isTransport = (a: { category: string; activity: string }) =>
+        a.category === 'Transport' || /\b(flight|airport|depart|arrive|travel)\b/i.test(a.activity);
 
-      // Skip dates where the user has no itinerary items and no flights.
-      if (userItems.length === 0 && !hasFlight) return [];
-
-      const isMale = user?.name === 'Dad';
-
-      const travelSuggestion = isMale
-        ? '✈️ Travel day! Comfortable joggers or relaxed jeans, soft tee, zip hoodie, slip-on trainers — easy layers for a long flight!'
-        : '✈️ Travel day! Soft leggings or wide-leg trousers, cozy oversized knit, slip-on shoes for security — and a warm wrap for the cabin!';
-
-      // No itinerary items but a flight on this date → pure travel day.
-      if (userItems.length === 0) {
-        return [{ date, dayLabel, liveWeather: null, staticWeather: '', activities: [], suggestion: travelSuggestion, isTravelDay: true }];
+      const isTravelDay = hasFlight && (userItems.length === 0 || userItems.every(isTransport));
+      if (isTravelDay) {
+        return { date, liveWeather: null, activities: userItems.map(i => i.activity), suggestion: travelSuggestion, isTravelDay: true };
       }
 
-      // All itinerary items are transport/travel → travel day.
-      if (userItems.every(isFlightAct)) {
-        return [{ date, dayLabel, liveWeather: null, staticWeather: '', activities: userItems, suggestion: travelSuggestion, isTravelDay: true }];
-      }
+      const liveWeather = weather[date] ?? null;
+      const actNames    = userItems.map(i => i.activity);
+      const suggestion  = liveWeather
+        ? suggestOutfit(liveWeather.minF, liveWeather.maxF, liveWeather.code, actNames)
+        : staticSuggestion;
 
-      const city = primaryCityForDate(userItems);
-
-      if (!city) {
-        // No Irish city — treat as travel day if any flight activity exists, otherwise generic.
-        if (userItems.some(isFlightAct) || hasFlight) {
-          return [{ date, dayLabel, liveWeather: null, staticWeather: '', activities: userItems, suggestion: travelSuggestion, isTravelDay: true }];
-        }
-        const fallback = isMale
-          ? '🍀 Layers are key! Jeans, a warm knit, and a waterproof jacket will cover most of what Ireland throws at you.'
-          : '🍀 Layers are key! Jeans or leggings, a cozy knit, ankle boots, and a waterproof jacket will cover most of what Ireland throws at you.';
-        return [{ date, dayLabel, liveWeather: null, staticWeather: data.weatherByDate?.[date] ?? '', activities: userItems, suggestion: fallback, isTravelDay: false }];
-      }
-
-      // Normal Irish-city day.
-      const liveWeather   = weather[`${date}_${city}`] ?? null;
-      const staticWeather = data.weatherByDate?.[date] ?? '';
-      const actNames      = userItems.map(i => i.activity);
-      const suggestion    = liveWeather
-        ? suggestOutfit(liveWeather.minF, liveWeather.maxF, liveWeather.code, actNames, date, isMale)
-        : (isMale
-          ? '☁️ Ireland weather varies — layers are your best friend! Jeans, a warm knit, waterproof jacket, and comfy shoes.'
-          : '☁️ Ireland weather varies — layers are your best friend! Jeans or leggings, a cozy knit, waterproof jacket, and ankle boots.');
-
-      return [{ date, dayLabel, liveWeather, staticWeather, activities: userItems, suggestion, isTravelDay: false }];
+      return { date, liveWeather, activities: actNames, suggestion, isTravelDay: false };
     });
   });
 
-  /** Fuzzy-match flight person field against a user name (handles "Maddie/Caitlin/Linda" etc.). */
-  private matchesFlightPerson(person: string, name: string): boolean {
-    const p = person.toLowerCase();
-    const n = name.toLowerCase();
-    if (p.includes(n)) return true;
-    const tokens = p.split(/[\/,&\s]+/).filter(Boolean);
-    if (n.length >= 3) {
-      const prefix = n.substring(0, 3);
-      return tokens.some(t => t.startsWith(prefix));
-    }
-    return false;
-  }
-
-  currentDay = computed(() => this.days()[this.currentDateIndex()] ?? null);
+  readonly currentDay = computed(() => this.days()[this.currentDateIndex()] ?? null);
 
   ngOnInit(): void {
-    this.weatherService.load();
-    // Jump to today or first upcoming date in the user's filtered day list
     const today = new Date().toISOString().slice(0, 10);
-    const idx = this.days().findIndex(d => d.date >= today);
+    const idx   = this.days().findIndex(d => d.date >= today);
     this.currentDateIndex.set(idx >= 0 ? idx : 0);
   }
 
@@ -249,14 +190,13 @@ export class OutfitsComponent implements OnInit {
 
   startEdit(date: string): void {
     const myOutfit = this.myOutfitsByDate()[date] ?? null;
-    const user = this.currentUser();
+    const user     = this.currentUser();
     this.editForm = {
       items:    [...(myOutfit?.items ?? [])],
       newItem:  '',
       notes:    myOutfit?.notes ?? '',
       photoUrl: myOutfit?.photoUrl ?? '',
     };
-    // Populate edit preview from cache for Firestore-stored photos
     if (myOutfit?.photoUrl === 'stored' && user) {
       this.editPhotoDataUrl = this.photoCache()[`${date}_${user.name}`] ?? '';
     } else {
@@ -279,9 +219,6 @@ export class OutfitsComponent implements OnInit {
     if (!user) return;
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
-
-    // Fire-and-forget — save can happen at any time while this runs.
-    // Run the callback inside NgZone so signal updates trigger change detection.
     this.photoService.upload(file, date, user.name).then(url => {
       this.ngZone.run(() => {
         const key = `${date}_${user.name}`;
@@ -290,37 +227,33 @@ export class OutfitsComponent implements OnInit {
           this.editPhotoDataUrl = url;
           this.editForm.photoUrl = 'stored';
         } else {
-          this.dataService.patchOutfitPhoto(date, user.name, 'stored');
+          this.outfitsService.patchOutfitPhoto(date, user.name, 'stored');
         }
       });
     }).catch(err => console.error('[uploadPhoto] failed:', err));
   }
 
-  cancelUpload(): void {
-    this.photoService.cancelUpload();
-  }
+  cancelUpload(): void { this.photoService.cancelUpload(); }
 
-  deleteOutfit(date: string): void {
+  async deleteOutfit(date: string): Promise<void> {
     const user = this.currentUser();
     if (!user) return;
     if (!confirm('Delete your outfit plan for this day?')) return;
     this.editingDate.set(null);
-    this.dataService.deleteOutfit(date, user.name);
+    await this.outfitsService.deleteOutfit(date, user.name);
   }
 
-  saveOutfit(date: string): void {
+  async saveOutfit(date: string): Promise<void> {
     const user = this.currentUser();
     if (!user) return;
-    // Auto-add any text still in the newItem input (user forgot to tap Add).
     if (this.editForm.newItem.trim()) {
       this.editForm.items.push(this.editForm.newItem.trim());
       this.editForm.newItem = '';
     }
-    // Close the form first so the UI responds immediately.
     this.editingDate.set(null);
-    this.dataService.upsertOutfit({
+    await this.outfitsService.upsertOutfit({
       date,
-      user: user.name,
+      user:     user.name,
       items:    [...this.editForm.items],
       notes:    this.editForm.notes.trim() || undefined,
       photoUrl: this.editForm.photoUrl || undefined,
@@ -328,6 +261,6 @@ export class OutfitsComponent implements OnInit {
   }
 
   formatDate(d: string): string {
-    return new Date(d + 'T00:00').toLocaleDateString('en-IE', { weekday: 'short', month: 'short', day: 'numeric' });
+    return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 }
