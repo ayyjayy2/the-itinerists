@@ -144,35 +144,31 @@ export class OutfitsComponent implements OnInit {
         .flatMap(f => [f.departureDate, f.arrivalDate].filter(Boolean))
     );
 
-    return this.tripDays().flatMap((date): DayData[] => {
+    const staticSuggestion = '🌸 April in Savannah is warm and lovely! Light layers, breathable fabrics, and comfortable walking shoes are your best bet.';
+    const travelSuggestion = '✈️ Travel day! Comfy leggings or joggers, an oversized tee or soft knit, slip-on shoes, and a warm wrap for the cabin.';
+
+    return this.tripDays().map((date): DayData => {
       const allItems  = this.itineraryService.items().filter(i => i.date === date);
       const userItems = allItems.filter(i =>
         i.forWho === 'All' || i.forWho.split(',').map(s => s.trim()).includes(name)
       );
       const hasFlight = flightDates.has(date);
 
-      if (userItems.length === 0 && !hasFlight) {
-        // Still show the day if it's in the trip range — just no activities
-        return [{ date, liveWeather: weather[date] ?? null, activities: [], suggestion: '', isTravelDay: false }];
-      }
-
       const isTransport = (a: { category: string; activity: string }) =>
         a.category === 'Transport' || /\b(flight|airport|depart|arrive|travel)\b/i.test(a.activity);
 
-      const isTravelDay = hasFlight && userItems.every(isTransport);
-      const travelSuggestion = '✈️ Travel day! Comfy leggings or joggers, an oversized tee or soft knit, slip-on shoes, and a warm wrap for the cabin.';
-
+      const isTravelDay = hasFlight && (userItems.length === 0 || userItems.every(isTransport));
       if (isTravelDay) {
-        return [{ date, liveWeather: null, activities: userItems.map(i => i.activity), suggestion: travelSuggestion, isTravelDay: true }];
+        return { date, liveWeather: null, activities: userItems.map(i => i.activity), suggestion: travelSuggestion, isTravelDay: true };
       }
 
       const liveWeather = weather[date] ?? null;
       const actNames    = userItems.map(i => i.activity);
       const suggestion  = liveWeather
         ? suggestOutfit(liveWeather.minF, liveWeather.maxF, liveWeather.code, actNames)
-        : '🌸 April in Savannah is warm and lovely! Light layers, breathable fabrics, and comfortable walking shoes are your best bet.';
+        : staticSuggestion;
 
-      return [{ date, liveWeather, activities: actNames, suggestion, isTravelDay: false }];
+      return { date, liveWeather, activities: actNames, suggestion, isTravelDay: false };
     });
   });
 
