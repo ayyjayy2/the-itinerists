@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Flight } from '../models/trip.models';
+import { Flight, FlightDoc } from '../models/trip.models';
 
 // UTC offsets for common US airports (after DST springs forward in March)
 const AIRPORT_UTC_OFFSET: Record<string, number> = {
@@ -31,6 +31,34 @@ const AIRPORT_UTC_OFFSET: Record<string, number> = {
 
 @Injectable({ providedIn: 'root' })
 export class FlightCountdownService {
+
+  /** Countdown for the new uid-based FlightDoc collection. */
+  getCountdownForUid(uid: string, flights: FlightDoc[]): string {
+    const mine = flights.filter(f => f.section === 'ARRIVALS' && f.uid === uid);
+    if (!mine.length) return '';
+
+    const sorted   = [...mine].sort((a, b) => a.departureDate.localeCompare(b.departureDate));
+    const firstLeg = sorted[0];
+    const lastLeg  = sorted[sorted.length - 1];
+
+    const depMs = this.parseToUtcMs(firstLeg.departureDate, firstLeg.departureTime, firstLeg.from);
+    const arrMs = this.parseToUtcMs(lastLeg.arrivalDate,    lastLeg.arrivalTime,    lastLeg.to);
+
+    if (isNaN(depMs) || isNaN(arrMs)) return '';
+
+    const now = Date.now();
+    if (now >= arrMs) return '';
+    if (now >= depMs) return '✈️ In the air!';
+
+    const diff  = depMs - now;
+    const days  = Math.floor(diff / 86_400_000);
+    const hours = Math.floor((diff % 86_400_000) / 3_600_000);
+    const mins  = Math.floor((diff % 3_600_000)  / 60_000);
+
+    if (days  > 0) return `✈️ ${days}d ${hours}h until departure`;
+    if (hours > 0) return `✈️ ${hours}h ${mins}m until departure`;
+    return `✈️ ${mins}m until departure`;
+  }
 
   /** Returns a live countdown string for the given user based on their ARRIVALS flights. */
   getCountdown(name: string, flights: Flight[]): string {

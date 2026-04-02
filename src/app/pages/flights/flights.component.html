@@ -2,21 +2,15 @@
 
   <div class="page-header">
     <h2>✈️ Flights</h2>
-    <button class="btn btn-ghost btn-sm" (click)="refresh()">↻ Refresh</button>
+    <button class="btn btn-primary btn-sm" (click)="openAddModal()">+ Add Flight</button>
   </div>
-
-  @if (dataService.loading()) {
-    <div class="loading-overlay"><div class="spinner"></div><p>Loading flights…</p></div>
-  } @else if (dataService.isStale()) {
-    <div class="stale-banner">⚠️ Offline — cached data <button (click)="refresh()">Retry</button></div>
-  }
 
   <!-- Filters -->
   <div class="filter-bar">
     <div class="section-tabs">
-      <button class="tab" [class.active]="sectionFilter() === 'All'"       (click)="setSectionFilter('All')">All</button>
-      <button class="tab" [class.active]="sectionFilter() === 'ARRIVALS'"  (click)="setSectionFilter('ARRIVALS')">↓ Arrivals</button>
-      <button class="tab" [class.active]="sectionFilter() === 'DEPARTURES'"(click)="setSectionFilter('DEPARTURES')">↑ Departures</button>
+      <button class="tab" [class.active]="sectionFilter() === 'All'"        (click)="setSectionFilter('All')">All</button>
+      <button class="tab" [class.active]="sectionFilter() === 'ARRIVALS'"   (click)="setSectionFilter('ARRIVALS')">↓ Arrivals</button>
+      <button class="tab" [class.active]="sectionFilter() === 'DEPARTURES'" (click)="setSectionFilter('DEPARTURES')">↑ Departures</button>
     </div>
   </div>
 
@@ -25,62 +19,54 @@
     <button [class.active]="!showMineOnly()" (click)="showMineOnly.set(false)">All</button>
   </div>
 
-  @if (allJourneys().length === 0 && !dataService.loading()) {
+  @if (allJourneys().length === 0) {
     <div class="empty-state">
       <span class="empty-icon">✈️</span>
-      <p>No flights yet — add them to your Google Sheet!</p>
+      <p>No flights yet.</p>
+      <button class="btn btn-primary" (click)="openAddModal()">Add your first flight</button>
     </div>
   }
 
-  <!-- ── ARRIVALS ── -->
   @if (arrivals().length > 0) {
     <div class="section-header arrivals">
       <span class="section-icon">🛬</span>
-      <span>Arrivals to Ireland</span>
+      <span>Arrivals to {{ destination() }}</span>
     </div>
-
-    @for (journey of arrivals(); track journey.groupName + journey.section) {
+    @for (journey of arrivals(); track journey.uid + journey.section) {
       <ng-container *ngTemplateOutlet="journeyCard; context: { journey }"></ng-container>
     }
   }
 
-  <!-- ── DEPARTURES ── -->
   @if (departures().length > 0) {
     <div class="section-header departures">
       <span class="section-icon">🛫</span>
       <span>Departures</span>
     </div>
-
-    @for (journey of departures(); track journey.groupName + journey.section) {
+    @for (journey of departures(); track journey.uid + journey.section) {
       <ng-container *ngTemplateOutlet="journeyCard; context: { journey }"></ng-container>
     }
   }
 
 </div>
 
-<!-- ── Journey card template ── -->
+<!-- ── Journey card ── -->
 <ng-template #journeyCard let-journey="journey">
   <div class="journey-card card" [class.mine]="journey.isMyJourney">
-
-    <!-- Header -->
     <div class="journey-header">
       <div class="journey-group">
-        <span class="group-icon">{{ groupIcon(journey.groupName) }}</span>
         <span class="group-name">{{ journey.groupName }}</span>
-        @if (journey.isMyJourney) {
-          <span class="chip chip-primary">You</span>
-        }
+        @if (journey.isMyJourney) { <span class="chip chip-primary">You</span> }
       </div>
-      <span class="section-badge" [class.dep]="journey.section === 'DEPARTURES'">
-        {{ journey.section === 'ARRIVALS' ? '↓ Arrival' : '↑ Departure' }}
-      </span>
+      <div class="journey-header-right">
+        <span class="section-badge" [class.dep]="journey.section === 'DEPARTURES'">
+          {{ journey.section === 'ARRIVALS' ? '↓ Arrival' : '↑ Departure' }}
+        </span>
+        <button class="edit-btn" title="Edit" (click)="openEditModal(journey)">✏️</button>
+      </div>
     </div>
 
-    <!-- Route visualization -->
     <div class="route">
       @for (stop of journey.stops; track $index) {
-
-        <!-- Stop -->
         <div class="stop" [class.layover]="stop.arrivalTime && stop.departureTime">
           <div class="iata">{{ stop.iata }}</div>
           <div class="stop-times">
@@ -88,24 +74,18 @@
               <div class="time arr">
                 <span class="t-arrow">↓</span>
                 <span class="t-val">{{ stop.arrivalTime }}</span>
-                @if (stop.arrivalDate) {
-                  <span class="t-date">{{ formatShortDate(stop.arrivalDate) }}</span>
-                }
+                @if (stop.arrivalDate) { <span class="t-date">{{ formatShortDate(stop.arrivalDate) }}</span> }
               </div>
             }
             @if (stop.departureTime) {
               <div class="time dep">
                 <span class="t-arrow">↑</span>
                 <span class="t-val">{{ stop.departureTime }}</span>
-                @if (stop.departureDate) {
-                  <span class="t-date">{{ formatShortDate(stop.departureDate) }}</span>
-                }
+                @if (stop.departureDate) { <span class="t-date">{{ formatShortDate(stop.departureDate) }}</span> }
               </div>
             }
           </div>
         </div>
-
-        <!-- Segment line (between stops) -->
         @if ($index < journey.segments.length) {
           <div class="segment">
             <span class="seg-carrier">{{ journey.segments[$index].carrier }}</span>
@@ -115,11 +95,9 @@
             }
           </div>
         }
-
       }
     </div>
 
-    <!-- Notes -->
     @if (journey.notes.length > 0) {
       <div class="journey-notes">
         @for (note of journey.notes; track note) {
@@ -128,4 +106,138 @@
       </div>
     }
   </div>
+</ng-template>
+
+
+<!-- ── Add Flight modal ── -->
+@if (showAddModal()) {
+  <div class="modal-backdrop" (click)="closeAddModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>Add Flight</h2>
+
+      <ng-container *ngTemplateOutlet="flightFormFields; context: { form: addForm, saving: addSaving(), error: addError(), isEdit: false }"></ng-container>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="closeAddModal()" [disabled]="addSaving()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveAdd()" [disabled]="addSaving()">
+          {{ addSaving() ? 'Saving…' : 'Add Flight' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Edit Flight modal ── -->
+@if (showEditModal()) {
+  <div class="modal-backdrop" (click)="closeEditModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>Edit Flight</h2>
+
+      <ng-container *ngTemplateOutlet="flightFormFields; context: { form: editForm, saving: editSaving(), error: editError(), isEdit: true }"></ng-container>
+
+      <div class="modal-actions modal-actions--split">
+        <button class="btn btn-danger" (click)="deleteJourney()" [disabled]="editSaving()">Delete</button>
+        <div class="modal-actions-right">
+          <button class="btn btn-ghost" (click)="closeEditModal()" [disabled]="editSaving()">Cancel</button>
+          <button class="btn btn-primary" (click)="saveEdit()" [disabled]="editSaving()">
+            {{ editSaving() ? 'Saving…' : 'Save Changes' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Shared form fields template ── -->
+<ng-template #flightFormFields let-form="form" let-saving="saving" let-error="error" let-isEdit="isEdit">
+
+  <!-- Section toggle -->
+  <div class="form-group">
+    <label>Type</label>
+    <div class="toggle-group">
+      <button type="button" class="toggle-btn" [class.active]="form.section === 'ARRIVALS'"   (click)="form.section = 'ARRIVALS'">🛬 Arrival</button>
+      <button type="button" class="toggle-btn" [class.active]="form.section === 'DEPARTURES'" (click)="form.section = 'DEPARTURES'">🛫 Departure</button>
+    </div>
+  </div>
+
+  <!-- Assign to -->
+  <div class="form-group">
+    <label>For</label>
+    <select [(ngModel)]="form.assignedUid" [name]="isEdit ? 'editAssignedUid' : 'addAssignedUid'">
+      <option value="" disabled>Select traveller</option>
+      @for (u of tripUsers(); track u.uid) {
+        <option [value]="u.uid">{{ u.name }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Legs -->
+  @for (leg of form.legs; track $index; let i = $index) {
+    <div class="leg-section" [class.has-divider]="form.legs.length > 1">
+      @if (form.legs.length > 1) {
+        <div class="leg-label">
+          <span>Leg {{ i + 1 }}</span>
+          <button type="button" class="remove-leg-btn" (click)="isEdit ? removeLegFromEdit(i) : removeLegFromAdd(i)">Remove</button>
+        </div>
+      }
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>From <span class="label-hint">(IATA)</span></label>
+          <input type="text" [(ngModel)]="leg.from" maxlength="4" placeholder="e.g. ORD" style="text-transform:uppercase" [name]="'from'+i+isEdit" />
+        </div>
+        <div class="form-group">
+          <label>To <span class="label-hint">(IATA)</span></label>
+          <input type="text" [(ngModel)]="leg.to" maxlength="4" placeholder="e.g. SAV" style="text-transform:uppercase" [name]="'to'+i+isEdit" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Airline</label>
+          <input type="text" [(ngModel)]="leg.airline" placeholder="e.g. Delta" [name]="'airline'+i+isEdit" />
+        </div>
+        <div class="form-group">
+          <label>Flight # <span class="label-hint">(optional)</span></label>
+          <input type="text" [(ngModel)]="leg.flightNumber" placeholder="e.g. DL 123" [name]="'fn'+i+isEdit" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Departure Date</label>
+          <input type="date" [(ngModel)]="leg.departureDate" [name]="'depDate'+i+isEdit" />
+        </div>
+        <div class="form-group">
+          <label>Departure Time</label>
+          <input type="text" [(ngModel)]="leg.departureTime" placeholder="e.g. 8:30 AM" [name]="'depTime'+i+isEdit" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Arrival Date</label>
+          <input type="date" [(ngModel)]="leg.arrivalDate" [name]="'arrDate'+i+isEdit" />
+        </div>
+        <div class="form-group">
+          <label>Arrival Time</label>
+          <input type="text" [(ngModel)]="leg.arrivalTime" placeholder="e.g. 11:45 AM" [name]="'arrTime'+i+isEdit" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Notes <span class="label-hint">(optional)</span></label>
+        <input type="text" [(ngModel)]="leg.notes" placeholder="e.g. Window seat confirmed" [name]="'notes'+i+isEdit" />
+      </div>
+    </div>
+  }
+
+  <button type="button" class="btn btn-ghost btn-sm add-layover-btn"
+    (click)="isEdit ? addLayoverToEdit() : addLayoverToAdd()">
+    + Add Layover
+  </button>
+
+  @if (error) {
+    <div class="alert alert-error">{{ error }}</div>
+  }
 </ng-template>
