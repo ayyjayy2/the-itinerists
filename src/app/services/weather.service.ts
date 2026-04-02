@@ -43,8 +43,9 @@ export class WeatherService {
   readonly weather = this._weather.asReadonly();
   private _loaded = false;
 
-  /** Load Savannah weather for a given date range. */
+  /** Load Savannah weather for a given date range. No-ops until dates are available. */
   load(startDate?: string, endDate?: string): void {
+    if (!startDate || !endDate) return;  // wait until config is ready
     if (this._loaded) return;
     this._loaded = true;
 
@@ -59,8 +60,6 @@ export class WeatherService {
         }
       }
     } catch { /* ignore */ }
-
-    if (!startDate || !endDate) return;
 
     const url = `https://api.open-meteo.com/v1/forecast` +
       `?latitude=${SAVANNAH_LAT}&longitude=${SAVANNAH_LON}` +

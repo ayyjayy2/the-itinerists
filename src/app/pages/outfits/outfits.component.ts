@@ -74,6 +74,15 @@ export class OutfitsComponent implements OnInit {
   weatherEmoji = weatherEmoji;
 
   constructor() {
+    // Load weather once trip config dates become available
+    effect(() => {
+      const cfg = this.tripConfigService.config();
+      if (cfg?.startDate && cfg?.endDate) {
+        this.weatherService.load(cfg.startDate, cfg.endDate);
+      }
+    });
+
+    // Eagerly resolve stored outfit photos from Firestore
     effect(() => {
       const stored = this.outfitsService.outfits().filter(o => o.photoUrl === 'stored');
       for (const o of stored) {
@@ -170,8 +179,6 @@ export class OutfitsComponent implements OnInit {
   readonly currentDay = computed(() => this.days()[this.currentDateIndex()] ?? null);
 
   ngOnInit(): void {
-    const cfg = this.tripConfigService.config();
-    this.weatherService.load(cfg?.startDate, cfg?.endDate);
     const today = new Date().toISOString().slice(0, 10);
     const idx   = this.days().findIndex(d => d.date >= today);
     this.currentDateIndex.set(idx >= 0 ? idx : 0);
