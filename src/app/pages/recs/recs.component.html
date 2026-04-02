@@ -1,19 +1,11 @@
 <div class="page-container">
   <div class="page-header">
-    <h2>☘️ Irish Tips & Recs</h2>
-    @if (dataService.isStale()) {
-      <button class="btn btn-ghost btn-sm" (click)="refresh()">↻ Refresh</button>
-    }
+    <h2>🌸 Savannah Tips & Recs</h2>
+    <button class="btn btn-primary btn-sm" (click)="showForm.set(true)">+ Add Rec</button>
   </div>
 
-  @if (dataService.loading()) {
-    <div class="loading-overlay"><div class="spinner"></div><p>Loading recs…</p></div>
-  }
-
-  <!-- Add form toggle -->
-  @if (!showForm()) {
-    <button class="btn btn-primary add-btn" (click)="showForm.set(true)">+ Add Rec</button>
-  } @else {
+  <!-- ── Add form ── -->
+  @if (showForm()) {
     <div class="add-form card">
       <h3>New Rec</h3>
 
@@ -22,7 +14,7 @@
         @if (!useCustomCategory) {
           <div class="category-row">
             <select [(ngModel)]="form.category">
-              @for (cat of formCategories(); track cat) {
+              @for (cat of categories.slice(1); track cat) {
                 <option [value]="cat">{{ categoryIcon(cat) }} {{ cat }}</option>
               }
             </select>
@@ -38,17 +30,17 @@
 
       <div class="form-group">
         <label>Title <span class="required">*</span></label>
-        <input type="text" [(ngModel)]="form.title" placeholder="e.g. Soda Bread">
+        <input type="text" [(ngModel)]="form.title" placeholder="e.g. Forsyth Park">
       </div>
 
       <div class="form-group">
         <label>Description</label>
-        <textarea [(ngModel)]="form.description" placeholder="e.g. A must-try Irish staple — dense, slightly tangy, goes great with butter." rows="2"></textarea>
+        <textarea [(ngModel)]="form.description" placeholder="What's great about it?" rows="2"></textarea>
       </div>
 
       <div class="form-group">
-        <label>Extra / Pro tip</label>
-        <input type="text" [(ngModel)]="form.extra" placeholder="e.g. Best found at local bakeries, not supermarkets">
+        <label>Pro tip</label>
+        <input type="text" [(ngModel)]="form.extra" placeholder="e.g. Best time to visit is early morning">
       </div>
 
       <div class="form-actions">
@@ -58,38 +50,41 @@
     </div>
   }
 
-  <!-- Category filter -->
+  <!-- ── Category filter chips ── -->
   <div class="filter-chips">
-    @for (cat of categories(); track cat) {
+    @for (cat of categories; track cat) {
       <button class="chip" [class.chip-primary]="selectedCategory() === cat" (click)="setCategory(cat)">
-        {{ categoryIcon(cat) }} {{ cat }}
+        @if (cat !== 'All') { {{ categoryIcon(cat) }}  }{{ cat }}
       </button>
     }
   </div>
 
-  @if (allRecs().length === 0 && !dataService.loading()) {
-    <div class="empty-state">
-      <span class="empty-icon">☘️</span>
-      <p>No recs yet — add the first one!</p>
-    </div>
-  }
-
+  <!-- ── Grouped recs ── -->
   @for (group of groupedByCat(); track group[0]) {
     <div class="rec-group">
       <h3 class="rec-group-title">{{ categoryIcon(group[0]) }} {{ group[0] }}</h3>
       <div class="rec-cards">
         @for (rec of group[1]; track rec.title) {
           <div class="rec-card card">
-            <div class="rec-title">{{ rec.title }}</div>
+            <div class="rec-card-header">
+              <div class="rec-title">{{ rec.title }}</div>
+              @if (canDelete(rec)) {
+                <button class="rec-delete-btn" (click)="deleteRec(rec.id!)" title="Delete">✕</button>
+              }
+            </div>
             @if (rec.description) {
               <p class="rec-desc">{{ rec.description }}</p>
             }
             @if (rec.extra) {
-              <p class="rec-extra">{{ rec.extra }}</p>
+              <p class="rec-extra">💡 {{ rec.extra }}</p>
+            }
+            @if (rec.isUserAdded) {
+              <span class="rec-user-badge">added by group</span>
             }
           </div>
         }
       </div>
     </div>
   }
+
 </div>
