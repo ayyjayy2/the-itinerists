@@ -2,10 +2,12 @@ import { Component, OnInit, inject, signal, computed, effect, untracked } from '
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { DataService } from '../../services/data.service';
+import { ItineraryService } from '../../services/itinerary.service';
 import { UserService } from '../../services/user.service';
-import { WeatherService, weatherEmoji, LiveWeather } from '../../services/weather.service';
-import { ItineraryItem } from '../../models/trip.models';
+import { UsersService } from '../../services/users.service';
+import { FlightsService } from '../../services/flights.service';
+import { TripConfigService } from '../../services/trip-config.service';
+import { ItineraryItemDoc } from '../../models/trip.models';
 
 type ViewMode = 'list' | 'calendar';
 
@@ -21,88 +23,136 @@ const CATEGORIES = [
   styleUrl: './itinerary.component.scss'
 })
 export class ItineraryComponent implements OnInit {
-  dataService    = inject(DataService);
-  userService    = inject(UserService);
-  weatherService = inject(WeatherService);
-
-  weatherEmoji = weatherEmoji;
+  itineraryService  = inject(ItineraryService);
+  userService       = inject(UserService);
+  usersService      = inject(UsersService);
+  flightsService    = inject(FlightsService);
+  tripConfigService = inject(TripConfigService);
 
   view         = signal<ViewMode>('list');
   selectedDate = signal<string>('All');
   currentUser  = this.userService.currentUser;
-
-  /** true = show everyone's items, false = show only current user's items */
-  showAll = signal<boolean>(true);
-
-  // ── Edit state ─────────────────────────────────────────────────────────────
-  editingKey    = signal<string | null>(null);
-  draft: Partial<ItineraryItem> = {};
-  editForWhoMap: Record<string, boolean> = {};
-
-  // ── Add state ──────────────────────────────────────────────────────────────
-  addingToDate = signal<string | null>(null);
-  newDraft: Partial<ItineraryItem> = {};
-  addForWhoMap: Record<string, boolean> = {};
+  showAll      = signal<boolean>(true);
 
   readonly categories = CATEGORIES;
 
-  // ── Data ───────────────────────────────────────────────────────────────────
-  allItems     = computed(() => this.dataService.data()?.itinerary ?? []);
-  weatherByDate = computed(() => this.dataService.data()?.weatherByDate ?? {});
-  users        = computed(() => (this.dataService.data()?.users ?? []).filter(u => u.name !== 'Arielle'));
-  userNames    = computed(() => this.users().map(u => u.name).join(', '));
+  // ── Day label editing ──────────────────────────────────────────────────────
+  editingLabelDate = signal<string | null>(null);
+  draftLabel       = '';
 
-  uniqueDates = computed(() => {
-    const dates = new Set(this.allItems().map(i => i.date));
-    return Array.from(dates).sort();
+  startLabelEdit(date: string): void {
+    this.draftLabel = this.effectiveDayLabel(date);
+    this.editingLabelDate.set(date);
+  }
+
+  saveLabelEdit(date: string): void {
+    const uid = this.currentUser()?.uid;
+    if (!uid) return;
+    const label = this.draftLabel.trim();
+    if (label) this.itineraryService.saveDayLabel(uid, date, label);
+    this.editingLabelDate.set(null);
+  }
+
+  cancelLabelEdit(): void { this.editingLabelDate.set(null); }
+
+  // ── Edit item state ────────────────────────────────────────────────────────
+  editingId     = signal<string | null>(null);
+  draft: Partial<ItineraryItemDoc> = {};
+  editForWhoMap: Record<string, boolean> = {};
+
+  // ── Add item state ─────────────────────────────────────────────────────────
+  addingToDate = signal<string | null>(null);
+  newDraft: Partial<ItineraryItemDoc> = {};
+  addForWhoMap: Record<string, boolean> = {};
+
+  // ── Trip days from config ──────────────────────────────────────────────────
+  readonly tripDays = computed((): string[] => {
+    const cfg = this.tripConfigService.config();
+    if (!cfg?.startDate || !cfg?.endDate) return [];
+    const days: string[] = [];
+    const cur = new Date(cfg.startDate + 'T00:00');
+    const end = new Date(cfg.endDate   + 'T00:00');
+    while (cur <= end) {
+      days.push(cur.toISOString().slice(0, 10));
+      cur.setDate(cur.getDate() + 1);
+    }
+    return days;
   });
 
-  dayLabels = computed(() => {
-    const map: Record<string, string> = {};
-    for (const item of this.allItems()) map[item.date] = item.dayLabel;
-    return map;
+  effectiveDayLabel(date: string): string {
+    const custom = this.itineraryService.dayLabels()[date];
+    if (custom) return custom;
+    const cfg = this.tripConfigService.config();
+    if (!cfg?.startDate) return date;
+    const start = new Date(cfg.startDate + 'T00:00');
+    const d     = new Date(date + 'T00:00');
+    const diff  = Math.round((d.getTime() - start.getTime()) / 86_400_000);
+    return `Day ${diff + 1}`;
+  }
+
+  // ── Data ──────────────────────────────────────────────────────────────────
+  readonly allItems = computed(() =>
+    [...this.itineraryService.items()].sort((a, b) =>
+      a.date.localeCompare(b.date) || a.sortOrder - b.sortOrder || a.time.localeCompare(b.time)
+    )
+  );
+
+  /** Auto-generated flight events for the current user — not stored, not editable. */
+  readonly flightEvents = computed(() => {
+    const uid     = this.currentUser()?.uid ?? '';
+    const dest    = this.tripConfigService.config()?.locationLabel ?? 'Savannah';
+    const flights = this.flightsService.flights();
+    const mine    = flights.filter(f => f.uid === uid);
+
+    const events: Array<{ date: string; label: string; time: string }> = [];
+
+    // Last arrival leg per date
+    const arrivalsByDate = mine.filter(f => f.section === 'ARRIVALS');
+    for (const f of arrivalsByDate) {
+      events.push({ date: f.arrivalDate, label: `✈️ Arrive at ${f.to} – ${dest}`, time: f.arrivalTime });
+    }
+    // First departure leg per date
+    const departuresByDate = mine.filter(f => f.section === 'DEPARTURES');
+    for (const f of departuresByDate) {
+      events.push({ date: f.departureDate, label: `✈️ Depart from ${f.from}`, time: f.departureTime });
+    }
+    return events;
   });
 
-  // ── "My Trip" flight date range ────────────────────────────────────────────
+  readonly tripUsers = this.usersService.tripUsers;
 
-  /** Ireland arrival / departure dates for the current user based on their flights. */
-  userFlightRange = computed((): { start: string; end: string } | null => {
-    const user = this.currentUser();
-    if (!user) return null;
-    const flights = this.dataService.data()?.flights ?? [];
+  // ── User flight range for "My Trip" ───────────────────────────────────────
+  readonly userFlightRange = computed((): { start: string; end: string } | null => {
+    const uid     = this.currentUser()?.uid ?? '';
+    const flights = this.flightsService.flights().filter(f => f.uid === uid);
+    if (!flights.length) return null;
 
-    const mine = flights.filter(f => this.matchesUser(f.person, user.name));
-    if (!mine.length) return null;
-
-    const arrivals   = mine.filter(f => f.section === 'ARRIVALS');
-    const departures = mine.filter(f => f.section === 'DEPARTURES');
-
-    // Last leg arrival date = day they land in Ireland
-    const start = arrivals.length
-      ? [...arrivals.map(f => f.arrivalDate)].sort().at(-1)!
-      : '';
-
-    // First leg departure date = day they leave Ireland
-    const end = departures.length
-      ? [...departures.map(f => f.departureDate)].sort()[0]
-      : '';
-
+    const arrivals   = flights.filter(f => f.section === 'ARRIVALS');
+    const departures = flights.filter(f => f.section === 'DEPARTURES');
+    const start = arrivals.length   ? [...arrivals.map(f => f.arrivalDate)].sort().at(-1)!   : '';
+    const end   = departures.length ? [...departures.map(f => f.departureDate)].sort()[0]    : '';
     return start || end ? { start, end } : null;
   });
 
-  /** Dates visible in the chip picker — filtered by flight range in "My Trip" mode. */
-  visibleDates = computed(() => {
+  // ── Visible dates (for chip bar) ──────────────────────────────────────────
+  readonly visibleDates = computed(() => {
     const all   = this.showAll();
     const range = this.userFlightRange();
-    const dates = this.uniqueDates();
-    if (all || !range) return dates;
-    return dates.filter(d =>
-      (!range.start || d >= range.start) &&
-      (!range.end   || d <= range.end)
+    const days  = this.tripDays();
+
+    // Include any dates with items that aren't in the trip days list
+    const itemDates  = new Set(this.allItems().map(i => i.date));
+    const flightDates = new Set(this.flightEvents().map(e => e.date));
+    const allDates   = [...new Set([...days, ...itemDates, ...flightDates])].sort();
+
+    if (all || !range) return allDates;
+    return allDates.filter(d =>
+      (!range.start || d >= range.start) && (!range.end || d <= range.end)
     );
   });
 
-  filteredItems = computed(() => {
+  // ── Filtered items ────────────────────────────────────────────────────────
+  readonly filteredItems = computed(() => {
     const me    = this.currentUser()?.name ?? '';
     const date  = this.selectedDate();
     const all   = this.showAll();
@@ -113,28 +163,34 @@ export class ItineraryComponent implements OnInit {
       const whoMatch   = all || item.forWho === 'All' ||
         item.forWho.split(',').map(s => s.trim()).includes(me);
       const rangeMatch = all || !range ||
-        ((!range.start || item.date >= range.start) &&
-         (!range.end   || item.date <= range.end));
+        ((!range.start || item.date >= range.start) && (!range.end || item.date <= range.end));
       return dateMatch && whoMatch && rangeMatch;
     });
   });
 
-  groupedByDay = computed(() => {
-    const groups: Record<string, ItineraryItem[]> = {};
+  readonly groupedByDay = computed((): [string, ItineraryItemDoc[]][] => {
+    const groups: Record<string, ItineraryItemDoc[]> = {};
     for (const item of this.filteredItems()) {
       if (!groups[item.date]) groups[item.date] = [];
       groups[item.date].push(item);
     }
+    // Include visible dates with no items so "Add event" still shows,
+    // but only for the selected date (or all dates when showing all).
+    const selected = this.selectedDate();
+    const datesToPad = selected === 'All' ? this.visibleDates() : [selected];
+    for (const date of datesToPad) {
+      if (!groups[date]) groups[date] = [];
+    }
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   });
 
-  calendarDays = computed(() => {
+  readonly calendarDays = computed(() => {
     const me  = this.currentUser()?.name ?? '';
     const all = this.showAll();
     return this.visibleDates().map(date => ({
       date,
-      label:      this.dayLabels()[date] ?? date,
-      items:      this.allItems().filter(i => {
+      label: this.effectiveDayLabel(date),
+      items: this.allItems().filter(i => {
         if (i.date !== date) return false;
         if (all) return true;
         return i.forWho === 'All' || i.forWho.split(',').map(s => s.trim()).includes(me);
@@ -143,7 +199,7 @@ export class ItineraryComponent implements OnInit {
     }));
   });
 
-  // ── Reset selectedDate when it falls outside the visible range ─────────────
+  // ── Reset selectedDate when out of range ──────────────────────────────────
   constructor() {
     effect(() => {
       const visible  = this.visibleDates();
@@ -154,45 +210,40 @@ export class ItineraryComponent implements OnInit {
     });
   }
 
-  // ── Name matching: handles nicknames like Maddie → Madeleine ───────────────
-  private matchesUser(flightPerson: string, userName: string): boolean {
-    const person = flightPerson.toLowerCase();
-    const name   = userName.toLowerCase();
-    if (person.includes(name)) return true;
-    // Fallback: first 3 chars catches short nicknames (Maddie ↔ Madeleine)
-    if (name.length >= 3 && person.includes(name.substring(0, 3))) return true;
-    return false;
+  ngOnInit(): void {
+    const uid = this.currentUser()?.uid;
+    if (uid) this.itineraryService.loadDayLabels(uid);
   }
 
-  // ── For-Who helpers ────────────────────────────────────────────────────────
+  // ── ForWho helpers ─────────────────────────────────────────────────────────
   private buildForWho(map: Record<string, boolean>): string {
-    const selected = this.users().filter(u => map[u.name]).map(u => u.name);
-    return selected.length === this.users().length ? 'All' : selected.join(', ');
+    const users    = this.tripUsers();
+    const selected = users.filter(u => map[u.name]).map(u => u.name);
+    return selected.length === users.length ? 'All' : selected.join(', ');
   }
 
   private parseForWhoToMap(forWho: string): Record<string, boolean> {
     const names = forWho.split(',').map(s => s.trim());
     const map: Record<string, boolean> = {};
-    for (const u of this.users()) {
+    for (const u of this.tripUsers()) {
       map[u.name] = forWho === 'All' || names.includes(u.name);
     }
     return map;
   }
 
   isAllForWhoSelected(map: Record<string, boolean>): boolean {
-    return this.users().every(u => map[u.name]);
+    return this.tripUsers().every(u => map[u.name]);
   }
 
   toggleAllForWho(map: Record<string, boolean>): void {
     const val = !this.isAllForWhoSelected(map);
-    for (const u of this.users()) map[u.name] = val;
+    for (const u of this.tripUsers()) map[u.name] = val;
   }
 
   // ── Time helpers ───────────────────────────────────────────────────────────
-  /** "H:MM AM/PM [TZ]" → "HH:MM" (for <input type="time">) */
   private formatTime24h(t: string): string {
     if (!t) return '';
-    const clean = t.replace(/\s+(CT|ET|PT|MT|IST)$/i, '').trim();
+    const clean = t.replace(/\s+(CT|ET|PT|MT|IST|CDT|EDT|CST|EST)$/i, '').trim();
     const m = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (!m) return '';
     let h = parseInt(m[1], 10);
@@ -202,7 +253,6 @@ export class ItineraryComponent implements OnInit {
     return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
   }
 
-  /** "HH:MM" (from <input type="time">) → "H:MM AM/PM" */
   private formatTime12h(t: string): string {
     if (!t) return '';
     const [h, m] = t.split(':').map(Number);
@@ -212,104 +262,89 @@ export class ItineraryComponent implements OnInit {
   }
 
   // ── Edit helpers ───────────────────────────────────────────────────────────
-  itemKey(item: ItineraryItem): string { return `${item.date}::${item.activity}`; }
+  isEditing(item: ItineraryItemDoc): boolean { return this.editingId() === item.id; }
 
-  isEditing(item: ItineraryItem): boolean { return this.editingKey() === this.itemKey(item); }
-
-  startEdit(item: ItineraryItem): void {
+  startEdit(item: ItineraryItemDoc): void {
     this.addingToDate.set(null);
-    this.editingKey.set(this.itemKey(item));
-    this.draft = {
-      ...item,
-      time:    this.formatTime24h(item.time),
-      endTime: this.formatTime24h(item.endTime ?? ''),
-    };
+    this.editingId.set(item.id);
+    this.draft = { ...item, time: this.formatTime24h(item.time), endTime: this.formatTime24h(item.endTime) };
     this.editForWhoMap = this.parseForWhoToMap(item.forWho);
   }
 
-  cancelEdit(): void {
-    this.editingKey.set(null);
-    this.draft = {};
-    this.editForWhoMap = {};
-  }
+  cancelEdit(): void { this.editingId.set(null); this.draft = {}; this.editForWhoMap = {}; }
 
-  saveEdit(original: ItineraryItem): void {
+  async saveEdit(original: ItineraryItemDoc): Promise<void> {
     if (!this.draft.activity?.trim()) return;
-    const time    = this.formatTime12h(this.draft.time ?? '');
-    const endTime = this.formatTime12h(this.draft.endTime ?? '');
-    const forWho  = this.buildForWho(this.editForWhoMap);
-    this.dataService.patchItineraryItem(original.date, original.activity, { ...this.draft, time, endTime, forWho });
-    this.dataService.sortItineraryDay(original.date);
-    this.editingKey.set(null);
-    this.draft = {};
-    this.editForWhoMap = {};
+    await this.itineraryService.updateItem(original.id, {
+      ...this.draft,
+      time:    this.formatTime12h(this.draft.time    ?? ''),
+      endTime: this.formatTime12h(this.draft.endTime ?? ''),
+      forWho:  this.buildForWho(this.editForWhoMap),
+    });
+    this.cancelEdit();
   }
 
-  deleteItem(item: ItineraryItem): void {
-    this.dataService.deleteItineraryItem(item.date, item.activity);
-    this.editingKey.set(null);
-    this.draft = {};
-    this.editForWhoMap = {};
+  async deleteItem(item: ItineraryItemDoc): Promise<void> {
+    await this.itineraryService.deleteItem(item.id);
+    this.cancelEdit();
   }
 
   // ── Add helpers ────────────────────────────────────────────────────────────
   startAdd(date: string): void {
-    this.editingKey.set(null);
+    this.cancelEdit();
     this.addingToDate.set(date);
-    this.newDraft = {
-      date,
-      dayLabel: this.dayLabels()[date] ?? '',
-      time: '', endTime: '', activity: '', location: '',
-      category: 'Activity', notes: '',
-    };
+    this.newDraft = { date, time: '', endTime: '', activity: '', location: '', category: 'Activity', notes: '' };
     this.addForWhoMap = this.parseForWhoToMap('All');
   }
 
-  cancelAdd(): void {
-    this.addingToDate.set(null);
-    this.newDraft = {};
-    this.addForWhoMap = {};
-  }
+  cancelAdd(): void { this.addingToDate.set(null); this.newDraft = {}; this.addForWhoMap = {}; }
 
-  saveAdd(): void {
+  async saveAdd(): Promise<void> {
     const date = this.addingToDate();
     if (!date || !this.newDraft.activity?.trim()) return;
-    this.dataService.addItineraryItem({
+    const dayItems   = this.allItems().filter(i => i.date === date);
+    const sortOrder  = dayItems.length;
+    await this.itineraryService.addItem({
       date,
-      dayLabel: this.dayLabels()[date] ?? '',
-      time:     this.formatTime12h(this.newDraft.time ?? ''),
-      endTime:  this.formatTime12h(this.newDraft.endTime ?? ''),
-      activity: this.newDraft.activity ?? '',
-      location: this.newDraft.location ?? '',
-      category: this.newDraft.category ?? 'Activity',
-      notes:    this.newDraft.notes    ?? '',
-      forWho:   this.buildForWho(this.addForWhoMap),
+      time:       this.formatTime12h(this.newDraft.time    ?? ''),
+      endTime:    this.formatTime12h(this.newDraft.endTime ?? ''),
+      activity:   this.newDraft.activity  ?? '',
+      location:   this.newDraft.location  ?? '',
+      category:   this.newDraft.category  ?? 'Activity',
+      notes:      this.newDraft.notes     ?? '',
+      forWho:     this.buildForWho(this.addForWhoMap),
+      addedByUid: this.currentUser()?.uid ?? '',
+      sortOrder,
+      createdAt:  Date.now(),
     });
-    this.addingToDate.set(null);
-    this.newDraft = {};
-    this.addForWhoMap = {};
+    this.cancelAdd();
   }
 
   // ── Drag-and-drop ──────────────────────────────────────────────────────────
-  onDrop(event: CdkDragDrop<ItineraryItem[]>, date: string): void {
+  async onDrop(event: CdkDragDrop<ItineraryItemDoc[]>, date: string): Promise<void> {
     if (event.previousIndex === event.currentIndex) return;
-    this.dataService.moveItineraryItem(date, event.previousIndex, event.currentIndex);
+    const items = [...this.allItems().filter(i => i.date === date)];
+    const [moved] = items.splice(event.previousIndex, 1);
+    items.splice(event.currentIndex, 0, moved);
+    await this.itineraryService.reorderDay(items);
   }
 
   // ── View helpers ───────────────────────────────────────────────────────────
   setView(v: ViewMode): void { this.view.set(v); }
+  setDate(d: string): void   { this.selectedDate.set(d); }
 
   openDay(date: string): void {
     this.selectedDate.set(date);
     this.view.set('list');
   }
 
-  setDate(d: string): void { this.selectedDate.set(d); }
-
   formatDate(d: string): string {
     if (!d) return '';
-    const dt = new Date(d + 'T00:00');
-    return dt.toLocaleDateString('en-IE', { weekday: 'long', month: 'long', day: 'numeric' });
+    return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+
+  flightEventsForDate(date: string) {
+    return this.flightEvents().filter(e => e.date === date);
   }
 
   categoryColor(cat: string): string {
@@ -323,37 +358,4 @@ export class ItineraryComponent implements OnInit {
     };
     return map[cat] ?? '#E2EDE8';
   }
-
-  ngOnInit(): void {
-    this.weatherService.load();
-  }
-
-  /** Map of date → live weather for that day's primary Irish city. */
-  liveWeatherByDate = computed((): Record<string, LiveWeather | null> => {
-    const weather  = this.weatherService.weather();
-    const allItems = this.allItems();
-    const result: Record<string, LiveWeather | null> = {};
-    for (const date of this.uniqueDates()) {
-      let city: string | null = null;
-      for (const a of allItems.filter(i => i.date === date)) {
-        const c = this.detectCity(a.location ?? '');
-        if (c) city = c;
-      }
-      result[date] = city ? (weather[`${date}_${city}`] ?? null) : null;
-    }
-    return result;
-  });
-
-  private detectCity(location: string): string | null {
-    const loc = location.toLowerCase();
-    if (/belfast|causeway|antrim|banbridge|voco/.test(loc))  return 'Belfast';
-    if (/galway/.test(loc))                                   return 'Galway';
-    if (/killarney|kerry|waterville|horseshoe/.test(loc))     return 'Killarney';
-    if (/cork|stationview/.test(loc))                         return 'Cork';
-    if (/wicklow|waterford|cliffs|moher|clare/.test(loc))     return 'Dublin';
-    if (/dublin|arthaus|heuston|skylon/.test(loc))            return 'Dublin';
-    return null;
-  }
-
-  refresh(): void { this.dataService.refresh(); }
 }

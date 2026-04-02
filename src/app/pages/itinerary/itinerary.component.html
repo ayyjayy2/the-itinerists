@@ -9,13 +9,7 @@
     </div>
   </div>
 
-  @if (dataService.loading()) {
-    <div class="loading-overlay"><div class="spinner"></div><p>Loading itinerary…</p></div>
-  } @else if (dataService.isStale()) {
-    <div class="stale-banner">⚠️ Offline — cached data <button (click)="refresh()">Retry</button></div>
-  }
-
-  <!-- ── Scope tabs: child of each view ── -->
+  <!-- ── Scope tabs ── -->
   <div class="scope-tabs">
     <button [class.active]="!showAll()" (click)="showAll.set(false)">My Trip</button>
     <button [class.active]="showAll()"  (click)="showAll.set(true)">All</button>
@@ -26,7 +20,7 @@
     <button class="chip" [class.chip-primary]="selectedDate() === 'All'" (click)="setDate('All')">All Days</button>
     @for (date of visibleDates(); track date) {
       <button class="chip" [class.chip-primary]="selectedDate() === date" (click)="setDate(date)">
-        {{ dayLabels()[date] || date }}
+        {{ effectiveDayLabel(date) }}
       </button>
     }
   </div>
@@ -44,21 +38,31 @@
 
           <div class="day-header">
             <div class="day-header-row">
-              <h3>{{ dayLabels()[group[0]] || group[0] }}</h3>
+              @if (editingLabelDate() === group[0]) {
+                <input class="day-label-input" [(ngModel)]="draftLabel" (keyup.enter)="saveLabelEdit(group[0])" (keyup.escape)="cancelLabelEdit()" />
+                <button class="label-save-btn" (click)="saveLabelEdit(group[0])">✓</button>
+                <button class="label-cancel-btn" (click)="cancelLabelEdit()">✕</button>
+              } @else {
+                <h3>{{ effectiveDayLabel(group[0]) }}</h3>
+                <button class="label-edit-btn" (click)="startLabelEdit(group[0])" title="Edit day label">✏️</button>
+              }
               <span class="day-date">{{ formatDate(group[0]) }}</span>
             </div>
-            @if (liveWeatherByDate()[group[0]]; as w) {
-              <div class="day-weather">{{ weatherEmoji(w.code) }} {{ w.minF }}–{{ w.maxF }}°F · {{ w.city }} <span class="live-badge">live</span></div>
-            } @else if (weatherByDate()[group[0]]) {
-              <div class="day-weather">🌡️ {{ weatherByDate()[group[0]] }}</div>
-            }
           </div>
+
+          <!-- Flight event banners -->
+          @for (flight of flightEventsForDate(group[0]); track flight.label) {
+            <div class="flight-banner">
+              <span class="flight-time">{{ flight.time }}</span>
+              <span class="flight-label">{{ flight.label }}</span>
+            </div>
+          }
 
           <div class="items-list"
                cdkDropList
                [cdkDropListData]="group[1]"
                (cdkDropListDropped)="onDrop($event, group[0])">
-            @for (item of group[1]; track item.date + item.activity) {
+            @for (item of group[1]; track item.id) {
 
               <div class="itinerary-item card" cdkDrag [cdkDragDisabled]="isEditing(item)" [class.editing]="isEditing(item)">
 
@@ -138,7 +142,7 @@
                       <label>For Who</label>
                       <div class="people-picker">
                         <button type="button" class="people-btn" [class.selected]="isAllForWhoSelected(editForWhoMap)" (click)="toggleAllForWho(editForWhoMap)">All</button>
-                        @for (user of users(); track user.name) {
+                        @for (user of tripUsers(); track user.name) {
                           <button type="button" class="people-btn" [class.selected]="editForWhoMap[user.name]" (click)="editForWhoMap[user.name] = !editForWhoMap[user.name]">
                             {{ user.avatarEmoji }} {{ user.name }}
                           </button>
@@ -162,7 +166,7 @@
             <!-- ── Add event for this day ── -->
             @if (addingToDate() === group[0]) {
               <div class="add-item-card card">
-                <p class="add-form-title">New event · {{ dayLabels()[group[0]] }}</p>
+                <p class="add-form-title">New event · {{ effectiveDayLabel(group[0]) }}</p>
 
                 <div class="form-row">
                   <div class="form-group">
@@ -202,7 +206,7 @@
                   <label>For Who</label>
                   <div class="people-picker">
                     <button type="button" class="people-btn" [class.selected]="isAllForWhoSelected(addForWhoMap)" (click)="toggleAllForWho(addForWhoMap)">All</button>
-                    @for (user of users(); track user.name) {
+                    @for (user of tripUsers(); track user.name) {
                       <button type="button" class="people-btn" [class.selected]="addForWhoMap[user.name]" (click)="addForWhoMap[user.name] = !addForWhoMap[user.name]">
                         {{ user.avatarEmoji }} {{ user.name }}
                       </button>
@@ -234,14 +238,9 @@
         <div class="cal-day" [class.selected]="day.isSelected" (click)="openDay(day.date)">
           <div class="cal-day-label">{{ day.label }}</div>
           <div class="cal-day-date">{{ formatDate(day.date) }}</div>
-          @if (liveWeatherByDate()[day.date]; as w) {
-            <div class="cal-weather">{{ weatherEmoji(w.code) }} {{ w.minF }}–{{ w.maxF }}°F · {{ w.city }} <span class="live-badge">live</span></div>
-          } @else if (weatherByDate()[day.date]) {
-            <div class="cal-weather">🌡️ {{ weatherByDate()[day.date] }}</div>
-          }
           <div class="cal-count">{{ day.items.length }} event{{ day.items.length !== 1 ? 's' : '' }}</div>
           <div class="cal-preview">
-            @for (item of day.items.slice(0, 3); track item.activity) {
+            @for (item of day.items.slice(0, 3); track item.id) {
               <div class="cal-item" [style.background]="categoryColor(item.category)">
                 @if (item.time) { <span class="cal-item-time">{{ item.time }}</span> · }{{ item.activity }}
               </div>

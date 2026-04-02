@@ -115,6 +115,22 @@ export interface ItineraryItem {
   forWho: string;      // comma-separated names or "All"
 }
 
+/** Stored in Firestore `itinerary` collection — one doc per event. */
+export interface ItineraryItemDoc {
+  id: string;
+  date: string;          // YYYY-MM-DD
+  time: string;          // "H:MM AM/PM" or ""
+  endTime: string;       // "H:MM AM/PM" or ""
+  activity: string;
+  location: string;
+  category: string;
+  notes: string;
+  forWho: string;        // comma-separated display names or "All"
+  addedByUid: string;
+  sortOrder: number;
+  createdAt: number;
+}
+
 // ── Accommodations ────────────────────────────────────────────────────────────
 
 export interface Accommodation {
