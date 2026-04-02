@@ -33,7 +33,10 @@ export class FinanceService {
   }
 
   async updateEntry(id: string, updates: Partial<FinanceEntryDoc>): Promise<void> {
-    await updateDoc(doc(this.firestore, 'financeEntries', id), { ...updates });
+    const data = Object.fromEntries(
+      Object.entries(updates).filter(([, v]) => v !== undefined)
+    );
+    await updateDoc(doc(this.firestore, 'financeEntries', id), data);
   }
 
   async deleteEntry(id: string): Promise<void> {
