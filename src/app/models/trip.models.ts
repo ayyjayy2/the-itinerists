@@ -202,10 +202,17 @@ export interface Balance {
 // ── Recs ──────────────────────────────────────────────────────────────────────
 
 export interface Rec {
-  category: string;   // "Irish Words", "Food", "Currency", etc.
+  category: string;
   title: string;
   description: string;
   extra: string;
+}
+
+/** Stored in Firestore `recs` collection — one doc per user-added rec. */
+export interface RecDoc extends Rec {
+  id: string;
+  addedByUid: string;
+  createdAt: number;
 }
 
 // ── Rental Car ────────────────────────────────────────────────────────────────

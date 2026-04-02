@@ -14,6 +14,7 @@ import { FlightsService } from './services/flights.service';
 import { ItineraryService } from './services/itinerary.service';
 import { StaysService } from './services/stays.service';
 import { FinanceService } from './services/finance.service';
+import { RecsService } from './services/recs.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../version';
 
 interface NavItem {
@@ -40,6 +41,7 @@ export class AppComponent implements OnInit {
   itineraryService  = inject(ItineraryService);
   staysService      = inject(StaysService);
   financeService    = inject(FinanceService);
+  recsService       = inject(RecsService);
   router        = inject(Router);
   private swUpdate = inject(SwUpdate);
 
@@ -84,6 +86,7 @@ export class AppComponent implements OnInit {
         this.itineraryService.init();
         this.staysService.init();
         this.financeService.init();
+        this.recsService.init();
       }
     });
   }
