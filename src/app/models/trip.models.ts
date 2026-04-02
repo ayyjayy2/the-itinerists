@@ -143,6 +143,21 @@ export interface Accommodation {
   forWho: string;      // comma-separated names or "All"
 }
 
+/** Stored in Firestore `stays` collection — one doc per accommodation. */
+export interface AccommodationDoc {
+  id: string;
+  name: string;
+  address: string;
+  checkIn: string;     // YYYY-MM-DD
+  checkOut: string;
+  notes: string;
+  bookingRef: string;
+  link?: string;
+  forWho: string;      // comma-separated display names or "All"
+  addedByUid: string;
+  createdAt: number;
+}
+
 // ── Finance (shared) ──────────────────────────────────────────────────────────
 
 export interface FinanceEntry {

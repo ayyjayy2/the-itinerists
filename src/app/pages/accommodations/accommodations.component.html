@@ -1,37 +1,88 @@
 <div class="page-container">
   <div class="page-header">
-    <h2>🏨 Accommodations</h2>
-    @if (dataService.isStale()) {
-      <button class="btn btn-ghost btn-sm" (click)="refresh()">↻ Refresh</button>
-    }
+    <h2>🏨 Stays</h2>
+    <button class="btn btn-primary btn-sm" (click)="startAdd()">+ Add Stay</button>
   </div>
 
-  @if (dataService.loading()) {
-    <div class="loading-overlay"><div class="spinner"></div><p>Loading stays…</p></div>
-  } @else if (dataService.isStale()) {
-    <div class="stale-banner">⚠️ Offline — cached data <button (click)="refresh()">Retry</button></div>
+  <!-- ── Scope tabs ── -->
+  <div class="scope-tabs">
+    <button [class.active]="!showAll()" (click)="showAll.set(false)">My Trip</button>
+    <button [class.active]="showAll()"  (click)="showAll.set(true)">All</button>
+  </div>
+
+  <!-- ── Add Stay form ── -->
+  @if (adding()) {
+    <div class="add-card card">
+      <p class="add-form-title">New Stay</p>
+
+      <div class="form-group">
+        <label>Name <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="newDraft.name" placeholder="e.g. The Alida Hotel" />
+      </div>
+
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" [(ngModel)]="newDraft.address" placeholder="Street address or area" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Check-in</label>
+          <input type="date" [(ngModel)]="newDraft.checkIn" />
+        </div>
+        <div class="form-group">
+          <label>Check-out</label>
+          <input type="date" [(ngModel)]="newDraft.checkOut" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Booking Ref</label>
+        <input type="text" [(ngModel)]="newDraft.bookingRef" placeholder="Confirmation number" />
+      </div>
+
+      <div class="form-group">
+        <label>Booking Link</label>
+        <input type="url" [(ngModel)]="newDraft.link" placeholder="https://…" />
+      </div>
+
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea [(ngModel)]="newDraft.notes" rows="2" placeholder="Check-in instructions, parking, etc."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>For Who</label>
+        <div class="people-picker">
+          <button type="button" class="people-btn" [class.selected]="isAllForWhoSelected(addForWhoMap)" (click)="toggleAllForWho(addForWhoMap)">All</button>
+          @for (user of tripUsers(); track user.name) {
+            <button type="button" class="people-btn" [class.selected]="addForWhoMap[user.name]" (click)="addForWhoMap[user.name] = !addForWhoMap[user.name]">
+              {{ user.avatarEmoji }} {{ user.name }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-ghost btn-sm" (click)="cancelAdd()">Cancel</button>
+        <button class="btn btn-primary btn-sm" (click)="saveAdd()">Save Stay</button>
+      </div>
+    </div>
   }
 
-  @if (allAccommodations().length === 0) {
+  <!-- ── Stays list ── -->
+  @if (displayedStays().length === 0 && !adding()) {
     <div class="empty-state">
       <span class="empty-icon">🏨</span>
-      <p>No accommodations yet — add them to your Google Sheet!</p>
+      <p>No stays yet. Tap <strong>+ Add Stay</strong> to get started.</p>
     </div>
   } @else {
-    <div class="scope-tabs">
-      <button [class.active]="!showAll()" (click)="showAll.set(false)">My Trip</button>
-      <button [class.active]="showAll()"  (click)="showAll.set(true)">All</button>
-    </div>
+    <div class="stays-list">
+      @for (stay of displayedStays(); track stay.id) {
 
-    @if (displayedAccommodations().length === 0) {
-      <div class="empty-state">
-        <span class="empty-icon">🏨</span>
-        <p>No stays for your trip. Switch to <strong>All</strong> to see everyone's accommodations.</p>
-      </div>
-    } @else {
-      <div class="stays-list">
-        @for (stay of displayedAccommodations(); track stay.name) {
-          <div class="stay-card card" [class.mine]="isForMe(stay.forWho)">
+        @if (!isEditing(stay)) {
+          <!-- ── Display card ── -->
+          <div class="stay-card card">
             <div class="stay-header">
               <div>
                 <h3>{{ stay.name }}</h3>
@@ -39,9 +90,14 @@
                   <p class="stay-address">📍 {{ stay.address }}</p>
                 }
               </div>
-              <div class="stay-nights">
-                <span class="nights-count">{{ nightsBetween(stay.checkIn, stay.checkOut) }}</span>
-                <span class="nights-label">nights</span>
+              <div class="stay-header-right">
+                @if (nightsBetween(stay.checkIn, stay.checkOut) > 0) {
+                  <div class="stay-nights">
+                    <span class="nights-count">{{ nightsBetween(stay.checkIn, stay.checkOut) }}</span>
+                    <span class="nights-label">nights</span>
+                  </div>
+                }
+                <button class="edit-btn" (click)="startEdit(stay)" title="Edit">✏️</button>
               </div>
             </div>
 
@@ -61,6 +117,9 @@
               @if (stay.bookingRef) {
                 <span class="chip chip-muted">Ref: {{ stay.bookingRef }}</span>
               }
+              @if (stay.link) {
+                <a class="chip chip-muted link-chip" [href]="stay.link" target="_blank" rel="noopener">🔗 Booking</a>
+              }
               @if (stay.forWho !== 'All') {
                 <span class="chip chip-highlight">{{ stay.forWho }}</span>
               } @else {
@@ -72,8 +131,68 @@
               <p class="stay-notes">📌 {{ stay.notes }}</p>
             }
           </div>
+
+        } @else {
+          <!-- ── Edit card ── -->
+          <div class="stay-card card editing">
+            <div class="form-group">
+              <label>Name <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="draft.name" />
+            </div>
+
+            <div class="form-group">
+              <label>Address</label>
+              <input type="text" [(ngModel)]="draft.address" />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Check-in</label>
+                <input type="date" [(ngModel)]="draft.checkIn" />
+              </div>
+              <div class="form-group">
+                <label>Check-out</label>
+                <input type="date" [(ngModel)]="draft.checkOut" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Booking Ref</label>
+              <input type="text" [(ngModel)]="draft.bookingRef" />
+            </div>
+
+            <div class="form-group">
+              <label>Booking Link</label>
+              <input type="url" [(ngModel)]="draft.link" placeholder="https://…" />
+            </div>
+
+            <div class="form-group">
+              <label>Notes</label>
+              <textarea [(ngModel)]="draft.notes" rows="2"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>For Who</label>
+              <div class="people-picker">
+                <button type="button" class="people-btn" [class.selected]="isAllForWhoSelected(editForWhoMap)" (click)="toggleAllForWho(editForWhoMap)">All</button>
+                @for (user of tripUsers(); track user.name) {
+                  <button type="button" class="people-btn" [class.selected]="editForWhoMap[user.name]" (click)="editForWhoMap[user.name] = !editForWhoMap[user.name]">
+                    {{ user.avatarEmoji }} {{ user.name }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-danger btn-sm" (click)="deleteStay(stay)">Delete</button>
+              <span class="actions-spacer"></span>
+              <button class="btn btn-ghost btn-sm"   (click)="cancelEdit()">Cancel</button>
+              <button class="btn btn-primary btn-sm" (click)="saveEdit(stay)">Save</button>
+            </div>
+          </div>
         }
-      </div>
-    }
+
+      }
+    </div>
   }
 </div>

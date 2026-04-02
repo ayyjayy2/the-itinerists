@@ -2,8 +2,56 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
+
+// ── Add form card ───────────────────────────────────────────────────────────
+
+.add-card {
+  border: 1.5px solid var(--primary);
+  background: rgba(136, 201, 161, 0.04);
+  margin-bottom: 1.25rem;
+
+  .add-form-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 0.85rem;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 0.75rem;
+
+  > .form-group { flex: 1; min-width: 120px; }
+}
+
+.form-group {
+  margin-bottom: 0.65rem;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  textarea { resize: vertical; min-height: 52px; }
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+
+  .actions-spacer { flex: 1; }
+}
+
+.required { color: var(--highlight-dk); font-style: normal; }
+
+// ── Stays list ──────────────────────────────────────────────────────────────
 
 .stays-list {
   display: flex;
@@ -11,8 +59,10 @@
   gap: 1rem;
 }
 
+// ── Stay card ───────────────────────────────────────────────────────────────
+
 .stay-card {
-  &.mine { border-left: 3px solid var(--primary); }
+  &.editing { border: 1.5px solid var(--primary); }
 }
 
 .stay-header {
@@ -26,15 +76,39 @@
   .stay-address { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; }
 }
 
+.stay-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 .stay-nights {
   text-align: center;
-  flex-shrink: 0;
   background: var(--accent);
   padding: 0.4rem 0.7rem;
   border-radius: var(--radius-sm);
 
   .nights-count { display: block; font-size: 1.3rem; font-weight: 800; color: #7a6200; }
   .nights-label { font-size: 0.7rem; color: #7a6200; font-weight: 700; }
+}
+
+.edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0.25rem 0.45rem;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover { background: var(--primary); border-color: var(--primary); }
 }
 
 .stay-dates {
@@ -61,6 +135,14 @@
   margin-bottom: 0.5rem;
 }
 
+.link-chip {
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.75; }
+}
+
 .stay-notes {
   font-size: 0.83rem;
   color: var(--text-muted);
@@ -68,4 +150,11 @@
   padding: 0.4rem 0.7rem;
   border-radius: var(--radius-sm);
   margin-top: 0.4rem;
+}
+
+@media (max-width: 480px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
 }
