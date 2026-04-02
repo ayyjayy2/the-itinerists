@@ -24,7 +24,8 @@ const SAVANNAH_LAT = 32.0809;
 const SAVANNAH_LON = -81.0912;
 const SAVANNAH_TZ  = 'America%2FNew_York';
 
-const CACHE_KEY = 'savannah_weather_v1';
+const CACHE_KEY    = 'savannah_weather_v2';
+const FORECAST_DAYS = 16;
 
 /** Cache is valid until the next 7 AM ET after it was saved. */
 function isCacheValid(timestamp: string): boolean {
@@ -49,6 +50,17 @@ export class WeatherService {
     if (this._loaded) return;
     this._loaded = true;
 
+    // Open-Meteo free tier: 16-day forecast only. Skip if trip hasn't entered the window yet.
+    const today     = new Date();
+    const maxForecast = new Date(today);
+    maxForecast.setDate(today.getDate() + FORECAST_DAYS);
+    const tripStart = new Date(startDate + 'T00:00');
+    if (tripStart > maxForecast) return;  // too far out — no forecast available yet
+
+    // Clamp end date to the forecast window
+    const tripEnd    = new Date(endDate + 'T00:00');
+    const fetchEnd   = tripEnd > maxForecast ? maxForecast.toISOString().slice(0, 10) : endDate;
+
     // Return cached data if still valid
     try {
       const raw = localStorage.getItem(CACHE_KEY);
@@ -63,27 +75,27 @@ export class WeatherService {
 
     const url = `https://api.open-meteo.com/v1/forecast` +
       `?latitude=${SAVANNAH_LAT}&longitude=${SAVANNAH_LON}` +
-      `&daily=temperature_2m_max,temperature_2m_min,weathercode` +
+      `&daily=temperature_2m_max,temperature_2m_min,weather_code` +
       `&temperature_unit=fahrenheit&timezone=${SAVANNAH_TZ}` +
-      `&start_date=${startDate}&end_date=${endDate}`;
+      `&start_date=${startDate}&end_date=${fetchEnd}`;
 
     this.http.get<any>(url).subscribe({
       next: (data) => {
         const results: Record<string, LiveWeather> = {};
-        const { time, temperature_2m_max, temperature_2m_min, weathercode } = data.daily;
+        const { time, temperature_2m_max, temperature_2m_min, weather_code } = data.daily;
         (time as string[]).forEach((date, i) => {
           results[date] = {
             city:  'Savannah',
             minF:  Math.round(temperature_2m_min[i]),
             maxF:  Math.round(temperature_2m_max[i]),
-            code:  weathercode[i] as number,
+            code:  weather_code[i] as number,
           };
         });
         this._weather.set(results);
         try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: results, timestamp: new Date().toISOString() })); }
         catch { /* storage full */ }
       },
-      error: () => { /* silently fail — no weather shown */ }
+      error: (err) => { console.error('[WeatherService] fetch failed:', err); }
     });
   }
 }

@@ -22,8 +22,11 @@ export class OutfitsService {
 
   async upsertOutfit(entry: OutfitEntry): Promise<void> {
     const id = this.docId(entry.date, entry.user);
+    const data = Object.fromEntries(
+      Object.entries(entry).filter(([, v]) => v !== undefined)
+    );
     await runInInjectionContext(this.injector, () =>
-      setDoc(doc(this.firestore, 'outfits', id), entry)
+      setDoc(doc(this.firestore, 'outfits', id), data)
     );
   }
 

@@ -144,7 +144,7 @@ export class OutfitsComponent implements OnInit {
         .flatMap(f => [f.departureDate, f.arrivalDate].filter(Boolean))
     );
 
-    const staticSuggestion = '🌸 April in Savannah is warm and lovely! Light layers, breathable fabrics, and comfortable walking shoes are your best bet.';
+    const staticSuggestion = '🌸 April in Savannah is warm and lovely! Light layers, breathable fabrics, and comfortable walking shoes are your best bet. Live weather will show up within 16 days of the trip.';
     const travelSuggestion = '✈️ Travel day! Comfy leggings or joggers, an oversized tee or soft knit, slip-on shoes, and a warm wrap for the cabin.';
 
     return this.tripDays().map((date): DayData => {

@@ -1,8 +1,8 @@
 import { Injectable, inject, signal, NgZone, Injector, runInInjectionContext } from '@angular/core';
 import { Firestore, doc, setDoc, getDoc } from '@angular/fire/firestore';
 
-const MAX_PX  = 300;
-const QUALITY = 0.4;
+const MAX_PX  = 1200;
+const QUALITY = 0.85;
 
 function compressImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
