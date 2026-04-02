@@ -160,6 +160,24 @@ export interface AccommodationDoc {
 
 // ── Finance (shared) ──────────────────────────────────────────────────────────
 
+/** Stored in Firestore `financeEntries` collection — one doc per expense. */
+export interface FinanceEntryDoc {
+  id: string;
+  date: string;
+  vendor?: string;
+  description: string;
+  amount: number;
+  currency: string;    // USD for Savannah trip
+  paidBy: string;
+  splitAmong: string;  // comma-separated display names or "All"
+  splits?: Record<string, number>;
+  category: string;
+  notes?: string;
+  link?: string;
+  addedByUid: string;
+  createdAt: number;
+}
+
 export interface FinanceEntry {
   date: string;
   description: string;
