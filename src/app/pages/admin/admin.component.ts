@@ -20,8 +20,9 @@ export class AdminComponent implements OnInit {
   currentUser = this.userService.firestoreUser;
 
   // Members
-  members     = signal<FirestoreUser[]>([]);
-  removeError = signal('');
+  members        = signal<FirestoreUser[]>([]);
+  removeError    = signal('');
+  memberToRemove = signal<FirestoreUser | null>(null);
 
   // Invite
   inviteLink     = signal('');
@@ -83,14 +84,25 @@ export class AdminComponent implements OnInit {
     setTimeout(() => this.inviteCopied.set(false), 2000);
   }
 
-  async removeUser(uid: string): Promise<void> {
-    if (uid === this.currentUser()?.uid) {
+  promptRemove(member: FirestoreUser): void {
+    if (member.uid === this.currentUser()?.uid) {
       this.removeError.set("You can't remove yourself.");
       return;
     }
     this.removeError.set('');
+    this.memberToRemove.set(member);
+  }
+
+  cancelRemove(): void {
+    this.memberToRemove.set(null);
+  }
+
+  async confirmRemove(): Promise<void> {
+    const member = this.memberToRemove();
+    if (!member) return;
+    this.memberToRemove.set(null);
     try {
-      await this.authService.disableUser(uid);
+      await this.authService.disableUser(member.uid);
     } catch {
       this.removeError.set('Failed to remove user. Please try again.');
     }
