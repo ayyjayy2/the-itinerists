@@ -21,18 +21,9 @@
     </div>
   </div>
 
-  <!-- Stale banner -->
-  @if (isStale()) {
-    <div class="stale-banner">
-      ⚠️ Showing cached data
-      <button (click)="refresh()">Refresh</button>
-    </div>
-  }
-
   <!-- Quick links grid -->
   <div class="section-title">
     <h2>Quick Access</h2>
-    @if (isLoading()) { <div class="spinner"></div> }
   </div>
 
   <div class="links-grid">

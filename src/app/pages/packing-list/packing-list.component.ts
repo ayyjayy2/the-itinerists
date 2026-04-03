@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PackingService } from '../../services/packing.service';
 import { UserService } from '../../services/user.service';
-import { DataService } from '../../services/data.service';
+import { UsersService } from '../../services/users.service';
 
 type TabType = 'list' | 'suggestions' | 'send';
 
@@ -16,7 +16,7 @@ type TabType = 'list' | 'suggestions' | 'send';
 export class PackingListComponent implements OnInit {
   packingService = inject(PackingService);
   userService    = inject(UserService);
-  dataService    = inject(DataService);
+  usersService   = inject(UsersService);
 
   currentUser = this.userService.currentUser;
   tab = signal<TabType>('list');
@@ -55,7 +55,7 @@ export class PackingListComponent implements OnInit {
 
   otherUsers = computed(() => {
     const me = this.currentUser()?.name ?? '';
-    return (this.dataService.data()?.users ?? []).filter(u => u.name !== me);
+    return this.usersService.tripUsers().filter(u => u.name !== me);
   });
 
   ngOnInit(): void {
@@ -116,6 +116,6 @@ export class PackingListComponent implements OnInit {
   setTab(t: TabType): void { this.tab.set(t); }
 
   formatTime(ts: number): string {
-    return new Date(ts).toLocaleDateString('en-IE', { month: 'short', day: 'numeric' });
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 }
