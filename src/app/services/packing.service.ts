@@ -2,9 +2,9 @@ import { Injectable, signal, inject } from '@angular/core';
 import { PackingItem, PackingSuggestion } from '../models/trip.models';
 import { UserService } from './user.service';
 
-const ITEMS_KEY_PREFIX      = 'ireland_packing_items_';
-const SUGGESTIONS_KEY       = 'ireland_packing_suggestions';
-const CATEGORIES_KEY_PREFIX = 'ireland_packing_categories_';
+const ITEMS_KEY_PREFIX      = 'savannah_packing_items_';
+const SUGGESTIONS_KEY       = 'savannah_packing_suggestions';
+const CATEGORIES_KEY_PREFIX = 'savannah_packing_categories_';
 export const DEFAULT_PACKING_CATEGORIES = ['Clothes', 'Shoes', 'Accessories', 'Outerwear', 'Toiletries'];
 
 @Injectable({ providedIn: 'root' })

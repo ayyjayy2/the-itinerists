@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
-import { DataService } from '../../services/data.service';
 import { FlightCountdownService } from '../../services/flight-countdown.service';
 import { FlightsService } from '../../services/flights.service';
 import { TripConfigService } from '../../services/trip-config.service';
@@ -23,7 +22,6 @@ interface QuickLink {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   userService       = inject(UserService);
-  dataService       = inject(DataService);
   flightCountdown   = inject(FlightCountdownService);
   flightsService    = inject(FlightsService);
   tripConfigService = inject(TripConfigService);
@@ -96,10 +94,4 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (this.countdownTimer) clearInterval(this.countdownTimer);
   }
 
-  isLoading = this.dataService.loading;
-  isStale   = this.dataService.isStale;
-
-  refresh(): void {
-    this.dataService.refresh();
-  }
 }

@@ -76,12 +76,12 @@
         <div class="header-right">
           <button class="refresh-btn" (click)="hardRefresh()" title="Hard refresh">↻</button>
           @if (currentUser()) {
-            <button class="user-chip" (click)="logout()">
+            <a class="user-chip" routerLink="/profile">
               <div class="avatar-sm" [style.background]="currentUser()!.color">
                 {{ currentUser()!.avatarEmoji }}
               </div>
               <span class="chip-name">{{ currentUser()!.name }}</span>
-            </button>
+            </a>
           }
         </div>
       </header>
