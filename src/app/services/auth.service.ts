@@ -63,8 +63,11 @@ export class AuthService {
     const inviteRef  = doc(this.firestore, 'invites', inviteCode);
     const inviteSnap = await getDoc(inviteRef);
     if (!inviteSnap.exists()) throw new Error('Invalid invite code.');
-    const invite = inviteSnap.data() as InviteCode;
-    if (invite.usedBy !== null) throw new Error('This invite code has already been used.');
+    const raw = inviteSnap.data() as any;
+    const invite: InviteCode = {
+      ...raw,
+      usedBy: Array.isArray(raw.usedBy) ? raw.usedBy : [],
+    };
     if (invite.expiresAt < Date.now()) throw new Error('This invite code has expired.');
 
     // Check username uniqueness
@@ -90,8 +93,8 @@ export class AuthService {
     };
     await setDoc(doc(this.firestore, 'users', uid), userDoc);
 
-    // Mark invite code as used
-    await updateDoc(inviteRef, { usedBy: uid });
+    // Record who used this invite code (write normalized array to handle legacy docs)
+    await updateDoc(inviteRef, { usedBy: [...invite.usedBy, uid] });
   }
 
   async generateInviteCode(createdByUid: string): Promise<string> {
@@ -101,7 +104,7 @@ export class AuthService {
       createdBy: createdByUid,
       createdAt: Date.now(),
       expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-      usedBy:    null,
+      usedBy:    [],
     };
     await setDoc(doc(this.firestore, 'invites', code), invite);
     return code;
@@ -110,8 +113,8 @@ export class AuthService {
   async validateInviteCode(code: string): Promise<boolean> {
     const snap = await getDoc(doc(this.firestore, 'invites', code));
     if (!snap.exists()) return false;
-    const invite = snap.data() as InviteCode;
-    return invite.usedBy === null && invite.expiresAt > Date.now();
+    const raw = snap.data() as any;
+    return raw.expiresAt > Date.now();
   }
 
   async updateProfile(uid: string, updates: Partial<Pick<FirestoreUser, 'displayName' | 'avatarEmoji' | 'color'>>): Promise<void> {
