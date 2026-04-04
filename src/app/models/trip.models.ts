@@ -24,7 +24,7 @@ export interface InviteCode {
   createdBy: string;   // uid
   createdAt: number;
   expiresAt: number;
-  usedBy: string | null;
+  usedBy: string[];
 }
 
 export interface TripConfig {
