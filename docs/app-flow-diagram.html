@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; color: #e8e8e8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; line-height: 1.5; }
+  h2 { color: #ffffff; font-size: 22px; margin-bottom: 4px; }
+  .subtitle { color: #a0a0b8; font-size: 14px; margin-bottom: 32px; }
+
+  .flow { position: relative; max-width: 900px; margin: 0 auto; }
+
+  /* ── Nodes ─────────────────────────────── */
+  .node {
+    background: #252540; border: 2px solid #3a3a5c; border-radius: 12px;
+    padding: 14px 18px; position: relative; display: inline-block;
+    font-size: 13px; color: #d0d0e0;
+  }
+  .node h4 { color: #fff; font-size: 14px; margin-bottom: 4px; }
+  .node.entry   { border-color: #6a6aff; background: #2a2a55; }
+  .node.gate    { border-color: #ffa84a; background: #3a2a1a; border-style: dashed; }
+  .node.screen  { border-color: #4a9aff; }
+  .node.tab     { border-color: #80d8a0; background: #1a3528; }
+  .node.sub     { border-color: #b088d0; background: #2a1a3a; }
+
+  /* ── Section layout ────────────────────── */
+  .section { margin-bottom: 40px; }
+  .section-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+    color: #707090; margin-bottom: 12px; padding-left: 4px;
+  }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 12px; }
+  .arrow-down {
+    text-align: center; color: #505070; font-size: 22px; margin: 8px 0;
+    letter-spacing: 4px;
+  }
+  .arrow-right { color: #505070; font-size: 20px; display: flex; align-items: center; padding: 0 4px; }
+  .branch { display: flex; gap: 12px; align-items: flex-start; }
+  .branch-line {
+    display: flex; flex-direction: column; align-items: center;
+    color: #505070; font-size: 11px; gap: 4px; padding: 0 8px;
+  }
+
+  /* ── Tab bar mockup ────────────────────── */
+  .tab-bar {
+    display: flex; gap: 0; border-radius: 12px; overflow: hidden;
+    border: 2px solid #80d8a0; margin-top: 4px;
+  }
+  .tab-bar .tab-item {
+    flex: 1; text-align: center; padding: 12px 8px;
+    background: #1a3528; border-right: 1px solid #2a5a3a;
+    font-size: 12px; color: #80d8a0;
+  }
+  .tab-bar .tab-item:last-child { border-right: none; }
+  .tab-bar .tab-item .icon { font-size: 20px; display: block; margin-bottom: 2px; }
+  .tab-bar .tab-item strong { color: #fff; }
+
+  /* ── More menu grid ────────────────────── */
+  .more-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    margin-top: 8px;
+  }
+  .more-item {
+    background: #2a1a3a; border: 1px solid #4a3a5c; border-radius: 8px;
+    padding: 10px 6px; text-align: center; font-size: 11px; color: #c8b8e0;
+  }
+  .more-item .icon { font-size: 18px; display: block; margin-bottom: 2px; }
+
+  /* ── Legend ─────────────────────────────── */
+  .legend {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    margin-bottom: 28px; padding: 12px 16px;
+    background: #1e1e36; border-radius: 8px; font-size: 12px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 4px; border: 2px solid;
+  }
+
+  .connector { color: #505070; font-size: 12px; padding: 4px 12px; }
+</style>
+</head>
+<body>
+
+<h2>Triplan — App Flow Diagram</h2>
+<p class="subtitle">Every screen, every decision point, every navigation path</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="border-color:#6a6aff;background:#2a2a55"></div> Entry point</div>
+  <div class="legend-item"><div class="legend-dot" style="border-color:#ffa84a;background:#3a2a1a"></div> Decision gate</div>
+  <div class="legend-item"><div class="legend-dot" style="border-color:#4a9aff;background:#252540"></div> Screen</div>
+  <div class="legend-item"><div class="legend-dot" style="border-color:#80d8a0;background:#1a3528"></div> Tab bar</div>
+  <div class="legend-item"><div class="legend-dot" style="border-color:#b088d0;background:#2a1a3a"></div> Sub-screen</div>
+</div>
+
+<div class="flow">
+
+  <!-- ── LAUNCH ──────────────────────────── -->
+  <div class="section">
+    <div class="section-label">App Launch</div>
+    <div class="row">
+      <div class="node entry">
+        <h4>🚀 App Opens</h4>
+        Check Firebase Auth state
+      </div>
+      <div class="arrow-right">→</div>
+      <div class="node gate">
+        <h4>Logged in?</h4>
+      </div>
+    </div>
+
+    <div class="row" style="padding-left: 40px;">
+      <div class="branch">
+        <div class="branch-line">
+          <span>NO ↓</span>
+        </div>
+        <div class="node screen">
+          <h4>🔐 Login Screen</h4>
+          Email + password<br>
+          "Create account" link<br>
+          "Join via invite" link
+        </div>
+        <div class="arrow-right">→</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="node screen" style="font-size:12px">
+            <h4>📝 Register Screen</h4>
+            Display name, username,<br>password, avatar emoji, color
+          </div>
+          <div class="node screen" style="font-size:12px">
+            <h4>🔗 Join Screen</h4>
+            From invite link →<br>register + auto-join trip
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="padding-left: 40px; margin-top: 8px;">
+      <div class="branch">
+        <div class="branch-line">
+          <span>YES ↓</span>
+        </div>
+        <div class="node gate">
+          <h4>Has lastActiveTrip?</h4>
+        </div>
+        <div class="arrow-right">→</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="node screen" style="font-size:12px">
+            <h4>YES → Trip Dashboard</h4>
+            Jump straight into last trip
+          </div>
+          <div class="node screen" style="font-size:12px">
+            <h4>NO → My Trips</h4>
+            Show trip list or<br>"Create your first trip"
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MY TRIPS ────────────────────────── -->
+  <div class="section">
+    <div class="section-label">Trip Management</div>
+    <div class="row">
+      <div class="node screen">
+        <h4>🗂️ My Trips</h4>
+        List of trip cards<br>
+        Name, destination, dates, member avatars<br>
+        "Active" badge on current trip<br>
+        <strong style="color:#80d8a0">+ Create New Trip</strong>
+      </div>
+      <div class="arrow-right">→</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="node screen">
+          <h4>✨ Create Trip</h4>
+          Trip name, destination<br>
+          Start/end dates, currency<br>
+          Cover photo (optional)<br>
+          → Creates trip, you become owner
+        </div>
+        <div class="connector">— or tap a trip card —</div>
+        <div class="node entry">
+          <h4>→ Enter Trip</h4>
+          Sets activeTripId<br>
+          Opens trip dashboard
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INSIDE A TRIP ───────────────────── -->
+  <div class="section">
+    <div class="section-label">Inside a Trip — Bottom Tab Bar</div>
+
+    <div class="tab-bar">
+      <div class="tab-item">
+        <span class="icon">🏠</span>
+        <strong>Home</strong>
+      </div>
+      <div class="tab-item">
+        <span class="icon">📅</span>
+        <strong>Itinerary</strong>
+      </div>
+      <div class="tab-item">
+        <span class="icon">💵</span>
+        <strong>Finance</strong>
+      </div>
+      <div class="tab-item">
+        <span class="icon">•••</span>
+        <strong>More</strong>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap">
+
+      <div class="node tab" style="flex:1;min-width:200px">
+        <h4>🏠 Home Tab</h4>
+        Trip name + destination<br>
+        Countdown timer<br>
+        Flight countdown (your next flight)<br>
+        Member avatars<br>
+        "Switch Trip" button → My Trips<br>
+        Quick links to other sections<br>
+        <span style="color:#80d8a0;font-size:11px">↳ "Invite Members" button</span>
+      </div>
+
+      <div class="node tab" style="flex:1;min-width:200px">
+        <h4>📅 Itinerary Tab</h4>
+        Day chips (swipeable)<br>
+        Events list by day<br>
+        Flight banners auto-injected<br>
+        Drag to reorder<br>
+        Calendar view toggle<br>
+        Add/edit/delete events<br>
+        ForWho filtering<br>
+        <span style="color:#80d8a0;font-size:11px">↳ "My Trip" / "Full Trip" toggle</span>
+      </div>
+
+      <div class="node tab" style="flex:1;min-width:200px">
+        <h4>💵 Finance Tab</h4>
+        Who owes who (settlement view)<br>
+        Net balance per person<br>
+        Add expense (vendor, amount, split)<br>
+        Equal / individual split modes<br>
+        Mark items as paid<br>
+        Expense log with search<br>
+        <span style="color:#80d8a0;font-size:11px">↳ Group summary view</span>
+      </div>
+
+    </div>
+
+    <div style="margin-top:16px">
+      <div class="node tab" style="width:100%">
+        <h4>••• More Tab</h4>
+        <div class="more-grid">
+          <div class="more-item"><span class="icon">✈️</span>Flights</div>
+          <div class="more-item"><span class="icon">🏨</span>Stays</div>
+          <div class="more-item"><span class="icon">🧳</span>Packing</div>
+          <div class="more-item"><span class="icon">👗</span>Outfits</div>
+          <div class="more-item"><span class="icon">🗺️</span>Map</div>
+          <div class="more-item"><span class="icon">🚗</span>Rental Cars</div>
+          <div class="more-item"><span class="icon">⭐</span>Recs</div>
+          <div class="more-item"><span class="icon">👤</span>Profile</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SUB SCREENS ─────────────────────── -->
+  <div class="section">
+    <div class="section-label">Sub-Screens (from More tab + overlays)</div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+
+      <div class="node sub">
+        <h4>✈️ Flights</h4>
+        Arrivals / Departures<br>
+        Per-person flight cards<br>
+        Add/edit flights<br>
+        Flight countdown
+      </div>
+
+      <div class="node sub">
+        <h4>🏨 Stays</h4>
+        Accommodation cards<br>
+        Check-in/out dates<br>
+        Booking ref + links<br>
+        ForWho filtering
+      </div>
+
+      <div class="node sub">
+        <h4>🧳 Packing</h4>
+        Per-user checklist<br>
+        Check/uncheck items<br>
+        Syncs across devices<br>
+        Suggestions from members
+      </div>
+
+      <div class="node sub">
+        <h4>👗 Outfits</h4>
+        Per-day outfit log<br>
+        Photo upload<br>
+        Weather info per day<br>
+        Group outfit gallery
+      </div>
+
+      <div class="node sub">
+        <h4>🗺️ Map</h4>
+        Interactive map<br>
+        Custom pins by category<br>
+        Itinerary locations pinned<br>
+        Add/remove pins
+      </div>
+
+      <div class="node sub">
+        <h4>🚗 Rental Cars</h4>
+        Car booking cards<br>
+        Pickup/dropoff details<br>
+        Driver + passengers<br>
+        Multiple cars per trip
+      </div>
+
+      <div class="node sub">
+        <h4>⭐ Recs</h4>
+        Tips by category<br>
+        Community-added recs<br>
+        Food, Drink, Culture,<br>Activities, Tips, Places
+      </div>
+
+      <div class="node sub">
+        <h4>👤 Profile</h4>
+        Avatar + display name<br>
+        Username + password<br>
+        Subscription tier (future)<br>
+        Logout
+      </div>
+
+      <div class="node sub">
+        <h4>⚙️ Trip Settings</h4>
+        Edit trip name/dates/dest<br>
+        Manage members<br>
+        Activity log<br>
+        Generate invite links<br>
+        <span style="color:#ffa84a;font-size:11px">Owner only: delete/transfer trip</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── INVITE FLOW ─────────────────────── -->
+  <div class="section">
+    <div class="section-label">Invite Flow (from outside the app)</div>
+    <div class="row">
+      <div class="node entry">
+        <h4>🔗 Invite Link Tapped</h4>
+        triplan.app/join/ABC123
+      </div>
+      <div class="arrow-right">→</div>
+      <div class="node gate">
+        <h4>Has account?</h4>
+      </div>
+      <div class="arrow-right">→</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="node screen" style="font-size:12px">
+          <h4>YES → Auto-join trip</h4>
+          Validate code → add to members<br>
+          → Open trip dashboard
+        </div>
+        <div class="node screen" style="font-size:12px">
+          <h4>NO → Register + join</h4>
+          Create account first<br>
+          → Auto-join trip on completion
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

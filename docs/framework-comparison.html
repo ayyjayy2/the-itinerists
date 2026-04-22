@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; color: #e8e8e8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; line-height: 1.6; }
+  h2 { color: #ffffff; font-size: 24px; margin-bottom: 6px; }
+  h3 { color: #ffffff; font-size: 17px; margin-bottom: 8px; }
+  .subtitle { color: #a0a0b8; font-size: 14px; margin-bottom: 28px; }
+  .split { display: flex; gap: 20px; margin-bottom: 24px; }
+  .split > div { flex: 1; }
+  .panel { background: #252540; border-radius: 12px; padding: 20px; border: 1px solid #3a3a5c; }
+  .panel-header { background: #2d2d4a; padding: 10px 16px; border-radius: 8px 8px 0 0; font-weight: 600; color: #c0c0d8; font-size: 13px; margin: -20px -20px 16px -20px; border-bottom: 1px solid #3a3a5c; }
+  .app-row { padding: 6px 0; font-size: 14px; color: #d0d0e0; }
+  .app-row strong { font-size: 17px; color: #ffffff; }
+  .note { margin-top: 14px; padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; }
+  .note-warn { background: #3d3520; color: #f0d890; border: 1px solid #5a4a20; }
+  .note-good { background: #1a3528; color: #80d8a0; border: 1px solid #2a5a3a; }
+  .matrix { background: #252540; border-radius: 12px; padding: 24px; margin-top: 28px; border: 1px solid #3a3a5c; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px; color: #a0a0c0; border-bottom: 2px solid #3a3a5c; }
+  td { padding: 10px; color: #d0d0e0; border-bottom: 1px solid #2a2a45; }
+  td strong { color: #ffffff; }
+  .options { display: flex; gap: 16px; margin-top: 32px; }
+  .opt { flex: 1; background: #252540; border: 2px solid #3a3a5c; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; }
+  .opt:hover { border-color: #6a6aff; background: #2a2a50; }
+  .opt h3 { margin-top: 8px; }
+  .opt p { color: #b0b0c8; font-size: 13px; margin-top: 6px; }
+  .opt .letter { display: inline-block; width: 28px; height: 28px; background: #3a3a6a; color: #c0c0ff; border-radius: 6px; text-align: center; line-height: 28px; font-weight: 700; font-size: 14px; }
+  .footer { text-align: center; color: #707090; font-size: 13px; margin-top: 24px; }
+
+  @media (max-width: 700px) {
+    .split { flex-direction: column; }
+    .options { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<h2>Real apps in production — React Native vs Flutter</h2>
+<p class="subtitle">Both are trusted by billion-dollar companies. Here's who ships what.</p>
+
+<div class="split">
+  <div class="panel">
+    <div class="panel-header">React Native — Who Uses It</div>
+    <div class="app-row"><strong>📱 Instagram</strong> — parts of the app</div>
+    <div class="app-row"><strong>💬 Discord</strong> — iOS app rebuilt in RN</div>
+    <div class="app-row"><strong>🛒 Shopify</strong> — Shop app + merchant tools</div>
+    <div class="app-row"><strong>💰 Coinbase</strong> — crypto trading app</div>
+    <div class="app-row"><strong>🍔 Uber Eats</strong> — restaurant dashboard</div>
+    <div class="app-row"><strong>📌 Pinterest</strong> — parts of the app</div>
+    <div class="app-row"><strong>💳 Stripe</strong> — Dashboard app</div>
+    <div class="app-row"><strong>🏨 Airbnb</strong> — used it, then moved off *</div>
+    <div class="note note-warn">* Airbnb left React Native in 2018 due to complexity at their scale (500+ engineers, heavy native integration). For teams under 10, RN remains excellent.</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">Flutter — Who Uses It</div>
+    <div class="app-row"><strong>💳 Google Pay</strong> — fully Flutter</div>
+    <div class="app-row"><strong>🏦 Nubank</strong> — largest digital bank (90M+ users)</div>
+    <div class="app-row"><strong>🚗 BMW</strong> — My BMW app</div>
+    <div class="app-row"><strong>🛍️ eBay Motors</strong> — full app</div>
+    <div class="app-row"><strong>☁️ Google Cloud</strong> — mobile console</div>
+    <div class="app-row"><strong>🏋️ Betterment</strong> — investing app</div>
+    <div class="app-row"><strong>🎵 ByteDance</strong> — multiple apps (TikTok parent co.)</div>
+    <div class="app-row"><strong>🏠 Realtor.com</strong> — property search</div>
+    <div class="note note-good">Google Pay is the flagship proof — Google chose Flutter for their own payment app over native Kotlin/Swift. That's the strongest possible endorsement.</div>
+  </div>
+</div>
+
+<div class="matrix">
+  <h3 style="margin-bottom:16px">The real deciding question for YOU</h3>
+  <p style="color:#b0b0c8;font-size:14px;margin-bottom:16px">Both are professionally legitimate. The question is what matters most to you right now:</p>
+  <table>
+    <tr>
+      <th>If you value...</th>
+      <th>Choose...</th>
+      <th>Because...</th>
+    </tr>
+    <tr>
+      <td>Shipping faster</td>
+      <td><strong>React Native</strong></td>
+      <td>You already write TypeScript daily. Zero language ramp-up.</td>
+    </tr>
+    <tr>
+      <td>UI polish & animations</td>
+      <td><strong>Flutter</strong></td>
+      <td>Custom rendering engine. Animations are built-in and beautiful.</td>
+    </tr>
+    <tr>
+      <td>Job market value</td>
+      <td><strong>Either ✓</strong></td>
+      <td>Both are top-demand mobile skills.</td>
+    </tr>
+    <tr>
+      <td>Hiring help later</td>
+      <td><strong>React Native</strong></td>
+      <td>Larger pool of React/TS developers who can contribute.</td>
+    </tr>
+    <tr>
+      <td>AI coding assistance</td>
+      <td><strong>Either ✓</strong></td>
+      <td>Both have excellent AI support. RN slightly more training data.</td>
+    </tr>
+    <tr>
+      <td>Long-term quality ceiling</td>
+      <td><strong>Flutter</strong></td>
+      <td>Consistent pixel-perfect rendering. Google's own choice.</td>
+    </tr>
+  </table>
+</div>
+
+<div class="options">
+  <div class="opt" onclick="this.style.borderColor='#6a6aff'; this.style.background='#2a2a50';">
+    <span class="letter">A</span>
+    <h3>React Native + Expo</h3>
+    <p><strong style="color:#80b0ff">Ship faster, leverage TypeScript, large hiring pool.</strong><br>The pragmatic choice — get to market sooner with skills you already have.</p>
+  </div>
+  <div class="opt" onclick="this.style.borderColor='#6a6aff'; this.style.background='#2a2a50';">
+    <span class="letter">B</span>
+    <h3>Flutter + Dart</h3>
+    <p><strong style="color:#80d8a0">Higher UI ceiling, beautiful animations, Google's own pick.</strong><br>The investment choice — steeper ramp but the polished result sets Triplan apart visually.</p>
+  </div>
+</div>
+
+<p class="footer">There is no wrong answer here. Both produce professional, App Store-ready apps used by Fortune 500 companies.</p>
+
+</body>
+</html>

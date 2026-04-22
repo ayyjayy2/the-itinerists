@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; color: #e8e8e8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; line-height: 1.5; }
+  h2 { color: #ffffff; font-size: 22px; margin-bottom: 4px; }
+  h3 { color: #ffffff; font-size: 16px; margin-bottom: 8px; }
+  .subtitle { color: #a0a0b8; font-size: 14px; margin-bottom: 28px; }
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #707090; margin: 32px 0 14px 0; }
+
+  /* ── Phone mockups ──────────────────── */
+  .phones { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+  .phone {
+    width: 280px; background: #0d0d1a; border-radius: 28px; border: 3px solid #3a3a5c;
+    padding: 12px; flex-shrink: 0;
+  }
+  .phone-notch {
+    width: 80px; height: 6px; background: #3a3a5c; border-radius: 3px;
+    margin: 0 auto 12px auto;
+  }
+  .phone-screen { background: #1e1e36; border-radius: 16px; padding: 16px; min-height: 420px; }
+  .phone-label {
+    text-align: center; font-size: 12px; color: #a0a0b8; margin-top: 10px;
+    font-weight: 600; letter-spacing: 0.5px;
+  }
+
+  /* ── Screen components ──────────────── */
+  .screen-header { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .screen-sub { font-size: 12px; color: #808098; margin-bottom: 16px; }
+  .travel-card {
+    background: #252540; border: 1.5px solid #3a3a5c; border-radius: 12px;
+    padding: 14px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.2s;
+  }
+  .travel-card:hover { border-color: #6a6aff; }
+  .travel-card .icon { font-size: 28px; margin-bottom: 6px; }
+  .travel-card .title { font-size: 14px; font-weight: 600; color: #fff; }
+  .travel-card .desc { font-size: 11px; color: #a0a0b8; margin-top: 2px; }
+  .travel-card.selected { border-color: #80d8a0; background: #1a3528; }
+
+  .field-label { font-size: 11px; color: #808098; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; margin-top: 12px; }
+  .field-value {
+    background: #2a2a48; border: 1px solid #3a3a5c; border-radius: 8px;
+    padding: 10px 12px; font-size: 13px; color: #d0d0e0; margin-bottom: 4px;
+  }
+  .field-row { display: flex; gap: 8px; }
+  .field-row > div { flex: 1; }
+
+  .flight-card {
+    background: #252540; border: 1.5px solid #4a9aff; border-radius: 12px;
+    padding: 12px; margin-bottom: 8px;
+  }
+  .flight-route { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .flight-code { font-size: 18px; font-weight: 700; color: #fff; }
+  .flight-arrow { color: #4a9aff; font-size: 14px; }
+  .flight-detail { font-size: 11px; color: #a0a0b8; }
+  .flight-num { font-size: 12px; color: #4a9aff; font-weight: 600; }
+
+  .tab-mock {
+    display: flex; gap: 0; border-radius: 8px; overflow: hidden;
+    border: 1px solid #3a3a5c; margin-bottom: 14px;
+  }
+  .tab-mock-item {
+    flex: 1; text-align: center; padding: 8px 4px; font-size: 11px;
+    background: #252540; color: #808098; border-right: 1px solid #3a3a5c;
+  }
+  .tab-mock-item:last-child { border-right: none; }
+  .tab-mock-item.active { background: #2a2a55; color: #80b0ff; font-weight: 600; }
+
+  .add-btn {
+    display: block; width: 100%; padding: 10px; margin-top: 12px;
+    background: #2a2a55; border: 1.5px dashed #6a6aff; border-radius: 10px;
+    color: #8a8aff; text-align: center; font-size: 13px; cursor: pointer;
+  }
+
+  .menu-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px; background: #252540; border-radius: 10px;
+    margin-bottom: 6px; border: 1px solid #3a3a5c;
+  }
+  .menu-item .icon { font-size: 20px; width: 28px; text-align: center; }
+  .menu-item .label { font-size: 14px; color: #e0e0f0; font-weight: 500; }
+  .menu-item .label-sub { font-size: 11px; color: #808098; }
+
+  /* ── Approach cards ─────────────────── */
+  .approach { margin-top: 36px; }
+  .approach-card {
+    background: #252540; border: 2px solid #3a3a5c; border-radius: 12px;
+    padding: 18px; margin-bottom: 14px; cursor: pointer; transition: border-color 0.2s;
+  }
+  .approach-card:hover { border-color: #6a6aff; }
+  .approach-card h3 { margin-bottom: 6px; }
+  .approach-card p { font-size: 13px; color: #b0b0c8; line-height: 1.6; }
+  .approach-card .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; margin-top: 8px;
+  }
+  .tag-rec { background: #1a3528; color: #80d8a0; }
+  .tag-alt { background: #2a2a55; color: #8a8aff; }
+</style>
+</head>
+<body>
+
+<h2>Travel & Menu: Three Approaches</h2>
+<p class="subtitle">How should users enter their travel details, and what should the menu page be called?</p>
+
+<!-- ── APPROACH A ─────────────────────── -->
+<div class="section-label">Approach A: Unified "Travel" page</div>
+<p style="font-size:13px;color:#b0b0c8;margin-bottom:16px">One page called <strong style="color:#fff">"Travel"</strong> that handles all modes — flights, driving, train, etc. Short label, covers everything.</p>
+
+<div class="phones">
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      <div class="screen-header">✈️ Travel</div>
+      <div class="screen-sub">How you're getting there & back</div>
+
+      <div class="tab-mock">
+        <div class="tab-mock-item active">My Travel</div>
+        <div class="tab-mock-item">Everyone</div>
+      </div>
+
+      <div class="field-label">Getting there</div>
+      <div class="travel-card selected">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="icon" style="font-size:20px;margin:0">✈️</span>
+          <div>
+            <div class="title">Flying</div>
+            <div class="desc">JFK → DPS · Mar 14 · Delta DL47</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-label">Getting home</div>
+      <div class="travel-card selected">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="icon" style="font-size:20px;margin:0">✈️</span>
+          <div>
+            <div class="title">Flying</div>
+            <div class="desc">DPS → JFK · Mar 21 · Delta DL48</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="add-btn">+ Add a leg</div>
+    </div>
+    <div class="phone-label">Flying — shows flight details inline</div>
+  </div>
+
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      <div class="screen-header">🚗 Travel</div>
+      <div class="screen-sub">How you're getting there & back</div>
+
+      <div class="tab-mock">
+        <div class="tab-mock-item active">My Travel</div>
+        <div class="tab-mock-item">Everyone</div>
+      </div>
+
+      <div class="field-label">Getting there</div>
+      <div class="travel-card selected">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="icon" style="font-size:20px;margin:0">🚗</span>
+          <div>
+            <div class="title">Driving</div>
+            <div class="desc">Leaving from Atlanta · Mar 14 · ~5hr</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-label">Getting home</div>
+      <div class="travel-card selected">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="icon" style="font-size:20px;margin:0">🚗</span>
+          <div>
+            <div class="title">Driving</div>
+            <div class="desc">Leaving Bali · Mar 21 · ~5hr</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="add-btn">+ Add a leg</div>
+    </div>
+    <div class="phone-label">Driving — simpler card, arrival time + origin</div>
+  </div>
+</div>
+
+<!-- ── APPROACH B ─────────────────────── -->
+<div class="section-label" style="margin-top:48px">Approach B: Onboarding chooses your page</div>
+<p style="font-size:13px;color:#b0b0c8;margin-bottom:16px">When joining a trip, the user picks their travel mode. The app shows <strong style="color:#fff">"Flights"</strong> to flyers and <strong style="color:#fff">"Road Trip"</strong> to drivers. Different experience per person.</p>
+
+<div class="phones">
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      <div class="screen-header">How are you getting there?</div>
+      <div class="screen-sub">We'll customize your trip view</div>
+
+      <div class="travel-card" style="margin-top:20px">
+        <div class="icon">✈️</div>
+        <div class="title">Flying</div>
+        <div class="desc">I'll enter my flight details</div>
+      </div>
+      <div class="travel-card">
+        <div class="icon">🚗</div>
+        <div class="title">Driving</div>
+        <div class="desc">Road trip — I'll set my arrival time</div>
+      </div>
+      <div class="travel-card">
+        <div class="icon">🚆</div>
+        <div class="title">Train / Bus</div>
+        <div class="desc">I'll enter my schedule</div>
+      </div>
+      <div class="travel-card">
+        <div class="icon">🤷</div>
+        <div class="title">Not sure yet</div>
+        <div class="desc">I'll add details later</div>
+      </div>
+    </div>
+    <div class="phone-label">Onboarding step after joining trip</div>
+  </div>
+
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      <div class="screen-header">Menu</div>
+      <div class="screen-sub">Alayna's view (flying)</div>
+
+      <div class="menu-item"><span class="icon">✈️</span><div><div class="label">Flights</div><div class="label-sub">JFK → DPS · Mar 14</div></div></div>
+      <div class="menu-item"><span class="icon">🏨</span><div><div class="label">Stays</div><div class="label-sub">2 bookings</div></div></div>
+      <div class="menu-item"><span class="icon">🧳</span><div><div class="label">Packing</div><div class="label-sub">12/28 packed</div></div></div>
+      <div class="menu-item"><span class="icon">👗</span><div><div class="label">Outfits</div></div></div>
+      <div class="menu-item"><span class="icon">🗺️</span><div><div class="label">Map</div></div></div>
+
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid #3a3a5c">
+        <div class="screen-sub">Sarah's view (driving)</div>
+        <div class="menu-item"><span class="icon">🚗</span><div><div class="label">Road Trip</div><div class="label-sub">Atlanta → Savannah · Mar 14</div></div></div>
+        <div class="menu-item"><span class="icon">🧳</span><div><div class="label">Packing</div></div></div>
+      </div>
+    </div>
+    <div class="phone-label">Different menus based on travel mode</div>
+  </div>
+</div>
+
+<!-- ── APPROACH C ─────────────────────── -->
+<div class="section-label" style="margin-top:48px">Approach C: Just call it "Travel" + onboarding prompt</div>
+<p style="font-size:13px;color:#b0b0c8;margin-bottom:16px">Combine the best of both — one unified <strong style="color:#fff">"Travel"</strong> page, but when you first join a trip you get a quick onboarding prompt that pre-fills the right form. You can always change it later.</p>
+
+<div class="phones">
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      <div class="screen-header">Welcome to Bali 2026! 🌴</div>
+      <div class="screen-sub">Let's set up your trip</div>
+
+      <div style="margin-top:16px;font-size:13px;color:#d0d0e0;margin-bottom:12px">How are you getting to Bali?</div>
+
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <div class="travel-card selected" style="flex:1;text-align:center;margin:0;padding:10px">
+          <div style="font-size:24px">✈️</div>
+          <div style="font-size:11px;color:#80d8a0;font-weight:600;margin-top:2px">Flying</div>
+        </div>
+        <div class="travel-card" style="flex:1;text-align:center;margin:0;padding:10px">
+          <div style="font-size:24px">🚗</div>
+          <div style="font-size:11px;margin-top:2px">Driving</div>
+        </div>
+        <div class="travel-card" style="flex:1;text-align:center;margin:0;padding:10px">
+          <div style="font-size:24px">🚆</div>
+          <div style="font-size:11px;margin-top:2px">Train</div>
+        </div>
+        <div class="travel-card" style="flex:1;text-align:center;margin:0;padding:10px">
+          <div style="font-size:24px">🤷</div>
+          <div style="font-size:11px;margin-top:2px">Later</div>
+        </div>
+      </div>
+
+      <div style="font-size:13px;color:#d0d0e0;margin-bottom:8px">When are you arriving?</div>
+      <div class="field-row">
+        <div><div class="field-value">Mar 14, 2026</div></div>
+        <div><div class="field-value">3:00 PM</div></div>
+      </div>
+
+      <div style="font-size:13px;color:#d0d0e0;margin-bottom:8px;margin-top:12px">When are you leaving?</div>
+      <div class="field-row">
+        <div><div class="field-value">Mar 21, 2026</div></div>
+        <div><div class="field-value">10:00 AM</div></div>
+      </div>
+
+      <div class="add-btn" style="margin-top:16px;background:#1a3528;border-color:#80d8a0;color:#80d8a0">
+        Continue →
+      </div>
+
+      <div style="text-align:center;margin-top:8px;font-size:11px;color:#707090">Skip for now</div>
+    </div>
+    <div class="phone-label">Quick setup on first join — sets dates + mode</div>
+  </div>
+
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      <div class="screen-header">🚀 Travel</div>
+      <div class="screen-sub">Bali 2026 · Alayna</div>
+
+      <div class="tab-mock">
+        <div class="tab-mock-item active">My Travel</div>
+        <div class="tab-mock-item">Everyone</div>
+      </div>
+
+      <div class="flight-card">
+        <div class="flight-num">Delta DL47</div>
+        <div class="flight-route">
+          <span class="flight-code">JFK</span>
+          <span class="flight-arrow">→</span>
+          <span class="flight-code">DPS</span>
+        </div>
+        <div class="flight-detail">Mar 14 · Departs 8:30 PM · Arrives Mar 15 6:15 AM</div>
+      </div>
+
+      <div class="flight-card">
+        <div class="flight-num">Delta DL48</div>
+        <div class="flight-route">
+          <span class="flight-code">DPS</span>
+          <span class="flight-arrow">→</span>
+          <span class="flight-code">JFK</span>
+        </div>
+        <div class="flight-detail">Mar 21 · Departs 10:00 AM · Arrives 8:45 PM</div>
+      </div>
+
+      <div class="add-btn">+ Add flight</div>
+
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid #3a3a5c">
+        <div style="font-size:11px;color:#707090;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Everyone's status</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <div style="background:#252540;border:1px solid #3a3a5c;border-radius:20px;padding:4px 10px;font-size:11px">
+            🌸 Alayna <span style="color:#4a9aff">✈️ Mar 14–21</span>
+          </div>
+          <div style="background:#252540;border:1px solid #3a3a5c;border-radius:20px;padding:4px 10px;font-size:11px">
+            🍀 Sarah <span style="color:#ffa84a">🚗 Mar 14–19</span>
+          </div>
+          <div style="background:#252540;border:1px solid #3a3a5c;border-radius:20px;padding:4px 10px;font-size:11px">
+            🌻 Megan <span style="color:#808098">TBD</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Travel page — adapts to your mode, shows everyone</div>
+  </div>
+</div>
+
+<!-- ── Pick one ───────────────────────── -->
+<div class="approach">
+  <div class="section-label">Which approach?</div>
+
+  <div class="approach-card" onclick="this.style.borderColor='#80d8a0'">
+    <h3>A — Unified "Travel" page, no onboarding</h3>
+    <p>One page handles all modes. Users add their travel details whenever they want. Simplest to build.</p>
+    <span class="tag tag-alt">Simplest</span>
+  </div>
+
+  <div class="approach-card" onclick="this.style.borderColor='#80d8a0'">
+    <h3>B — Onboarding picks your page type</h3>
+    <p>Travel mode chosen on join → different menu page per user ("Flights" vs "Road Trip"). Most personalized but complex.</p>
+    <span class="tag tag-alt">Most personalized</span>
+  </div>
+
+  <div class="approach-card" onclick="this.style.borderColor='#80d8a0'">
+    <h3>C — "Travel" page + onboarding prompt</h3>
+    <p>Quick setup on first join (mode + dates), then one unified Travel page that adapts to your mode. Shows everyone's status. Best of both worlds.</p>
+    <span class="tag tag-rec">Recommended</span>
+  </div>
+</div>
+
+</body>
+</html>
