@@ -1,18 +1,31 @@
-import { Injectable, signal, inject, Injector, runInInjectionContext } from '@angular/core';
-import { Firestore, collection, doc, onSnapshot, setDoc, deleteDoc } from '@angular/fire/firestore';
+import { Injectable, signal, inject, Injector, runInInjectionContext, effect } from '@angular/core';
+import { Firestore, collection, doc, onSnapshot, setDoc, deleteDoc, Unsubscribe } from '@angular/fire/firestore';
 import { RecDoc } from '../models/trip.models';
+import { TripContextService } from './trip-context.service';
 
 @Injectable({ providedIn: 'root' })
 export class RecsService {
-  private firestore = inject(Firestore);
-  private injector  = inject(Injector);
+  private firestore   = inject(Firestore);
+  private injector    = inject(Injector);
+  private tripContext = inject(TripContextService);
 
   private _recs = signal<RecDoc[]>([]);
   readonly recs = this._recs.asReadonly();
 
-  init(): void {
+  private unsub?: Unsubscribe;
+
+  constructor() {
+    effect(() => this.subscribe(this.tripContext.activeTripId()));
+  }
+
+  /** Retained for AppComponent compatibility — the constructor effect drives the subscription. */
+  init(): void { /* no-op */ }
+
+  private subscribe(tripId: string | null): void {
+    this.unsub?.(); this.unsub = undefined;
+    if (!tripId) { this._recs.set([]); return; }
     runInInjectionContext(this.injector, () => {
-      onSnapshot(collection(this.firestore, 'recs'), snap => {
+      this.unsub = onSnapshot(collection(this.firestore, 'trips', tripId, 'recs'), snap => {
         this._recs.set(
           snap.docs
             .map(d => ({ id: d.id, ...d.data() } as RecDoc))
@@ -23,11 +36,19 @@ export class RecsService {
   }
 
   async addRec(rec: Omit<RecDoc, 'id'>): Promise<void> {
-    const ref = doc(collection(this.firestore, 'recs'));
+    const tid = this.requireTrip();
+    const ref = doc(collection(this.firestore, 'trips', tid, 'recs'));
     await setDoc(ref, { ...rec, id: ref.id });
   }
 
   async deleteRec(id: string): Promise<void> {
-    await deleteDoc(doc(this.firestore, 'recs', id));
+    const tid = this.requireTrip();
+    await deleteDoc(doc(this.firestore, 'trips', tid, 'recs', id));
+  }
+
+  private requireTrip(): string {
+    const tid = this.tripContext.activeTripId();
+    if (!tid) throw new Error('No active trip selected.');
+    return tid;
   }
 }

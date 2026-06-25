@@ -1,18 +1,31 @@
-import { Injectable, signal, inject, Injector, runInInjectionContext } from '@angular/core';
-import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
+import { Injectable, signal, inject, Injector, runInInjectionContext, effect } from '@angular/core';
+import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, Unsubscribe } from '@angular/fire/firestore';
 import { FlightDoc } from '../models/trip.models';
+import { TripContextService } from './trip-context.service';
 
 @Injectable({ providedIn: 'root' })
 export class FlightsService {
-  private firestore = inject(Firestore);
-  private injector  = inject(Injector);
+  private firestore   = inject(Firestore);
+  private injector    = inject(Injector);
+  private tripContext = inject(TripContextService);
 
   private _flights = signal<FlightDoc[]>([]);
   readonly flights = this._flights.asReadonly();
 
-  init(): void {
+  private unsub?: Unsubscribe;
+
+  constructor() {
+    effect(() => this.subscribe(this.tripContext.activeTripId()));
+  }
+
+  /** Retained for AppComponent compatibility — the constructor effect drives the subscription. */
+  init(): void { /* no-op */ }
+
+  private subscribe(tripId: string | null): void {
+    this.unsub?.(); this.unsub = undefined;
+    if (!tripId) { this._flights.set([]); return; }
     runInInjectionContext(this.injector, () => {
-      onSnapshot(collection(this.firestore, 'flights'), snap => {
+      this.unsub = onSnapshot(collection(this.firestore, 'trips', tripId, 'flights'), snap => {
         this._flights.set(
           snap.docs
             .map(d => ({ id: d.id, ...d.data() } as FlightDoc))
@@ -26,15 +39,24 @@ export class FlightsService {
   }
 
   async addFlight(data: Omit<FlightDoc, 'id'>): Promise<void> {
-    const ref = doc(collection(this.firestore, 'flights'));
+    const tid = this.requireTrip();
+    const ref = doc(collection(this.firestore, 'trips', tid, 'flights'));
     await setDoc(ref, { ...data, id: ref.id });
   }
 
   async updateFlight(id: string, data: Partial<Omit<FlightDoc, 'id'>>): Promise<void> {
-    await updateDoc(doc(this.firestore, 'flights', id), { ...data });
+    const tid = this.requireTrip();
+    await updateDoc(doc(this.firestore, 'trips', tid, 'flights', id), { ...data });
   }
 
   async deleteFlight(id: string): Promise<void> {
-    await deleteDoc(doc(this.firestore, 'flights', id));
+    const tid = this.requireTrip();
+    await deleteDoc(doc(this.firestore, 'trips', tid, 'flights', id));
+  }
+
+  private requireTrip(): string {
+    const tid = this.tripContext.activeTripId();
+    if (!tid) throw new Error('No active trip selected.');
+    return tid;
   }
 }
