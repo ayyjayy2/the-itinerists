@@ -1,6 +1,7 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, effect } from '@angular/core';
 import { PackingItem, PackingSuggestion } from '../models/trip.models';
 import { UserService } from './user.service';
+import { TripContextService } from './trip-context.service';
 
 const ITEMS_KEY_PREFIX      = 'tripplanner_packing_items_';
 const SUGGESTIONS_KEY       = 'tripplanner_packing_suggestions';
@@ -10,6 +11,7 @@ export const DEFAULT_PACKING_CATEGORIES = ['Clothes', 'Shoes', 'Accessories', 'O
 @Injectable({ providedIn: 'root' })
 export class PackingService {
   private userService = inject(UserService);
+  private tripContext = inject(TripContextService);
 
   private _items       = signal<PackingItem[]>([]);
   private _suggestions = signal<PackingSuggestion[]>([]);
@@ -18,6 +20,15 @@ export class PackingService {
   readonly items       = this._items.asReadonly();
   readonly suggestions = this._suggestions.asReadonly();
   readonly categories  = this._categories.asReadonly();
+
+  constructor() {
+    // Reload per-trip packing data whenever the active trip changes.
+    effect(() => {
+      this.tripContext.activeTripId();
+      this._items.set(this.loadItems());
+      this._categories.set(this.loadCategories());
+    });
+  }
 
   init(): void {
     this._items.set(this.loadItems());
@@ -111,7 +122,9 @@ export class PackingService {
   // ── Storage ───────────────────────────────────────────────────────────────────
 
   private userKey(): string {
-    return this.userService.currentUser()?.name ?? 'unknown';
+    const user = this.userService.currentUser()?.name ?? 'unknown';
+    const trip = this.tripContext.activeTripId() ?? 'none';
+    return `${trip}_${user}`;
   }
 
   private itemsKey(): string {
