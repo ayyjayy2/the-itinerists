@@ -20,7 +20,7 @@ admin.initializeApp({
 const auth = admin.auth();
 const db   = admin.firestore();
 
-const EMAIL    = 'makaela@savannah-getaway.local';
+const EMAIL    = 'makaela@trip-planner.local';
 const PASSWORD = 'AdminMj96!';
 
 async function main() {
