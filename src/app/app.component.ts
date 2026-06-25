@@ -65,11 +65,14 @@ export class AppComponent implements OnInit {
     { path: '/recs',           label: 'Recs',            icon: '🌸' },
     { path: '/packing',        label: 'Packing',         icon: '🧳' },
     { path: '/outfits',        label: 'Outfits',         icon: '👗' },
+    { path: '/trip-settings',  label: 'Trip Settings',   icon: '⚙️' },
     { path: '/profile',        label: 'Profile',         icon: '👤' },
   ];
 
   readonly navItems = computed<NavItem[]>(() => {
-    const items = [...this.baseNavItems];
+    // Hide pages this member toggled off for the active trip (TP-15).
+    const hidden = this.tripService.hiddenPages();
+    const items = this.baseNavItems.filter(i => !hidden.includes(i.path.slice(1)));
     if (this.userService.isAdmin()) {
       items.push({ path: '/admin', label: 'Admin', icon: '⚙️' });
     }

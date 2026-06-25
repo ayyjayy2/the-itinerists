@@ -1,0 +1,116 @@
+<div class="page-container">
+  <h1>⚙️ Trip Settings</h1>
+
+  @if (!trip()) {
+    <div class="card empty">
+      <p>No active trip. <a routerLink="/trips">Pick or create a trip</a> first.</p>
+    </div>
+  } @else {
+    @if (error()) { <div class="alert-error">{{ error() }}</div> }
+
+    <!-- Details -->
+    <section class="card">
+      <h2>Details</h2>
+      <div class="form-group">
+        <label>Trip name</label>
+        <input type="text" [(ngModel)]="name" maxlength="80" />
+      </div>
+      <div class="form-group">
+        <label>Destination</label>
+        <input type="text" [(ngModel)]="destination" maxlength="120" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Start date</label>
+          <input type="date" [(ngModel)]="startDate" />
+        </div>
+        <div class="form-group">
+          <label>End date</label>
+          <input type="date" [(ngModel)]="endDate" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Primary currency</label>
+        <select [(ngModel)]="currency">
+          @for (c of currencies; track c.code) { <option [value]="c.code">{{ c.label }}</option> }
+        </select>
+      </div>
+      <div class="form-actions">
+        @if (savedOk()) { <span class="saved-tag">✓ Saved</span> }
+        <button class="btn btn-primary" (click)="saveDetails()" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save changes' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Members -->
+    <section class="card">
+      <div class="section-head">
+        <h2>Members ({{ members().length }})</h2>
+        <button class="btn btn-ghost btn-sm" (click)="copyInvite()" [disabled]="inviteState() === 'copying'">
+          @if (inviteState() === 'copied') { ✓ Link copied }
+          @else if (inviteState() === 'copying') { Generating… }
+          @else { 🔗 Invite }
+        </button>
+      </div>
+      <ul class="member-list">
+        @for (m of members(); track m.uid) {
+          <li class="member-row">
+            <span class="member-avatar" [style.background]="m.color">{{ m.avatarEmoji }}</span>
+            <span class="member-name">
+              {{ m.displayName }}
+              @if (isMe(m)) { <span class="tag">You</span> }
+              @if (m.role === 'owner') { <span class="tag tag-owner">Owner</span> }
+            </span>
+            @if (canRemove(m)) {
+              <button class="btn btn-danger btn-sm" (click)="remove(m)" [disabled]="busyMember() === m.uid">
+                Remove
+              </button>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- Customize Menu (page toggles) -->
+    <section class="card">
+      <h2>Customize Menu</h2>
+      <p class="muted">Hide pages you don't use. Home, Itinerary and Finance always stay. This only affects your menu.</p>
+      <ul class="toggle-list">
+        @for (p of hideablePages; track p.key) {
+          <li class="toggle-row">
+            <span>{{ p.icon }} {{ p.label }}</span>
+            <button class="toggle" [class.on]="!isHidden(p.key)" (click)="togglePage(p.key)">
+              {{ isHidden(p.key) ? 'Hidden' : 'Shown' }}
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- Danger / lifecycle -->
+    <section class="card">
+      <h2>Trip</h2>
+      <div class="lifecycle-row">
+        <div>
+          <strong>{{ trip()!.archived ? 'Archived' : 'Active' }}</strong>
+          <p class="muted">{{ trip()!.archived ? 'Restore to move it back to your active trips.' : 'Archive to tuck it away without deleting anything.' }}</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" (click)="toggleArchive()">
+          {{ trip()!.archived ? 'Restore' : 'Archive' }}
+        </button>
+      </div>
+      @if (!isOwner()) {
+        <div class="lifecycle-row">
+          <div>
+            <strong>Leave trip</strong>
+            <p class="muted">Remove yourself from this trip. You'll need a new invite to rejoin.</p>
+          </div>
+          <button class="btn btn-danger btn-sm" (click)="leave()">Leave</button>
+        </div>
+      } @else {
+        <p class="muted owner-note">You're the owner. Transfer ownership or delete the trip — coming soon.</p>
+      }
+    </section>
+  }
+</div>

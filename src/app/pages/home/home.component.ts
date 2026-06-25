@@ -47,10 +47,14 @@ export class HomeComponent implements OnInit, OnDestroy {
     { path: '/profile',        label: 'Profile',      icon: '👤',  description: 'Settings & account',    color: '#F5D4B5' },
   ];
 
-  readonly quickLinks = computed(() => this.isAdmin()
-    ? [...this.baseLinks, { path: '/admin', label: 'Admin', icon: '⚙️', description: 'Trip & members', color: '#D4B5F5' }]
-    : this.baseLinks
-  );
+  readonly quickLinks = computed(() => {
+    // Respect the member's hidden pages for the active trip (TP-15).
+    const hidden = this.tripService.hiddenPages();
+    const links = this.baseLinks.filter(l => !hidden.includes(l.path.slice(1)));
+    return this.isAdmin()
+      ? [...links, { path: '/admin', label: 'Admin', icon: '⚙️', description: 'Trip & members', color: '#D4B5F5' }]
+      : links;
+  });
 
   /** Short destination for countdown copy: "Lisbon, Portugal" → "Lisbon". */
   readonly destinationShort = computed(() => {

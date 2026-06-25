@@ -1,7 +1,7 @@
-import { Injectable, inject, Injector, runInInjectionContext, signal, effect } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext, signal, computed, effect } from '@angular/core';
 import {
-  Firestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot,
-  arrayUnion, increment, Unsubscribe,
+  Firestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot,
+  arrayUnion, arrayRemove, increment, Unsubscribe,
 } from '@angular/fire/firestore';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
@@ -42,12 +42,23 @@ export class TripService {
   /** Live document for the active trip (null when none is selected). */
   private _activeTrip = signal<TripDoc | null>(null);
   readonly activeTrip = this._activeTrip.asReadonly();
-  private activeTripUnsub?: Unsubscribe;
 
+  /** Live member list for the active trip. */
+  private _activeMembers = signal<TripMember[]>([]);
+  readonly activeMembers = this._activeMembers.asReadonly();
+
+  /** Pages the current user has hidden on the active trip (TP-15 page toggles). */
+  readonly hiddenPages = computed<string[]>(() => {
+    const uid = this.userService.firestoreUser()?.uid;
+    const me  = this._activeMembers().find(m => m.uid === uid);
+    return me?.hiddenPages ?? [];
+  });
+
+  private activeUnsubs: Unsubscribe[] = [];
   private restoring = false;
 
   constructor() {
-    // Keep `activeTrip` in sync with whichever trip is currently active.
+    // Keep `activeTrip` + `activeMembers` in sync with whichever trip is active.
     effect(() => this.watchActiveTrip(this.tripContext.activeTripId()));
 
     // On login, restore the user's last active trip when none is set locally
@@ -77,12 +88,20 @@ export class TripService {
   }
 
   private watchActiveTrip(tripId: string | null): void {
-    this.activeTripUnsub?.(); this.activeTripUnsub = undefined;
-    if (!tripId) { this._activeTrip.set(null); return; }
+    this.activeUnsubs.forEach(u => u());
+    this.activeUnsubs = [];
+    if (!tripId) { this._activeTrip.set(null); this._activeMembers.set([]); return; }
     runInInjectionContext(this.injector, () => {
-      this.activeTripUnsub = onSnapshot(doc(this.firestore, 'trips', tripId), snap => {
-        this._activeTrip.set(snap.exists() ? (snap.data() as TripDoc) : null);
-      });
+      this.activeUnsubs.push(
+        onSnapshot(doc(this.firestore, 'trips', tripId), snap => {
+          this._activeTrip.set(snap.exists() ? (snap.data() as TripDoc) : null);
+        }),
+        onSnapshot(collection(this.firestore, 'trips', tripId, 'members'), snap => {
+          this._activeMembers.set(
+            snap.docs.map(d => d.data() as TripMember).sort((a, b) => a.joinedAt - b.joinedAt),
+          );
+        }),
+      );
     });
   }
 
@@ -187,6 +206,63 @@ export class TripService {
   async archiveTrip(tripId: string, archived = true): Promise<void> {
     await runInInjectionContext(this.injector, () =>
       updateDoc(doc(this.firestore, 'trips', tripId), { archived }),
+    );
+  }
+
+  /** Edit a trip's core details (any member). Only defined fields are written. */
+  async updateTrip(tripId: string, patch: Partial<Pick<TripDoc,
+    'name' | 'destination' | 'startDate' | 'endDate' | 'currency'>>): Promise<void> {
+    const data = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
+    if (Object.keys(data).length === 0) return;
+    await runInInjectionContext(this.injector, () =>
+      updateDoc(doc(this.firestore, 'trips', tripId), data),
+    );
+  }
+
+  /** Remove another member from a trip (the owner can't be removed). */
+  async removeMember(tripId: string, uid: string): Promise<void> {
+    await runInInjectionContext(this.injector, async () => {
+      const snap = await getDoc(this.memberRef(tripId, uid));
+      if (snap.exists() && (snap.data() as TripMember).role === 'owner') {
+        throw new Error('The trip owner cannot be removed.');
+      }
+      await deleteDoc(this.memberRef(tripId, uid));
+      await updateDoc(doc(this.firestore, 'userTrips', uid), { tripIds: arrayRemove(tripId) })
+        .catch(() => {/* tolerate a missing index doc */});
+      await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(-1) });
+    });
+  }
+
+  /**
+   * Leave the active trip voluntarily. Removes the current user's membership,
+   * decrements the count, and switches to another of the user's trips (or clears
+   * the active trip if none remain). Returns the new active tripId (or null).
+   */
+  async leaveTrip(tripId: string): Promise<string | null> {
+    const user = this.requireUser();
+    return runInInjectionContext(this.injector, async () => {
+      await deleteDoc(this.memberRef(tripId, user.uid));
+      await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(-1) });
+
+      // Drop it from the user's index and pick a replacement active trip.
+      const idxRef  = doc(this.firestore, 'userTrips', user.uid);
+      const idxSnap = await getDoc(idxRef);
+      const remaining = (idxSnap.exists() ? (idxSnap.data() as UserTripsDoc).tripIds ?? [] : [])
+        .filter(id => id !== tripId);
+      const next = remaining[0] ?? null;
+      await setDoc(idxRef, { tripIds: remaining, lastActiveTrip: next ?? null }, { merge: true });
+
+      if (next) this.tripContext.switchTrip(next);
+      else      this.tripContext.clearActiveTrip();
+      return next;
+    });
+  }
+
+  /** Persist the current user's hidden-pages list for a trip (TP-15 page toggles). */
+  async setHiddenPages(tripId: string, hiddenPages: string[]): Promise<void> {
+    const user = this.requireUser();
+    await runInInjectionContext(this.injector, () =>
+      updateDoc(this.memberRef(tripId, user.uid), { hiddenPages }),
     );
   }
 
