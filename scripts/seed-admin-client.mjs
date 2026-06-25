@@ -10,15 +10,15 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } f
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey:            'AIzaSyAWs9Dkhf1RlAQUgCAFarthHpuHHm01Xkc',
-  authDomain:        'savannah-getaway.firebaseapp.com',
-  projectId:         'savannah-getaway',
-  storageBucket:     'savannah-getaway.firebasestorage.app',
-  messagingSenderId: '383826917625',
-  appId:             '1:383826917625:web:2502d195e539600e730a28',
+  apiKey:            'AIzaSyAhu_RR_cGScZm6GZ96tC_f_kn5Qhbgl3M',
+  authDomain:        'trip-planner-ayyjayy2.firebaseapp.com',
+  projectId:         'trip-planner-ayyjayy2',
+  storageBucket:     'trip-planner-ayyjayy2.firebasestorage.app',
+  messagingSenderId: '861993541272',
+  appId:             '1:861993541272:web:e18a674f266db2ce543aed',
 };
 
-const EMAIL    = 'makaela@savannah-getaway.local';
+const EMAIL    = 'makaela@trip-planner.local';
 const PASSWORD = 'AdminMj96!';
 
 const app  = initializeApp(firebaseConfig);

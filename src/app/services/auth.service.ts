@@ -22,7 +22,7 @@ import {
 } from '@angular/fire/firestore';
 import { FirestoreUser, InviteCode } from '../models/trip.models';
 
-const EMAIL_DOMAIN = '@savannah-getaway.local';
+const EMAIL_DOMAIN = '@trip-planner.local';
 
 function toEmail(username: string): string {
   return `${username.toLowerCase().trim()}${EMAIL_DOMAIN}`;

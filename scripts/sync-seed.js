@@ -24,7 +24,7 @@ if (!fs.existsSync(KEY_PATH)) {
 ERROR: ${KEY_PATH} not found.
 
 To generate it:
-  1. Go to https://console.firebase.google.com/project/savannah-getaway/settings/serviceaccounts/adminsdk
+  1. Go to https://console.firebase.google.com/project/trip-planner-ayyjayy2/settings/serviceaccounts/adminsdk
   2. Click "Generate new private key"
   3. Save the file as:  scripts/serviceAccountKey.json
   (It is already in .gitignore — never commit it)
