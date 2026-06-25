@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Firestore, collection, onSnapshot, doc, setDoc } from '@angular/fire/firestore';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
+import { TripContextService } from '../../services/trip-context.service';
 import { FirestoreUser, TripConfig } from '../../models/trip.models';
 
 @Component({
@@ -16,6 +17,7 @@ export class AdminComponent implements OnInit {
   private firestore   = inject(Firestore);
   private userService = inject(UserService);
   private authService = inject(AuthService);
+  private tripContext = inject(TripContextService);
 
   currentUser = this.userService.firestoreUser;
 
@@ -62,13 +64,18 @@ export class AdminComponent implements OnInit {
   }
 
   async generateInvite(): Promise<void> {
-    const uid = this.currentUser()?.uid;
+    const uid    = this.currentUser()?.uid;
+    const tripId = this.tripContext.activeTripId();
     if (!uid) return;
+    if (!tripId) {
+      this.inviteError.set('Select a trip first — invites are per-trip.');
+      return;
+    }
     this.inviteLoading.set(true);
     this.inviteError.set('');
     this.inviteLink.set('');
     try {
-      const code = await this.authService.generateInviteCode(uid);
+      const code = await this.authService.generateInviteCode(uid, tripId);
       const url  = `${window.location.origin}/join?code=${code}`;
       this.inviteLink.set(url);
     } catch {
