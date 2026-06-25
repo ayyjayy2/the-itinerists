@@ -24,7 +24,7 @@ const SAVANNAH_LAT = 32.0809;
 const SAVANNAH_LON = -81.0912;
 const SAVANNAH_TZ  = 'America%2FNew_York';
 
-const CACHE_KEY    = 'savannah_weather_v2';
+const CACHE_KEY    = 'tripplanner_weather_v2';
 const FORECAST_DAYS = 16;
 
 /** Cache is valid until the next 7 AM ET after it was saved. */

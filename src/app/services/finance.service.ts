@@ -2,7 +2,7 @@ import { Injectable, signal, inject, Injector, runInInjectionContext } from '@an
 import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
 import { FinanceEntryDoc } from '../models/trip.models';
 
-const PAID_KEY = 'savannah_paid_items';
+const PAID_KEY = 'tripplanner_paid_items';
 
 @Injectable({ providedIn: 'root' })
 export class FinanceService {
