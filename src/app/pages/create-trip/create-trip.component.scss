@@ -1,0 +1,42 @@
+.subtitle {
+  color: var(--text-muted);
+  margin: 0.25rem 0 1.25rem;
+}
+
+.card {
+  max-width: 560px;
+}
+
+.alert-error {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: rgba(212, 144, 154, 0.15);
+  color: var(--highlight-dk);
+  border: 1px solid var(--highlight);
+  font-weight: 600;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+
+  &:hover:not(:disabled) { background: var(--primary-dark); }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+
+  &:hover:not(:disabled) { background: var(--bg); color: var(--text); }
+  &:disabled { opacity: 0.6; cursor: default; }
+}

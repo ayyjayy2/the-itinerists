@@ -54,6 +54,7 @@ export class AppComponent implements OnInit {
 
   readonly baseNavItems: NavItem[] = [
     { path: '/home',           label: 'Home',            icon: '🏠' },
+    { path: '/trips/new',      label: 'New Trip',        icon: '✨' },
     { path: '/flights',        label: 'Flights',         icon: '✈️' },
     { path: '/itinerary',      label: 'Itinerary',       icon: '📅' },
     { path: '/accommodations', label: 'Stays',           icon: '🏨' },
