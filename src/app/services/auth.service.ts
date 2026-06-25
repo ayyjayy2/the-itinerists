@@ -19,8 +19,13 @@ import {
   query,
   where,
   getDocs,
+  arrayUnion,
+  increment,
 } from '@angular/fire/firestore';
-import { FirestoreUser, InviteCode } from '../models/trip.models';
+import {
+  FirestoreUser, InviteCode, InviteIndexEntry, TripMember,
+} from '../models/trip.models';
+import { TripContextService } from './trip-context.service';
 
 const EMAIL_DOMAIN = '@trip-planner.local';
 
@@ -40,8 +45,9 @@ const AVATAR_COLORS = [
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private auth      = inject(Auth);
-  private firestore = inject(Firestore);
+  private auth        = inject(Auth);
+  private firestore   = inject(Firestore);
+  private tripContext = inject(TripContextService);
 
   async login(username: string, password: string): Promise<void> {
     await signInWithEmailAndPassword(this.auth, toEmail(username), password);
@@ -51,6 +57,11 @@ export class AuthService {
     await signOut(this.auth);
   }
 
+  /**
+   * Register a new user via a trip invite, then auto-join that trip (TP-11).
+   * The invite code resolves to a tripId through `/inviteIndex`; on success the
+   * user becomes a member of the invited trip and it is made active.
+   */
   async register(
     inviteCode: string,
     displayName: string,
@@ -59,16 +70,15 @@ export class AuthService {
     password: string,
     color: string,
   ): Promise<void> {
-    // Validate invite code
-    const inviteRef  = doc(this.firestore, 'invites', inviteCode);
+    // Resolve & validate the invite (code → trip).
+    const tripId = await this.validateInviteCode(inviteCode);
+    if (!tripId) throw new Error('This invite code is invalid or has expired.');
+
+    const inviteRef  = doc(this.firestore, 'trips', tripId, 'invites', inviteCode);
     const inviteSnap = await getDoc(inviteRef);
     if (!inviteSnap.exists()) throw new Error('Invalid invite code.');
-    const raw = inviteSnap.data() as any;
-    const invite: InviteCode = {
-      ...raw,
-      usedBy: Array.isArray(raw.usedBy) ? raw.usedBy : [],
-    };
-    if (invite.expiresAt < Date.now()) throw new Error('This invite code has expired.');
+    const raw = inviteSnap.data() as Partial<InviteCode>;
+    const usedBy = Array.isArray(raw.usedBy) ? raw.usedBy : [];
 
     // Check username uniqueness
     const usersRef  = collection(this.firestore, 'users');
@@ -79,6 +89,7 @@ export class AuthService {
     // Create Firebase Auth account
     const cred = await createUserWithEmailAndPassword(this.auth, toEmail(username), password);
     const uid  = cred.user.uid;
+    const now  = Date.now();
 
     // Write Firestore user profile
     const userDoc: FirestoreUser = {
@@ -89,32 +100,59 @@ export class AuthService {
       color,
       isAdmin:      false,
       isDisabled:   false,
-      createdAt:    Date.now(),
+      createdAt:    now,
     };
     await setDoc(doc(this.firestore, 'users', uid), userDoc);
 
-    // Record who used this invite code (write normalized array to handle legacy docs)
-    await updateDoc(inviteRef, { usedBy: [...invite.usedBy, uid] });
+    // Join the invited trip: member doc + trips index + member count + usedBy.
+    const member: TripMember = {
+      uid, role: 'member',
+      displayName: userDoc.displayName,
+      avatarEmoji, color, joinedAt: now,
+    };
+    await setDoc(doc(this.firestore, 'trips', tripId, 'members', uid), member);
+    await setDoc(
+      doc(this.firestore, 'userTrips', uid),
+      { tripIds: arrayUnion(tripId), lastActiveTrip: tripId },
+      { merge: true },
+    );
+    await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(1) });
+    await updateDoc(inviteRef, { usedBy: [...usedBy, uid] });
+
+    this.tripContext.switchTrip(tripId);
   }
 
-  async generateInviteCode(createdByUid: string): Promise<string> {
-    const code = randomCode();
+  /**
+   * Generate a trip-scoped invite (TP-11). Writes the invite under the trip and
+   * a `/inviteIndex/{code}` entry so the join flow can resolve it without
+   * scanning every trip. Returns the code.
+   */
+  async generateInviteCode(createdByUid: string, tripId: string): Promise<string> {
+    const code      = randomCode();
+    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
     const invite: InviteCode = {
-      code,
+      code, tripId,
       createdBy: createdByUid,
       createdAt: Date.now(),
-      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+      expiresAt,
       usedBy:    [],
     };
-    await setDoc(doc(this.firestore, 'invites', code), invite);
+    const index: InviteIndexEntry = { tripId, expiresAt };
+    await setDoc(doc(this.firestore, 'trips', tripId, 'invites', code), invite);
+    await setDoc(doc(this.firestore, 'inviteIndex', code), index);
     return code;
   }
 
-  async validateInviteCode(code: string): Promise<boolean> {
-    const snap = await getDoc(doc(this.firestore, 'invites', code));
-    if (!snap.exists()) return false;
-    const raw = snap.data() as any;
-    return raw.expiresAt > Date.now();
+  /**
+   * Resolve an invite code to its tripId if it exists and hasn't expired,
+   * else `null`. Reads the global `/inviteIndex` (TP-11).
+   */
+  async validateInviteCode(code: string): Promise<string | null> {
+    const snap = await getDoc(doc(this.firestore, 'inviteIndex', code.trim().toUpperCase()));
+    if (!snap.exists()) return null;
+    const entry = snap.data() as InviteIndexEntry;
+    if (!entry.expiresAt || entry.expiresAt < Date.now()) return null;
+    return entry.tripId;
   }
 
   async updateProfile(uid: string, updates: Partial<Pick<FirestoreUser, 'displayName' | 'avatarEmoji' | 'color'>>): Promise<void> {

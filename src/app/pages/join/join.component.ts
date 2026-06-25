@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { TripService } from '../../services/trip.service';
+import { UserService } from '../../services/user.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 
 const EMOJI_OPTIONS = [
@@ -18,6 +20,8 @@ const EMOJI_OPTIONS = [
 })
 export class JoinComponent implements OnInit {
   private authService = inject(AuthService);
+  private tripService = inject(TripService);
+  private userService = inject(UserService);
   private router      = inject(Router);
   private route       = inject(ActivatedRoute);
 
@@ -43,8 +47,23 @@ export class JoinComponent implements OnInit {
   error         = signal('');
   step          = signal<'validating' | 'form' | 'invalid'>('validating');
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.inviteCode = this.route.snapshot.queryParams['code'] ?? '';
+
+    // Already signed in? Resolve the code and join the trip directly (TP-11).
+    if (this.inviteCode && this.userService.hasUser()) {
+      this.step.set('validating');
+      try {
+        await this.tripService.joinByCode(this.inviteCode);
+        this.router.navigate(['/home']);
+        return;
+      } catch (err: any) {
+        this.step.set('invalid');
+        this.codeError.set(err?.message ?? 'This invite code is invalid or has expired.');
+        return;
+      }
+    }
+
     if (this.inviteCode) {
       this.validateCode();
     } else {
@@ -55,8 +74,8 @@ export class JoinComponent implements OnInit {
   async validateCode(): Promise<void> {
     this.step.set('validating');
     try {
-      const valid = await this.authService.validateInviteCode(this.inviteCode.trim().toUpperCase());
-      if (valid) {
+      const tripId = await this.authService.validateInviteCode(this.inviteCode.trim().toUpperCase());
+      if (tripId) {
         this.step.set('form');
       } else {
         this.step.set('invalid');

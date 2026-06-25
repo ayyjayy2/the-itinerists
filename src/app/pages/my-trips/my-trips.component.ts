@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { TripService } from '../../services/trip.service';
 import { TripContextService } from '../../services/trip-context.service';
 import { UserService } from '../../services/user.service';
+import { AuthService } from '../../services/auth.service';
 import { TripDoc } from '../../models/trip.models';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -17,12 +18,17 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 export class MyTripsComponent implements OnInit {
   private tripService = inject(TripService);
   private userService = inject(UserService);
+  private authService = inject(AuthService);
   private router      = inject(Router);
   private tripContext = inject(TripContextService);
 
   trips   = signal<TripDoc[]>([]);
   loading = signal(true);
   error   = signal('');
+
+  invitingId  = signal<string | null>(null);
+  copiedId    = signal<string | null>(null);
+  inviteError = signal('');
 
   async ngOnInit(): Promise<void> {
     const user = this.userService.firestoreUser();
@@ -49,6 +55,24 @@ export class MyTripsComponent implements OnInit {
 
   newTrip(): void {
     this.router.navigate(['/trips/new']);
+  }
+
+  /** Generate a per-trip invite link and copy it to the clipboard (TP-11). */
+  async invite(trip: TripDoc): Promise<void> {
+    this.inviteError.set('');
+    this.copiedId.set(null);
+    this.invitingId.set(trip.id);
+    try {
+      const code = await this.tripService.generateInvite(trip.id);
+      const url  = `${window.location.origin}/join?code=${code}`;
+      await navigator.clipboard.writeText(url);
+      this.copiedId.set(trip.id);
+      setTimeout(() => this.copiedId.set(null), 2500);
+    } catch (e: unknown) {
+      this.inviteError.set(e instanceof Error ? e.message : 'Could not create an invite link.');
+    } finally {
+      this.invitingId.set(null);
+    }
   }
 
   dateRange(t: TripDoc): string {

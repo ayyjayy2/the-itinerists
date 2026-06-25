@@ -4,6 +4,7 @@ import {
 } from '@angular/fire/firestore';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
+import { AuthService } from './auth.service';
 import { TripDoc, TripMember, UserTripsDoc, FirestoreUser } from '../models/trip.models';
 
 /** Fields collected by the Create Trip form (TP-13). */
@@ -25,9 +26,9 @@ export interface CreateTripInput {
  * `/userTrips/{uid}` documents introduced by the multi-trip model (TP-5), and
  * drives the active trip through {@link TripContextService} (TP-6).
  *
- * Invite-code resolution and validation (code → tripId via `/inviteIndex`,
- * `usedBy`, activity log) is layered on top in TP-12; that flow calls
- * {@link joinTrip} once it has resolved a tripId.
+ * Invite-code resolution lives in {@link AuthService} (code → tripId via
+ * `/inviteIndex`); {@link joinByCode} resolves a code for an already-signed-in
+ * user and routes through {@link joinTrip} (TP-11).
  */
 @Injectable({ providedIn: 'root' })
 export class TripService {
@@ -35,6 +36,7 @@ export class TripService {
   private injector    = inject(Injector);
   private userService = inject(UserService);
   private tripContext = inject(TripContextService);
+  private authService = inject(AuthService);
 
   /** Create a trip, make the current user its owner, switch to it. Returns the new tripId. */
   async createTrip(input: CreateTripInput): Promise<string> {
@@ -91,6 +93,37 @@ export class TripService {
       await this.indexTrip(user.uid, tripId);
       this.tripContext.switchTrip(tripId);
     });
+  }
+
+  /**
+   * Join a trip from an invite code, for an already-signed-in user (TP-11).
+   * Resolves the code → tripId, joins (if not already a member), and records
+   * the user in the invite's `usedBy`. Returns the joined tripId.
+   */
+  async joinByCode(code: string): Promise<string> {
+    const user      = this.requireUser();
+    const trimmed   = code.trim().toUpperCase();
+    const tripId    = await this.authService.validateInviteCode(trimmed);
+    if (!tripId) throw new Error('This invite code is invalid or has expired.');
+
+    await runInInjectionContext(this.injector, async () => {
+      const alreadyMember = (await getDoc(this.memberRef(tripId, user.uid))).exists();
+      if (!alreadyMember) {
+        await this.joinTrip(tripId);
+      } else {
+        this.tripContext.switchTrip(tripId);
+      }
+      // Record usage on the invite doc (idempotent via arrayUnion).
+      await updateDoc(doc(this.firestore, 'trips', tripId, 'invites', trimmed),
+        { usedBy: arrayUnion(user.uid) });
+    });
+    return tripId;
+  }
+
+  /** Generate a trip-scoped invite code for the given trip. Returns the code. */
+  async generateInvite(tripId: string): Promise<string> {
+    const user = this.requireUser();
+    return this.authService.generateInviteCode(user.uid, tripId);
   }
 
   /** Switch the active trip (updates the context immediately, persists lastActiveTrip). */

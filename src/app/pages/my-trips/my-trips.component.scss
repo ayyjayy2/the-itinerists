@@ -39,6 +39,16 @@
   gap: 1rem;
 }
 
+.trip-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.invite-btn {
+  align-self: flex-end;
+}
+
 .trip-card {
   display: flex;
   flex-direction: column;

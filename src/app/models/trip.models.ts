@@ -19,12 +19,26 @@ export interface FirestoreUser {
   createdAt: number;   // unix ms
 }
 
+/**
+ * A trip invite. Stored per-trip at `/trips/{tripId}/invites/{code}` (TP-11);
+ * the `tripId` is also denormalized here so a fetched invite is self-describing.
+ */
 export interface InviteCode {
   code: string;
+  tripId: string;      // which trip this invite joins
   createdBy: string;   // uid
   createdAt: number;
   expiresAt: number;
   usedBy: string[];
+}
+
+/**
+ * Global lookup so the join flow can resolve a code → trip without scanning
+ * every trip. Stored at `/inviteIndex/{code}` (TP-11).
+ */
+export interface InviteIndexEntry {
+  tripId: string;
+  expiresAt: number;   // duplicated from the invite doc for fast validation
 }
 
 export interface TripConfig {
