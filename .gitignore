@@ -47,6 +47,9 @@ Thumbs.db
 # Claude local settings
 .claude/settings.local.json
 
+# Superpowers tooling cache
+.superpowers/
+
 # Secrets and local environment config (never commit)
 .env
 scripts/serviceAccountKey.json
