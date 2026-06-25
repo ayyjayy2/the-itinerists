@@ -1,0 +1,33 @@
+<div class="page-container">
+  <div class="trips-header">
+    <h1>🧭 My Trips</h1>
+    <button class="btn btn-primary" (click)="newTrip()">+ New Trip</button>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Loading your trips…</p>
+  } @else if (error()) {
+    <div class="alert-error">{{ error() }}</div>
+  } @else if (trips().length === 0) {
+    <div class="card empty">
+      <div class="empty-emoji">🧳</div>
+      <p>You're not part of any trips yet.</p>
+      <button class="btn btn-primary" (click)="newTrip()">Create your first trip</button>
+    </div>
+  } @else {
+    <div class="trip-grid">
+      @for (trip of trips(); track trip.id) {
+        <button class="trip-card" [class.active]="isActive(trip)" (click)="open(trip)">
+          <div class="trip-card-top">
+            <span class="trip-name">{{ trip.name }}</span>
+            @if (isActive(trip)) { <span class="badge badge-active">Active</span> }
+            @if (trip.archived) { <span class="badge badge-archived">Archived</span> }
+          </div>
+          <div class="trip-line">📍 {{ trip.destination }}</div>
+          <div class="trip-line">🗓️ {{ dateRange(trip) }}</div>
+          <div class="trip-meta">👥 {{ trip.memberCount }} · {{ trip.currency }}</div>
+        </button>
+      }
+    </div>
+  }
+</div>
