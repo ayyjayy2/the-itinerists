@@ -1,6 +1,7 @@
-import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext, signal, effect } from '@angular/core';
 import {
-  Firestore, collection, doc, setDoc, getDoc, updateDoc, arrayUnion, increment,
+  Firestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot,
+  arrayUnion, increment, Unsubscribe,
 } from '@angular/fire/firestore';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
@@ -37,6 +38,53 @@ export class TripService {
   private userService = inject(UserService);
   private tripContext = inject(TripContextService);
   private authService = inject(AuthService);
+
+  /** Live document for the active trip (null when none is selected). */
+  private _activeTrip = signal<TripDoc | null>(null);
+  readonly activeTrip = this._activeTrip.asReadonly();
+  private activeTripUnsub?: Unsubscribe;
+
+  private restoring = false;
+
+  constructor() {
+    // Keep `activeTrip` in sync with whichever trip is currently active.
+    effect(() => this.watchActiveTrip(this.tripContext.activeTripId()));
+
+    // On login, restore the user's last active trip when none is set locally
+    // (e.g. a fresh device/browser) — spec §3.2 (TP-14).
+    effect(() => {
+      const user = this.userService.firestoreUser();
+      if (user) this.maybeRestoreActiveTrip(user.uid);
+    });
+  }
+
+  /** If no trip is active locally, adopt the user's lastActiveTrip (or their first trip). */
+  private async maybeRestoreActiveTrip(uid: string): Promise<void> {
+    if (this.tripContext.activeTripId() || this.restoring) return;
+    this.restoring = true;
+    try {
+      const snap = await runInInjectionContext(this.injector, () =>
+        getDoc(doc(this.firestore, 'userTrips', uid)));
+      if (!snap.exists()) return;
+      const idx = snap.data() as UserTripsDoc;
+      const target = idx.lastActiveTrip ?? idx.tripIds?.[0];
+      if (target && !this.tripContext.activeTripId()) {
+        this.tripContext.switchTrip(target);
+      }
+    } finally {
+      this.restoring = false;
+    }
+  }
+
+  private watchActiveTrip(tripId: string | null): void {
+    this.activeTripUnsub?.(); this.activeTripUnsub = undefined;
+    if (!tripId) { this._activeTrip.set(null); return; }
+    runInInjectionContext(this.injector, () => {
+      this.activeTripUnsub = onSnapshot(doc(this.firestore, 'trips', tripId), snap => {
+        this._activeTrip.set(snap.exists() ? (snap.data() as TripDoc) : null);
+      });
+    });
+  }
 
   /** Create a trip, make the current user its owner, switch to it. Returns the new tripId. */
   async createTrip(input: CreateTripInput): Promise<string> {

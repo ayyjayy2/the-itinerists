@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { FlightCountdownService } from '../../services/flight-countdown.service';
 import { FlightsService } from '../../services/flights.service';
-import { TripConfigService } from '../../services/trip-config.service';
+import { TripService } from '../../services/trip.service';
 
 interface QuickLink {
   path: string;
@@ -21,13 +21,17 @@ interface QuickLink {
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  userService       = inject(UserService);
-  flightCountdown   = inject(FlightCountdownService);
-  flightsService    = inject(FlightsService);
-  tripConfigService = inject(TripConfigService);
+  userService     = inject(UserService);
+  flightCountdown = inject(FlightCountdownService);
+  flightsService  = inject(FlightsService);
+  tripService     = inject(TripService);
 
   currentUser = this.userService.currentUser;
   isAdmin     = this.userService.isAdmin;
+
+  /** The active trip drives the home dashboard (TP-14). */
+  readonly activeTrip    = this.tripService.activeTrip;
+  readonly hasActiveTrip = computed(() => this.activeTrip() !== null);
 
   private now = signal(Date.now());
   private countdownTimer: ReturnType<typeof setInterval> | null = null;
@@ -37,7 +41,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     { path: '/itinerary',      label: 'Itinerary',    icon: '📅',  description: 'Day-by-day plans',      color: '#F9E4B7' },
     { path: '/accommodations', label: 'Stays',        icon: '🏨',  description: 'Hotels & check-in',     color: '#D4B5F5' },
     { path: '/finance',        label: 'Finance',      icon: '💵',  description: 'Shared expenses',       color: '#88C9A1' },
-    { path: '/recs',           label: 'Recs',         icon: '🌸',  description: 'Savannah tips & spots', color: '#B5F5D4' },
+    { path: '/recs',           label: 'Recs',         icon: '🌸',  description: 'Local tips & spots',    color: '#B5F5D4' },
     { path: '/packing',        label: 'Packing',      icon: '🧳',  description: 'Your packing list',     color: '#F9E4B7' },
     { path: '/outfits',        label: 'Outfits',      icon: '👗',  description: 'Plan your looks',       color: '#F5B5D4' },
     { path: '/profile',        label: 'Profile',      icon: '👤',  description: 'Settings & account',    color: '#F5D4B5' },
@@ -48,6 +52,20 @@ export class HomeComponent implements OnInit, OnDestroy {
     : this.baseLinks
   );
 
+  /** Short destination for countdown copy: "Lisbon, Portugal" → "Lisbon". */
+  readonly destinationShort = computed(() => {
+    const trip = this.activeTrip();
+    if (!trip) return '';
+    return (trip.destination || trip.name || '').split(',')[0].trim();
+  });
+
+  /** Hero subtitle. */
+  readonly locationLabel = computed(() => {
+    const trip = this.activeTrip();
+    if (!trip) return 'plan your next adventure';
+    return trip.destination || trip.name || 'your trip';
+  });
+
   readonly flightLabel = computed(() => {
     const uid     = this.currentUser()?.uid ?? '';
     const flights = this.flightsService.flights();
@@ -56,15 +74,19 @@ export class HomeComponent implements OnInit, OnDestroy {
   });
 
   readonly countdown = computed(() => {
-    const cfg = this.tripConfigService.config();
-    const now = new Date(this.now());
+    const trip = this.activeTrip();
+    const now  = new Date(this.now());
 
-    if (!cfg?.startDate || !cfg?.endDate) {
+    if (!trip) {
+      return { label: 'No active trip — pick one in My Trips', type: 'unset' };
+    }
+    if (!trip.startDate || !trip.endDate) {
       return { label: 'Trip dates not set yet', type: 'unset' };
     }
 
-    const tripStart = new Date(cfg.startDate + 'T00:00:00');
-    const tripEnd   = new Date(cfg.endDate   + 'T00:00:00');
+    const where     = this.destinationShort() || 'your trip';
+    const tripStart = new Date(trip.startDate + 'T00:00:00');
+    const tripEnd   = new Date(trip.endDate   + 'T00:00:00');
     const diff      = tripStart.getTime() - now.getTime();
 
     if (diff <= 0) {
@@ -73,17 +95,12 @@ export class HomeComponent implements OnInit, OnDestroy {
         const days = Math.ceil(remaining / (1000 * 60 * 60 * 24));
         return { label: `Trip is live! ${days} day${days !== 1 ? 's' : ''} left 🌿`, type: 'live' };
       }
-      return { label: 'Savannah getaway complete! 🌿', type: 'done' };
+      return { label: `${trip.name} complete! 🌿`, type: 'done' };
     }
 
     const days  = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    return { label: `${days}d ${hours}h until Savannah!`, type: 'countdown' };
-  });
-
-  readonly locationLabel = computed(() => {
-    const cfg = this.tripConfigService.config();
-    return cfg?.locationLabel ?? 'Savannah, Georgia';
+    return { label: `${days}d ${hours}h until ${where}!`, type: 'countdown' };
   });
 
   ngOnInit(): void {

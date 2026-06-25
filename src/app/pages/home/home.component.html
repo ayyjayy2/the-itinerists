@@ -10,7 +10,11 @@
       }
       <div>
         <h1>Hey, {{ currentUser()?.name ?? 'traveller' }}! 👋</h1>
-        <p>Ready for {{ locationLabel() }}?</p>
+        @if (hasActiveTrip()) {
+          <p><strong>{{ activeTrip()!.name }}</strong> · Ready for {{ locationLabel() }}?</p>
+        } @else {
+          <p>Ready to <a routerLink="/trips">plan your next adventure</a>?</p>
+        }
       </div>
     </div>
     <div class="countdown-badge"
@@ -20,6 +24,17 @@
       {{ flightLabel() || countdown().label }}
     </div>
   </div>
+
+  @if (!hasActiveTrip()) {
+    <a class="no-trip-cta card" routerLink="/trips">
+      <span class="no-trip-emoji">🧭</span>
+      <div>
+        <strong>No trip selected</strong>
+        <p>Pick a trip or create one to start planning.</p>
+      </div>
+      <span class="no-trip-arrow">→</span>
+    </a>
+  }
 
   <!-- Quick links grid -->
   <div class="section-title">
