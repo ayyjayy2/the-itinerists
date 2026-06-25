@@ -1,0 +1,47 @@
+<div class="page-container">
+  <h1>✨ New Trip</h1>
+  <p class="subtitle">Plan a new adventure. You'll be the trip owner and can invite others.</p>
+
+  <div class="card">
+    <div class="form-group">
+      <label>Trip name</label>
+      <input type="text" [(ngModel)]="name" placeholder="e.g. Bali Girls Trip 2026" maxlength="80" />
+    </div>
+
+    <div class="form-group">
+      <label>Destination</label>
+      <input type="text" [(ngModel)]="destination" placeholder="e.g. Bali, Indonesia" maxlength="120" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Start date</label>
+        <input type="date" [(ngModel)]="startDate" />
+      </div>
+      <div class="form-group">
+        <label>End date</label>
+        <input type="date" [(ngModel)]="endDate" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Primary currency</label>
+      <select [(ngModel)]="currency">
+        @for (c of currencies; track c.code) {
+          <option [value]="c.code">{{ c.label }}</option>
+        }
+      </select>
+    </div>
+
+    @if (error()) {
+      <div class="alert-error">{{ error() }}</div>
+    }
+
+    <div class="form-actions">
+      <button class="btn btn-ghost" (click)="cancel()" [disabled]="saving()">Cancel</button>
+      <button class="btn btn-primary" (click)="create()" [disabled]="saving()">
+        {{ saving() ? 'Creating…' : 'Create Trip' }}
+      </button>
+    </div>
+  </div>
+</div>
