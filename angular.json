@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "savannah-getaway": {
+    "trip-planner": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,7 +20,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/savannah-getaway",
+            "outputPath": "dist/trip-planner",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -76,10 +76,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "savannah-getaway:build:production"
+              "buildTarget": "trip-planner:build:production"
             },
             "development": {
-              "buildTarget": "savannah-getaway:build:development"
+              "buildTarget": "trip-planner:build:development"
             }
           },
           "defaultConfiguration": "development"

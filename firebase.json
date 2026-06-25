@@ -9,7 +9,7 @@
     "rules": "storage.rules"
   },
   "hosting": {
-    "public": "dist/savannah-getaway/browser",
+    "public": "dist/trip-planner/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
