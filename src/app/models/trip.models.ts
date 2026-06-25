@@ -34,6 +34,57 @@ export interface TripConfig {
   locationLabel: string;
 }
 
+// ── Multi-Trip Architecture ─────────────────────────────────────────────────────
+// Foundational data model for supporting many trips per user. Supersedes the
+// single-trip `TripConfig` above (which is removed once TripContextService and
+// the per-trip sub-collections land — see ROADMAP Phase 1).
+// Spec: docs/superpowers/specs/2026-04-22-triplan-multi-trip-architecture-design.md
+
+export type TripMemberRole = 'owner' | 'member';
+export type TravelMode = 'flying' | 'driving' | 'train' | 'bus' | 'other';
+
+/** Stored at Firestore `/trips/{tripId}` — one doc per trip. */
+export interface TripDoc {
+  id: string;                   // Firestore doc id (tripId)
+  name: string;                 // "Bali Girls Trip 2026"
+  destination: string;          // "Bali, Indonesia"
+  destinationPlaceId?: string;  // Google Places ID, for maps/weather (optional — freeform destinations have none)
+  destinationCoords?: {         // lat/lng for the weather API + map centering
+    lat: number;
+    lng: number;
+  };
+  startDate: string;            // YYYY-MM-DD
+  endDate: string;              // YYYY-MM-DD
+  currency: string;             // ISO currency code, e.g. "USD"
+  coverPhotoUrl?: string;       // Firebase Storage URL
+  createdBy: string;            // uid of the trip creator
+  createdAt: number;            // unix ms
+  memberCount: number;          // denormalized count, for plan/limit checks
+  archived?: boolean;           // set true by archiveTrip()
+}
+
+/** Stored at Firestore `/trips/{tripId}/members/{uid}` — one doc per member (doc id = uid). */
+export interface TripMember {
+  uid: string;                  // Firebase Auth UID (matches the doc id)
+  role: TripMemberRole;
+  displayName: string;          // snapshot at join time
+  avatarEmoji: string;
+  color: string;
+  joinedAt: number;             // unix ms
+  travelMode?: TravelMode | null;
+  arrivalDate?: string;         // YYYY-MM-DD (derived from travel entries or set manually)
+  arrivalTime?: string;         // e.g. "3:00 PM"
+  departureDate?: string;       // YYYY-MM-DD
+  departureTime?: string;       // e.g. "9:00 AM"
+  hiddenPages?: string[];       // pages this member has toggled off, e.g. ["cars", "outfits"]
+}
+
+/** Stored at Firestore `/userTrips/{uid}` — fast index of the trips a user belongs to (doc id = uid). */
+export interface UserTripsDoc {
+  tripIds: string[];            // all trips this user is a member of
+  lastActiveTrip?: string;      // tripId to restore on next app open
+}
+
 // ── Currency ──────────────────────────────────────────────────────────────────
 
 export interface ExchangeRates {
