@@ -8,6 +8,23 @@
   background: linear-gradient(135deg, #f0faf5, #fff9ee);
 }
 
+.no-trip-cta {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+
+  &:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+  .no-trip-emoji { font-size: 1.6rem; }
+  strong { display: block; }
+  p { margin: 0.15rem 0 0; color: var(--text-muted, #6b7280); font-size: 0.9rem; }
+  .no-trip-arrow { margin-left: auto; font-size: 1.3rem; color: var(--primary); }
+}
+
 .hero-left {
   display: flex;
   align-items: center;

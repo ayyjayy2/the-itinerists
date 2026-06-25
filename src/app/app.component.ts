@@ -6,6 +6,7 @@ import { filter } from 'rxjs/operators';
 import { UserService } from './services/user.service';
 import { AuthService } from './services/auth.service';
 import { DataService } from './services/data.service';
+import { TripService } from './services/trip.service';
 import { UsersService } from './services/users.service';
 import { ExpensesService } from './services/expenses.service';
 import { PackingService } from './services/packing.service';
@@ -34,6 +35,7 @@ export class AppComponent implements OnInit {
   userService   = inject(UserService);
   authService   = inject(AuthService);
   dataService   = inject(DataService);
+  tripService   = inject(TripService);   // constructed early so it restores the active trip on login (TP-14)
   usersService  = inject(UsersService);
   expensesService   = inject(ExpensesService);
   packingService    = inject(PackingService);
