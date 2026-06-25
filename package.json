@@ -1,5 +1,5 @@
 {
-  "name": "savannah-getaway",
+  "name": "trip-planner",
   "version": "0.0.1",
   "scripts": {
     "ng": "ng",
@@ -21,9 +21,9 @@
     "@angular/forms": "^19.1.0",
     "@angular/platform-browser": "^19.1.0",
     "@angular/platform-browser-dynamic": "^19.1.0",
-    "@angular/pwa": "^21.1.5",
+    "@angular/pwa": "^19.2.27",
     "@angular/router": "^19.1.0",
-    "@angular/service-worker": "^21.2.0",
+    "@angular/service-worker": "^19.2.25",
     "@types/leaflet": "^1.9.21",
     "firebase": "^12.9.0",
     "leaflet": "^1.9.4",
