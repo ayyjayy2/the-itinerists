@@ -1,0 +1,87 @@
+.page-container { max-width: 640px; }
+
+h1 { margin-bottom: 1rem; }
+
+.card {
+  margin-bottom: 1.25rem;
+
+  h2 { margin: 0 0 0.85rem; font-size: 1.1rem; }
+}
+
+.muted { color: var(--text-muted, #6b7280); font-size: 0.9rem; }
+
+.form-group { margin-bottom: 0.85rem; }
+.form-row { display: flex; gap: 0.85rem; .form-group { flex: 1; } }
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.saved-tag { color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  h2 { margin: 0; }
+}
+
+.member-list, .toggle-list { list-style: none; margin: 0; padding: 0; }
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+  &:last-child { border-bottom: none; }
+}
+.member-avatar {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  font-size: 1rem; flex-shrink: 0;
+}
+.member-name { flex: 1; display: flex; align-items: center; gap: 0.4rem; }
+
+.tag {
+  font-size: 0.7rem; font-weight: 600;
+  padding: 0.1rem 0.4rem; border-radius: 999px;
+  background: var(--border); color: var(--text-muted, #6b7280);
+}
+.tag-owner { background: rgba(139, 175, 124, 0.25); color: #4a6b3a; }
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  &:last-child { border-bottom: none; }
+}
+.toggle {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-muted, #6b7280);
+  border-radius: 999px;
+  padding: 0.25rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  &.on { background: rgba(139, 175, 124, 0.2); color: #4a6b3a; border-color: var(--primary); }
+}
+
+.lifecycle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  &:last-child { border-bottom: none; }
+  p { margin: 0.15rem 0 0; }
+}
+.owner-note { margin-top: 0.6rem; }
