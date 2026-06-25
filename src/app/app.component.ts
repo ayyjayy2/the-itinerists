@@ -50,7 +50,7 @@ export class AppComponent implements OnInit {
   readonly version   = APP_VERSION;
   readonly buildDate = APP_BUILD_DATE;
   sidebarOpen  = false;
-  navCollapsed = localStorage.getItem('savannah_nav_collapsed') === 'true';
+  navCollapsed = localStorage.getItem('tripplanner_nav_collapsed') === 'true';
 
   readonly baseNavItems: NavItem[] = [
     { path: '/home',           label: 'Home',            icon: '🏠' },
@@ -145,6 +145,6 @@ export class AppComponent implements OnInit {
 
   toggleCollapse(): void {
     this.navCollapsed = !this.navCollapsed;
-    localStorage.setItem('savannah_nav_collapsed', String(this.navCollapsed));
+    localStorage.setItem('tripplanner_nav_collapsed', String(this.navCollapsed));
   }
 }
