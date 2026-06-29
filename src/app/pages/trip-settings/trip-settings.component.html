@@ -121,23 +121,15 @@
           {{ trip()!.archived ? 'Restore' : 'Archive' }}
         </button>
       </div>
-      @if (!isOwner()) {
-        <div class="lifecycle-row">
-          <div>
-            <strong>Leave trip</strong>
-            <p class="muted">Remove yourself from this trip. You'll need a new invite to rejoin.</p>
-          </div>
-          <button class="btn btn-danger btn-sm" (click)="leave()">Leave</button>
-        </div>
-      } @else {
-        <!-- Transfer ownership (owner only) -->
+      <!-- Transfer ownership (owner only, when there's someone to hand it to) -->
+      @if (isOwner() && otherMembers().length > 0) {
         <div class="lifecycle-row">
           <div>
             <strong>Transfer ownership</strong>
             <p class="muted">Hand the trip to another member. You'll become a regular member.</p>
           </div>
           <div class="transfer-controls">
-            <select [(ngModel)]="transferTarget" [disabled]="otherMembers().length === 0">
+            <select [(ngModel)]="transferTarget">
               <option value="">Choose a member…</option>
               @for (m of otherMembers(); track m.uid) {
                 <option [value]="m.uid">{{ m.displayName }}</option>
@@ -146,18 +138,24 @@
             <button class="btn btn-ghost btn-sm" (click)="transfer()" [disabled]="!transferTarget">Transfer</button>
           </div>
         </div>
-
-        <!-- Delete trip (owner only) -->
-        <div class="lifecycle-row danger">
-          <div>
-            <strong>Delete trip</strong>
-            <p class="muted">Permanently removes this trip and all of its data for everyone. Can't be undone.</p>
-          </div>
-          <button class="btn btn-danger btn-sm" (click)="confirmDelete()" [disabled]="deleting()">
-            {{ deleting() ? 'Deleting…' : 'Delete' }}
-          </button>
-        </div>
       }
+
+      <!-- Remove from my trips — per-account (TP-24) -->
+      <div class="lifecycle-row danger">
+        <div>
+          <strong>Remove from my trips</strong>
+          <p class="muted">
+            @if (isLastMember()) {
+              You're the only member — removing it permanently deletes the trip and all of its data.
+            } @else {
+              Removes this trip from your account. Other members keep it; you'll need a new invite to rejoin.
+            }
+          </p>
+        </div>
+        <button class="btn btn-danger btn-sm" (click)="removeFromMyTrips()" [disabled]="leaving()">
+          {{ leaving() ? 'Removing…' : 'Remove' }}
+        </button>
+      </div>
     </section>
   }
 </div>

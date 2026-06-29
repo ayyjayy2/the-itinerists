@@ -53,7 +53,7 @@ export class TripSettingsComponent {
   error        = signal('');
   inviteState  = signal<'idle' | 'copying' | 'copied'>('idle');
   busyMember   = signal<string | null>(null);
-  deleting     = signal(false);
+  leaving      = signal(false);
   transferTarget = '';
 
   private readonly currentUid = computed(() => this.userService.firestoreUser()?.uid ?? '');
@@ -62,6 +62,7 @@ export class TripSettingsComponent {
 
   /** Members eligible to receive ownership (everyone but the current owner). */
   readonly otherMembers = computed(() => this.members().filter(m => m.uid !== this.currentUid()));
+  readonly isLastMember = computed(() => this.members().length <= 1);
   private readonly currentMemberUids = computed(() => new Set(this.members().map(m => m.uid)));
 
   constructor() {
@@ -132,15 +133,21 @@ export class TripSettingsComponent {
     }
   }
 
-  async leave(): Promise<void> {
+  /** Remove the trip from my account (TP-24). Sole member → deletes the trip + data. */
+  async removeFromMyTrips(): Promise<void> {
     const t = this.trip();
     if (!t) return;
-    if (!confirm(`Leave "${t.name}"? You'll need a new invite to rejoin.`)) return;
+    const msg = this.isLastMember()
+      ? `You're the only member of "${t.name}". Removing it permanently deletes the trip and all of its data. Continue?`
+      : `Remove "${t.name}" from your trips? Other members keep it; you'll need a new invite to rejoin.`;
+    if (!confirm(msg)) return;
+    this.leaving.set(true);
     try {
       await this.tripService.leaveTrip(t.id);
       this.router.navigate(['/trips']);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Could not leave the trip.');
+      this.error.set(e instanceof Error ? e.message : 'Could not remove the trip.');
+      this.leaving.set(false);
     }
   }
 
@@ -212,19 +219,6 @@ export class TripSettingsComponent {
     }
   }
 
-  async confirmDelete(): Promise<void> {
-    const t = this.trip();
-    if (!t) return;
-    if (!confirm(`Permanently delete "${t.name}" and all of its data? This can't be undone.`)) return;
-    this.deleting.set(true);
-    try {
-      await this.tripService.deleteTrip(t.id);
-      this.router.navigate(['/trips']);
-    } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Could not delete the trip.');
-      this.deleting.set(false);
-    }
-  }
 
   relativeTime(ts: number): string {
     const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
