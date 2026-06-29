@@ -99,6 +99,19 @@ export interface UserTripsDoc {
   lastActiveTrip?: string;      // tripId to restore on next app open
 }
 
+export type ActivityAction = 'member_added' | 'member_removed' | 'member_left';
+
+/** Stored at Firestore `/trips/{tripId}/activityLog/{logId}` — member history (TP-18, spec §1.5). */
+export interface ActivityLogEntry {
+  id: string;
+  action: ActivityAction;
+  targetUid: string;            // the member who was affected
+  targetName: string;           // snapshot for display
+  performedByUid: string;       // who took the action
+  performedByName: string;      // snapshot for display
+  timestamp: number;            // unix ms
+}
+
 // ── Currency ──────────────────────────────────────────────────────────────────
 
 export interface ExchangeRates {

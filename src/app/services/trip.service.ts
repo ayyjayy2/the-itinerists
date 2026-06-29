@@ -6,7 +6,9 @@ import {
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
 import { AuthService } from './auth.service';
-import { TripDoc, TripMember, UserTripsDoc, FirestoreUser } from '../models/trip.models';
+import {
+  TripDoc, TripMember, UserTripsDoc, FirestoreUser, ActivityLogEntry, ActivityAction,
+} from '../models/trip.models';
 
 /** Fields collected by the Create Trip form (TP-13). */
 export interface CreateTripInput {
@@ -46,6 +48,10 @@ export class TripService {
   /** Live member list for the active trip. */
   private _activeMembers = signal<TripMember[]>([]);
   readonly activeMembers = this._activeMembers.asReadonly();
+
+  /** Live activity log for the active trip, newest first (TP-18). */
+  private _activeActivity = signal<ActivityLogEntry[]>([]);
+  readonly activeActivity = this._activeActivity.asReadonly();
 
   /** Pages the current user has hidden on the active trip (TP-15 page toggles). */
   readonly hiddenPages = computed<string[]>(() => {
@@ -90,7 +96,10 @@ export class TripService {
   private watchActiveTrip(tripId: string | null): void {
     this.activeUnsubs.forEach(u => u());
     this.activeUnsubs = [];
-    if (!tripId) { this._activeTrip.set(null); this._activeMembers.set([]); return; }
+    if (!tripId) {
+      this._activeTrip.set(null); this._activeMembers.set([]); this._activeActivity.set([]);
+      return;
+    }
     runInInjectionContext(this.injector, () => {
       this.activeUnsubs.push(
         onSnapshot(doc(this.firestore, 'trips', tripId), snap => {
@@ -99,6 +108,11 @@ export class TripService {
         onSnapshot(collection(this.firestore, 'trips', tripId, 'members'), snap => {
           this._activeMembers.set(
             snap.docs.map(d => d.data() as TripMember).sort((a, b) => a.joinedAt - b.joinedAt),
+          );
+        }),
+        onSnapshot(collection(this.firestore, 'trips', tripId, 'activityLog'), snap => {
+          this._activeActivity.set(
+            snap.docs.map(d => d.data() as ActivityLogEntry).sort((a, b) => b.timestamp - a.timestamp),
           );
         }),
       );
@@ -158,6 +172,7 @@ export class TripService {
       await setDoc(this.memberRef(tripId, user.uid), this.memberSnapshot(user, 'member', now));
       await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(1) });
       await this.indexTrip(user.uid, tripId);
+      this.logActivity(tripId, 'member_added', user, user); // self-join
       this.tripContext.switchTrip(tripId);
     });
   }
@@ -221,15 +236,19 @@ export class TripService {
 
   /** Remove another member from a trip (the owner can't be removed). */
   async removeMember(tripId: string, uid: string): Promise<void> {
+    const actor = this.requireUser();
     await runInInjectionContext(this.injector, async () => {
       const snap = await getDoc(this.memberRef(tripId, uid));
-      if (snap.exists() && (snap.data() as TripMember).role === 'owner') {
+      const target = snap.exists() ? (snap.data() as TripMember) : null;
+      if (target?.role === 'owner') {
         throw new Error('The trip owner cannot be removed.');
       }
       await deleteDoc(this.memberRef(tripId, uid));
       await updateDoc(doc(this.firestore, 'userTrips', uid), { tripIds: arrayRemove(tripId) })
         .catch(() => {/* tolerate a missing index doc */});
       await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(-1) });
+      this.logActivity(tripId, 'member_removed',
+        { uid, displayName: target?.displayName ?? 'A member' }, actor);
     });
   }
 
@@ -241,6 +260,7 @@ export class TripService {
   async leaveTrip(tripId: string): Promise<string | null> {
     const user = this.requireUser();
     return runInInjectionContext(this.injector, async () => {
+      this.logActivity(tripId, 'member_left', user, user); // log before we lose access on switch
       await deleteDoc(this.memberRef(tripId, user.uid));
       await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(-1) });
 
@@ -270,6 +290,26 @@ export class TripService {
 
   private memberRef(tripId: string, uid: string) {
     return doc(this.firestore, 'trips', tripId, 'members', uid);
+  }
+
+  /**
+   * Append a best-effort entry to the trip's activity log (TP-18). Fire-and-forget:
+   * a failed log write must never block the member action that triggered it.
+   */
+  private logActivity(
+    tripId: string,
+    action: ActivityAction,
+    target: { uid: string; displayName: string },
+    performedBy: { uid: string; displayName: string },
+  ): void {
+    const ref = doc(collection(this.firestore, 'trips', tripId, 'activityLog'));
+    const entry: ActivityLogEntry = {
+      id: ref.id, action,
+      targetUid: target.uid, targetName: target.displayName,
+      performedByUid: performedBy.uid, performedByName: performedBy.displayName,
+      timestamp: Date.now(),
+    };
+    setDoc(ref, entry).catch(err => console.warn('[TripService] activity log failed:', err));
   }
 
   private memberSnapshot(user: FirestoreUser, role: TripMember['role'], now: number): TripMember {
