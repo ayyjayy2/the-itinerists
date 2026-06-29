@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
-import { TripDoc, TripMember } from '../../models/trip.models';
+import { TripDoc, TripMember, ActivityLogEntry } from '../../models/trip.models';
 
 interface CurrencyOption { code: string; label: string; }
 interface HideablePage { key: string; label: string; icon: string; }
@@ -20,8 +20,9 @@ export class TripSettingsComponent {
   private userService = inject(UserService);
   private router      = inject(Router);
 
-  readonly trip    = this.tripService.activeTrip;
-  readonly members = this.tripService.activeMembers;
+  readonly trip     = this.tripService.activeTrip;
+  readonly members  = this.tripService.activeMembers;
+  readonly activity = this.tripService.activeActivity;
 
   readonly currencies: CurrencyOption[] = [
     { code: 'USD', label: 'USD — US Dollar' },
@@ -149,6 +150,30 @@ export class TripSettingsComponent {
     } catch (e: unknown) {
       this.error.set(e instanceof Error ? e.message : 'Could not update your menu.');
     }
+  }
+
+  activityIcon(e: ActivityLogEntry): string {
+    return e.action === 'member_removed' ? '🔴' : e.action === 'member_left' ? '🚪' : '🟢';
+  }
+
+  activityText(e: ActivityLogEntry): string {
+    switch (e.action) {
+      case 'member_added':
+        return e.performedByUid === e.targetUid
+          ? `${e.targetName} joined`
+          : `${e.performedByName} added ${e.targetName}`;
+      case 'member_removed': return `${e.performedByName} removed ${e.targetName}`;
+      case 'member_left':    return `${e.targetName} left`;
+      default:               return '';
+    }
+  }
+
+  relativeTime(ts: number): string {
+    const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+    if (s < 60) return 'just now';
+    const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24); return `${d}d ago`;
   }
 
   async toggleArchive(): Promise<void> {

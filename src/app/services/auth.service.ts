@@ -119,6 +119,15 @@ export class AuthService {
     await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(1) });
     await updateDoc(inviteRef, { usedBy: [...usedBy, uid] });
 
+    // Best-effort activity log: the new member joined (TP-18).
+    const logRef = doc(collection(this.firestore, 'trips', tripId, 'activityLog'));
+    await setDoc(logRef, {
+      id: logRef.id, action: 'member_added',
+      targetUid: uid, targetName: userDoc.displayName,
+      performedByUid: uid, performedByName: userDoc.displayName,
+      timestamp: now,
+    }).catch(err => console.warn('[AuthService] activity log failed:', err));
+
     this.tripContext.switchTrip(tripId);
   }
 

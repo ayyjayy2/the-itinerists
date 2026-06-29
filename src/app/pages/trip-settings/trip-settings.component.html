@@ -72,6 +72,22 @@
       </ul>
     </section>
 
+    <!-- Activity log -->
+    @if (activity().length) {
+      <section class="card">
+        <h2>Activity</h2>
+        <ul class="activity-list">
+          @for (e of activity(); track e.id) {
+            <li class="activity-row">
+              <span class="activity-icon">{{ activityIcon(e) }}</span>
+              <span class="activity-text">{{ activityText(e) }}</span>
+              <span class="activity-time">{{ relativeTime(e.timestamp) }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     <!-- Customize Menu (page toggles) -->
     <section class="card">
       <h2>Customize Menu</h2>

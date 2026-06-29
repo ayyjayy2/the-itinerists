@@ -74,6 +74,19 @@ h1 { margin-bottom: 1rem; }
   &.on { background: rgba(139, 175, 124, 0.2); color: #4a6b3a; border-color: var(--primary); }
 }
 
+.activity-list { list-style: none; margin: 0; padding: 0; }
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+  &:last-child { border-bottom: none; }
+}
+.activity-icon { font-size: 0.7rem; }
+.activity-text { flex: 1; }
+.activity-time { color: var(--text-muted, #6b7280); font-size: 0.8rem; white-space: nowrap; }
+
 .lifecycle-row {
   display: flex;
   align-items: center;
