@@ -8,10 +8,18 @@
     </div>
   </div>
 
-  @if (days().length === 0) {
+  @if (!hasActiveTrip()) {
     <div class="empty-state">
       <span class="empty-icon">👗</span>
-      <p>Trip dates aren't set yet. Check back once the admin configures the trip.</p>
+      <p>No active trip yet. <a routerLink="/trips">Pick or create a trip</a> to plan outfits.</p>
+    </div>
+  } @else if (!hasTripDates()) {
+    <!-- Trip exists but no dates: still addable (fallback days), with a nudge to set them. -->
+    <div class="dates-banner">
+      <span>📅 Trip dates aren't set yet — showing the week ahead.</span>
+      @if (isAdmin()) {
+        <a class="btn btn-sm btn-primary" routerLink="/trip-settings">Set trip dates</a>
+      }
     </div>
   }
 

@@ -15,6 +15,15 @@
     <button [class.active]="showAll()"  (click)="showAll.set(true)">All</button>
   </div>
 
+  @if (hasActiveTrip() && !hasTripDates()) {
+    <div class="dates-banner">
+      <span>📅 Trip dates aren't set yet — showing the week ahead.</span>
+      @if (isAdmin()) {
+        <a class="btn btn-sm btn-primary" routerLink="/trip-settings">Set trip dates</a>
+      }
+    </div>
+  }
+
   <!-- Day filter chips -->
   <div class="filter-chips">
     <button class="chip" [class.chip-primary]="selectedDate() === 'All'" (click)="setDate('All')">All Days</button>
