@@ -50,13 +50,19 @@ export class TripSettingsComponent {
 
   saving      = signal(false);
   savedOk     = signal(false);
-  error       = signal('');
-  inviteState = signal<'idle' | 'copying' | 'copied'>('idle');
-  busyMember  = signal<string | null>(null);
+  error        = signal('');
+  inviteState  = signal<'idle' | 'copying' | 'copied'>('idle');
+  busyMember   = signal<string | null>(null);
+  deleting     = signal(false);
+  transferTarget = '';
 
   private readonly currentUid = computed(() => this.userService.firestoreUser()?.uid ?? '');
   readonly isOwner = computed(() =>
     this.members().find(m => m.uid === this.currentUid())?.role === 'owner');
+
+  /** Members eligible to receive ownership (everyone but the current owner). */
+  readonly otherMembers = computed(() => this.members().filter(m => m.uid !== this.currentUid()));
+  private readonly currentMemberUids = computed(() => new Set(this.members().map(m => m.uid)));
 
   constructor() {
     // Seed the form whenever the active trip changes.
@@ -153,7 +159,12 @@ export class TripSettingsComponent {
   }
 
   activityIcon(e: ActivityLogEntry): string {
-    return e.action === 'member_removed' ? '🔴' : e.action === 'member_left' ? '🚪' : '🟢';
+    switch (e.action) {
+      case 'member_removed':  return '🔴';
+      case 'member_left':     return '🚪';
+      case 'member_restored': return '♻️';
+      default:                return '🟢';
+    }
   }
 
   activityText(e: ActivityLogEntry): string {
@@ -162,9 +173,56 @@ export class TripSettingsComponent {
         return e.performedByUid === e.targetUid
           ? `${e.targetName} joined`
           : `${e.performedByName} added ${e.targetName}`;
-      case 'member_removed': return `${e.performedByName} removed ${e.targetName}`;
-      case 'member_left':    return `${e.targetName} left`;
-      default:               return '';
+      case 'member_removed':  return `${e.performedByName} removed ${e.targetName}`;
+      case 'member_left':     return `${e.targetName} left`;
+      case 'member_restored': return `${e.performedByName} restored ${e.targetName}`;
+      default:                return '';
+    }
+  }
+
+  /** Owner can restore a member from a member_removed entry if they're not currently on the trip. */
+  canRestore(e: ActivityLogEntry): boolean {
+    return this.isOwner() && e.action === 'member_removed' && !this.currentMemberUids().has(e.targetUid);
+  }
+
+  async restore(e: ActivityLogEntry): Promise<void> {
+    const t = this.trip();
+    if (!t) return;
+    this.busyMember.set(e.targetUid);
+    try {
+      await this.tripService.restoreMember(t.id, e.targetUid);
+    } catch (err: unknown) {
+      this.error.set(err instanceof Error ? err.message : 'Could not restore member.');
+    } finally {
+      this.busyMember.set(null);
+    }
+  }
+
+  async transfer(): Promise<void> {
+    const t = this.trip();
+    const to = this.transferTarget;
+    if (!t || !to) return;
+    const m = this.members().find(x => x.uid === to);
+    if (!confirm(`Make ${m?.displayName ?? 'this member'} the owner? You'll become a regular member.`)) return;
+    try {
+      await this.tripService.transferOwnership(t.id, to);
+      this.transferTarget = '';
+    } catch (e: unknown) {
+      this.error.set(e instanceof Error ? e.message : 'Could not transfer ownership.');
+    }
+  }
+
+  async confirmDelete(): Promise<void> {
+    const t = this.trip();
+    if (!t) return;
+    if (!confirm(`Permanently delete "${t.name}" and all of its data? This can't be undone.`)) return;
+    this.deleting.set(true);
+    try {
+      await this.tripService.deleteTrip(t.id);
+      this.router.navigate(['/trips']);
+    } catch (e: unknown) {
+      this.error.set(e instanceof Error ? e.message : 'Could not delete the trip.');
+      this.deleting.set(false);
     }
   }
 

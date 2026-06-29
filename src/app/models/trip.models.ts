@@ -99,7 +99,7 @@ export interface UserTripsDoc {
   lastActiveTrip?: string;      // tripId to restore on next app open
 }
 
-export type ActivityAction = 'member_added' | 'member_removed' | 'member_left';
+export type ActivityAction = 'member_added' | 'member_removed' | 'member_left' | 'member_restored';
 
 /** Stored at Firestore `/trips/{tripId}/activityLog/{logId}` — member history (TP-18, spec §1.5). */
 export interface ActivityLogEntry {
