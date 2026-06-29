@@ -11,7 +11,7 @@
       <div>
         <h1>Hey, {{ currentUser()?.name ?? 'traveller' }}! 👋</h1>
         @if (hasActiveTrip()) {
-          <p><strong>{{ activeTrip()!.name }}</strong> · Ready for {{ locationLabel() }}?</p>
+          <p>Ready for {{ locationLabel() }}?</p>
         } @else {
           <p>Ready to <a routerLink="/trips">plan your next adventure</a>?</p>
         }
