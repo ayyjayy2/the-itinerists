@@ -81,6 +81,11 @@
             <li class="activity-row">
               <span class="activity-icon">{{ activityIcon(e) }}</span>
               <span class="activity-text">{{ activityText(e) }}</span>
+              @if (canRestore(e)) {
+                <button class="btn btn-ghost btn-sm" (click)="restore(e)" [disabled]="busyMember() === e.targetUid">
+                  Restore
+                </button>
+              }
               <span class="activity-time">{{ relativeTime(e.timestamp) }}</span>
             </li>
           }
@@ -125,7 +130,33 @@
           <button class="btn btn-danger btn-sm" (click)="leave()">Leave</button>
         </div>
       } @else {
-        <p class="muted owner-note">You're the owner. Transfer ownership or delete the trip — coming soon.</p>
+        <!-- Transfer ownership (owner only) -->
+        <div class="lifecycle-row">
+          <div>
+            <strong>Transfer ownership</strong>
+            <p class="muted">Hand the trip to another member. You'll become a regular member.</p>
+          </div>
+          <div class="transfer-controls">
+            <select [(ngModel)]="transferTarget" [disabled]="otherMembers().length === 0">
+              <option value="">Choose a member…</option>
+              @for (m of otherMembers(); track m.uid) {
+                <option [value]="m.uid">{{ m.displayName }}</option>
+              }
+            </select>
+            <button class="btn btn-ghost btn-sm" (click)="transfer()" [disabled]="!transferTarget">Transfer</button>
+          </div>
+        </div>
+
+        <!-- Delete trip (owner only) -->
+        <div class="lifecycle-row danger">
+          <div>
+            <strong>Delete trip</strong>
+            <p class="muted">Permanently removes this trip and all of its data for everyone. Can't be undone.</p>
+          </div>
+          <button class="btn btn-danger btn-sm" (click)="confirmDelete()" [disabled]="deleting()">
+            {{ deleting() ? 'Deleting…' : 'Delete' }}
+          </button>
+        </div>
       }
     </section>
   }

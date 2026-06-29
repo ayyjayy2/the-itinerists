@@ -98,3 +98,12 @@ h1 { margin-bottom: 1rem; }
   p { margin: 0.15rem 0 0; }
 }
 .owner-note { margin-top: 0.6rem; }
+
+.transfer-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  select { min-width: 9rem; }
+}
+
+.lifecycle-row.danger strong { color: var(--danger, #c0392b); }

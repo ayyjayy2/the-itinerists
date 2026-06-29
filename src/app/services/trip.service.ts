@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext, signal, computed, effect } from '@angular/core';
 import {
-  Firestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot,
-  arrayUnion, arrayRemove, increment, Unsubscribe,
+  Firestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot,
+  writeBatch, arrayUnion, arrayRemove, increment, Unsubscribe,
 } from '@angular/fire/firestore';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
@@ -284,6 +284,99 @@ export class TripService {
     await runInInjectionContext(this.injector, () =>
       updateDoc(this.memberRef(tripId, user.uid), { hiddenPages }),
     );
+  }
+
+  // ── Owner-only actions (TP-19) ───────────────────────────────────────────────
+
+  /** Sub-collections deleted when a trip is removed. */
+  private static readonly SUBCOLLECTIONS = [
+    'members', 'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
+    'flights', 'outfits', 'dayLabels', 'invites', 'activityLog',
+  ];
+
+  /**
+   * Permanently delete a trip and every sub-collection (owner only). Also removes
+   * the trip from each member's `/userTrips` index and clears `/inviteIndex`
+   * mirrors, then moves the owner to another trip (or clears the active trip).
+   */
+  async deleteTrip(tripId: string): Promise<string | null> {
+    const user = this.requireUser();
+    return runInInjectionContext(this.injector, async () => {
+      await this.assertOwner(tripId, user.uid);
+
+      // Members need their userTrips index cleaned up after the trip is gone.
+      const memberUids = (await getDocs(collection(this.firestore, 'trips', tripId, 'members')))
+        .docs.map(d => d.id);
+
+      // Delete every sub-collection in batches (≤500 ops); invites also clear their index mirror.
+      for (const name of TripService.SUBCOLLECTIONS) {
+        const snap = await getDocs(collection(this.firestore, 'trips', tripId, name));
+        let batch = writeBatch(this.firestore);
+        let ops = 0;
+        for (const d of snap.docs) {
+          batch.delete(d.ref);
+          ops++;
+          if (name === 'invites') { batch.delete(doc(this.firestore, 'inviteIndex', d.id)); ops++; }
+          if (ops >= 400) { await batch.commit(); batch = writeBatch(this.firestore); ops = 0; }
+        }
+        if (ops > 0) await batch.commit();
+      }
+
+      await deleteDoc(doc(this.firestore, 'trips', tripId));
+      await Promise.all(memberUids.map(uid =>
+        updateDoc(doc(this.firestore, 'userTrips', uid), { tripIds: arrayRemove(tripId) })
+          .catch(() => {/* tolerate a missing index */}),
+      ));
+
+      // Move the owner off the deleted trip.
+      const idxRef  = doc(this.firestore, 'userTrips', user.uid);
+      const idxSnap = await getDoc(idxRef);
+      const remaining = (idxSnap.exists() ? (idxSnap.data() as UserTripsDoc).tripIds ?? [] : [])
+        .filter(id => id !== tripId);
+      const next = remaining[0] ?? null;
+      await setDoc(idxRef, { lastActiveTrip: next ?? null }, { merge: true });
+      if (next) this.tripContext.switchTrip(next);
+      else      this.tripContext.clearActiveTrip();
+      return next;
+    });
+  }
+
+  /** Promote another member to owner and demote the current owner to member. */
+  async transferOwnership(tripId: string, toUid: string): Promise<void> {
+    const user = this.requireUser();
+    await runInInjectionContext(this.injector, async () => {
+      await this.assertOwner(tripId, user.uid);
+      if (!(await getDoc(this.memberRef(tripId, toUid))).exists()) {
+        throw new Error('That member is no longer on the trip.');
+      }
+      await updateDoc(this.memberRef(tripId, toUid), { role: 'owner' });
+      await updateDoc(this.memberRef(tripId, user.uid), { role: 'member' });
+      await updateDoc(doc(this.firestore, 'trips', tripId), { createdBy: toUid });
+    });
+  }
+
+  /** Re-add a previously removed member to the trip (owner only); logs member_restored. */
+  async restoreMember(tripId: string, uid: string): Promise<void> {
+    const actor = this.requireUser();
+    await runInInjectionContext(this.injector, async () => {
+      await this.assertOwner(tripId, actor.uid);
+      if ((await getDoc(this.memberRef(tripId, uid))).exists()) return; // already a member
+      const userSnap = await getDoc(doc(this.firestore, 'users', uid));
+      if (!userSnap.exists()) throw new Error('That user no longer exists.');
+      const profile = userSnap.data() as FirestoreUser;
+      const now = Date.now();
+      await setDoc(this.memberRef(tripId, uid), this.memberSnapshot(profile, 'member', now));
+      await setDoc(doc(this.firestore, 'userTrips', uid), { tripIds: arrayUnion(tripId) }, { merge: true });
+      await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(1) });
+      this.logActivity(tripId, 'member_restored', { uid, displayName: profile.displayName }, actor);
+    });
+  }
+
+  private async assertOwner(tripId: string, uid: string): Promise<void> {
+    const snap = await getDoc(this.memberRef(tripId, uid));
+    if (!snap.exists() || (snap.data() as TripMember).role !== 'owner') {
+      throw new Error('Only the trip owner can do that.');
+    }
   }
 
   // ── helpers ──────────────────────────────────────────────────────────────────
