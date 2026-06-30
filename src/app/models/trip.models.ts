@@ -41,17 +41,9 @@ export interface InviteIndexEntry {
   expiresAt: number;   // duplicated from the invite doc for fast validation
 }
 
-export interface TripConfig {
-  startDate: string;   // YYYY-MM-DD
-  endDate: string;
-  location: string;
-  locationLabel: string;
-}
-
 // ── Multi-Trip Architecture ─────────────────────────────────────────────────────
-// Foundational data model for supporting many trips per user. Supersedes the
-// single-trip `TripConfig` above (which is removed once TripContextService and
-// the per-trip sub-collections land — see ROADMAP Phase 1).
+// Foundational data model for supporting many trips per user. Each trip carries
+// its own dates/destination on the TripDoc; there is no global single-trip config.
 // Spec: docs/superpowers/specs/2026-04-22-triplan-multi-trip-architecture-design.md
 
 export type TripMemberRole = 'owner' | 'member';

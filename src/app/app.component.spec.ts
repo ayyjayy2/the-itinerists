@@ -11,7 +11,6 @@ import { TripService } from './services/trip.service';
 import { UsersService } from './services/users.service';
 import { ExpensesService } from './services/expenses.service';
 import { PackingService } from './services/packing.service';
-import { TripConfigService } from './services/trip-config.service';
 import { FlightsService } from './services/flights.service';
 import { ItineraryService } from './services/itinerary.service';
 import { StaysService } from './services/stays.service';
@@ -55,7 +54,6 @@ describe('AppComponent', () => {
         { provide: UsersService, useValue: initStub() },
         { provide: ExpensesService, useValue: initStub() },
         { provide: PackingService, useValue: initStub() },
-        { provide: TripConfigService, useValue: initStub() },
         { provide: FlightsService, useValue: initStub() },
         { provide: ItineraryService, useValue: initStub() },
         { provide: StaysService, useValue: initStub() },

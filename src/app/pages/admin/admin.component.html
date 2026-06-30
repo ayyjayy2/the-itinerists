@@ -1,44 +1,6 @@
 <div class="page-container">
   <h1>⚙️ Admin</h1>
 
-  <!-- ── Trip Setup ─────────────────────────────────────────── -->
-  <div class="card section-card">
-    <h2>Trip Setup</h2>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Start Date</label>
-        <input type="date" [(ngModel)]="tripStart" />
-      </div>
-      <div class="form-group">
-        <label>End Date</label>
-        <input type="date" [(ngModel)]="tripEnd" />
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Location</label>
-        <input type="text" [(ngModel)]="tripLocation" placeholder="e.g. Savannah, GA" />
-      </div>
-      <div class="form-group">
-        <label>Label (optional)</label>
-        <input type="text" [(ngModel)]="tripLabel" placeholder="e.g. Savannah Getaway" />
-      </div>
-    </div>
-
-    @if (configError()) {
-      <div class="alert alert-error">{{ configError() }}</div>
-    }
-    @if (configSuccess()) {
-      <div class="alert alert-success">Trip config saved!</div>
-    }
-
-    <button class="btn btn-primary" (click)="saveTripConfig()" [disabled]="configSaving()">
-      {{ configSaving() ? 'Saving…' : 'Save Trip Config' }}
-    </button>
-  </div>
-
   <!-- ── Invite Members ─────────────────────────────────────── -->
   <div class="card section-card">
     <h2>Invite Members</h2>
