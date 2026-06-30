@@ -169,9 +169,9 @@
           <p class="muted">Your personal data for this trip — your flights, outfits, and day notes — will be deleted. Shared plans (itinerary, finance, stays, recs) stay with the group.</p>
         }
         <div class="modal-actions">
-          <button class="btn btn-ghost btn-sm" (click)="cancelRemove()" [disabled]="leaving()">Cancel</button>
+          <button class="btn btn-ghost btn-sm" (click)="cancelRemove()" [disabled]="leaving()">Nevermind</button>
           <button class="btn btn-danger btn-sm" (click)="confirmRemove()" [disabled]="leaving()">
-            {{ leaving() ? 'Removing…' : (isLastMember() ? 'Delete trip' : 'Remove') }}
+            {{ leaving() ? 'Removing…' : (isLastMember() ? 'Delete trip' : 'Remove trip') }}
           </button>
         </div>
       </div>
