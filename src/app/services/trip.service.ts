@@ -314,7 +314,8 @@ export class TripService {
   /** Sub-collections removed when a trip is torn down. */
   private static readonly SUBCOLLECTIONS = [
     'members', 'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
-    'flights', 'outfits', 'dayLabels', 'invites', 'activityLog',
+    'flights', 'outfits', 'dayLabels', 'packing', 'packingSuggestions',
+    'invites', 'activityLog',
   ];
 
   /**
@@ -338,6 +339,19 @@ export class TripService {
     // Per-user day notes.
     await deleteDoc(doc(this.firestore, 'trips', tripId, 'dayLabels', user.uid))
       .catch(() => {/* may not exist */});
+
+    // Per-user packing list (TP-21).
+    await deleteDoc(doc(this.firestore, 'trips', tripId, 'packing', user.uid))
+      .catch(() => {/* may not exist */});
+
+    // Packing suggestions to or from the leaver (TP-21).
+    const suggestions = await getDocs(collection(this.firestore, 'trips', tripId, 'packingSuggestions'));
+    await Promise.all(suggestions.docs
+      .filter(d => {
+        const s = d.data() as { from?: string; to?: string };
+        return s.from === user.displayName || s.to === user.displayName;
+      })
+      .map(d => deleteDoc(d.ref).catch(() => {/* best-effort */})));
   }
 
   /**
