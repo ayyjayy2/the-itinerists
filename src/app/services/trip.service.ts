@@ -282,6 +282,7 @@ export class TripService {
           await updateDoc(doc(this.firestore, 'trips', tripId), { createdBy: heir.uid });
         }
         this.logActivity(tripId, 'member_left', user, user);
+        await this.removePersonalData(tripId, user);
         await deleteDoc(this.memberRef(tripId, user.uid));
         await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(-1) });
       }
@@ -315,6 +316,29 @@ export class TripService {
     'members', 'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
     'flights', 'outfits', 'dayLabels', 'invites', 'activityLog',
   ];
+
+  /**
+   * Delete a leaving member's *personal* data on a trip (TP-24): their flights,
+   * their outfit entries, and their day-notes. Shared/collaborative collections
+   * (itinerary, finance, stays, recs, cars, pins) are kept for the group.
+   */
+  private async removePersonalData(tripId: string, user: FirestoreUser): Promise<void> {
+    // Flights are tagged with the owner's uid.
+    const flights = await getDocs(collection(this.firestore, 'trips', tripId, 'flights'));
+    await Promise.all(flights.docs
+      .filter(d => (d.data() as { uid?: string }).uid === user.uid)
+      .map(d => deleteDoc(d.ref).catch(() => {/* best-effort */})));
+
+    // Outfit entries carry the owner's display name.
+    const outfits = await getDocs(collection(this.firestore, 'trips', tripId, 'outfits'));
+    await Promise.all(outfits.docs
+      .filter(d => (d.data() as { user?: string }).user === user.displayName)
+      .map(d => deleteDoc(d.ref).catch(() => {/* best-effort */})));
+
+    // Per-user day notes.
+    await deleteDoc(doc(this.firestore, 'trips', tripId, 'dayLabels', user.uid))
+      .catch(() => {/* may not exist */});
+  }
 
   /**
    * Recursively delete a trip's sub-collections (and their `/inviteIndex`

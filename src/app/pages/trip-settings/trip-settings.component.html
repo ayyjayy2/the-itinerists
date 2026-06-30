@@ -152,10 +152,29 @@
             }
           </p>
         </div>
-        <button class="btn btn-danger btn-sm" (click)="removeFromMyTrips()" [disabled]="leaving()">
-          {{ leaving() ? 'Removing…' : 'Remove' }}
-        </button>
+        <button class="btn btn-danger btn-sm" (click)="openRemoveConfirm()" [disabled]="leaving()">Remove</button>
       </div>
     </section>
+  }
+
+  <!-- Remove-trip confirmation modal (TP-24) -->
+  @if (removeConfirmOpen() && trip(); as t) {
+    <div class="modal-backdrop" (click)="cancelRemove()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3>Remove “{{ t.name }}”?</h3>
+        @if (isLastMember()) {
+          <p>You're the only member, so the entire trip and <strong>all of its data</strong> will be permanently deleted. This can't be undone.</p>
+        } @else {
+          <p>This trip will be <strong>permanently removed from your account</strong>. Other members keep it, and you'll need a new invite to rejoin.</p>
+          <p class="muted">Your personal data for this trip — your flights, outfits, and day notes — will be deleted. Shared plans (itinerary, finance, stays, recs) stay with the group.</p>
+        }
+        <div class="modal-actions">
+          <button class="btn btn-ghost btn-sm" (click)="cancelRemove()" [disabled]="leaving()">Cancel</button>
+          <button class="btn btn-danger btn-sm" (click)="confirmRemove()" [disabled]="leaving()">
+            {{ leaving() ? 'Removing…' : (isLastMember() ? 'Delete trip' : 'Remove') }}
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>

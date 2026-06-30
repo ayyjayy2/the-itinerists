@@ -53,7 +53,8 @@ export class TripSettingsComponent {
   error        = signal('');
   inviteState  = signal<'idle' | 'copying' | 'copied'>('idle');
   busyMember   = signal<string | null>(null);
-  leaving      = signal(false);
+  leaving        = signal(false);
+  removeConfirmOpen = signal(false);
   transferTarget = '';
 
   private readonly currentUid = computed(() => this.userService.firestoreUser()?.uid ?? '');
@@ -133,17 +134,18 @@ export class TripSettingsComponent {
     }
   }
 
-  /** Remove the trip from my account (TP-24). Sole member → deletes the trip + data. */
-  async removeFromMyTrips(): Promise<void> {
+  /** Open the remove-trip confirmation modal (TP-24). */
+  openRemoveConfirm(): void { this.removeConfirmOpen.set(true); }
+  cancelRemove(): void { this.removeConfirmOpen.set(false); }
+
+  /** Confirmed removal: per-account. Sole member → deletes the trip + data. */
+  async confirmRemove(): Promise<void> {
     const t = this.trip();
     if (!t) return;
-    const msg = this.isLastMember()
-      ? `You're the only member of "${t.name}". Removing it permanently deletes the trip and all of its data. Continue?`
-      : `Remove "${t.name}" from your trips? Other members keep it; you'll need a new invite to rejoin.`;
-    if (!confirm(msg)) return;
     this.leaving.set(true);
     try {
       await this.tripService.leaveTrip(t.id);
+      this.removeConfirmOpen.set(false);
       this.router.navigate(['/trips']);
     } catch (e: unknown) {
       this.error.set(e instanceof Error ? e.message : 'Could not remove the trip.');

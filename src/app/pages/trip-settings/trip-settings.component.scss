@@ -107,3 +107,31 @@ h1 { margin-bottom: 1rem; }
 }
 
 .lifecycle-row.danger strong { color: var(--danger, #c0392b); }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 1000;
+}
+.modal-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  max-width: 440px;
+  width: 100%;
+  padding: 1.25rem 1.35rem;
+
+  h3 { margin: 0 0 0.6rem; }
+  p { margin: 0 0 0.6rem; font-size: 0.92rem; line-height: 1.45; }
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+}
