@@ -77,7 +77,7 @@ export class FlightCountdownService {
     if (isNaN(depMs) || isNaN(arrMs)) return '';
 
     const now = Date.now();
-    if (now >= arrMs) return ''; // trip-live state owned by tripConfig countdown
+    if (now >= arrMs) return ''; // trip-live state owned by the home countdown
     if (now >= depMs) return '✈️ In the air!';
 
     const diff  = depMs - now;

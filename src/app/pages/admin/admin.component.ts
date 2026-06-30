@@ -1,11 +1,11 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Firestore, collection, onSnapshot, doc, setDoc } from '@angular/fire/firestore';
+import { Firestore, collection, onSnapshot } from '@angular/fire/firestore';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { TripContextService } from '../../services/trip-context.service';
-import { FirestoreUser, TripConfig } from '../../models/trip.models';
+import { FirestoreUser } from '../../models/trip.models';
 
 @Component({
   selector: 'app-admin',
@@ -32,15 +32,6 @@ export class AdminComponent implements OnInit {
   inviteError    = signal('');
   inviteCopied   = signal(false);
 
-  // Trip config
-  tripStart     = '';
-  tripEnd       = '';
-  tripLocation  = '';
-  tripLabel     = '';
-  configSaving  = signal(false);
-  configSuccess = signal(false);
-  configError   = signal('');
-
   ngOnInit(): void {
     // Load members
     onSnapshot(collection(this.firestore, 'users'), snap => {
@@ -49,17 +40,6 @@ export class AdminComponent implements OnInit {
           .map(d => d.data() as FirestoreUser)
           .sort((a, b) => a.createdAt - b.createdAt)
       );
-    });
-
-    // Load trip config
-    onSnapshot(doc(this.firestore, 'app/tripConfig'), snap => {
-      if (snap.exists()) {
-        const cfg = snap.data() as TripConfig;
-        this.tripStart    = cfg.startDate    ?? '';
-        this.tripEnd      = cfg.endDate      ?? '';
-        this.tripLocation = cfg.location     ?? '';
-        this.tripLabel    = cfg.locationLabel ?? '';
-      }
     });
   }
 
@@ -115,27 +95,4 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  async saveTripConfig(): Promise<void> {
-    if (!this.tripStart || !this.tripEnd || !this.tripLocation) {
-      this.configError.set('Please fill in all trip config fields.'); return;
-    }
-    this.configSaving.set(true);
-    this.configError.set('');
-    this.configSuccess.set(false);
-    try {
-      const cfg: TripConfig = {
-        startDate:     this.tripStart,
-        endDate:       this.tripEnd,
-        location:      this.tripLocation,
-        locationLabel: this.tripLabel || this.tripLocation,
-      };
-      await setDoc(doc(this.firestore, 'app/tripConfig'), cfg);
-      this.configSuccess.set(true);
-      setTimeout(() => this.configSuccess.set(false), 3000);
-    } catch {
-      this.configError.set('Failed to save trip config. Please try again.');
-    } finally {
-      this.configSaving.set(false);
-    }
-  }
 }

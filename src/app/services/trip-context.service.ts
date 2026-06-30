@@ -9,9 +9,7 @@ const ACTIVE_TRIP_KEY = 'tripplanner_active_trip_id';
  * Holds the active trip id and persists it to localStorage so it survives
  * reloads. All trip-scoped services derive their Firestore paths
  * (`trips/{activeTripId}/...`) from `activeTripId()` and re-subscribe whenever
- * it changes. Supersedes the single-trip `TripConfigService`, which is removed
- * once the per-trip sub-collection rewrite (TP-8) and home screen update
- * (TP-15) land.
+ * it changes. Replaced the old single-trip `TripConfigService` (retired in TP-20).
  */
 @Injectable({ providedIn: 'root' })
 export class TripContextService {
