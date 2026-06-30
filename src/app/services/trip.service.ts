@@ -257,18 +257,37 @@ export class TripService {
   }
 
   /**
-   * Leave the active trip voluntarily. Removes the current user's membership,
-   * decrements the count, and switches to another of the user's trips (or clears
-   * the active trip if none remain). Returns the new active tripId (or null).
+   * Remove the current user from a trip — "Remove from my trips" (TP-24).
+   * Per-account: everyone else keeps the trip. If the leaver is the owner and
+   * other members remain, ownership auto-transfers to the longest-standing
+   * member. If the leaver is the LAST member, the trip and all of its data are
+   * deleted. Returns the leaver's next active tripId (or null).
    */
   async leaveTrip(tripId: string): Promise<string | null> {
     const user = this.requireUser();
     return runInInjectionContext(this.injector, async () => {
-      this.logActivity(tripId, 'member_left', user, user); // log before we lose access on switch
-      await deleteDoc(this.memberRef(tripId, user.uid));
-      await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(-1) });
+      const members = (await getDocs(collection(this.firestore, 'trips', tripId, 'members')))
+        .docs.map(d => d.data() as TripMember);
+      const others = members.filter(m => m.uid !== user.uid);
 
-      // Drop it from the user's index and pick a replacement active trip.
+      if (others.length === 0) {
+        // Last one out — delete the whole trip and its data.
+        await this.purgeTripData(tripId);
+      } else {
+        // If the owner is leaving, hand the trip to the longest-standing member.
+        const me = members.find(m => m.uid === user.uid);
+        if (me?.role === 'owner') {
+          const heir = [...others].sort((a, b) => a.joinedAt - b.joinedAt)[0];
+          await updateDoc(this.memberRef(tripId, heir.uid), { role: 'owner' });
+          await updateDoc(doc(this.firestore, 'trips', tripId), { createdBy: heir.uid });
+        }
+        this.logActivity(tripId, 'member_left', user, user);
+        await this.removePersonalData(tripId, user);
+        await deleteDoc(this.memberRef(tripId, user.uid));
+        await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(-1) });
+      }
+
+      // Drop the trip from the leaver's index and pick a replacement active trip.
       const idxRef  = doc(this.firestore, 'userTrips', user.uid);
       const idxSnap = await getDoc(idxRef);
       const remaining = (idxSnap.exists() ? (idxSnap.data() as UserTripsDoc).tripIds ?? [] : [])
@@ -290,59 +309,56 @@ export class TripService {
     );
   }
 
-  // ── Owner-only actions (TP-19) ───────────────────────────────────────────────
+  // ── Owner actions (TP-19) + trip teardown (TP-24) ────────────────────────────
 
-  /** Sub-collections deleted when a trip is removed. */
+  /** Sub-collections removed when a trip is torn down. */
   private static readonly SUBCOLLECTIONS = [
     'members', 'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
     'flights', 'outfits', 'dayLabels', 'invites', 'activityLog',
   ];
 
   /**
-   * Permanently delete a trip and every sub-collection (owner only). Also removes
-   * the trip from each member's `/userTrips` index and clears `/inviteIndex`
-   * mirrors, then moves the owner to another trip (or clears the active trip).
+   * Delete a leaving member's *personal* data on a trip (TP-24): their flights,
+   * their outfit entries, and their day-notes. Shared/collaborative collections
+   * (itinerary, finance, stays, recs, cars, pins) are kept for the group.
    */
-  async deleteTrip(tripId: string): Promise<string | null> {
-    const user = this.requireUser();
-    return runInInjectionContext(this.injector, async () => {
-      await this.assertOwner(tripId, user.uid);
+  private async removePersonalData(tripId: string, user: FirestoreUser): Promise<void> {
+    // Flights are tagged with the owner's uid.
+    const flights = await getDocs(collection(this.firestore, 'trips', tripId, 'flights'));
+    await Promise.all(flights.docs
+      .filter(d => (d.data() as { uid?: string }).uid === user.uid)
+      .map(d => deleteDoc(d.ref).catch(() => {/* best-effort */})));
 
-      // Members need their userTrips index cleaned up after the trip is gone.
-      const memberUids = (await getDocs(collection(this.firestore, 'trips', tripId, 'members')))
-        .docs.map(d => d.id);
+    // Outfit entries carry the owner's display name.
+    const outfits = await getDocs(collection(this.firestore, 'trips', tripId, 'outfits'));
+    await Promise.all(outfits.docs
+      .filter(d => (d.data() as { user?: string }).user === user.displayName)
+      .map(d => deleteDoc(d.ref).catch(() => {/* best-effort */})));
 
-      // Delete every sub-collection in batches (≤500 ops); invites also clear their index mirror.
-      for (const name of TripService.SUBCOLLECTIONS) {
-        const snap = await getDocs(collection(this.firestore, 'trips', tripId, name));
-        let batch = writeBatch(this.firestore);
-        let ops = 0;
-        for (const d of snap.docs) {
-          batch.delete(d.ref);
-          ops++;
-          if (name === 'invites') { batch.delete(doc(this.firestore, 'inviteIndex', d.id)); ops++; }
-          if (ops >= 400) { await batch.commit(); batch = writeBatch(this.firestore); ops = 0; }
-        }
-        if (ops > 0) await batch.commit();
+    // Per-user day notes.
+    await deleteDoc(doc(this.firestore, 'trips', tripId, 'dayLabels', user.uid))
+      .catch(() => {/* may not exist */});
+  }
+
+  /**
+   * Recursively delete a trip's sub-collections (and their `/inviteIndex`
+   * mirrors) and the trip doc itself. Used by {@link leaveTrip} when the last
+   * member leaves — there is no global "delete for everyone" action (TP-24).
+   */
+  private async purgeTripData(tripId: string): Promise<void> {
+    for (const name of TripService.SUBCOLLECTIONS) {
+      const snap = await getDocs(collection(this.firestore, 'trips', tripId, name));
+      let batch = writeBatch(this.firestore);
+      let ops = 0;
+      for (const d of snap.docs) {
+        batch.delete(d.ref);
+        ops++;
+        if (name === 'invites') { batch.delete(doc(this.firestore, 'inviteIndex', d.id)); ops++; }
+        if (ops >= 400) { await batch.commit(); batch = writeBatch(this.firestore); ops = 0; }
       }
-
-      await deleteDoc(doc(this.firestore, 'trips', tripId));
-      await Promise.all(memberUids.map(uid =>
-        updateDoc(doc(this.firestore, 'userTrips', uid), { tripIds: arrayRemove(tripId) })
-          .catch(() => {/* tolerate a missing index */}),
-      ));
-
-      // Move the owner off the deleted trip.
-      const idxRef  = doc(this.firestore, 'userTrips', user.uid);
-      const idxSnap = await getDoc(idxRef);
-      const remaining = (idxSnap.exists() ? (idxSnap.data() as UserTripsDoc).tripIds ?? [] : [])
-        .filter(id => id !== tripId);
-      const next = remaining[0] ?? null;
-      await setDoc(idxRef, { lastActiveTrip: next ?? null }, { merge: true });
-      if (next) this.tripContext.switchTrip(next);
-      else      this.tripContext.clearActiveTrip();
-      return next;
-    });
+      if (ops > 0) await batch.commit();
+    }
+    await deleteDoc(doc(this.firestore, 'trips', tripId));
   }
 
   /** Promote another member to owner and demote the current owner to member. */
