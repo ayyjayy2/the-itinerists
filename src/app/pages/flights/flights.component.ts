@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { FlightsService } from '../../services/flights.service';
 import { UsersService } from '../../services/users.service';
 import { UserService } from '../../services/user.service';
-import { TripConfigService } from '../../services/trip-config.service';
+import { TripService } from '../../services/trip.service';
 import { FlightDoc } from '../../models/trip.models';
 
 // ── View models ───────────────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ export class FlightsComponent {
   flightsService    = inject(FlightsService);
   usersService      = inject(UsersService);
   userService       = inject(UserService);
-  tripConfigService = inject(TripConfigService);
+  tripService       = inject(TripService);
 
   currentUser   = this.userService.currentUser;
   tripUsers     = this.usersService.tripUsers;
@@ -295,7 +295,7 @@ export class FlightsComponent {
   departures = computed(() => this.filteredJourneys().filter(j => j.section === 'DEPARTURES'));
 
   readonly destination = computed(() =>
-    this.tripConfigService.config()?.locationLabel ?? 'Savannah'
+    this.tripService.activeTrip()?.destination || 'your destination'
   );
 
   formatShortDate(d: string): string {

@@ -83,8 +83,12 @@ export class TripService {
       const snap = await runInInjectionContext(this.injector, () =>
         getDoc(doc(this.firestore, 'userTrips', uid)));
       if (!snap.exists()) return;
-      const idx = snap.data() as UserTripsDoc;
-      const target = idx.lastActiveTrip ?? idx.tripIds?.[0];
+      const idx  = snap.data() as UserTripsDoc;
+      const ids  = idx.tripIds ?? [];
+      // Honor lastActiveTrip only if it's still a trip the user belongs to — a
+      // deleted/left trip can linger here and would otherwise strand the user.
+      const last = idx.lastActiveTrip;
+      const target = (last && ids.includes(last)) ? last : ids[0];
       if (target && !this.tripContext.activeTripId()) {
         this.tripContext.switchTrip(target);
       }

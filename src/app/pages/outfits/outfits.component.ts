@@ -1,14 +1,32 @@
 import { Component, OnInit, inject, signal, computed, NgZone, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { WeatherService, LiveWeather, weatherEmoji } from '../../services/weather.service';
 import { OutfitPhotoService } from '../../services/outfit-photo.service';
 import { OutfitsService } from '../../services/outfits.service';
 import { ItineraryService } from '../../services/itinerary.service';
 import { FlightsService } from '../../services/flights.service';
-import { TripConfigService } from '../../services/trip-config.service';
+import { TripService } from '../../services/trip.service';
 import { OutfitEntry } from '../../models/trip.models';
+
+/** Inclusive YYYY-MM-DD range builder. */
+function dateRange(start: string, end: string): string[] {
+  const days: string[] = [];
+  const cur = new Date(start + 'T00:00');
+  const end_ = new Date(end + 'T00:00');
+  while (cur <= end_) { days.push(cur.toISOString().slice(0, 10)); cur.setDate(cur.getDate() + 1); }
+  return days;
+}
+
+/** Fallback when a trip has no dates yet: today + the next 6 days, so outfits stay addable. */
+function fallbackWindow(): string[] {
+  const days: string[] = [];
+  const cur = new Date(); cur.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 7; i++) { days.push(cur.toISOString().slice(0, 10)); cur.setDate(cur.getDate() + 1); }
+  return days;
+}
 
 function suggestOutfit(minF: number, maxF: number, code: number, activities: string[]): string {
   const avg    = (minF + maxF) / 2;
@@ -44,7 +62,7 @@ interface DayData {
 
 @Component({
   selector: 'app-outfits',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './outfits.component.html',
   styleUrl: './outfits.component.scss'
 })
@@ -55,11 +73,19 @@ export class OutfitsComponent implements OnInit {
   outfitsService = inject(OutfitsService);
   itineraryService = inject(ItineraryService);
   flightsService   = inject(FlightsService);
-  tripConfigService = inject(TripConfigService);
+  tripService      = inject(TripService);
   private ngZone = inject(NgZone);
 
   currentUser = this.userService.currentUser;
   uploading   = this.photoService.uploading;
+  isAdmin     = this.userService.isAdmin;
+
+  /** Active-trip date state (TP-23). */
+  readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
+  readonly hasTripDates  = computed(() => {
+    const t = this.tripService.activeTrip();
+    return !!(t?.startDate && t?.endDate);
+  });
 
   view             = signal<'day' | 'all'>('day');
   currentDateIndex = signal(0);
@@ -74,11 +100,11 @@ export class OutfitsComponent implements OnInit {
   weatherEmoji = weatherEmoji;
 
   constructor() {
-    // Load weather once trip config dates become available
+    // Load weather once the active trip's dates are available
     effect(() => {
-      const cfg = this.tripConfigService.config();
-      if (cfg?.startDate && cfg?.endDate) {
-        this.weatherService.load(cfg.startDate, cfg.endDate);
+      const t = this.tripService.activeTrip();
+      if (t?.startDate && t?.endDate) {
+        this.weatherService.load(t.startDate, t.endDate);
       }
     });
 
@@ -99,25 +125,19 @@ export class OutfitsComponent implements OnInit {
   }
 
   readonly tripDays = computed((): string[] => {
-    const cfg = this.tripConfigService.config();
-    if (!cfg?.startDate || !cfg?.endDate) return [];
-    const days: string[] = [];
-    const cur = new Date(cfg.startDate + 'T00:00');
-    const end = new Date(cfg.endDate   + 'T00:00');
-    while (cur <= end) {
-      days.push(cur.toISOString().slice(0, 10));
-      cur.setDate(cur.getDate() + 1);
-    }
-    return days;
+    const t = this.tripService.activeTrip();
+    if (t?.startDate && t?.endDate) return dateRange(t.startDate, t.endDate);
+    // A trip with no dates yet still gets addable day cards (TP-23); no trip → empty.
+    return t ? fallbackWindow() : [];
   });
 
   effectiveDayLabel(date: string): string {
     const custom = this.itineraryService.dayLabels()[date];
     if (custom) return custom;
-    const cfg = this.tripConfigService.config();
-    if (!cfg?.startDate) return date;
+    const start = this.tripService.activeTrip()?.startDate;
+    if (!start) return date;
     const diff = Math.round(
-      (new Date(date + 'T00:00').getTime() - new Date(cfg.startDate + 'T00:00').getTime()) / 86_400_000
+      (new Date(date + 'T00:00').getTime() - new Date(start + 'T00:00').getTime()) / 86_400_000
     );
     return `Day ${diff + 1}`;
   }
@@ -144,7 +164,7 @@ export class OutfitsComponent implements OnInit {
         .flatMap(f => [f.departureDate, f.arrivalDate].filter(Boolean))
     );
 
-    const staticSuggestion = '🌸 April in Savannah is warm and lovely! Light layers, breathable fabrics, and comfortable walking shoes are your best bet. Live weather will show up within 16 days of the trip.';
+    const staticSuggestion = '🌸 Pack light layers, breathable fabrics, and comfortable walking shoes. Live weather will show up within 16 days of the trip.';
     const travelSuggestion = '✈️ Travel day! Comfy leggings or joggers, an oversized tee or soft knit, slip-on shoes, and a warm wrap for the cabin.';
 
     return this.tripDays().map((date): DayData => {

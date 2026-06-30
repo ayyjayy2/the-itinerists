@@ -2,11 +2,12 @@ import { Component, OnInit, inject, signal, computed, effect, untracked } from '
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
+import { RouterLink } from '@angular/router';
 import { ItineraryService } from '../../services/itinerary.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { FlightsService } from '../../services/flights.service';
-import { TripConfigService } from '../../services/trip-config.service';
+import { TripService } from '../../services/trip.service';
 import { ItineraryItemDoc } from '../../models/trip.models';
 
 type ViewMode = 'list' | 'calendar';
@@ -16,9 +17,26 @@ const CATEGORIES = [
   'Transport', 'Accommodation', 'Activity', 'Free',
 ];
 
+/** Inclusive YYYY-MM-DD range builder. */
+function dateRange(start: string, end: string): string[] {
+  const days: string[] = [];
+  const cur = new Date(start + 'T00:00');
+  const end_ = new Date(end + 'T00:00');
+  while (cur <= end_) { days.push(cur.toISOString().slice(0, 10)); cur.setDate(cur.getDate() + 1); }
+  return days;
+}
+
+/** Fallback when a trip has no dates yet: today + the next 6 days, so the plan stays usable. */
+function fallbackWindow(): string[] {
+  const days: string[] = [];
+  const cur = new Date(); cur.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 7; i++) { days.push(cur.toISOString().slice(0, 10)); cur.setDate(cur.getDate() + 1); }
+  return days;
+}
+
 @Component({
   selector: 'app-itinerary',
-  imports: [CommonModule, FormsModule, DragDropModule],
+  imports: [CommonModule, FormsModule, DragDropModule, RouterLink],
   templateUrl: './itinerary.component.html',
   styleUrl: './itinerary.component.scss'
 })
@@ -27,12 +45,20 @@ export class ItineraryComponent implements OnInit {
   userService       = inject(UserService);
   usersService      = inject(UsersService);
   flightsService    = inject(FlightsService);
-  tripConfigService = inject(TripConfigService);
+  tripService       = inject(TripService);
 
   view         = signal<ViewMode>('list');
   selectedDate = signal<string>('All');
   currentUser  = this.userService.currentUser;
   showAll      = signal<boolean>(false);
+  isAdmin      = this.userService.isAdmin;
+
+  /** Active-trip date state (TP-23). */
+  readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
+  readonly hasTripDates  = computed(() => {
+    const t = this.tripService.activeTrip();
+    return !!(t?.startDate && t?.endDate);
+  });
 
   readonly categories = CATEGORIES;
 
@@ -65,26 +91,20 @@ export class ItineraryComponent implements OnInit {
   newDraft: Partial<ItineraryItemDoc> = {};
   addForWhoMap: Record<string, boolean> = {};
 
-  // ── Trip days from config ──────────────────────────────────────────────────
+  // ── Trip days from the active trip ──────────────────────────────────────────
   readonly tripDays = computed((): string[] => {
-    const cfg = this.tripConfigService.config();
-    if (!cfg?.startDate || !cfg?.endDate) return [];
-    const days: string[] = [];
-    const cur = new Date(cfg.startDate + 'T00:00');
-    const end = new Date(cfg.endDate   + 'T00:00');
-    while (cur <= end) {
-      days.push(cur.toISOString().slice(0, 10));
-      cur.setDate(cur.getDate() + 1);
-    }
-    return days;
+    const t = this.tripService.activeTrip();
+    if (t?.startDate && t?.endDate) return dateRange(t.startDate, t.endDate);
+    // A trip with no dates yet still gets usable day cards (TP-23); no trip → empty.
+    return t ? fallbackWindow() : [];
   });
 
   effectiveDayLabel(date: string): string {
     const custom = this.itineraryService.dayLabels()[date];
     if (custom) return custom;
-    const cfg = this.tripConfigService.config();
-    if (!cfg?.startDate) return date;
-    const start = new Date(cfg.startDate + 'T00:00');
+    const startStr = this.tripService.activeTrip()?.startDate;
+    if (!startStr) return date;
+    const start = new Date(startStr + 'T00:00');
     const d     = new Date(date + 'T00:00');
     const diff  = Math.round((d.getTime() - start.getTime()) / 86_400_000);
     return `Day ${diff + 1}`;
@@ -100,7 +120,7 @@ export class ItineraryComponent implements OnInit {
   /** Auto-generated flight events for the current user — not stored, not editable. */
   readonly flightEvents = computed(() => {
     const uid     = this.currentUser()?.uid ?? '';
-    const dest    = this.tripConfigService.config()?.locationLabel ?? 'Savannah';
+    const dest    = this.tripService.activeTrip()?.destination ?? 'your destination';
     const flights = this.flightsService.flights();
     const mine    = flights.filter(f => f.uid === uid);
 
