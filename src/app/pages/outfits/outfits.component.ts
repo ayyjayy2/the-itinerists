@@ -43,13 +43,13 @@ function suggestOutfit(minF: number, maxF: number, code: number, activities: str
     if (isDining) return '✨ Warm dinner night: a cute sundress or linen pants + blouse, strappy sandals, light cardigan for A/C.';
     if (isNight)  return '🌙 Warm night out: flowy dress or chic shorts + top, sandals, light layer for the bar A/C.';
     if (isWalk)   return '🌿 Perfect walking weather! Sundress or shorts + tee, comfortable sneakers or sandals, light layer for indoor A/C.';
-    return '🌤️ Beautiful Savannah weather! Light outfit — dress, shorts, or jeans + breezy top. Comfortable shoes for the squares.';
+    return '🌤️ Beautiful weather! Light outfit — dress, shorts, or jeans + breezy top. Comfortable shoes for exploring.';
   }
   if (avg >= 65) {
-    if (isWalk) return '🌸 Lovely day for the squares! Jeans or a midi skirt, a cute top, and comfortable walking shoes. Light jacket for the evening.';
+    if (isWalk) return '🌸 Lovely day to explore! Jeans or a midi skirt, a cute top, and comfortable walking shoes. Light jacket for the evening.';
     return '🌤️ Warm-ish and pleasant. Jeans + a nice top or light dress, comfortable shoes, and a light jacket just in case.';
   }
-  return '🧥 Cooler evening — layer up! Jeans, a cozy top, and a light jacket. Comfortable shoes for walking the cobblestones.';
+  return '🧥 Cooler evening — layer up! Jeans, a cozy top, and a light jacket. Comfortable shoes for walking.';
 }
 
 interface DayData {
@@ -104,7 +104,7 @@ export class OutfitsComponent implements OnInit {
     effect(() => {
       const t = this.tripService.activeTrip();
       if (t?.startDate && t?.endDate) {
-        this.weatherService.load(t.startDate, t.endDate);
+        this.weatherService.load(t.startDate, t.endDate, t.destination);
       }
     });
 
