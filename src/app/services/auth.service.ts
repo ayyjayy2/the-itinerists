@@ -132,6 +132,41 @@ export class AuthService {
   }
 
   /**
+   * Register a brand-new user with no invite code (open self-serve signup, TP-25).
+   * Creates the Firebase Auth account + Firestore profile and signs them in, but
+   * does NOT join or create any trip — onboarding sends them to `/get-started`.
+   */
+  async registerStandalone(
+    displayName: string,
+    avatarEmoji: string,
+    username: string,
+    password: string,
+    color: string,
+  ): Promise<void> {
+    const uname = username.toLowerCase().trim();
+
+    // Username uniqueness (runs unauthenticated — users is publicly readable).
+    const usernameQ = query(collection(this.firestore, 'users'), where('username', '==', uname));
+    if (!(await getDocs(usernameQ)).empty) throw new Error('That username is already taken.');
+
+    const cred = await createUserWithEmailAndPassword(this.auth, toEmail(uname), password);
+    const uid  = cred.user.uid;
+    const now  = Date.now();
+
+    const userDoc: FirestoreUser = {
+      uid,
+      displayName: displayName.trim(),
+      username:    uname,
+      avatarEmoji,
+      color,
+      isAdmin:     false,
+      isDisabled:  false,
+      createdAt:   now,
+    };
+    await setDoc(doc(this.firestore, 'users', uid), userDoc);
+  }
+
+  /**
    * Generate a trip-scoped invite (TP-11). Writes the invite under the trip and
    * a `/inviteIndex/{code}` entry so the join flow can resolve it without
    * scanning every trip. Returns the code.

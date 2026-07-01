@@ -26,11 +26,40 @@
 
     <div class="form-group">
       <label>Primary currency</label>
-      <select [(ngModel)]="currency">
-        @for (c of currencies; track c.code) {
-          <option [value]="c.code">{{ c.label }}</option>
+      <div class="currency-combo">
+        <input
+          type="text"
+          class="currency-input"
+          [value]="currencyOpen() ? currencyQuery() : selectedCurrencyLabel()"
+          (focus)="openCurrency()"
+          (input)="onCurrencyInput($any($event.target).value)"
+          (keydown)="onCurrencyKeydown($event)"
+          (blur)="closeCurrency()"
+          placeholder="Type to search currencies…"
+          autocomplete="off"
+          role="combobox"
+          [attr.aria-expanded]="currencyOpen()"
+        />
+        @if (currencyOpen()) {
+          <ul class="currency-list" role="listbox">
+            @for (c of filteredCurrencies(); track c.code; let i = $index) {
+              <li
+                class="currency-option"
+                role="option"
+                [class.active]="i === activeIndex()"
+                [class.selected]="c.code === currency"
+                [attr.aria-selected]="c.code === currency"
+                (mousedown)="$event.preventDefault(); selectCurrency(c.code)"
+              >
+                <span class="currency-code">{{ c.code }}</span>
+                <span class="currency-name">{{ c.name }}</span>
+              </li>
+            } @empty {
+              <li class="currency-empty">No currencies match “{{ currencyQuery() }}”.</li>
+            }
+          </ul>
         }
-      </select>
+      </div>
     </div>
 
     @if (error()) {

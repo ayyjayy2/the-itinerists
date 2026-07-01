@@ -16,6 +16,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/join/join.component').then(m => m.JoinComponent)
   },
   {
+    path: 'signup',
+    loadComponent: () => import('./pages/signup/signup.component').then(m => m.SignupComponent)
+  },
+  {
+    path: 'get-started',
+    loadComponent: () => import('./pages/get-started/get-started.component').then(m => m.GetStartedComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'home',
     loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent),
     canActivate: [authGuard]
