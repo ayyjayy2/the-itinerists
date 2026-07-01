@@ -1,15 +1,23 @@
-import { Injectable, signal, inject, effect } from '@angular/core';
+import { Injectable, signal, inject, Injector, runInInjectionContext, effect } from '@angular/core';
+import {
+  Firestore, collection, doc, onSnapshot, setDoc, updateDoc, Unsubscribe,
+} from '@angular/fire/firestore';
 import { PackingItem, PackingSuggestion } from '../models/trip.models';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
 
-const ITEMS_KEY_PREFIX      = 'tripplanner_packing_items_';
-const SUGGESTIONS_KEY       = 'tripplanner_packing_suggestions';
-const CATEGORIES_KEY_PREFIX = 'tripplanner_packing_categories_';
 export const DEFAULT_PACKING_CATEGORIES = ['Clothes', 'Shoes', 'Accessories', 'Outerwear', 'Toiletries'];
 
+/**
+ * Per-trip packing, in Firestore (TP-21) so it syncs across devices:
+ * - `trips/{tripId}/packing/{uid}` — this member's `{ items, categories }`.
+ * - `trips/{tripId}/packingSuggestions/{id}` — suggestions between members.
+ * Re-subscribes whenever the active trip or signed-in user changes.
+ */
 @Injectable({ providedIn: 'root' })
 export class PackingService {
+  private firestore   = inject(Firestore);
+  private injector    = inject(Injector);
   private userService = inject(UserService);
   private tripContext = inject(TripContextService);
 
@@ -21,74 +29,96 @@ export class PackingService {
   readonly suggestions = this._suggestions.asReadonly();
   readonly categories  = this._categories.asReadonly();
 
+  private unsubs: Unsubscribe[] = [];
+
   constructor() {
-    // Reload per-trip packing data whenever the active trip changes.
-    effect(() => {
-      this.tripContext.activeTripId();
-      this._items.set(this.loadItems());
-      this._categories.set(this.loadCategories());
+    effect(() => this.subscribe(this.tripContext.activeTripId(), this.userService.firestoreUser()?.uid));
+  }
+
+  /** Retained for AppComponent compatibility — the constructor effect drives loading. */
+  init(): void { /* no-op */ }
+
+  private packingRef(tripId: string, uid: string) {
+    return doc(this.firestore, 'trips', tripId, 'packing', uid);
+  }
+
+  private subscribe(tripId: string | null, uid: string | undefined): void {
+    this.unsubs.forEach(u => u());
+    this.unsubs = [];
+    if (!tripId || !uid) {
+      this._items.set([]); this._suggestions.set([]); this._categories.set([...DEFAULT_PACKING_CATEGORIES]);
+      return;
+    }
+    runInInjectionContext(this.injector, () => {
+      this.unsubs.push(
+        onSnapshot(this.packingRef(tripId, uid), snap => {
+          const data = snap.exists() ? snap.data() : {};
+          this._items.set((data['items'] as PackingItem[]) ?? []);
+          this._categories.set(this.mergeCategories((data['categories'] as string[]) ?? []));
+        }),
+        onSnapshot(collection(this.firestore, 'trips', tripId, 'packingSuggestions'), snap => {
+          this._suggestions.set(snap.docs.map(d => d.data() as PackingSuggestion));
+        }),
+      );
     });
   }
 
-  init(): void {
-    this._items.set(this.loadItems());
-    this._suggestions.set(this.loadSuggestions());
-    this._categories.set(this.loadCategories());
+  private mergeCategories(custom: string[]): string[] {
+    return [...DEFAULT_PACKING_CATEGORIES, ...custom.filter(c => !DEFAULT_PACKING_CATEGORIES.includes(c))];
   }
 
   // ── Items ────────────────────────────────────────────────────────────────────
 
   addItem(label: string, category = 'Clothes'): void {
-    const item: PackingItem = {
-      id: crypto.randomUUID(),
-      label,
-      packed: false,
-      addedAt: Date.now(),
-      category,
-    };
-    const updated = [...this._items(), item];
-    this._items.set(updated);
-    this.saveItems(updated);
+    const item: PackingItem = { id: crypto.randomUUID(), label, packed: false, addedAt: Date.now(), category };
+    this.saveItems([...this._items(), item]);
   }
 
   toggleItem(id: string): void {
-    const updated = this._items().map(i =>
-      i.id === id ? { ...i, packed: !i.packed } : i
-    );
-    this._items.set(updated);
-    this.saveItems(updated);
+    this.saveItems(this._items().map(i => (i.id === id ? { ...i, packed: !i.packed } : i)));
   }
 
   removeItem(id: string): void {
-    const updated = this._items().filter(i => i.id !== id);
-    this._items.set(updated);
-    this.saveItems(updated);
+    this.saveItems(this._items().filter(i => i.id !== id));
+  }
+
+  private saveItems(items: PackingItem[]): void {
+    const ref = this.myRef();
+    if (!ref) return;
+    this._items.set(items); // optimistic; the snapshot will confirm
+    setDoc(ref, { items }, { merge: true })
+      .catch(err => console.error('[PackingService] saveItems failed:', err));
+  }
+
+  addCategory(name: string): void {
+    const trimmed = name.trim();
+    const ref = this.myRef();
+    if (!trimmed || !ref || this._categories().includes(trimmed)) return;
+    const custom = [...this._categories().filter(c => !DEFAULT_PACKING_CATEGORIES.includes(c)), trimmed];
+    this._categories.set(this.mergeCategories(custom));
+    setDoc(ref, { categories: custom }, { merge: true })
+      .catch(err => console.error('[PackingService] addCategory failed:', err));
   }
 
   // ── Suggestions ───────────────────────────────────────────────────────────────
 
-  /** Pending suggestions for current user (received from others) */
+  /** Pending suggestions addressed to the current user. */
   inboxSuggestions(): PackingSuggestion[] {
     const me = this.userService.currentUser()?.name ?? '';
     return this._suggestions().filter(s => s.to === me && s.status === 'pending');
   }
 
-  /** Send a suggestion to another user (posts to Apps Script + saves locally) */
+  /** Send a packing suggestion to another member. */
   sendSuggestion(toUser: string, item: string): void {
-    const me = this.userService.currentUser()?.name ?? '';
+    const tripId = this.tripContext.activeTripId();
+    if (!tripId) return;
+    const me  = this.userService.currentUser()?.name ?? '';
+    const ref = doc(collection(this.firestore, 'trips', tripId, 'packingSuggestions'));
     const suggestion: PackingSuggestion = {
-      id: crypto.randomUUID(),
-      from: me,
-      to: toUser,
-      item,
-      sentAt: Date.now(),
-      status: 'pending'
+      id: ref.id, from: me, to: toUser, item, sentAt: Date.now(), status: 'pending',
     };
-
-    // Save locally
-    const updated = [...this._suggestions(), suggestion];
-    this._suggestions.set(updated);
-    this.saveSuggestions(updated);
+    setDoc(ref, suggestion)
+      .catch(err => console.error('[PackingService] sendSuggestion failed:', err));
   }
 
   acceptSuggestion(id: string): void {
@@ -104,70 +134,18 @@ export class PackingService {
   }
 
   private updateSuggestionStatus(id: string, status: 'accepted' | 'declined'): void {
-    const updated = this._suggestions().map(s =>
-      s.id === id ? { ...s, status } : s
-    );
-    this._suggestions.set(updated);
-    this.saveSuggestions(updated);
+    const tripId = this.tripContext.activeTripId();
+    if (!tripId) return;
+    updateDoc(doc(this.firestore, 'trips', tripId, 'packingSuggestions', id), { status })
+      .catch(err => console.error('[PackingService] updateSuggestionStatus failed:', err));
   }
 
-  addCategory(name: string): void {
-    const trimmed = name.trim();
-    if (!trimmed || this._categories().includes(trimmed)) return;
-    const updated = [...this._categories(), trimmed];
-    this._categories.set(updated);
-    this.saveCustomCategories(updated);
-  }
+  // ── helpers ──────────────────────────────────────────────────────────────────
 
-  // ── Storage ───────────────────────────────────────────────────────────────────
-
-  private userKey(): string {
-    const user = this.userService.currentUser()?.name ?? 'unknown';
-    const trip = this.tripContext.activeTripId() ?? 'none';
-    return `${trip}_${user}`;
-  }
-
-  private itemsKey(): string {
-    return ITEMS_KEY_PREFIX + this.userKey();
-  }
-
-  private loadCategories(): string[] {
-    try {
-      const raw    = localStorage.getItem(CATEGORIES_KEY_PREFIX + this.userKey());
-      const custom = raw ? (JSON.parse(raw) as string[]) : [];
-      return [...DEFAULT_PACKING_CATEGORIES,
-              ...custom.filter(c => !DEFAULT_PACKING_CATEGORIES.includes(c))];
-    } catch { return [...DEFAULT_PACKING_CATEGORIES]; }
-  }
-
-  private saveCustomCategories(all: string[]): void {
-    const custom = all.filter(c => !DEFAULT_PACKING_CATEGORIES.includes(c));
-    localStorage.setItem(CATEGORIES_KEY_PREFIX + this.userKey(), JSON.stringify(custom));
-  }
-
-  private loadItems(): PackingItem[] {
-    try {
-      const raw = localStorage.getItem(this.itemsKey());
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private saveItems(items: PackingItem[]): void {
-    localStorage.setItem(this.itemsKey(), JSON.stringify(items));
-  }
-
-  private loadSuggestions(): PackingSuggestion[] {
-    try {
-      const raw = localStorage.getItem(SUGGESTIONS_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private saveSuggestions(items: PackingSuggestion[]): void {
-    localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(items));
+  /** The current user's packing doc ref for the active trip, or null. */
+  private myRef() {
+    const tripId = this.tripContext.activeTripId();
+    const uid    = this.userService.firestoreUser()?.uid;
+    return tripId && uid ? this.packingRef(tripId, uid) : null;
   }
 }
