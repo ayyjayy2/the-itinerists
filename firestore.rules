@@ -1,22 +1,129 @@
 rules_version = '2';
 
+// Trip Planner security rules (TP-9).
+//
+// Access model:
+//   • Trip data is readable/writable only by *members* of that trip (a member
+//     is a doc at trips/{tripId}/members/{uid}).
+//   • Privileged member actions (role changes, removing others) are owner-only.
+//   • Per-user docs (users, userTrips) are self-owned; app admins may also touch
+//     them for member management.
+//
+// Deliberate public-read exceptions, forced by the invite/register flow, which
+// runs *before* the Firebase Auth account exists (see AuthService.register):
+//   • inviteIndex/{code}            — resolve an invite code → tripId
+//   • trips/{tripId}/invites/{code} — validate the invite before joining
+//   • users                         — username-uniqueness check
+// These expose only low-sensitivity data (codes you must already know, and
+// public profile fields). Credentials live in Firebase Auth, never Firestore.
+//
+// Known relaxation (documented follow-up): a signed-in user can self-create
+// their own trips/{tripId}/members/{uid} doc, so membership isn't cryptographically
+// gated on holding a valid invite — it relies on tripIds being unguessable random
+// ids. True enforcement would move join to a server-side callable. Tracked for later.
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // App logs: write-only from the client.
-    // The app writes structured error/traffic logs here; nothing should be able
-    // to read, modify, or delete them via the client SDK.
-    // To view logs, use the Firebase Console or Admin SDK.
+    // ── helpers ────────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function uid() {
+      return request.auth.uid;
+    }
+    function isMember(tripId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/trips/$(tripId)/members/$(uid()));
+    }
+    function isOwner(tripId) {
+      return isMember(tripId)
+        && get(/databases/$(database)/documents/trips/$(tripId)/members/$(uid())).data.role == 'owner';
+    }
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(uid()))
+        && get(/databases/$(database)/documents/users/$(uid())).data.isAdmin == true;
+    }
+
+    // ── App logs: write-only from the client (unchanged) ───────────────────
     match /_appLogs/{log} {
       allow create: if true;
       allow read, update, delete: if false;
     }
 
-    // All other documents: open read/write until Firebase Auth is added.
-    // TODO (IRE-10): lock down to allowlisted emails once Google OAuth is wired up.
-    match /{document=**} {
-      allow read, write: if true;
+    // ── User profiles ──────────────────────────────────────────────────────
+    // Public read: registration checks username uniqueness while unauthenticated,
+    // and members render each other's name/avatar. Only public profile fields
+    // live here. You may write only your own doc; admins may also edit (disable).
+    match /users/{userId} {
+      allow read:   if true;
+      allow create: if isSignedIn() && userId == uid();
+      allow update, delete: if userId == uid() || isAdmin();
     }
 
+    // ── Per-user trip index ────────────────────────────────────────────────
+    // Your own list of trips. Admins may edit it too, because removing a member
+    // updates the removed user's index (TripService.removeMember).
+    match /userTrips/{userId} {
+      allow read:  if userId == uid();
+      allow write: if userId == uid() || isAdmin();
+    }
+
+    // ── Global invite lookup ───────────────────────────────────────────────
+    // Public read so an invite code resolves to a trip before sign-in. Written
+    // by a signed-in member when generating/rescinding an invite.
+    match /inviteIndex/{code} {
+      allow read:  if true;
+      allow write: if isSignedIn();
+    }
+
+    // ── Shared geocode cache (non-sensitive, any signed-in user) ────────────
+    match /geocache/{doc} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── Legacy per-user aggregates keyed by name (any signed-in user) ───────
+    match /userExpenses/{name} {
+      allow read, write: if isSignedIn();
+    }
+    match /outfitPhotos/{key} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── Trips and their sub-collections ────────────────────────────────────
+    match /trips/{tripId} {
+      allow read:   if isMember(tripId);
+      allow create: if isSignedIn() && request.resource.data.createdBy == uid();
+      // Members maintain shared trip fields (memberCount, dates, ownership
+      // transfer). Deletion happens when the last member leaves (purge).
+      allow update, delete: if isMember(tripId);
+
+      // Members: owners manage roles/removal; you can add or remove *yourself*
+      // (self-join via invite, self-leave).
+      match /members/{memberId} {
+        allow read:   if isMember(tripId);
+        allow create: if isSignedIn() && (memberId == uid() || isOwner(tripId) || isAdmin());
+        allow update, delete: if memberId == uid() || isOwner(tripId) || isAdmin();
+      }
+
+      // Invites: public read (pre-auth join resolves the code); members manage.
+      match /invites/{code} {
+        allow read:  if true;
+        allow write: if isMember(tripId);
+      }
+
+      // Collaborative + per-user trip data. Enumerated so the wildcard can't
+      // over-grant on the members/invites sub-collections above.
+      match /{sub}/{doc} {
+        allow read, write: if isMember(tripId) && sub in [
+          'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
+          'flights', 'outfits', 'dayLabels', 'packing', 'packingSuggestions',
+          'activityLog'
+        ];
+      }
+    }
+
+    // Everything else is denied by default (no catch-all allow).
   }
 }
