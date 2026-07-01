@@ -283,8 +283,10 @@ export class TripService {
         }
         this.logActivity(tripId, 'member_left', user, user);
         await this.removePersonalData(tripId, user);
-        await deleteDoc(this.memberRef(tripId, user.uid));
+        // Decrement before dropping our own membership: once the member doc is
+        // gone, security rules no longer treat us as a member of this trip.
         await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(-1) });
+        await deleteDoc(this.memberRef(tripId, user.uid));
       }
 
       // Drop the trip from the leaver's index and pick a replacement active trip.
@@ -360,7 +362,7 @@ export class TripService {
    * member leaves — there is no global "delete for everyone" action (TP-24).
    */
   private async purgeTripData(tripId: string): Promise<void> {
-    for (const name of TripService.SUBCOLLECTIONS) {
+    const deleteCollection = async (name: string): Promise<void> => {
       const snap = await getDocs(collection(this.firestore, 'trips', tripId, name));
       let batch = writeBatch(this.firestore);
       let ops = 0;
@@ -371,8 +373,16 @@ export class TripService {
         if (ops >= 400) { await batch.commit(); batch = writeBatch(this.firestore); ops = 0; }
       }
       if (ops > 0) await batch.commit();
+    };
+
+    // Delete everything except members first, then the trip doc — security
+    // rules require the caller to still be a member for all of these writes.
+    for (const name of TripService.SUBCOLLECTIONS) {
+      if (name !== 'members') await deleteCollection(name);
     }
     await deleteDoc(doc(this.firestore, 'trips', tripId));
+    // Members last: removing our own member doc revokes our own access.
+    await deleteCollection('members');
   }
 
   /** Promote another member to owner and demote the current owner to member. */
