@@ -55,7 +55,20 @@ being an unguessable 20-char random id. True enforcement would move the join
 into a server-side callable that validates the invite before writing membership.
 Tracked as a follow-up; out of scope for TP-9.
 
-## Validation & deploy
+## Validation
+
+`test/firestore-rules.test.mjs` is a rules-unit-testing suite that runs against
+the local Firestore emulator (no production impact) and asserts both ALLOW and
+DENY outcomes for every collection/actor combination — the deny cases are what
+guard against an over-permissive rule, which happy-path E2E can't catch.
+
+```bash
+npm run test:rules   # requires a JDK on PATH (Firestore emulator)
+```
+
+Current status: **48/48 passing.**
+
+## Deploy
 
 Rules are **not** deployed by merging (no CI deploy is configured). Deploy is a
 manual, gated step:
@@ -64,13 +77,7 @@ manual, gated step:
 firebase deploy --only firestore:rules
 ```
 
-Recommended validation before deploy — run the Firestore emulator locally
-(requires a JDK) and exercise register → join → CRUD → leave, **or** deploy and
-immediately run the browser verification scripts, rolling back if anything
-breaks:
-
-```bash
-firebase deploy --only firestore:rules   # roll forward
-# …run verify-tp*.mjs (register/join/CRUD/leave cover every rule path)…
-# firebase deploy re-applies the previous rules file to roll back
-```
+After deploying, a quick live smoke with the browser verification scripts
+(`verify-tp*.mjs` — they cover register → join → CRUD → leave) confirms the real
+app still works end-to-end; re-running `firebase deploy` re-applies the previous
+rules file to roll back.

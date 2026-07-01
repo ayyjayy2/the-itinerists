@@ -57,3 +57,8 @@ scripts/serviceAccountKey.json
 # Generated environment files (built from .env via: npm run gen-env)
 src/environments/environment.ts
 src/environments/environment.prod.ts
+
+# Firebase emulator logs
+firestore-debug.log
+ui-debug.log
+firebase-debug.log
