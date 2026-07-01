@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
+import { TripService } from '../../services/trip.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 
 @Component({
@@ -15,6 +16,7 @@ import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 export class LoginComponent {
   private authService = inject(AuthService);
   private userService = inject(UserService);
+  private tripService = inject(TripService);
   private router      = inject(Router);
 
   readonly version   = APP_VERSION;
@@ -38,8 +40,10 @@ export class LoginComponent {
       return;
     }
     try {
-      await this.userService.waitForUser();
-      this.router.navigate(['/home']);
+      const user = await this.userService.waitForUser();
+      // New here / no trips yet? Guide them through setup first (TP-25).
+      const trips = user.uid ? await this.tripService.getUserTrips(user.uid) : [];
+      this.router.navigate([trips.length === 0 ? '/get-started' : '/home']);
     } catch (err) {
       console.error('[Login] Profile load error:', err);
       this.error.set('Signed in but could not load profile. Please refresh.');
