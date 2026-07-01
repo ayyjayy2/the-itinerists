@@ -109,7 +109,9 @@ export class AppComponent implements OnInit {
   }
 
   isAuthPage(): boolean {
-    return this.router.url.startsWith('/login') || this.router.url.startsWith('/join');
+    const url = this.router.url;
+    // Full-screen, no-nav layout for the auth + onboarding screens (TP-25).
+    return ['/login', '/join', '/signup', '/get-started'].some(p => url.startsWith(p));
   }
 
   async logout(): Promise<void> {
