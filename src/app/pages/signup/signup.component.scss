@@ -87,6 +87,13 @@
 
     &:hover { text-decoration: underline; }
   }
+
+  .auth-hint {
+    margin-bottom: 0.5rem;
+    font-size: 0.82rem;
+    font-style: italic;
+    opacity: 0.85;
+  }
 }
 
 .input-wrap {
