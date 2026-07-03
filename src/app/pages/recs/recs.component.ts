@@ -7,151 +7,7 @@ import { Rec, RecDoc } from '../../models/trip.models';
 
 const CATEGORIES = ['Food', 'Drink', 'Places', 'Activities', 'Tips', 'Culture'];
 
-const SEED_RECS: Rec[] = [
-  // ── Food ──────────────────────────────────────────────────────────────────
-  {
-    category: 'Food',
-    title: 'The Grey',
-    description: 'Upscale Southern cuisine inside a beautifully restored 1938 Greyhound bus terminal. One of the best restaurants in the South.',
-    extra: 'Reservations strongly recommended — book well in advance.',
-  },
-  {
-    category: 'Food',
-    title: "Mrs. Wilkes' Dining Room",
-    description: 'Famous family-style Southern cooking — fried chicken, collard greens, cornbread, and more shared at communal tables.',
-    extra: 'Cash only. Expect a line outside — it moves fast and is worth every minute.',
-  },
-  {
-    category: 'Food',
-    title: 'Savannah Candy Kitchen',
-    description: 'Iconic Savannah shop famous for fresh Georgia peach pralines made right in front of you.',
-    extra: 'Multiple locations downtown. The pralines are the move.',
-  },
-  {
-    category: 'Food',
-    title: "Huey's on the River",
-    description: 'New Orleans-style breakfast and brunch on River Street with great waterfront views.',
-    extra: "The beignets are excellent. Perfect spot for a lazy morning.",
-  },
-
-  // ── Drink ─────────────────────────────────────────────────────────────────
-  {
-    category: 'Drink',
-    title: 'Ghost Coast Distillery',
-    description: "Savannah's first distillery, known for their gin. Great cocktails and tours of the distillery available.",
-    extra: 'Tours run most days — check their schedule. The cocktail menu is creative.',
-  },
-  {
-    category: 'Drink',
-    title: 'Rocks on the Roof',
-    description: 'Rooftop bar at The Bohemian Hotel with stunning views of the Savannah River.',
-    extra: 'Best at sunset. Can get busy on weekends — grab a spot early.',
-  },
-  {
-    category: 'Drink',
-    title: 'Prohibition',
-    description: 'Speakeasy-style cocktail bar on Bay Street with a vintage Prohibition-era vibe and excellent craft drinks.',
-    extra: 'The old-fashioned and aviation cocktails are standouts.',
-  },
-  {
-    category: 'Drink',
-    title: 'Congress Street Social Club',
-    description: 'Laid-back, unpretentious bar popular with locals. Good beer selection and a great neighborhood feel.',
-    extra: 'A nice break from the more touristy spots on River Street.',
-  },
-
-  // ── Places ────────────────────────────────────────────────────────────────
-  {
-    category: 'Places',
-    title: 'Forsyth Park',
-    description: 'The crown jewel of Savannah — a beautiful 30-acre park anchored by the famous white cast-iron fountain.',
-    extra: 'Perfect for a morning walk. Farmers market on Saturdays.',
-  },
-  {
-    category: 'Places',
-    title: 'Bonaventure Cemetery',
-    description: 'A hauntingly beautiful Victorian cemetery draped in Spanish moss, made famous by "Midnight in the Garden of Good and Evil."',
-    extra: 'Free to visit. Best explored in the late afternoon when the light filters through the oaks.',
-  },
-  {
-    category: 'Places',
-    title: 'River Street',
-    description: 'Historic cobblestone waterfront strip lined with shops, restaurants, bars, and great views of the river.',
-    extra: 'Watch for the massive container ships passing through — it\'s surprisingly close.',
-  },
-  {
-    category: 'Places',
-    title: 'The Historic Squares',
-    description: 'Savannah has 22 park-like squares spread throughout the historic district, each with its own character and history.',
-    extra: 'Chippewa, Madison, and Lafayette squares are fan favorites. Pick up a map and wander.',
-  },
-
-  // ── Activities ────────────────────────────────────────────────────────────
-  {
-    category: 'Activities',
-    title: 'Ghost Tour',
-    description: 'Savannah is widely considered one of the most haunted cities in America. Evening ghost tours are atmospheric and genuinely fun.',
-    extra: 'Several companies offer tours — walking and trolley formats available.',
-  },
-  {
-    category: 'Activities',
-    title: 'Old Town Trolley Tour',
-    description: 'Hop-on, hop-off narrated trolley tour covering all major landmarks. Great for getting oriented on day one.',
-    extra: 'Tickets are good all day. Start early to make the most of it.',
-  },
-  {
-    category: 'Activities',
-    title: 'Walk the Squares',
-    description: "One of the best ways to experience Savannah is simply to walk — the grid of squares makes it easy and endlessly interesting.",
-    extra: 'Pick a square, find a bench, people-watch. No agenda needed.',
-  },
-
-  // ── Tips ──────────────────────────────────────────────────────────────────
-  {
-    category: 'Tips',
-    title: 'Open Container Law',
-    description: 'Savannah allows alcoholic drinks in plastic cups on public streets in the downtown historic district.',
-    extra: 'Must be in a plastic cup — no glass. Most bars will pour your drink into one to go. 🎉',
-  },
-  {
-    category: 'Tips',
-    title: 'Parking',
-    description: 'Street parking can be tricky. City garages off Congress Street and Bryan Street are your best bets.',
-    extra: 'The parking garage at State Street and Abercorn is convenient for the historic district.',
-  },
-  {
-    category: 'Tips',
-    title: 'Weather in April',
-    description: 'Savannah in April is warm and can be humid. Expect highs in the 70s–80s°F.',
-    extra: 'Light breathable layers, sunscreen, and comfortable walking shoes are a must.',
-  },
-  {
-    category: 'Tips',
-    title: 'Use the Squares as Landmarks',
-    description: 'Navigating by square name is very Savannah. "Meet me at Chippewa Square" is cleaner than any address.',
-    extra: 'Download the Savannah squares map before you go — it\'s a game changer.',
-  },
-
-  // ── Culture ───────────────────────────────────────────────────────────────
-  {
-    category: 'Culture',
-    title: 'Midnight in the Garden of Good and Evil',
-    description: 'The 1994 bestselling book (and 1997 Clint Eastwood film) set in Savannah is basically required reading before the trip.',
-    extra: 'The Mercer Williams House on Monterey Square is a key landmark from the book.',
-  },
-  {
-    category: 'Culture',
-    title: 'SCAD — Savannah College of Art and Design',
-    description: 'SCAD has a massive presence throughout downtown Savannah, with galleries, cafes, and renovated historic buildings all over.',
-    extra: 'The SCAD Museum of Art on Martin Luther King Jr. Blvd is free and worth a visit.',
-  },
-  {
-    category: 'Culture',
-    title: 'Southern Hospitality',
-    description: "Savannah locals are genuinely warm and friendly. Don't be surprised if strangers strike up a full conversation.",
-    extra: 'Slow down, say hello, and lean into it — it\'s one of the best parts of the trip.',
-  },
-];
+type GroupedRecs = [string, RecDoc[]][];
 
 @Component({
   selector: 'app-recs',
@@ -175,21 +31,17 @@ export class RecsComponent {
   customCategory    = '';
   useCustomCategory = false;
 
-  // Seed + user-added combined
-  readonly allRecs = computed((): Array<Rec & { id?: string; isUserAdded: boolean }> => {
-    const seed = SEED_RECS.map(r => ({ ...r, isUserAdded: false }));
-    const user = this.recsService.recs().map(r => ({ ...r, isUserAdded: true }));
-    return [...seed, ...user];
-  });
+  // Recs are entirely user-added, per trip (no hardcoded seed content).
+  readonly allRecs = computed((): RecDoc[] => this.recsService.recs());
 
-  readonly filtered = computed(() => {
+  readonly filtered = computed((): RecDoc[] => {
     const cat = this.selectedCategory();
     return cat === 'All' ? this.allRecs() : this.allRecs().filter(r => r.category === cat);
   });
 
-  readonly groupedByCat = computed((): [string, Array<Rec & { id?: string; isUserAdded: boolean }>][] => {
+  readonly groupedByCat = computed((): GroupedRecs => {
     const order = [...CATEGORIES];
-    const groups: Record<string, Array<Rec & { id?: string; isUserAdded: boolean }>> = {};
+    const groups: Record<string, RecDoc[]> = {};
     for (const r of this.filtered()) {
       if (!groups[r.category]) groups[r.category] = [];
       groups[r.category].push(r);
@@ -237,12 +89,10 @@ export class RecsComponent {
     this.showForm.set(false);
   }
 
-  canDelete(rec: Rec & { id?: string; isUserAdded: boolean }): boolean {
-    if (!rec.isUserAdded || !rec.id) return false;
-    const uid = this.currentUser()?.uid;
+  canDelete(rec: RecDoc): boolean {
+    if (!rec.id) return false;
     if (this.isAdmin()) return true;
-    const full = this.recsService.recs().find(r => r.id === rec.id);
-    return full?.addedByUid === uid;
+    return rec.addedByUid === this.currentUser()?.uid;
   }
 
   async deleteRec(id: string): Promise<void> {
