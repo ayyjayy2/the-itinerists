@@ -2,7 +2,7 @@
   <div class="onboard-card">
 
     <div class="onboard-header">
-      <div class="onboard-emoji">🌿</div>
+      <app-brand [mark]="50" [showWordmark]="false" />
       <h1>Hey{{ currentUser()?.name ? ', ' + currentUser()!.name : '' }}!</h1>
       <p class="onboard-sub">Let's get your first trip going.</p>
     </div>

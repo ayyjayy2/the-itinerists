@@ -4,7 +4,7 @@
     <!-- Validating -->
     @if (step() === 'validating') {
       <div class="auth-header">
-        <div class="auth-emoji">🌿</div>
+        <app-brand [mark]="48" [showWordmark]="false" />
         <h1>Joining the Trip</h1>
         <p class="auth-sub">Validating your invite code…</p>
       </div>
@@ -16,7 +16,7 @@
     <!-- Invalid code -->
     @if (step() === 'invalid') {
       <div class="auth-header">
-        <div class="auth-emoji">🌿</div>
+        <app-brand [mark]="48" [showWordmark]="false" />
         <h1>Trip Planner</h1>
       </div>
       <div class="auth-error">{{ codeError() }}</div>
@@ -28,7 +28,7 @@
     <!-- Join form -->
     @if (step() === 'form') {
       <div class="auth-header">
-        <div class="auth-emoji">🌿</div>
+        <app-brand [mark]="48" [showWordmark]="false" />
         <h1>Join the Trip</h1>
         <p class="auth-sub">Set up your profile</p>
       </div>

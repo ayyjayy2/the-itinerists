@@ -2,6 +2,7 @@ import { Component, OnInit, inject, computed, effect, signal } from '@angular/co
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from './shared/icon/icon.component';
+import { BrandComponent } from './shared/brand/brand.component';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
 import { UserService } from './services/user.service';
@@ -28,7 +29,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

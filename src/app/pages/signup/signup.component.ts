@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
+import { BrandComponent } from '../../shared/brand/brand.component';
 
 const EMOJI_OPTIONS = [
   '🌸','🌿','✨','🦋','🐘','🌼','🍑','🌺','🦊','🐬',
@@ -17,7 +18,7 @@ const EMOJI_OPTIONS = [
  */
 @Component({
   selector: 'app-signup',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [BrandComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.scss',
 })

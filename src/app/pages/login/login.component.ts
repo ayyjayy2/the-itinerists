@@ -6,10 +6,11 @@ import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
+import { BrandComponent } from '../../shared/brand/brand.component';
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [BrandComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
