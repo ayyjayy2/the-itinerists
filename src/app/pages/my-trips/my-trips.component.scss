@@ -80,8 +80,23 @@
   color: var(--text);
 }
 
-.trip-line { color: var(--text); font-size: 0.95rem; }
-.trip-meta { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem; }
+.trip-line {
+  color: var(--text);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  app-icon { color: var(--text-muted); flex-shrink: 0; }
+}
+.trip-meta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  app-icon { flex-shrink: 0; }
+}
 
 .badge {
   font-size: 0.7rem;

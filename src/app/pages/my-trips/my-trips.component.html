@@ -24,14 +24,14 @@
               @if (isActive(trip)) { <span class="badge badge-active">Active</span> }
               @if (trip.archived) { <span class="badge badge-archived">Archived</span> }
             </div>
-            <div class="trip-line">📍 {{ trip.destination }}</div>
-            <div class="trip-line">🗓️ {{ dateRange(trip) }}</div>
-            <div class="trip-meta">👥 {{ trip.memberCount }} · {{ trip.currency }}</div>
+            <div class="trip-line"><app-icon name="pin" [size]="15" /> {{ trip.destination }}</div>
+            <div class="trip-line"><app-icon name="itinerary" [size]="15" /> {{ dateRange(trip) }}</div>
+            <div class="trip-meta"><app-icon name="people" [size]="15" /> {{ trip.memberCount }} · {{ trip.currency }}</div>
           </button>
           <button class="btn btn-ghost btn-sm invite-btn" (click)="invite(trip)" [disabled]="invitingId() === trip.id">
             @if (copiedId() === trip.id) { ✓ Invite link copied }
             @else if (invitingId() === trip.id) { Generating… }
-            @else { 🔗 Invite }
+            @else { <app-icon name="link" [size]="14" /> Invite }
           </button>
         </div>
       }
