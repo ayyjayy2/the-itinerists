@@ -1,7 +1,7 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h2>🧾 My Expenses</h2>
+      <h2><app-icon name="expenses" [size]="22" /> My Expenses</h2>
       <p class="user-sub">{{ currentUser()?.name }}'s personal log</p>
     </div>
     <div class="total-chip" [class.total-empty]="total() === 0">

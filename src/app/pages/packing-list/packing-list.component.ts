@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { PackingService } from '../../services/packing.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 type TabType = 'list' | 'suggestions' | 'send';
 
 @Component({
   selector: 'app-packing-list',
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './packing-list.component.html',
   styleUrl: './packing-list.component.scss'
 })

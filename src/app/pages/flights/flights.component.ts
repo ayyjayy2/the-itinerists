@@ -6,6 +6,7 @@ import { UsersService } from '../../services/users.service';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { FlightDoc } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 // ── View models ───────────────────────────────────────────────────────────────
 
@@ -69,7 +70,7 @@ function emptyForm(): FlightForm {
 
 @Component({
   selector: 'app-flights',
-  imports: [CommonModule, NgTemplateOutlet, FormsModule],
+  imports: [IconComponent, CommonModule, NgTemplateOutlet, FormsModule],
   templateUrl: './flights.component.html',
   styleUrl: './flights.component.scss'
 })

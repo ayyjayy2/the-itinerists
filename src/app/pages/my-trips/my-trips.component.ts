@@ -6,12 +6,13 @@ import { TripContextService } from '../../services/trip-context.service';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { TripDoc } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 @Component({
   selector: 'app-my-trips',
-  imports: [CommonModule],
+  imports: [IconComponent, CommonModule],
   templateUrl: './my-trips.component.html',
   styleUrl: './my-trips.component.scss',
 })

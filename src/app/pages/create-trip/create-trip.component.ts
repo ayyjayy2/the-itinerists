@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TripService, CreateTripInput } from '../../services/trip.service';
 import { CURRENCIES } from '../../data/currencies';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-create-trip',
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './create-trip.component.html',
   styleUrl: './create-trip.component.scss',
 })

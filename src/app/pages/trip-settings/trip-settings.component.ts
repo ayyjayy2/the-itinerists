@@ -6,13 +6,14 @@ import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
 import { ThemeService, ThemePref } from '../../services/theme.service';
 import { TripDoc, TripMember, ActivityLogEntry } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 interface CurrencyOption { code: string; label: string; }
 interface HideablePage { key: string; label: string; icon: string; }
 
 @Component({
   selector: 'app-trip-settings',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [IconComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './trip-settings.component.html',
   styleUrl: './trip-settings.component.scss',
 })
