@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Caprasimo&family=Baloo+2:wght@700;800&display=swap">
+<style>
+body{margin:0;background:#EFE9DD;font-family:'Nunito',system-ui,sans-serif}
+a{color:#6A8F5E;text-decoration:none}a:hover{color:#8BAF7C}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#3A3020;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:800 14px/1.2 'Nunito',sans-serif;color:#3A3020}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(58,48,32,.1);color:#3A3020;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:700 12px/1.3 'Nunito',sans-serif;color:rgba(58,48,32,.6);max-width:440px}
+.dv-opt:target .dv-oid{background:#6A8F5E;color:#fff}
+.dv-sechd{font:800 20px 'Nunito',sans-serif;color:#3A3020;margin:34px 0 4px}
+.dv-secsub{font:600 13px 'Nunito',sans-serif;color:rgba(58,48,32,.55);margin:0 0 18px;max-width:640px;line-height:1.5}
+.dv-next{margin:26px 0 0;font:600 12.5px/1.6 'Nunito',sans-serif;color:rgba(58,48,32,.55)}
+.sw{display:flex;flex-direction:column;gap:4px;align-items:center}
+.sw i{display:block;width:52px;height:52px;border-radius:16px;border:1px solid rgba(0,0,0,.08)}
+.sw b{font:800 10px ui-monospace,monospace;color:#3A3020}
+.sw span{font:700 10.5px 'Nunito';color:rgba(58,48,32,.55)}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t4">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Passport-stamp icon — 6 variations</span></div>
+<div class="dv-secsub">Riffs on <a class="dv-oid" href="#3c">3c</a>. Each shown as iOS rounded-square (large), Android round, and small-size legibility check.</div>
+<div class="dv-opts">
+
+  <div class="dv-opt" id="4a"><div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Classic — dashed ring + inner ring + leaf (3c refined, heavier ink)</div>
+    <div style="width:270px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:22px;display:flex;align-items:flex-end;gap:14px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="width:84px;height:84px;border-radius:20px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center;box-shadow:0 4px 14px rgba(139,175,124,.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#5E7F4C" stroke-width="1.9" stroke-linecap="round" style="width:54px;height:54px"><circle cx="12" cy="12" r="9.4" stroke-dasharray="2.6 2.4"/><circle cx="12" cy="12" r="6.4"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1.6-2.2 2.1-3.7 4.4-4.3-2.1 1.2-3.4 2.8-3.8 4.8 3.5.5 5.5-2 5.5-5.6z" fill="#5E7F4C" stroke="none"/></svg></div>
+      <div style="width:64px;height:64px;border-radius:50%;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#5E7F4C" stroke-width="1.9" stroke-linecap="round" style="width:40px;height:40px"><circle cx="12" cy="12" r="9.4" stroke-dasharray="2.6 2.4"/><circle cx="12" cy="12" r="6.4"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1.6-2.2 2.1-3.7 4.4-4.3-2.1 1.2-3.4 2.8-3.8 4.8 3.5.5 5.5-2 5.5-5.6z" fill="#5E7F4C" stroke="none"/></svg></div>
+      <div style="width:26px;height:26px;border-radius:8px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#5E7F4C" stroke-width="2.6" style="width:17px;height:17px"><circle cx="12" cy="12" r="8.8" stroke-dasharray="3 2.8"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1 1-2.8 2.6-4.2 6.1-5.1z" fill="#5E7F4C" stroke="none"/></svg></div>
+    </div>
+  </div>
+
+  <div class="dv-opt" id="4b"><div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>Lettered ring — "GETAWAY CLUB · EST 2026 ·" set around the stamp</div>
+    <div style="width:270px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:22px;display:flex;align-items:flex-end;gap:14px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="width:84px;height:84px;border-radius:20px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center;box-shadow:0 4px 14px rgba(139,175,124,.25)"><svg viewBox="0 0 48 48" fill="none" style="width:66px;height:66px"><defs><path id="tc4b" d="M24 7.5a16.5 16.5 0 1 1 0 33 16.5 16.5 0 0 1 0-33"/></defs><circle cx="24" cy="24" r="22" stroke="#5E7F4C" stroke-width="1.7"/><circle cx="24" cy="24" r="11.6" stroke="#5E7F4C" stroke-width="1.7"/><text font-family="Nunito,sans-serif" font-size="5.4" font-weight="800" fill="#5E7F4C" letter-spacing="1.1"><textPath href="#tc4b">GETAWAY CLUB · EST 2026 ·</textPath></text><path d="M29.5 18.8c-6.2 0-9.9 3.3-9.9 8.3 1-3.6 3.4-5.9 7.2-7-3.4 2-5.5 4.5-6.2 7.8 5.7.9 8.9-3.3 8.9-9.1z" fill="#5E7F4C"/></svg></div>
+      <div style="width:64px;height:64px;border-radius:50%;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 48 48" fill="none" style="width:50px;height:50px"><defs><path id="tc4b2" d="M24 7.5a16.5 16.5 0 1 1 0 33 16.5 16.5 0 0 1 0-33"/></defs><circle cx="24" cy="24" r="22" stroke="#5E7F4C" stroke-width="1.7"/><circle cx="24" cy="24" r="11.6" stroke="#5E7F4C" stroke-width="1.7"/><text font-family="Nunito,sans-serif" font-size="5.4" font-weight="800" fill="#5E7F4C" letter-spacing="1.1"><textPath href="#tc4b2">GETAWAY CLUB · EST 2026 ·</textPath></text><path d="M29.5 18.8c-6.2 0-9.9 3.3-9.9 8.3 1-3.6 3.4-5.9 7.2-7-3.4 2-5.5 4.5-6.2 7.8 5.7.9 8.9-3.3 8.9-9.1z" fill="#5E7F4C"/></svg></div>
+      <div style="width:26px;height:26px;border-radius:8px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#5E7F4C" stroke-width="2.4" style="width:17px;height:17px"><circle cx="12" cy="12" r="9"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1 1-2.8 2.6-4.2 6.1-5.1z" fill="#5E7F4C" stroke="none"/></svg></div>
+    </div>
+  </div>
+
+  <div class="dv-opt" id="4c"><div class="dv-olabel"><a class="dv-oid" href="#4c">4c</a>Perforated — postage-dot ring, like a stamp torn from the sheet</div>
+    <div style="width:270px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:22px;display:flex;align-items:flex-end;gap:14px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="width:84px;height:84px;border-radius:20px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center;box-shadow:0 4px 14px rgba(139,175,124,.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#5E7F4C" style="width:54px;height:54px"><circle cx="12" cy="12" r="9.6" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="0.1 3.1"/><circle cx="12" cy="12" r="7.2" stroke-width="1.7"/><path d="M15.7 8.3c-4.2 0-6.6 2.2-6.6 5.5.6-2.4 2.3-4 4.8-4.7-2.3 1.3-3.7 3-4.1 5.2 3.8.6 5.9-2.2 5.9-6z" fill="#5E7F4C" stroke="none"/></svg></div>
+      <div style="width:64px;height:64px;border-radius:50%;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#5E7F4C" style="width:40px;height:40px"><circle cx="12" cy="12" r="9.6" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="0.1 3.1"/><circle cx="12" cy="12" r="7.2" stroke-width="1.7"/><path d="M15.7 8.3c-4.2 0-6.6 2.2-6.6 5.5.6-2.4 2.3-4 4.8-4.7-2.3 1.3-3.7 3-4.1 5.2 3.8.6 5.9-2.2 5.9-6z" fill="#5E7F4C" stroke="none"/></svg></div>
+      <div style="width:26px;height:26px;border-radius:8px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#5E7F4C" style="width:17px;height:17px"><circle cx="12" cy="12" r="9" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0.1 4"/><path d="M15.7 8.3c-4.2 0-6.6 2.2-6.6 5.5 1.1-3 2.8-4.5 6.6-5.5z" fill="#5E7F4C" stroke="none"/></svg></div>
+    </div>
+  </div>
+
+  <div class="dv-opt" id="4d"><div class="dv-olabel"><a class="dv-oid" href="#4d">4d</a>Tilted oval — the hand-stamped arrival mark, leaf + date line</div>
+    <div style="width:270px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:22px;display:flex;align-items:flex-end;gap:14px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="width:84px;height:84px;border-radius:20px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center;box-shadow:0 4px 14px rgba(139,175,124,.25)"><svg viewBox="0 0 48 48" fill="none" style="width:66px;height:66px"><g transform="rotate(-12 24 24)"><ellipse cx="24" cy="24" rx="20" ry="14" stroke="#5E7F4C" stroke-width="1.8"/><ellipse cx="24" cy="24" rx="16.5" ry="10.8" stroke="#5E7F4C" stroke-width="1.2" stroke-dasharray="2.6 2.2"/><path d="M28.8 17.5c-5.9 0-9.4 3.1-9.4 7.9.9-3.4 3.2-5.6 6.8-6.6-3.3 1.9-5.3 4.3-5.9 7.4 5.5.8 8.5-3.1 8.5-8.7z" fill="#5E7F4C"/><path d="M16 30.5h16" stroke="#5E7F4C" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="1.5 2"/></g></svg></div>
+      <div style="width:64px;height:64px;border-radius:50%;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 48 48" fill="none" style="width:50px;height:50px"><g transform="rotate(-12 24 24)"><ellipse cx="24" cy="24" rx="20" ry="14" stroke="#5E7F4C" stroke-width="1.8"/><ellipse cx="24" cy="24" rx="16.5" ry="10.8" stroke="#5E7F4C" stroke-width="1.2" stroke-dasharray="2.6 2.2"/><path d="M28.8 17.5c-5.9 0-9.4 3.1-9.4 7.9.9-3.4 3.2-5.6 6.8-6.6-3.3 1.9-5.3 4.3-5.9 7.4 5.5.8 8.5-3.1 8.5-8.7z" fill="#5E7F4C"/><path d="M16 30.5h16" stroke="#5E7F4C" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="1.5 2"/></g></svg></div>
+      <div style="width:26px;height:26px;border-radius:8px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 48 48" fill="none" style="width:19px;height:19px"><g transform="rotate(-12 24 24)"><ellipse cx="24" cy="24" rx="20" ry="14" stroke="#5E7F4C" stroke-width="3"/><path d="M28.8 17.5c-5.9 0-9.4 3.1-9.4 7.9 1.5-4.2 4-6.3 9.4-7.9z" fill="#5E7F4C"/></g></svg></div>
+    </div>
+  </div>
+
+  <div class="dv-opt" id="4e"><div class="dv-olabel"><a class="dv-oid" href="#4e">4e</a>Inked solid — filled sage stamp, cream leaf; boldest at tiny sizes</div>
+    <div style="width:270px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:22px;display:flex;align-items:flex-end;gap:14px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="width:84px;height:84px;border-radius:20px;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center;box-shadow:0 4px 14px rgba(106,143,94,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.7" stroke-linecap="round" style="width:54px;height:54px"><circle cx="12" cy="12" r="9.4" stroke-dasharray="2.6 2.4"/><circle cx="12" cy="12" r="6.4"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1.6-2.2 2.1-3.7 4.4-4.3-2.1 1.2-3.4 2.8-3.8 4.8 3.5.5 5.5-2 5.5-5.6z" fill="#FAF6EF" stroke="none"/></svg></div>
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.7" stroke-linecap="round" style="width:40px;height:40px"><circle cx="12" cy="12" r="9.4" stroke-dasharray="2.6 2.4"/><circle cx="12" cy="12" r="6.4"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1.6-2.2 2.1-3.7 4.4-4.3-2.1 1.2-3.4 2.8-3.8 4.8 3.5.5 5.5-2 5.5-5.6z" fill="#FAF6EF" stroke="none"/></svg></div>
+      <div style="width:26px;height:26px;border-radius:8px;background:#6A8F5E;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2.4" style="width:17px;height:17px"><circle cx="12" cy="12" r="8.8" stroke-dasharray="3 2.8"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1 1-2.8 2.6-4.2 6.1-5.1z" fill="#FAF6EF" stroke="none"/></svg></div>
+    </div>
+  </div>
+
+  <div class="dv-opt" id="4f"><div class="dv-olabel"><a class="dv-oid" href="#4f">4f</a>Lavender ink — Dusk Garden's stamp pad; two-color with pink date line</div>
+    <div style="width:270px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:22px;display:flex;align-items:flex-end;gap:14px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="width:84px;height:84px;border-radius:20px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center;box-shadow:0 4px 14px rgba(126,111,168,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#7E6FA8" stroke-width="1.9" stroke-linecap="round" style="width:54px;height:54px"><circle cx="12" cy="12" r="9.4" stroke-dasharray="2.6 2.4"/><circle cx="12" cy="12" r="6.4"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1.6-2.2 2.1-3.7 4.4-4.3-2.1 1.2-3.4 2.8-3.8 4.8 3.5.5 5.5-2 5.5-5.6z" fill="#7E6FA8" stroke="none"/><path d="M8.5 16.8h7" stroke="#D4909A" stroke-width="1.5" stroke-dasharray="1.4 1.8"/></svg></div>
+      <div style="width:64px;height:64px;border-radius:50%;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#7E6FA8" stroke-width="1.9" stroke-linecap="round" style="width:40px;height:40px"><circle cx="12" cy="12" r="9.4" stroke-dasharray="2.6 2.4"/><circle cx="12" cy="12" r="6.4"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1.6-2.2 2.1-3.7 4.4-4.3-2.1 1.2-3.4 2.8-3.8 4.8 3.5.5 5.5-2 5.5-5.6z" fill="#7E6FA8" stroke="none"/><path d="M8.5 16.8h7" stroke="#D4909A" stroke-width="1.5" stroke-dasharray="1.4 1.8"/></svg></div>
+      <div style="width:26px;height:26px;border-radius:8px;background:#B4A6D4;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2.4" style="width:17px;height:17px"><circle cx="12" cy="12" r="8.8" stroke-dasharray="3 2.8"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1 1-2.8 2.6-4.2 6.1-5.1z" fill="#FAF6EF" stroke="none"/></svg></div>
+    </div>
+  </div>
+</div>
+<p class="dv-next">Pick one (e.g. "<a class="dv-oid" href="#4e">4e</a>") and I'll apply it in the app + splash.</p>
+</section>
+
+<section class="dv-turn" id="t3">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Getaway Club adopted (working name) · new icon options · finance rebuilt on your real trip logic</span></div>
+
+<div class="dv-sechd">Getaway Club — icon, take 2</div>
+<div class="dv-secsub">The sun badge is out. Three replacements built on travel objects with the leaf as a detail; <a class="dv-oid" href="#3a">3a</a> is applied in the app (header, login, sidebar).</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="3a"><div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Suitcase + leaf sticker — packed and ready · ★ applied</div>
+    <div style="width:300px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:24px;display:flex;align-items:flex-end;gap:14px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="text-align:center"><div style="width:84px;height:84px;border-radius:20px;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center;box-shadow:0 4px 14px rgba(106,143,94,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><rect x="4" y="7.5" width="16" height="12.5" rx="3"/><path d="M9.5 7.5V6a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 6v1.5"/><path d="M16 10.8c-3.4 0-5.4 1.8-5.4 4.5.5-2 1.9-3.3 4-3.9-1.9 1.1-3 2.5-3.3 4.3 3.1.4 4.7-1.8 4.7-4.9z" fill="#FAF6EF" stroke="none"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">iOS</div></div>
+      <div style="text-align:center"><div style="width:84px;height:84px;border-radius:50%;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px"><rect x="4" y="7.5" width="16" height="12.5" rx="3"/><path d="M9.5 7.5V6a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 6v1.5"/><path d="M16 10.8c-3.4 0-5.4 1.8-5.4 4.5.5-2 1.9-3.3 4-3.9-1.9 1.1-3 2.5-3.3 4.3 3.1.4 4.7-1.8 4.7-4.9z" fill="#FAF6EF" stroke="none"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">Android</div></div>
+      <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><rect x="4" y="7.5" width="16" height="12.5" rx="3"/><path d="M16 10.8c-3.4 0-5.4 1.8-5.4 4.5.5-2 1.9-3.3 4-3.9-1.9 1.1-3 2.5-3.3 4.3 3.1.4 4.7-1.8 4.7-4.9z" fill="#FAF6EF" stroke="none"/></svg></div>
+      <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2.4" style="width:14px;height:14px"><rect x="4" y="7.5" width="16" height="12.5" rx="3"/></svg></div>
+    </div>
+  </div>
+  <div class="dv-opt" id="3b"><div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Luggage tag + leaf — the "add her to the club" invite object</div>
+    <div style="width:300px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:24px;display:flex;align-items:flex-end;gap:14px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="text-align:center"><div style="width:84px;height:84px;border-radius:20px;background:#B4A6D4;display:grid;place-items:center;box-shadow:0 4px 14px rgba(126,111,168,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><path d="M7.5 6.5 13 3.8a2 2 0 0 1 2.6.9l3.6 6.6a2 2 0 0 1-.8 2.7l-5.5 2.7a2 2 0 0 1-2.6-.9L6.7 9.2a2 2 0 0 1 .8-2.7z"/><circle cx="10.6" cy="7.4" r="1.1"/><path d="M10.6 7.4 4.8 12.2"/><path d="M16.4 8.7c-2.7 0-4.3 1.4-4.3 3.6.4-1.6 1.5-2.6 3.2-3.1-1.5.9-2.4 2-2.7 3.4 2.5.3 3.8-1.4 3.8-3.9z" fill="#FAF6EF" stroke="none"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">iOS</div></div>
+      <div style="text-align:center"><div style="width:84px;height:84px;border-radius:50%;background:#B4A6D4;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px"><path d="M7.5 6.5 13 3.8a2 2 0 0 1 2.6.9l3.6 6.6a2 2 0 0 1-.8 2.7l-5.5 2.7a2 2 0 0 1-2.6-.9L6.7 9.2a2 2 0 0 1 .8-2.7z"/><circle cx="10.6" cy="7.4" r="1.1"/><path d="M10.6 7.4 4.8 12.2"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">Android</div></div>
+      <div style="width:40px;height:40px;border-radius:10px;background:#B4A6D4;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M7.5 6.5 13 3.8a2 2 0 0 1 2.6.9l3.6 6.6a2 2 0 0 1-.8 2.7l-5.5 2.7a2 2 0 0 1-2.6-.9L6.7 9.2a2 2 0 0 1 .8-2.7z"/><path d="M10.6 7.4 4.8 12.2"/></svg></div>
+      <div style="width:24px;height:24px;border-radius:50%;background:#B4A6D4;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2.4" style="width:14px;height:14px"><path d="M7.5 6.5 13 3.8a2 2 0 0 1 2.6.9l3.6 6.6a2 2 0 0 1-.8 2.7l-5.5 2.7a2 2 0 0 1-2.6-.9L6.7 9.2a2 2 0 0 1 .8-2.7z"/></svg></div>
+    </div>
+  </div>
+  <div class="dv-opt" id="3c"><div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a>Passport stamp — dashed ring, leaf at center; collect-the-trips energy</div>
+    <div style="width:300px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:24px;display:flex;align-items:flex-end;gap:14px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="text-align:center"><div style="width:84px;height:84px;border-radius:20px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center;box-shadow:0 4px 14px rgba(139,175,124,.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#6A8F5E" stroke-width="1.6" stroke-linecap="round" style="width:52px;height:52px"><circle cx="12" cy="12" r="9.2" stroke-dasharray="2.4 2.6"/><circle cx="12" cy="12" r="6.6"/><path d="M15.5 8.5c-4 0-6.3 2.1-6.3 5.3.6-2.3 2.2-3.8 4.6-4.5-2.2 1.3-3.5 2.9-3.9 5 3.6.5 5.6-2.1 5.6-5.8z" fill="#6A8F5E" stroke="none"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">iOS</div></div>
+      <div style="text-align:center"><div style="width:84px;height:84px;border-radius:50%;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#6A8F5E" stroke-width="1.6" stroke-linecap="round" style="width:48px;height:48px"><circle cx="12" cy="12" r="9.2" stroke-dasharray="2.4 2.6"/><circle cx="12" cy="12" r="6.6"/><path d="M15.5 8.5c-4 0-6.3 2.1-6.3 5.3.6-2.3 2.2-3.8 4.6-4.5-2.2 1.3-3.5 2.9-3.9 5 3.6.5 5.6-2.1 5.6-5.8z" fill="#6A8F5E" stroke="none"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">Android</div></div>
+      <div style="width:40px;height:40px;border-radius:10px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#6A8F5E" stroke-width="1.9" style="width:26px;height:26px"><circle cx="12" cy="12" r="9" stroke-dasharray="2.4 2.6"/><path d="M15.5 8.5c-4 0-6.3 2.1-6.3 5.3.6-2.3 2.2-3.8 4.6-4.5-2.2 1.3-3.5 2.9-3.9 5 3.6.5 5.6-2.1 5.6-5.8z" fill="#6A8F5E" stroke="none"/></svg></div>
+      <div style="width:24px;height:24px;border-radius:50%;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#6A8F5E" stroke-width="2.6" style="width:15px;height:15px"><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 3"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<div class="dv-sechd">Finance — rebuilt on your Ireland-trip logic</div>
+<div class="dv-secsub">Straight from your screenshots, restyled: "You are still owed / You still owe" cards with per-person breakdowns, collapsible Group summary with IS OWED / OWES badges, Owed ⇄ Paid toggle, search, and pair ledgers itemized by vendor · description · date · per-person share with tap-to-settle circles (settling moves items to Paid and recalculates everything live). New Expense sheet now matches your form: date, vendor, description, amount + currency, category, paid by, split-among chips, Equal/Individual, notes.</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="3d"><div class="dv-olabel"><a class="dv-oid" href="#3d">3d</a>Finance — tap circles to settle, try the Paid tab</div>
+    <dc-import name="Trip Planner App" width="390" screen="finance" hint-size="392px,846px"></dc-import></div>
+  <div class="dv-opt" id="3e"><div class="dv-olabel"><a class="dv-oid" href="#3e">3e</a>Dark, small phone (360) — same screen</div>
+    <dc-import name="Trip Planner App" theme="dark" width="360" screen="finance" hint-size="362px,781px"></dc-import></div>
+</div>
+
+<p class="dv-next">Try next: "use icon <a class="dv-oid" href="#3b">3b</a>/<a class="dv-oid" href="#3c">3c</a> instead" · "tweak the CLUB lockup" · "apply the same ledger detail to My Expenses"</p>
+</section>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Round 2 — travel-forward names · Dusk Garden applied · finance balances · retuned dark mode</span></div>
+
+<div class="dv-sechd">Naming, take 2 — travel first, botanical second</div>
+<div class="dv-secsub">You're right that <a class="dv-oid" href="#1e">1e</a>-style names read "plant app". These lead with the trip; the leaf stays as the mark, not the metaphor.</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="2a"><div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Flock — friends who travel together; social by definition · ★ recommended</div>
+    <div style="width:330px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:26px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="font-family:'Caprasimo',serif;font-size:44px;color:#3A3020;line-height:1">flock<span style="color:#8BAF7C">.</span></div>
+      <div style="font-size:12.5px;font-weight:700;color:#8A7E6A;margin-top:8px;line-height:1.5">"The flock lands in Tokyo in 6 days." Group-travel energy built into the word; leaf-as-feather mark.</div>
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-top:20px">
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:20px;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center;box-shadow:0 4px 14px rgba(106,143,94,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px"><path d="M20 5c-8 0-13 4-13 10 0 1.5.3 2.7.8 3.7C9 13 12.5 9.4 17 7.4 12.7 10.2 9.8 14.2 9 19c.9.3 1.9.4 3 .4 6 0 8-7 8-14.4z"/><path d="M3.5 9.5C5 7 7.5 5.5 10.5 5.2 8.8 6.8 7.6 8.7 7 11"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">iOS</div></div>
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:50%;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:42px;height:42px"><path d="M20 5c-8 0-13 4-13 10 0 1.5.3 2.7.8 3.7C9 13 12.5 9.4 17 7.4 12.7 10.2 9.8 14.2 9 19c.9.3 1.9.4 3 .4 6 0 8-7 8-14.4z"/><path d="M3.5 9.5C5 7 7.5 5.5 10.5 5.2 8.8 6.8 7.6 8.7 7 11"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">Android</div></div>
+        <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="width:23px;height:23px"><path d="M20 5c-8 0-13 4-13 10 0 1.5.3 2.7.8 3.7C9 13 12.5 9.4 17 7.4 12.7 10.2 9.8 14.2 9 19c.9.3 1.9.4 3 .4 6 0 8-7 8-14.4z"/></svg></div>
+        <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M20 5c-8 0-13 4-13 10 0 1.5.3 2.7.8 3.7C9 13 12.5 9.4 17 7.4 12.7 10.2 9.8 14.2 9 19c.9.3 1.9.4 3 .4 6 0 8-7 8-14.4z"/></svg></div>
+      </div>
+    </div>
+  </div>
+  <div class="dv-opt" id="2b"><div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Souvenir — the trip you'll keep; warm, sentimental, unmistakably travel</div>
+    <div style="width:330px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:26px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="font-family:'Caprasimo',serif;font-size:38px;color:#3A3020;line-height:1">souvenir</div>
+      <div style="font-size:12.5px;font-weight:700;color:#8A7E6A;margin-top:8px;line-height:1.5">Plans become keepsakes — fits recs, outfits & shared memories. Mark: luggage-tag with a leaf stamp.</div>
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-top:20px">
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:20px;background:#E8B4B8;display:grid;place-items:center;box-shadow:0 4px 14px rgba(212,144,154,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="#3A3020" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px"><path d="M8 7 14.5 3.5a2 2 0 0 1 2.7.8l3.3 6a2 2 0 0 1-.8 2.7L13 16.5a2 2 0 0 1-2.7-.8L7 9.7A2 2 0 0 1 8 7z" transform="rotate(8 12 10)"/><circle cx="10.5" cy="7.5" r="1.2"/><path d="M10.5 7.5 4.5 12.5"/><path d="M17 9.5c-2.6 0-4.2 1.3-4.2 3.3.6-1.4 1.7-2.3 3.3-2.7-1.4.9-2.3 2-2.6 3.5 2.3.3 3.5-1.6 3.5-4.1z" fill="#3A3020" stroke="none"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">iOS</div></div>
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:50%;background:#E8B4B8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#3A3020" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:42px;height:42px"><path d="M8 7 14.5 3.5a2 2 0 0 1 2.7.8l3.3 6a2 2 0 0 1-.8 2.7L13 16.5a2 2 0 0 1-2.7-.8L7 9.7A2 2 0 0 1 8 7z" transform="rotate(8 12 10)"/><circle cx="10.5" cy="7.5" r="1.2"/><path d="M10.5 7.5 4.5 12.5"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">Android</div></div>
+        <div style="width:40px;height:40px;border-radius:10px;background:#E8B4B8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#3A3020" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:23px;height:23px"><path d="M8 7 14.5 3.5a2 2 0 0 1 2.7.8l3.3 6a2 2 0 0 1-.8 2.7L13 16.5a2 2 0 0 1-2.7-.8L7 9.7A2 2 0 0 1 8 7z" transform="rotate(8 12 10)"/><path d="M10.5 7.5 4.5 12.5"/></svg></div>
+        <div style="width:24px;height:24px;border-radius:50%;background:#E8B4B8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#3A3020" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M8 7 14.5 3.5a2 2 0 0 1 2.7.8l3.3 6a2 2 0 0 1-.8 2.7L13 16.5a2 2 0 0 1-2.7-.8L7 9.7A2 2 0 0 1 8 7z" transform="rotate(8 12 10)"/></svg></div>
+      </div>
+    </div>
+  </div>
+  <div class="dv-opt" id="2c"><div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>Getaway Club — playful, girls'-trip voice; says exactly what it is</div>
+    <div style="width:330px;background:#F8F4EF;border:1px solid #EDE5D8;border-radius:20px;padding:26px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="line-height:1"><span style="font-family:'Caprasimo',serif;font-size:36px;color:#3A3020">getaway</span><br><span style="font-family:'Nunito',sans-serif;font-weight:800;font-size:20px;letter-spacing:5px;color:#7E6FA8;text-transform:uppercase">club</span></div>
+      <div style="font-size:12.5px;font-weight:700;color:#8A7E6A;margin-top:8px;line-height:1.5">Membership feel — "add her to the club". Mark: sun-over-leaf badge, lavender accent from Dusk Garden.</div>
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-top:20px">
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:20px;background:#B4A6D4;display:grid;place-items:center;box-shadow:0 4px 14px rgba(126,111,168,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px"><circle cx="12" cy="9" r="3.5"/><path d="M12 2.5V4M5.5 9H4M20 9h-1.5M7.4 4.4l1 1M16.6 4.4l-1 1"/><path d="M19 14.5c-5.5 0-8.5 2.2-8.5 5.5.9-2.4 2.7-3.9 5.4-4.6-2.4 1.3-3.9 3-4.5 5.4 4.6.6 7.6-2.2 7.6-6.3z" fill="#FAF6EF" stroke="none"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">iOS</div></div>
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:50%;background:#B4A6D4;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:42px;height:42px"><circle cx="12" cy="9" r="3.5"/><path d="M12 2.5V4M5.5 9H4M20 9h-1.5M7.4 4.4l1 1M16.6 4.4l-1 1"/><path d="M19 14.5c-5.5 0-8.5 2.2-8.5 5.5.9-2.4 2.7-3.9 5.4-4.6-2.4 1.3-3.9 3-4.5 5.4 4.6.6 7.6-2.2 7.6-6.3z" fill="#FAF6EF" stroke="none"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">Android</div></div>
+        <div style="width:40px;height:40px;border-radius:10px;background:#B4A6D4;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2.1" stroke-linecap="round" style="width:23px;height:23px"><circle cx="12" cy="9" r="3.5"/><path d="M19 14.5c-5.5 0-8.5 2.2-8.5 5.5 1.2-3 3.6-4.8 8.5-5.5z" fill="#FAF6EF" stroke="none"/></svg></div>
+        <div style="width:24px;height:24px;border-radius:50%;background:#B4A6D4;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2.6" style="width:14px;height:14px"><circle cx="12" cy="10" r="4"/></svg></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dv-sechd">Applied: Dusk Garden + finance detail + darker-contrast dark mode</div>
+<div class="dv-secsub">The prototype now defaults to <a class="dv-oid" href="#1j">1j</a> Dusk Garden (lavender replaces gold as third voice) — a palette tweak keeps <a class="dv-oid" href="#1h">1h</a>/<a class="dv-oid" href="#1i">1i</a>/<a class="dv-oid" href="#1k">1k</a> one click away. Finance gets an explicit "Who owes who" ledger (who, how much, for what, remind/settle). Dark mode reground on deep moss (#171A13) with lifted text/border contrast.</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="2d"><div class="dv-olabel"><a class="dv-oid" href="#2d">2d</a>Home — merged layout (1b hero + switcher + pins), Dusk Garden</div>
+    <dc-import name="Trip Planner App" home-variant="b" width="390" hint-size="392px,846px"></dc-import></div>
+  <div class="dv-opt" id="2e"><div class="dv-olabel"><a class="dv-oid" href="#2e">2e</a>Finance @ 375 — who-owes-who ledger with reasons</div>
+    <dc-import name="Trip Planner App" width="375" screen="finance" hint-size="377px,814px"></dc-import></div>
+  <div class="dv-opt" id="2f"><div class="dv-olabel"><a class="dv-oid" href="#2f">2f</a>Dark mode v2 — deep moss ground, higher contrast</div>
+    <dc-import name="Trip Planner App" theme="dark" width="390" hint-size="392px,846px"></dc-import></div>
+  <div class="dv-opt" id="2g"><div class="dv-olabel"><a class="dv-oid" href="#2g">2g</a>Dark v2 on Finance</div>
+    <dc-import name="Trip Planner App" theme="dark" width="390" screen="finance" hint-size="392px,846px"></dc-import></div>
+</div>
+
+<p class="dv-next">Try next: "go with <a class="dv-oid" href="#2a">2a</a> Flock" · "dark mode still too X, try Y" · "more name ideas around Z"</p>
+</section>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Trip Planner redesign — full pass: Home variants · branding · palettes · platforms · responsive · dark · tablet · components</span></div>
+
+<!-- ===== HOME + TAB BAR VARIANTS ===== -->
+<div class="dv-sechd">Home + tab bar — 3 takes</div>
+<div class="dv-secsub">All fully clickable (tap tabs, More, sheets, Settings → dark mode). Same IA, different hero treatments. Everything below embeds this same live prototype.</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="1a"><div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Soft hero card — gradient tint, countdown pill, stat trio. Calm, closest to today.</div>
+    <dc-import name="Trip Planner App" home-variant="a" width="390" hint-size="392px,846px"></dc-import></div>
+  <div class="dv-opt" id="1b"><div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Bold countdown — solid sage hero, Caprasimo number, glance chips. The most "app icon energy".</div>
+    <dc-import name="Trip Planner App" home-variant="b" width="390" hint-size="392px,846px"></dc-import></div>
+  <div class="dv-opt" id="1c"><div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>List-first — typographic greeting, trip switcher chips, densest glance list.</div>
+    <dc-import name="Trip Planner App" home-variant="c" width="390" hint-size="392px,846px"></dc-import></div>
+</div>
+
+<!-- ===== BRANDING ===== -->
+<div class="dv-sechd">Naming & wordmark — 3 directions</div>
+<div class="dv-secsub">Each with iOS rounded-square + Android adaptive icon at large & small sizes. Recommendation: <a class="dv-oid" href="#1d">1d</a> Sprig — short, ownable, literally "a small cutting that grows", and its Caprasimo wordmark pairs beautifully with Nunito UI text.</div>
+<div class="dv-opts">
+
+  <div class="dv-opt" id="1d"><div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Sprig — the plan that grows with the group · Caprasimo · ★ recommended</div>
+    <div style="width:330px;background:#FAF6EF;border:1px solid #EDE5D8;border-radius:20px;padding:26px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="font-family:'Caprasimo',serif;font-size:44px;color:#3A3020;line-height:1">sprig<span style="color:#8BAF7C">.</span></div>
+      <div style="font-size:12.5px;font-weight:700;color:#8A7E6A;margin-top:8px;line-height:1.5">Wordmark: Caprasimo, lowercase, sage full-stop. UI stays Nunito.</div>
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-top:20px">
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:20px;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center;box-shadow:0 4px 14px rgba(106,143,94,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><path d="M20 4c-9.5 0-15 5-15 12 0 1.8.4 3.2 1 4.4C7.3 13.7 11.4 9.3 16.6 7 11.6 10.2 8.2 15 7.2 20.6c1.1.3 2.3.4 3.6.4 7.2 0 9.2-8.5 9.2-17z"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">iOS</div></div>
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:50%;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px"><path d="M20 4c-9.5 0-15 5-15 12 0 1.8.4 3.2 1 4.4C7.3 13.7 11.4 9.3 16.6 7 11.6 10.2 8.2 15 7.2 20.6c1.1.3 2.3.4 3.6.4 7.2 0 9.2-8.5 9.2-17z"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">Android</div></div>
+        <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2" style="width:24px;height:24px" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4c-9.5 0-15 5-15 12 0 1.8.4 3.2 1 4.4C7.3 13.7 11.4 9.3 16.6 7 11.6 10.2 8.2 15 7.2 20.6c1.1.3 2.3.4 3.6.4 7.2 0 9.2-8.5 9.2-17z"/></svg></div>
+        <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="2.4" style="width:14px;height:14px" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4c-9.5 0-15 5-15 12 0 1.8.4 3.2 1 4.4C7.3 13.7 11.4 9.3 16.6 7 11.6 10.2 8.2 15 7.2 20.6c1.1.3 2.3.4 3.6.4 7.2 0 9.2-8.5 9.2-17z"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dv-opt" id="1e"><div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Fernway — fern + "on our way"; botanical wayfinding · Baloo 2</div>
+    <div style="width:330px;background:#FAF6EF;border:1px solid #EDE5D8;border-radius:20px;padding:26px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;color:#6A8F5E;line-height:1">fernway</div>
+      <div style="font-size:12.5px;font-weight:700;color:#8A7E6A;margin-top:8px;line-height:1.5">Wordmark: Baloo 2 ExtraBold in the dark sage. Frond icon.</div>
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-top:20px">
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:20px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center;box-shadow:0 4px 14px rgba(139,175,124,.25)"><svg viewBox="0 0 24 24" fill="none" stroke="#6A8F5E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:50px;height:50px"><path d="M12 21C12 10 12 6 12 3M12 8C9 8 7 6.5 6.5 4 9.5 4 11.5 5.5 12 8zM12 8c3 0 5-1.5 5.5-4C14.5 4 12.5 5.5 12 8zM12 13.5c-3 0-5.2-1.5-5.8-4 3.2 0 5.3 1.5 5.8 4zM12 13.5c3 0 5.2-1.5 5.8-4-3.2 0-5.3 1.5-5.8 4zM12 19c-3.2 0-5.5-1.6-6-4.2 3.4 0 5.5 1.7 6 4.2zM12 19c3.2 0 5.5-1.6 6-4.2-3.4 0-5.5 1.7-6 4.2z"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">iOS</div></div>
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:50%;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#6A8F5E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px"><path d="M12 21C12 10 12 6 12 3M12 8C9 8 7 6.5 6.5 4 9.5 4 11.5 5.5 12 8zM12 8c3 0 5-1.5 5.5-4C14.5 4 12.5 5.5 12 8zM12 13.5c-3 0-5.2-1.5-5.8-4 3.2 0 5.3 1.5 5.8 4zM12 13.5c3 0 5.2-1.5 5.8-4-3.2 0-5.3 1.5-5.8 4zM12 19c-3.2 0-5.5-1.6-6-4.2 3.4 0 5.5 1.7 6 4.2zM12 19c3.2 0 5.5-1.6 6-4.2-3.4 0-5.5 1.7-6 4.2z"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">Android</div></div>
+        <div style="width:40px;height:40px;border-radius:10px;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#6A8F5E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px"><path d="M12 21C12 10 12 6 12 3M12 8C9 8 7 6.5 6.5 4 9.5 4 11.5 5.5 12 8zM12 8c3 0 5-1.5 5.5-4C14.5 4 12.5 5.5 12 8zM12 13.5c-3 0-5.2-1.5-5.8-4 3.2 0 5.3 1.5 5.8 4zM12 13.5c3 0 5.2-1.5 5.8-4-3.2 0-5.3 1.5-5.8 4z"/></svg></div>
+        <div style="width:24px;height:24px;border-radius:50%;background:#FAF6EF;border:1px solid #EDE5D8;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#6A8F5E" stroke-width="2.6" stroke-linecap="round" style="width:14px;height:14px"><path d="M12 21V3M12 8C9 8 7 6.5 6.5 4M12 8c3 0 5-1.5 5.5-4M12 14c-3 0-5-1.5-5.5-4M12 14c3 0 5-1.5 5.5-4"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dv-opt" id="1f"><div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Trellis — the frame friends grow plans on · Nunito ExtraBold (system-native)</div>
+    <div style="width:330px;background:#FAF6EF;border:1px solid #EDE5D8;border-radius:20px;padding:26px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+      <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:38px;color:#3A3020;line-height:1;letter-spacing:-.5px">trell<span style="color:#B97F35">i</span>s</div>
+      <div style="font-size:12.5px;font-weight:700;color:#8A7E6A;margin-top:8px;line-height:1.5">Wordmark: Nunito 800 with a gold "i" — leaf grows through the lattice.</div>
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-top:20px">
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:20px;background:#F2C48A;display:grid;place-items:center;box-shadow:0 4px 14px rgba(224,160,85,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="#3A3020" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><path d="M5 3v18M12 3v18M19 3v18M3 8h18M3 15h18" opacity=".35"/><path d="M19.5 5.5c-6 0-9.5 3.2-9.5 7.6 0 1.1.2 2 .6 2.8 1-4.3 3.5-7 6.8-8.5-3.2 2-5.2 4.9-5.8 8.4.7.2 1.4.3 2.2.3 4.6 0 5.7-5.4 5.7-10.6z" fill="#3A3020" stroke="none"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">iOS</div></div>
+        <div style="text-align:center"><div style="width:84px;height:84px;border-radius:50%;background:#F2C48A;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#3A3020" stroke-width="1.7" stroke-linecap="round" style="width:44px;height:44px"><path d="M5 3v18M12 3v18M19 3v18M3 8h18M3 15h18" opacity=".35"/><path d="M19.5 5.5c-6 0-9.5 3.2-9.5 7.6 0 1.1.2 2 .6 2.8 1-4.3 3.5-7 6.8-8.5-3.2 2-5.2 4.9-5.8 8.4.7.2 1.4.3 2.2.3 4.6 0 5.7-5.4 5.7-10.6z" fill="#3A3020" stroke="none"/></svg></div><div style="font-size:10px;font-weight:800;color:#8A7E6A;margin-top:5px">Android</div></div>
+        <div style="width:40px;height:40px;border-radius:10px;background:#F2C48A;display:grid;place-items:center"><svg viewBox="0 0 24 24" style="width:24px;height:24px"><path d="M19.5 5.5c-6 0-9.5 3.2-9.5 7.6 0 1.1.2 2 .6 2.8 1-4.3 3.5-7 6.8-8.5-3.2 2-5.2 4.9-5.8 8.4.7.2 1.4.3 2.2.3 4.6 0 5.7-5.4 5.7-10.6z" fill="#3A3020"/></svg></div>
+        <div style="width:24px;height:24px;border-radius:50%;background:#F2C48A;display:grid;place-items:center"><svg viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M19.5 5.5c-6 0-9.5 3.2-9.5 7.6 0 1.1.2 2 .6 2.8 1-4.3 3.5-7 6.8-8.5-3.2 2-5.2 4.9-5.8 8.4.7.2 1.4.3 2.2.3 4.6 0 5.7-5.4 5.7-10.6z" fill="#3A3020"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dv-opt" id="1g"><div class="dv-olabel"><a class="dv-oid" href="#1g">1g</a>Splash / launch — Sprig, iOS (left) & Android (right, with M3 loader)</div>
+    <div style="display:flex;gap:18px">
+      <div style="width:200px;height:420px;border-radius:34px;background:linear-gradient(170deg,#FAF6EF,#EAF1E3);border:1px solid #EDE5D8;box-shadow:0 4px 24px rgba(139,175,124,.22);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
+        <div style="position:absolute;top:12px;width:64px;height:18px;border-radius:12px;background:#171410"></div>
+        <div style="width:74px;height:74px;border-radius:22px;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center;box-shadow:0 6px 20px rgba(106,143,94,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:42px;height:42px"><path d="M20 4c-9.5 0-15 5-15 12 0 1.8.4 3.2 1 4.4C7.3 13.7 11.4 9.3 16.6 7 11.6 10.2 8.2 15 7.2 20.6c1.1.3 2.3.4 3.6.4 7.2 0 9.2-8.5 9.2-17z"/></svg></div>
+        <div style="font-family:'Caprasimo',serif;font-size:26px;color:#3A3020;margin-top:14px">sprig<span style="color:#8BAF7C">.</span></div>
+        <div style="position:absolute;bottom:22px;font-size:10.5px;font-weight:800;color:#8A7E6A">plan it together 🌱</div>
+        <div style="position:absolute;bottom:8px;width:86px;height:4px;border-radius:99px;background:#3A3020;opacity:.8"></div>
+      </div>
+      <div style="width:200px;height:420px;border-radius:26px;background:#FAF6EF;border:1px solid #EDE5D8;box-shadow:0 4px 24px rgba(139,175,124,.22);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
+        <div style="position:absolute;top:10px;width:10px;height:10px;border-radius:50%;background:#171410;opacity:.85"></div>
+        <div style="width:86px;height:86px;border-radius:50%;background:linear-gradient(140deg,#8BAF7C,#6A8F5E);display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF6EF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px"><path d="M20 4c-9.5 0-15 5-15 12 0 1.8.4 3.2 1 4.4C7.3 13.7 11.4 9.3 16.6 7 11.6 10.2 8.2 15 7.2 20.6c1.1.3 2.3.4 3.6.4 7.2 0 9.2-8.5 9.2-17z"/></svg></div>
+        <div style="position:absolute;bottom:56px;width:90px;height:4px;border-radius:99px;background:#EDE5D8;overflow:hidden"><div style="width:40%;height:100%;background:#6A8F5E;border-radius:99px"></div></div>
+        <div style="position:absolute;bottom:26px;font-family:'Caprasimo',serif;font-size:15px;color:#8A7E6A">sprig</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PALETTES ===== -->
+<div class="dv-sechd">Palette options — 4 evolutions of your tokens</div>
+<div class="dv-secsub">All keep the cream ground and the sage/gold/pink family; darks shown are the text-safe AA steps. <a class="dv-oid" href="#1h">1h</a> is what the prototype uses today.</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="1h"><div class="dv-olabel"><a class="dv-oid" href="#1h">1h</a>Garden Party — current tokens, refined darks for AA · in the prototype</div>
+    <div style="width:330px;background:#FAF6EF;border:1px solid #EDE5D8;border-radius:20px;padding:22px;display:flex;gap:12px;flex-wrap:wrap">
+      <div class="sw"><i style="background:#FAF6EF"></i><b>#FAF6EF</b><span>bg</span></div>
+      <div class="sw"><i style="background:#8BAF7C"></i><b>#8BAF7C</b><span>sage</span></div>
+      <div class="sw"><i style="background:#6A8F5E"></i><b>#6A8F5E</b><span>sage-d</span></div>
+      <div class="sw"><i style="background:#F2C48A"></i><b>#F2C48A</b><span>gold</span></div>
+      <div class="sw"><i style="background:#B97F35"></i><b>#B97F35</b><span>gold-txt</span></div>
+      <div class="sw"><i style="background:#E8B4B8"></i><b>#E8B4B8</b><span>pink</span></div>
+      <div class="sw"><i style="background:#B96A76"></i><b>#B96A76</b><span>pink-txt</span></div>
+      <div class="sw"><i style="background:#3A3020"></i><b>#3A3020</b><span>text</span></div>
+    </div>
+  </div>
+  <div class="dv-opt" id="1i"><div class="dv-olabel"><a class="dv-oid" href="#1i">1i</a>Matcha & Clay — earthier: terracotta replaces gold; grounded, less sweet</div>
+    <div style="width:330px;background:#FAF4EA;border:1px solid #EDE2D0;border-radius:20px;padding:22px;display:flex;gap:12px;flex-wrap:wrap">
+      <div class="sw"><i style="background:#FAF4EA"></i><b>#FAF4EA</b><span>bg</span></div>
+      <div class="sw"><i style="background:#7FA069"></i><b>#7FA069</b><span>matcha</span></div>
+      <div class="sw"><i style="background:#5E7F4C"></i><b>#5E7F4C</b><span>matcha-d</span></div>
+      <div class="sw"><i style="background:#C67139"></i><b>#C67139</b><span>clay</span></div>
+      <div class="sw"><i style="background:#A2531F"></i><b>#A2531F</b><span>clay-txt</span></div>
+      <div class="sw"><i style="background:#E5B8A8"></i><b>#E5B8A8</b><span>blush</span></div>
+      <div class="sw"><i style="background:#3B3126"></i><b>#3B3126</b><span>text</span></div>
+    </div>
+  </div>
+  <div class="dv-opt" id="1j"><div class="dv-olabel"><a class="dv-oid" href="#1j">1j</a>Dusk Garden — lavender third voice; dreamier, most "girls' trip"</div>
+    <div style="width:330px;background:#F8F4EF;border:1px solid #ECE4DA;border-radius:20px;padding:22px;display:flex;gap:12px;flex-wrap:wrap">
+      <div class="sw"><i style="background:#F8F4EF"></i><b>#F8F4EF</b><span>bg</span></div>
+      <div class="sw"><i style="background:#8BAF7C"></i><b>#8BAF7C</b><span>sage</span></div>
+      <div class="sw"><i style="background:#6A8F5E"></i><b>#6A8F5E</b><span>sage-d</span></div>
+      <div class="sw"><i style="background:#B4A6D4"></i><b>#B4A6D4</b><span>lavender</span></div>
+      <div class="sw"><i style="background:#7E6FA8"></i><b>#7E6FA8</b><span>lav-txt</span></div>
+      <div class="sw"><i style="background:#E8B4B8"></i><b>#E8B4B8</b><span>pink</span></div>
+      <div class="sw"><i style="background:#3A3328"></i><b>#3A3328</b><span>text</span></div>
+    </div>
+  </div>
+  <div class="dv-opt" id="1k"><div class="dv-olabel"><a class="dv-oid" href="#1k">1k</a>Deep Fern — darker forest primary for stronger contrast & buttons that pass AA at any size</div>
+    <div style="width:330px;background:#F6F2E8;border:1px solid #EAE3D3;border-radius:20px;padding:22px;display:flex;gap:12px;flex-wrap:wrap">
+      <div class="sw"><i style="background:#F6F2E8"></i><b>#F6F2E8</b><span>bg</span></div>
+      <div class="sw"><i style="background:#4F6F44"></i><b>#4F6F44</b><span>fern</span></div>
+      <div class="sw"><i style="background:#3D5735"></i><b>#3D5735</b><span>fern-d</span></div>
+      <div class="sw"><i style="background:#E0A055"></i><b>#E0A055</b><span>gold</span></div>
+      <div class="sw"><i style="background:#96621B"></i><b>#96621B</b><span>gold-txt</span></div>
+      <div class="sw"><i style="background:#D4909A"></i><b>#D4909A</b><span>rose</span></div>
+      <div class="sw"><i style="background:#332C1F"></i><b>#332C1F</b><span>text</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ANDROID ===== -->
+<div class="dv-sechd">Android — Material 3 variants</div>
+<div class="dv-secsub">Same brand, Android conventions: status bar with punch-hole, M3 nav bar with active pill indicator, centered M3 dialog for destructive confirm (try Settings → Remove trip), gesture bar. All clickable.</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="1l"><div class="dv-olabel"><a class="dv-oid" href="#1l">1l</a>Android Home (Pixel-class, 412pt)</div>
+    <dc-import name="Trip Planner App" platform="android" width="412" hint-size="414px,892px"></dc-import></div>
+  <div class="dv-opt" id="1m"><div class="dv-olabel"><a class="dv-oid" href="#1m">1m</a>Android Itinerary</div>
+    <dc-import name="Trip Planner App" platform="android" width="412" screen="itinerary" hint-size="414px,892px"></dc-import></div>
+  <div class="dv-opt" id="1n"><div class="dv-olabel"><a class="dv-oid" href="#1n">1n</a>Android Trip Settings — M3 dialog on "Remove trip"</div>
+    <dc-import name="Trip Planner App" platform="android" width="412" screen="settings" hint-size="414px,892px"></dc-import></div>
+</div>
+
+<!-- ===== RESPONSIVE ===== -->
+<div class="dv-sechd">Responsive proof — 360 → 430</div>
+<div class="dv-secsub">Fluid layout, not fixed width: chips scroll, grids share gap, pills never wrap. Small SE-class next to Pro Max.</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="1o"><div class="dv-olabel"><a class="dv-oid" href="#1o">1o</a>Home @ 360pt (small)</div>
+    <dc-import name="Trip Planner App" width="360" hint-size="362px,781px"></dc-import></div>
+  <div class="dv-opt" id="1p"><div class="dv-olabel"><a class="dv-oid" href="#1p">1p</a>Home @ 430pt (Pro Max)</div>
+    <dc-import name="Trip Planner App" width="430" hint-size="432px,932px"></dc-import></div>
+  <div class="dv-opt" id="1q"><div class="dv-olabel"><a class="dv-oid" href="#1q">1q</a>Finance @ 375pt</div>
+    <dc-import name="Trip Planner App" width="375" screen="finance" hint-size="377px,814px"></dc-import></div>
+</div>
+
+<!-- ===== DARK MODE ===== -->
+<div class="dv-sechd">Dark mode — warm, not gray</div>
+<div class="dv-secsub">Espresso-brown ground (#211D15), cream text, same sage/gold/pink lifted for AA. User-toggled in Trip Settings → Appearance; works on all 18 screens.</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="1r"><div class="dv-olabel"><a class="dv-oid" href="#1r">1r</a>Dark Home</div>
+    <dc-import name="Trip Planner App" theme="dark" width="390" hint-size="392px,846px"></dc-import></div>
+  <div class="dv-opt" id="1s"><div class="dv-olabel"><a class="dv-oid" href="#1s">1s</a>Dark Itinerary</div>
+    <dc-import name="Trip Planner App" theme="dark" width="390" screen="itinerary" hint-size="392px,846px"></dc-import></div>
+  <div class="dv-opt" id="1t"><div class="dv-olabel"><a class="dv-oid" href="#1t">1t</a>Dark Login</div>
+    <dc-import name="Trip Planner App" theme="dark" width="390" screen="login" hint-size="392px,846px"></dc-import></div>
+</div>
+
+<!-- ===== TABLET ===== -->
+<div class="dv-sechd">Tablet / desktop adaptation</div>
+<div class="dv-secsub">At ≥700pt the tab bar becomes a left sidebar with the full menu (no More overflow needed); content column stays comfortable. Clickable.</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="1u"><div class="dv-olabel"><a class="dv-oid" href="#1u">1u</a>Tablet Home, 1024×800</div>
+    <dc-import name="Trip Planner App" width="1024" hint-size="1026px,802px"></dc-import></div>
+  <div class="dv-opt" id="1v"><div class="dv-olabel"><a class="dv-oid" href="#1v">1v</a>Tablet Finance</div>
+    <dc-import name="Trip Planner App" width="1024" screen="finance" hint-size="1026px,802px"></dc-import></div>
+</div>
+
+<!-- ===== COMPONENT SHEET ===== -->
+<div class="dv-sechd">Component / style sheet</div>
+<div class="dv-secsub">The reusable kit, one page. Custom line-icon set (2.2px round strokes) replaces the emoji section icons — same items, redrawn.</div>
+<div class="dv-opts">
+  <div class="dv-opt" id="1w"><div class="dv-olabel"><a class="dv-oid" href="#1w">1w</a>Components — light tokens</div>
+    <div style="--bg:#FAF6EF;--sur:#fff;--sur2:#F5EFE3;--pri:#8BAF7C;--prid:#6A8F5E;--prit:#EAF1E3;--acc:#F2C48A;--accd:#B97F35;--acct:#FBEED9;--pink:#E8B4B8;--pinkd:#B96A76;--pinkt:#F9ECED;--tx:#3A3020;--mut:#8A7E6A;--bd:#EDE5D8;--dan:#C0564A;--dant:#F7E4E1;width:760px;background:var(--bg);border:1px solid var(--bd);border-radius:24px;padding:30px;color:var(--tx);box-shadow:0 4px 24px rgba(139,175,124,.22)">
+      <div style="display:flex;gap:34px;flex-wrap:wrap">
+        <div style="flex:1;min-width:330px;display:flex;flex-direction:column;gap:22px">
+          <div>
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;margin-bottom:10px">Type · Nunito 400–800 + Caprasimo display</div>
+            <div style="font-family:'Caprasimo',serif;font-size:30px;line-height:1.1">Display 30 — Ready for Tokyo?</div>
+            <div style="font-size:22px;font-weight:800;margin-top:6px">Title 22 / 800</div>
+            <div style="font-size:16px;font-weight:800;margin-top:4px">Heading 16 / 800</div>
+            <div style="font-size:15px;font-weight:600;margin-top:4px">Body 15 / 600 — warm near-black brown on cream.</div>
+            <div style="font-size:13px;font-weight:700;color:var(--mut);margin-top:4px">Caption 13 / 700 muted</div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;margin-bottom:10px">Buttons · pill, ≥44pt</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <button style="background:var(--prid);color:#fff;border:none;border-radius:999px;padding:13px 22px;font-size:14.5px;font-weight:800;font-family:'Nunito'">Primary</button>
+              <button style="background:none;color:var(--prid);border:1.5px solid var(--pri);border-radius:999px;padding:12px 22px;font-size:14.5px;font-weight:800;font-family:'Nunito'">Ghost</button>
+              <button style="background:var(--acc);color:#3A3020;border:none;border-radius:999px;padding:13px 22px;font-size:14.5px;font-weight:800;font-family:'Nunito'">Accent</button>
+              <button style="background:var(--dant);color:var(--dan);border:none;border-radius:999px;padding:13px 22px;font-size:14.5px;font-weight:800;font-family:'Nunito'">Danger</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;margin-bottom:10px">Chips · filters & tags</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span style="background:var(--prid);color:#fff;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:800">Primary</span>
+              <span style="background:#fff;color:var(--mut);border:1px solid var(--bd);border-radius:999px;padding:8px 15px;font-size:13px;font-weight:800">Default</span>
+              <span style="background:var(--acct);color:var(--accd);border-radius:999px;padding:8px 15px;font-size:13px;font-weight:800">Gold tag</span>
+              <span style="background:var(--pinkt);color:var(--pinkd);border-radius:999px;padding:8px 15px;font-size:13px;font-weight:800">Highlight</span>
+              <span style="background:var(--sur2);color:var(--mut);border-radius:999px;padding:8px 15px;font-size:13px;font-weight:800">Muted</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;margin-bottom:10px">Inputs & field</div>
+            <div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">Destination</div>
+            <div style="background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:13px 16px;font-size:15px;color:var(--mut);font-weight:600">e.g. Bali, Indonesia</div>
+            <div style="background:#fff;border:1.5px solid var(--pri);border-radius:16px;padding:13px 16px;font-size:15px;font-weight:700;margin-top:8px;box-shadow:0 0 0 3px var(--prit)">Tokyo, Japan|</div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;margin-bottom:10px">Avatars & people picker</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div style="width:44px;height:44px;border-radius:50%;background:#F2C48A;display:grid;place-items:center;font-size:19px;border:2.5px solid var(--prid)">🦊</div>
+              <div style="width:44px;height:44px;border-radius:50%;background:#E8B4B8;display:grid;place-items:center;font-size:19px;border:2.5px solid var(--prid)">🌸</div>
+              <div style="width:44px;height:44px;border-radius:50%;background:#D8CDEA;display:grid;place-items:center;font-size:19px;border:2.5px solid var(--bd)">✨</div>
+              <div style="width:44px;height:44px;border-radius:50%;background:#BFD3EA;display:grid;place-items:center;font-size:19px;border:2.5px solid var(--bd)">🌙</div>
+              <span style="font-size:12.5px;font-weight:700;color:var(--mut)">selected = sage ring</span>
+            </div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:330px;display:flex;flex-direction:column;gap:22px">
+          <div>
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;margin-bottom:10px">Icon set · 2.2px round strokes (replaces emoji)</div>
+            <div style="display:flex;gap:14px;flex-wrap:wrap;color:var(--prid)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 10.5 12 3l9 7.5M5 9.7V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.7M9.5 21v-5.5h5V21"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM15.2 8.8l-1.8 4.6-4.6 1.8 1.8-4.6z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M21 3 3 10.5l7.5 3M21 3l-6 18-4.5-7.5M21 3 10.5 13.5"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM4 10h16M8 3v4M16 3v4"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 18v-7M3 14h18v4M21 14v-2a2 2 0 0 0-2-2h-9v4M3 11V6M8.5 10.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M9 4a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zM16.8 8a5.5 5.5 0 1 1-6.9 8.4"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5L10 21l-2-1.5L6 21zM9.5 8h5M9.5 12h5M9.5 16h3"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M12 12m-2.5 0a2.5 2.5 0 1 0 5 0 2.5 2.5 0 1 0-5 0M12 9.5V4M12 14.5V20M9.8 10.2 5.5 6.5M14.2 13.8l4.3 3.7M9.8 13.8 5.5 17.5M14.2 10.2l4.3-3.7"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M6 8h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2zM9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M9 8v13M15 8v13"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M12 7a2 2 0 1 1 2-2M12 7v1.8l8.2 5.7a1.4 1.4 0 0 1-.8 2.5H4.6a1.4 1.4 0 0 1-.8-2.5L12 8.8"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M12 21c-4.5-3.8-7-7.2-7-10.5a7 7 0 0 1 14 0c0 3.3-2.5 6.7-7 10.5zM12 8a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M4 7h6M16 7h4M4 17h4M12 17h8M16 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0M12 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM4.5 21a7.5 7.5 0 0 1 15 0"/></svg>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;margin-bottom:10px">Card & weather card</div>
+            <div style="background:#fff;border:1px solid var(--bd);border-radius:20px;padding:15px 16px;box-shadow:0 2px 10px rgba(139,175,124,.16)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--accd)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>
+                <div style="flex:1"><b style="font-size:15px">76–90°F</b> <span style="font-size:13px;color:var(--mut);font-weight:700">· Hot & clear · Tokyo</span></div>
+                <span style="background:var(--prit);color:var(--prid);font-size:10.5px;font-weight:800;letter-spacing:1px;border-radius:999px;padding:4px 9px">LIVE</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;margin-bottom:10px">Empty state</div>
+            <div style="background:#fff;border:1px solid var(--bd);border-radius:20px;padding:22px;text-align:center">
+              <div style="width:52px;height:52px;margin:0 auto 10px;border-radius:17px;background:var(--pinkt);display:grid;place-items:center;color:var(--pinkd)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px"><path d="M12 12m-2.5 0a2.5 2.5 0 1 0 5 0 2.5 2.5 0 1 0-5 0M12 9.5V4M12 14.5V20M9.8 10.2 5.5 6.5M14.2 13.8l4.3 3.7M9.8 13.8 5.5 17.5M14.2 10.2l4.3-3.7"/></svg></div>
+              <div style="font-size:15px;font-weight:800">Nothing here yet</div>
+              <div style="font-size:12.5px;color:var(--mut);font-weight:600;margin:4px 0 12px">Share the spots you're excited about.</div>
+              <button style="background:var(--prid);color:#fff;border:none;border-radius:999px;padding:11px 18px;font-size:13px;font-weight:800;font-family:'Nunito'">+ Add the first one</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:1.4px;color:var(--mut);text-transform:uppercase;margin-bottom:10px">Bottom sheet & tab bar</div>
+            <div style="background:var(--sur2);border-radius:20px;padding:16px 14px 0;overflow:hidden">
+              <div style="background:#fff;border-radius:20px 20px 0 0;padding:8px 16px 14px;box-shadow:0 -4px 24px rgba(139,175,124,.22)">
+                <div style="width:36px;height:5px;border-radius:99px;background:var(--bd);margin:2px auto 10px"></div>
+                <div style="font-size:14px;font-weight:800">New expense</div>
+                <div style="background:var(--bg);border:1.5px solid var(--bd);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--mut);font-weight:700;margin-top:8px">¥ 4,800 — Ichiran ramen</div>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid var(--bd);border-radius:16px;margin-top:10px;padding:8px 6px 6px;display:flex">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--prid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M3 10.5 12 3l9 7.5M5 9.7V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.7M9.5 21v-5.5h5V21"/></svg><span style="font-size:10px;font-weight:800">Home</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--mut)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM4 10h16M8 3v4M16 3v4"/></svg><span style="font-size:10px;font-weight:800">Itinerary</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--mut)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M9 4a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zM16.8 8a5.5 5.5 0 1 1-6.9 8.4"/></svg><span style="font-size:10px;font-weight:800">Finance</span></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--mut)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg><span style="font-size:10px;font-weight:800">More</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="dv-next">Try next: "make <a class="dv-oid" href="#1b">1b</a> the default Home" · "apply palette <a class="dv-oid" href="#1i">1i</a> to the prototype" · "go with <a class="dv-oid" href="#1e">1e</a> Fernway branding" · "show dark mode on Finance too"</p>
+</section>
+
+</x-dc>
+</body>
+</html>
