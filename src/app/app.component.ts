@@ -17,6 +17,7 @@ import { StaysService } from './services/stays.service';
 import { FinanceService } from './services/finance.service';
 import { RecsService } from './services/recs.service';
 import { OutfitsService } from './services/outfits.service';
+import { ThemeService } from './services/theme.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../version';
 
 interface NavItem {
@@ -45,6 +46,7 @@ export class AppComponent implements OnInit {
   financeService    = inject(FinanceService);
   recsService       = inject(RecsService);
   outfitsService    = inject(OutfitsService);
+  themeService  = inject(ThemeService);   // constructed early so the theme applies on load (DP2-4)
   router        = inject(Router);
   private swUpdate = inject(SwUpdate);
 

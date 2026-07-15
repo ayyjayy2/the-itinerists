@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
+import { ThemeService, ThemePref } from '../../services/theme.service';
 import { TripDoc, TripMember, ActivityLogEntry } from '../../models/trip.models';
 
 interface CurrencyOption { code: string; label: string; }
@@ -18,7 +19,17 @@ interface HideablePage { key: string; label: string; icon: string; }
 export class TripSettingsComponent {
   private tripService = inject(TripService);
   private userService = inject(UserService);
+  private themeService = inject(ThemeService);
   private router      = inject(Router);
+
+  // Appearance (DP2-4) — light / system / dark theme.
+  readonly themePref = this.themeService.pref;
+  readonly themeOptions: { value: ThemePref; label: string; icon: string }[] = [
+    { value: 'light',  label: 'Light',  icon: '☀️' },
+    { value: 'system', label: 'System', icon: '🖥️' },
+    { value: 'dark',   label: 'Dark',   icon: '🌙' },
+  ];
+  setTheme(pref: ThemePref): void { this.themeService.set(pref); }
 
   readonly trip     = this.tripService.activeTrip;
   readonly members  = this.tripService.activeMembers;
