@@ -23,7 +23,8 @@ export class TripSettingsComponent {
   private themeService = inject(ThemeService);
   private router      = inject(Router);
 
-  // Appearance (DP2-4) — light / system / dark theme.
+  // Appearance (DP2-4) — hidden while dark mode is disabled (DP2-7).
+  readonly appearanceEnabled = this.themeService.darkModeEnabled;
   readonly themePref = this.themeService.pref;
   readonly themeOptions: { value: ThemePref; label: string; icon: string }[] = [
     { value: 'light',  label: 'Light',  icon: '☀️' },

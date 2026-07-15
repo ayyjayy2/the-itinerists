@@ -93,7 +93,8 @@
       </section>
     }
 
-    <!-- Appearance (DP2-4) -->
+    <!-- Appearance (DP2-4) — hidden while dark mode is disabled (DP2-7) -->
+    @if (appearanceEnabled) {
     <section class="card">
       <h2>Appearance</h2>
       <p class="muted">Choose light, dark, or match your device. Applies on all your devices.</p>
@@ -110,6 +111,7 @@
         }
       </div>
     </section>
+    }
 
     <!-- Customize Menu (page toggles) -->
     <section class="card">
