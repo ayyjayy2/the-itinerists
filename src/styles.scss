@@ -112,6 +112,9 @@ h1 > app-icon, h2 > app-icon {
   margin-right: 0.4rem;
 }
 
+// Brand lockup spacing on the auth/onboarding headers (DP2-8).
+.auth-header > app-brand, .onboard-header > app-brand { margin-bottom: 0.6rem; }
+
 // ── Shared layout ─────────────────────────────────────────────────────────────
 .page-container {
   padding: 1.5rem 2rem;

@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
+import { BrandComponent } from '../../shared/brand/brand.component';
 
 const EMOJI_OPTIONS = [
   '🌸','🌿','✨','🦋','🐘','🌼','🍑','🌺','🦊','🐬',
@@ -14,7 +15,7 @@ const EMOJI_OPTIONS = [
 
 @Component({
   selector: 'app-join',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [BrandComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './join.component.html',
   styleUrl: './join.component.scss'
 })

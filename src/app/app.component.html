@@ -8,8 +8,7 @@
     <nav class="sidebar" [class.collapsed]="navCollapsed">
       <div class="sidebar-inner">
         <div class="sidebar-brand">
-          <span class="brand-flag">🌿</span>
-          <span class="brand-text">Trip Planner</span>
+          <app-brand [mark]="30" [showWordmark]="!navCollapsed" />
         </div>
 
         <div class="sidebar-nav">
@@ -51,8 +50,7 @@
     <div class="main-area">
       <header class="app-header">
         <a class="header-title" routerLink="/home">
-          <span>🌿</span>
-          <span>Trip Planner</span>
+          <app-brand [mark]="26" />
         </a>
 
         <div class="header-right">
