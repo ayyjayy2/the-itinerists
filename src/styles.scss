@@ -1,27 +1,51 @@
 @import 'leaflet/dist/leaflet.css';
 
-// ── Trip Planner Theme Variables ──────────────────────────────────────────────
+// ── Getaway Club Theme Variables — "Dusk Garden" (Design Phase 2) ─────────────
+// Warm cream ground, sage primary, lavender third voice, gold + pink tags.
+// Darks are the AA-safe text steps. Existing var names are preserved (values
+// updated) and new tokens (tints, lavender, surface-2, danger) are added.
 :root {
-  --bg:           #FAF6EF;
-  --primary:      #8BAF7C;
-  --primary-dark: #6A8F5E;
-  --accent:       #F2C48A;
-  --accent-dark:  #E0A055;
-  --highlight:    #E8B4B8;
-  --highlight-dk: #D4909A;
-  --card-bg:      #FFFFFF;
-  --text:         #3A3020;
-  --text-muted:   #8A7E6A;
-  --border:       #EDE5D8;
-  --shadow:       0 2px 12px rgba(139, 175, 124, 0.18);
-  --shadow-md:    0 4px 24px rgba(139, 175, 124, 0.22);
-  --radius:       16px;
-  --radius-sm:    8px;
-  --radius-lg:    24px;
-  --font:         'Nunito', system-ui, sans-serif;
-  --header-h:     60px;
-  --sidebar-w:    240px;
+  --bg:            #F8F4EF;   // warm cream ground
+  --surface:       #FFFFFF;   // cards
+  --surface-2:     #F5EFE3;   // sunken/secondary surface
+  --card-bg:       #FFFFFF;   // (legacy alias of --surface)
+
+  --primary:       #8BAF7C;   // sage
+  --primary-dark:  #6A8F5E;   // sage — button fills & text on tint
+  --primary-tint:  #EAF1E3;   // sage wash
+
+  --lavender:      #B4A6D4;   // third voice
+  --lavender-dark: #7E6FA8;   // lavender text / accent
+  --lavender-tint: #ECE7F4;
+
+  --accent:        #F2C48A;   // gold
+  --accent-dark:   #B97F35;   // gold text (AA)
+  --accent-tint:   #FBEED9;
+
+  --highlight:     #E8B4B8;   // pink
+  --highlight-dk:  #B96A76;   // pink text (AA)
+  --highlight-tint:#F9ECED;
+
+  --danger:        #C0564A;
+  --danger-tint:   #F7E4E1;
+
+  --text:          #3A3328;   // warm near-black brown
+  --text-muted:    #8A7E6A;
+  --border:        #EDE5D8;
+
+  --shadow:        0 2px 12px rgba(139, 175, 124, 0.18);
+  --shadow-md:     0 4px 24px rgba(139, 175, 124, 0.22);
+  --radius:        16px;
+  --radius-sm:     8px;
+  --radius-lg:     24px;
+  --font:          'Nunito', system-ui, sans-serif;
+  --font-display:  'Caprasimo', 'Nunito', serif;
+  --header-h:      60px;
+  --sidebar-w:     240px;
 }
+
+// Caprasimo display face — hero numbers, wordmark, big headings (DP2).
+.display { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; }
 
 // ── Reset & Base ──────────────────────────────────────────────────────────────
 *, *::before, *::after {
@@ -93,42 +117,46 @@ p  { line-height: 1.6; }
   }
 }
 
-// ── Chips ─────────────────────────────────────────────────────────────────────
+// ── Chips ── pill filters & tags; default is neutral, modifiers tint from ramps
 .chip {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.7rem;
-  border-radius: 99px;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
   font-size: 0.78rem;
-  font-weight: 700;
-  background: var(--accent);
-  color: #7a6200;
+  font-weight: 800;
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
 }
-.chip-primary   { background: var(--primary);   color: #1a4a2e; }
-.chip-highlight { background: var(--highlight); color: #7a2020; }
-.chip-muted     { background: var(--border);    color: var(--text-muted); }
+.chip-primary   { background: var(--primary-dark);  color: #fff;                 border-color: transparent; }
+.chip-accent    { background: var(--accent-tint);   color: var(--accent-dark);   border-color: transparent; }
+.chip-lavender  { background: var(--lavender-tint);  color: var(--lavender-dark); border-color: transparent; }
+.chip-highlight { background: var(--highlight-tint); color: var(--highlight-dk);  border-color: transparent; }
+.chip-muted     { background: var(--surface-2);     color: var(--text-muted);    border-color: transparent; }
 
-// ── Buttons ───────────────────────────────────────────────────────────────────
+// ── Buttons ── pill, ≥44pt tall, weight 800
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
-  padding: 0.55rem 1.1rem;
-  border-radius: var(--radius-sm);
+  padding: 0.8rem 1.4rem;
+  border-radius: 999px;
   font-family: var(--font);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 0.94rem;
+  font-weight: 800;
   cursor: pointer;
   border: none;
   transition: all 0.15s;
   text-decoration: none;
   white-space: nowrap;
 
-  &-primary  { background: var(--primary);   color: #1a4a2e; &:hover { background: var(--primary-dark); } }
-  &-accent   { background: var(--accent);    color: #7a6200; &:hover { background: var(--accent-dark);  } }
-  &-ghost    { background: transparent; border: 1.5px solid var(--border); color: var(--text-muted); &:hover { background: var(--bg); } }
-  &-danger   { background: var(--highlight); color: #7a2020; &:hover { background: var(--highlight-dk); } }
-  &-sm       { padding: 0.3rem 0.7rem; font-size: 0.8rem; }
+  &-primary  { background: var(--primary-dark); color: #fff;         &:hover { background: #5c7e50; } }
+  &-accent   { background: var(--accent);       color: var(--text);  &:hover { filter: brightness(0.96); } }
+  &-ghost    { background: transparent; border: 1.5px solid var(--primary); color: var(--primary-dark); &:hover { background: var(--primary-tint); } }
+  &-danger   { background: var(--danger-tint);  color: var(--danger); &:hover { background: #f2d6d1; } }
+  &-sm       { padding: 0.5rem 0.95rem; font-size: 0.82rem; }
 }
 
 // ── Stale/error banners ───────────────────────────────────────────────────────
@@ -173,17 +201,17 @@ input, select, textarea {
   font-family: var(--font);
   font-size: 0.95rem;
   color: var(--text);
-  background: var(--bg);
+  background: var(--surface);
   border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
   width: 100%;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 
   &:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(136, 201, 161, 0.2);
+    box-shadow: 0 0 0 3px var(--primary-tint);
   }
 }
 

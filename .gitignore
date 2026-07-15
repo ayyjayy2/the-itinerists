@@ -62,3 +62,7 @@ src/environments/environment.prod.ts
 firestore-debug.log
 ui-debug.log
 firebase-debug.log
+
+# Design Phase 2 — heavy reference assets kept locally (originals in the export zip)
+docs/design-phase-2/_original-export.zip
+docs/design-phase-2/uploads/

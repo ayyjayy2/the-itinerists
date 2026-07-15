@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Caprasimo&display=swap">
+<style>
+body{margin:0;background:transparent;font-family:'Nunito',sans-serif}
+a{color:#6A8F5E;text-decoration:none}a:hover{color:#8BAF7C}
+.tp{--bg:#FAF6EF;--sur:#FFFFFF;--sur2:#F5EFE3;--pri:#8BAF7C;--prid:#6A8F5E;--prit:#EAF1E3;--acc:#F2C48A;--accd:#B97F35;--acct:#FBEED9;--pink:#E8B4B8;--pinkd:#B96A76;--pinkt:#F9ECED;--tx:#3A3020;--mut:#8A7E6A;--bd:#EDE5D8;--dan:#C0564A;--dant:#F7E4E1;--onpri:#FFFFFF;--sh:0 4px 24px rgba(139,175,124,.22);--shs:0 2px 10px rgba(139,175,124,.16)}
+.tp[data-theme=dark]{--bg:#171A13;--sur:#242A20;--sur2:#30382B;--pri:#96BB85;--prid:#ABCE9A;--prit:#2C3A26;--acc:#E5AC64;--accd:#EFC28A;--acct:#3A3120;--pink:#D998A2;--pinkd:#E7B6BE;--pinkt:#3E2E32;--tx:#F6F1E3;--mut:#B7BFA6;--bd:#3D4634;--dan:#E8938A;--dant:#452F2C;--onpri:#1C2916;--sh:0 4px 24px rgba(0,0,0,.5);--shs:0 2px 10px rgba(0,0,0,.4)}
+.tp[data-palette=dusk]{--bg:#F8F4EF;--acc:#B4A6D4;--accd:#7E6FA8;--acct:#EEE9F6}
+.tp[data-palette=dusk][data-theme=dark]{--bg:#171A13;--acc:#B9A8E0;--accd:#CFC2EB;--acct:#322D45}
+.tp[data-palette=matcha]{--bg:#FAF4EA;--pri:#7FA069;--prid:#5E7F4C;--prit:#E7EEDD;--acc:#C67139;--accd:#A2531F;--acct:#F8E4D3;--pink:#E5B8A8;--pinkd:#B26A52;--pinkt:#F9EBE5}
+.tp[data-palette=matcha][data-theme=dark]{--bg:#171A13;--pri:#8FB078;--prid:#A3C48C;--prit:#2C3A26;--acc:#D98A50;--accd:#E8A873;--acct:#3D2C1E;--pink:#D9A695;--pinkd:#E6BCAD;--pinkt:#3E2E28}
+.tp[data-palette=fern]{--bg:#F6F2E8;--pri:#4F6F44;--prid:#3D5735;--prit:#E3EBDD;--acc:#E0A055;--accd:#96621B;--acct:#F9E9D2;--pink:#D4909A;--pinkd:#A75663;--pinkt:#F7E7EA}
+.tp[data-palette=fern][data-theme=dark]{--bg:#171A13;--pri:#7E9E6F;--prid:#9BBE8A;--prit:#2A3624}
+.tp[data-theme=dark] .prib{background:var(--pri)!important;color:#25321E!important}
+.tp ::placeholder{color:var(--mut);opacity:.75}
+.tp input,.tp select{font-family:'Nunito',sans-serif}
+.tp *::-webkit-scrollbar{display:none}
+.tp button{font-family:'Nunito',sans-serif;cursor:pointer}
+.tp button:hover{filter:brightness(1.04)}
+.tp button:active{transform:scale(.97)}
+.tp button,.tp input{transition:filter .15s,transform .1s}
+.tp :focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+@keyframes tpSheet{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes tpFade{from{opacity:0}to{opacity:1}}
+</style>
+</helmet>
+<div class="tp" data-theme="{{theme}}" data-palette="{{palette}}" style="width:{{wOuter}}px;font-family:'Nunito',sans-serif;color:var(--tx)">
+<div style="position:relative;width:100%;height:{{hOuter}}px;background:var(--bg);border-radius:{{bezelR}}px;border:1px solid var(--bd);box-shadow:var(--sh);overflow:hidden;display:flex">
+
+<!-- ============ TABLET SIDEBAR ============ -->
+<sc-if value="{{isTablet}}" hint-placeholder-val="{{false}}">
+<div style="width:248px;flex:none;background:var(--sur);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:24px 14px 18px">
+  <div style="display:flex;align-items:center;gap:10px;padding:0 10px 18px">
+    <div style="width:34px;height:34px;border-radius:11px;background:var(--prid);display:grid;place-items:center;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" style="width:22px;height:22px"><circle cx="12" cy="12" r="9.4" stroke-dasharray="2.6 2.4"/><circle cx="12" cy="12" r="6.4"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1.6-2.2 2.1-3.7 4.4-4.3-2.1 1.2-3.4 2.8-3.8 4.8 3.5.5 5.5-2 5.5-5.6z" fill="currentColor" stroke="none"/></svg></div>
+    <div style="display:flex;align-items:baseline;gap:5px"><span style="font-family:'Caprasimo',serif;font-size:21px">getaway</span><span style="font-size:10px;font-weight:800;letter-spacing:2px;color:var(--accd)">CLUB</span></div>
+  </div>
+  <sc-for list="{{sideItems}}" as="it" hint-placeholder-count="6">
+    <button onClick="{{it.go}}" style="display:flex;align-items:center;gap:12px;border:none;background:{{it.bg}};color:{{it.fg}};font-size:15px;font-weight:700;padding:11px 12px;border-radius:14px;text-align:left;margin-bottom:2px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex:none"><path d="{{it.d}}"/></svg>{{it.label}}
+    </button>
+  </sc-for>
+  <div style="flex:1"></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--sur2)">
+    <div style="width:32px;height:32px;border-radius:50%;background:#F2C48A;display:grid;place-items:center;font-size:16px">🦊</div>
+    <div style="line-height:1.2"><div style="font-weight:800;font-size:13.5px">Maya</div><div style="font-size:11.5px;color:var(--mut)">@maya</div></div>
+  </div>
+</div>
+</sc-if>
+
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;position:relative">
+
+<!-- ============ STATUS BAR ============ -->
+<sc-if value="{{isAndroid}}" hint-placeholder-val="{{false}}">
+  <div style="flex:none;height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:12.5px;font-weight:700">
+    <span>9:41</span>
+    <div style="position:absolute;left:50%;transform:translateX(-50%);width:12px;height:12px;border-radius:50%;background:var(--tx);opacity:.85"></div>
+    <span style="display:flex;gap:5px;align-items:center"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px"><path d="M2 20 22 4v16z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><rect x="3" y="10" width="18" height="7" rx="2.5"/></svg></span>
+  </div>
+</sc-if>
+<sc-if value="{{isIos}}" hint-placeholder-val="{{true}}">
+  <div style="flex:none;height:{{statusH}}px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 8px;font-size:14px;font-weight:800;position:relative">
+    <span>9:41</span>
+    <div style="position:absolute;left:50%;top:11px;transform:translateX(-50%);width:112px;height:30px;border-radius:18px;background:#171410"></div>
+    <span style="display:flex;gap:6px;align-items:center">
+      <svg viewBox="0 0 20 12" fill="currentColor" style="width:17px;height:11px"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="5" width="3" height="7" rx="1"/><rect x="9" y="2.5" width="3" height="9.5" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1"/></svg>
+      <svg viewBox="0 0 26 12" style="width:23px;height:12px"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".5"/><rect x="2.5" y="2.5" width="17" height="7" rx="2" fill="currentColor"/><path d="M23.5 4v4a2.2 2.2 0 0 0 0-4z" fill="currentColor" opacity=".5"/></svg>
+    </span>
+  </div>
+</sc-if>
+
+<!-- ============ CONTENT ============ -->
+<div style="flex:1;overflow-y:auto;overflow-x:hidden;position:relative">
+
+<!-- ======== LOGIN ======== -->
+<sc-if value="{{sLogin}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Login" style="min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:32px 26px 48px">
+  <div style="text-align:center;margin-bottom:30px">
+    <div style="width:76px;height:76px;margin:0 auto 14px;border-radius:24px;background:var(--prit);display:grid;place-items:center;color:var(--prid)"><svg viewBox="0 0 48 48" fill="none" style="width:58px;height:58px"><defs><path id="loginStampArc" d="M24 7.5a16.5 16.5 0 1 1 0 33 16.5 16.5 0 0 1 0-33"/></defs><circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="1.7"/><circle cx="24" cy="24" r="11.6" stroke="currentColor" stroke-width="1.7"/><text font-family="Nunito,sans-serif" font-size="5.4" font-weight="800" fill="currentColor" letter-spacing="1.1"><textPath href="#loginStampArc">GETAWAY CLUB · EST 2026 ·</textPath></text><path d="M29.5 18.8c-6.2 0-9.9 3.3-9.9 8.3 1-3.6 3.4-5.9 7.2-7-3.4 2-5.5 4.5-6.2 7.8 5.7.9 8.9-3.3 8.9-9.1z" fill="currentColor"/></svg></div>
+    <div style="font-family:'Caprasimo',serif;font-size:32px;letter-spacing:.5px">getaway</div>
+    <div style="font-size:14px;font-weight:800;letter-spacing:6px;color:var(--accd);margin-top:2px">CLUB</div>
+    <div style="color:var(--mut);font-size:15px;margin-top:4px">Plan the trip. Bring your people.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div><div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">Username</div><input value="maya" style="width:100%;box-sizing:border-box;background:var(--sur);border:1.5px solid var(--bd);border-radius:16px;padding:14px 16px;font-size:16px;color:var(--tx)"></div>
+    <div><div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">Password</div><input type="password" value="password" style="width:100%;box-sizing:border-box;background:var(--sur);border:1.5px solid var(--bd);border-radius:16px;padding:14px 16px;font-size:16px;color:var(--tx)"></div>
+    <button onClick="{{goHome}}" class="prib" style="margin-top:8px;background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:16px;font-size:16.5px;font-weight:800;box-shadow:var(--shs)">Sign in</button>
+    <div style="text-align:center;font-size:14.5px;color:var(--mut);margin-top:6px">New here? <a href="#" onClick="{{goSignup}}" style="font-weight:800">Sign up</a></div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== SIGN UP ======== -->
+<sc-if value="{{sSignup}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Sign up" style="padding:18px 26px 48px">
+  <div style="text-align:center;margin:10px 0 22px">
+    <div style="width:56px;height:56px;margin:0 auto 10px;border-radius:19px;background:var(--prit);display:grid;place-items:center;color:var(--prid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px"><path d="M20 4c-9.5 0-15 5-15 12 0 1.8.4 3.2 1 4.4C7.3 13.7 11.4 9.3 16.6 7 11.6 10.2 8.2 15 7.2 20.6c1.1.3 2.3.4 3.6.4 7.2 0 9.2-8.5 9.2-17z"/></svg></div>
+    <div style="font-size:24px;font-weight:800">Create your account</div>
+    <div style="color:var(--mut);font-size:14px;margin-top:2px">Set up your profile to start planning</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div><div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">Your name</div><input placeholder="e.g. Maya" style="width:100%;box-sizing:border-box;background:var(--sur);border:1.5px solid var(--bd);border-radius:16px;padding:13px 16px;font-size:16px;color:var(--tx)"></div>
+    <div><div style="font-size:13px;font-weight:800;margin:0 0 8px 4px">Pick an avatar</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{emojiOpts}}" as="e" hint-placeholder-count="8">
+          <button style="width:46px;height:46px;border-radius:14px;background:var(--sur);border:{{e.bord}};font-size:21px;display:grid;place-items:center">{{e.c}}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div><div style="font-size:13px;font-weight:800;margin:0 0 8px 4px">Pick a color</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <sc-for list="{{colorOpts}}" as="c" hint-placeholder-count="6">
+          <button style="width:38px;height:38px;border-radius:50%;background:{{c.hex}};border:none;box-shadow:{{c.ring}}"></button>
+        </sc-for>
+      </div>
+    </div>
+    <div><div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">Username</div><input placeholder="lowercase, no spaces" style="width:100%;box-sizing:border-box;background:var(--sur);border:1.5px solid var(--bd);border-radius:16px;padding:13px 16px;font-size:16px;color:var(--tx)"></div>
+    <div><div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">Password</div><input type="password" placeholder="At least 6 characters" style="width:100%;box-sizing:border-box;background:var(--sur);border:1.5px solid var(--bd);border-radius:16px;padding:13px 16px;font-size:16px;color:var(--tx)"></div>
+    <button onClick="{{goStart}}" class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:16px;font-size:16.5px;font-weight:800;margin-top:4px;box-shadow:var(--shs)">Create account</button>
+    <div style="text-align:center;font-size:14px;color:var(--mut)">Already have an account? <a href="#" onClick="{{goLogin}}" style="font-weight:800">Sign in</a></div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== GET STARTED ======== -->
+<sc-if value="{{sStart}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Get started" style="min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:32px 26px 48px">
+  <div style="text-align:center;margin-bottom:28px">
+    <div style="width:64px;height:64px;margin:0 auto 12px;border-radius:22px;background:var(--acct);display:grid;place-items:center;color:var(--accd)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></div>
+    <div style="font-size:26px;font-weight:800">Hey, Maya! 👋</div>
+    <div style="color:var(--mut);font-size:15px;margin-top:4px">Let's get your first trip going.</div>
+  </div>
+  <button onClick="{{goCreate}}" style="display:flex;align-items:center;gap:16px;background:var(--sur);border:1.5px solid var(--bd);border-radius:24px;padding:22px 20px;text-align:left;box-shadow:var(--shs);margin-bottom:14px;color:var(--tx)">
+    <div style="width:52px;height:52px;flex:none;border-radius:17px;background:var(--prit);display:grid;place-items:center;color:var(--prid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px"><path d="M6 8h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2zM9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></div>
+    <div style="flex:1"><div style="font-size:17.5px;font-weight:800">Set up a trip</div><div style="font-size:14px;color:var(--mut);margin-top:2px">Start a new trip and invite your people</div></div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M10 6l6 6-6 6"/></svg>
+  </button>
+  <button onClick="{{goJoin}}" style="display:flex;align-items:center;gap:16px;background:var(--sur);border:1.5px solid var(--bd);border-radius:24px;padding:22px 20px;text-align:left;box-shadow:var(--shs);color:var(--tx)">
+    <div style="width:52px;height:52px;flex:none;border-radius:17px;background:var(--pinkt);display:grid;place-items:center;color:var(--pinkd)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:26px;height:26px"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 1 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 1 0 0-4zM13 6v2M13 11v2M13 16v2"/></svg></div>
+    <div style="flex:1"><div style="font-size:17.5px;font-weight:800">I have an invite code</div><div style="font-size:14px;color:var(--mut);margin-top:2px">Join a trip someone shared with you</div></div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M10 6l6 6-6 6"/></svg>
+  </button>
+  <button onClick="{{goHome}}" style="margin-top:22px;background:none;border:none;color:var(--mut);font-size:14.5px;font-weight:700;padding:12px">Do this later</button>
+</div>
+</sc-if>
+
+<!-- ======== JOIN ======== -->
+<sc-if value="{{sJoin}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Join trip" style="min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:32px 26px 48px">
+  <button onClick="{{goStart}}" style="position:absolute;top:14px;left:14px;width:44px;height:44px;border-radius:50%;background:var(--sur);border:1px solid var(--bd);display:grid;place-items:center;color:var(--tx)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M14 6l-6 6 6 6"/></svg></button>
+  <div style="text-align:center;margin-bottom:26px">
+    <div style="width:64px;height:64px;margin:0 auto 12px;border-radius:22px;background:var(--pinkt);display:grid;place-items:center;color:var(--pinkd)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 1 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 1 0 0-4z"/></svg></div>
+    <div style="font-size:24px;font-weight:800">Join a trip</div>
+    <div style="color:var(--mut);font-size:14.5px;margin-top:4px">Enter the invite code your friend shared</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <input value="TOKYO-26" style="width:100%;box-sizing:border-box;background:var(--sur);border:1.5px solid var(--pri);border-radius:16px;padding:16px;font-size:19px;font-weight:800;letter-spacing:4px;text-align:center;color:var(--tx);text-transform:uppercase">
+    <div style="display:flex;align-items:center;gap:12px;background:var(--prit);border-radius:18px;padding:14px 16px">
+      <div style="width:40px;height:40px;flex:none;border-radius:13px;background:var(--sur);display:grid;place-items:center;font-size:19px">🗼</div>
+      <div style="flex:1;line-height:1.3"><div style="font-weight:800;font-size:15px">Tokyo, Girls' Trip '26</div><div style="font-size:13px;color:var(--mut)">Jul 20 – 25 · 4 friends already in</div></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--prid)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M4.5 12.5 10 18 19.5 7"/></svg>
+    </div>
+    <button onClick="{{goHome}}" class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:16px;font-size:16.5px;font-weight:800;box-shadow:var(--shs)">Join trip</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== HOME ======== -->
+<sc-if value="{{sHome}}" hint-placeholder-val="{{true}}">
+<div data-screen-label="Home" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 2px 14px">
+    <div style="display:flex;align-items:center;gap:9px">
+      <div style="width:30px;height:30px;border-radius:10px;background:var(--prid);display:grid;place-items:center;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" style="width:20px;height:20px"><circle cx="12" cy="12" r="9.4" stroke-dasharray="2.6 2.4"/><circle cx="12" cy="12" r="6.4"/><path d="M15.4 8.6c-3.9 0-6.1 2-6.1 5.1.6-2.2 2.1-3.7 4.4-4.3-2.1 1.2-3.4 2.8-3.8 4.8 3.5.5 5.5-2 5.5-5.6z" fill="currentColor" stroke="none"/></svg></div>
+      <span style="display:flex;align-items:baseline;gap:5px"><span style="font-family:'Caprasimo',serif;font-size:19px">getaway</span><span style="font-size:10px;font-weight:800;letter-spacing:2.5px;color:var(--accd)">CLUB</span></span>
+    </div>
+    <button onClick="{{goProfile}}" style="width:38px;height:38px;border-radius:50%;background:#F2C48A;border:2px solid var(--sur);box-shadow:var(--shs);font-size:18px;display:grid;place-items:center">🦊</button>
+  </div>
+
+  <!-- Variant A: soft hero card -->
+  <sc-if value="{{hvA}}" hint-placeholder-val="{{true}}">
+    <div style="background:linear-gradient(135deg,var(--prit),var(--acct));border-radius:24px;padding:22px 20px 18px;box-shadow:var(--shs)">
+      <div style="font-size:13px;font-weight:800;color:var(--prid);letter-spacing:1.2px;text-transform:uppercase">Up next</div>
+      <div style="font-size:26px;font-weight:800;line-height:1.15;margin-top:4px">Ready for Tokyo? 🗼</div>
+      <div style="font-size:14px;color:var(--mut);margin-top:3px">Jul 20 – 25 · 5 travelers</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
+        <div style="flex:none;white-space:nowrap;background:var(--sur);border-radius:999px;padding:9px 16px;font-weight:800;font-size:14.5px;box-shadow:var(--shs)">🌱 6 days to go</div>
+        <div style="display:flex">
+          <sc-for list="{{members}}" as="m" hint-placeholder-count="5">
+            <div style="width:30px;height:30px;border-radius:50%;background:{{m.color}};border:2px solid var(--sur);display:grid;place-items:center;font-size:14px;margin-left:-6px">{{m.e}}</div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- Variant B: bold countdown hero + trip switcher -->
+  <sc-if value="{{hvB}}" hint-placeholder-val="{{false}}">
+    <div style="display:flex;gap:8px;overflow-x:auto;padding:0 2px 12px;margin:0 -2px">
+      <button onClick="{{goTrips}}" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;background:var(--sur);border:1.5px solid var(--pri);border-radius:999px;padding:9px 15px;font-size:13.5px;font-weight:800;color:var(--tx)">🗼 Tokyo '26 <span style="color:var(--prid);white-space:nowrap">· active</span></button>
+      <button onClick="{{goTrips}}" style="flex:none;white-space:nowrap;background:var(--sur2);border:1px solid var(--bd);border-radius:999px;padding:9px 15px;font-size:13.5px;font-weight:700;color:var(--mut)">🌮 Mexico '26</button>
+      <button onClick="{{goCreate}}" style="flex:none;white-space:nowrap;background:var(--sur2);border:1px solid var(--bd);border-radius:999px;padding:9px 15px;font-size:13.5px;font-weight:700;color:var(--mut)">+ New</button>
+    </div>
+    <div style="background:var(--prid);border-radius:26px;padding:24px 22px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--sh)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1.4" style="position:absolute;right:-30px;top:-24px;width:170px;height:170px"><path d="M20 4c-9.5 0-15 5-15 12 0 1.8.4 3.2 1 4.4C7.3 13.7 11.4 9.3 16.6 7 11.6 10.2 8.2 15 7.2 20.6c1.1.3 2.3.4 3.6.4 7.2 0 9.2-8.5 9.2-17z"/></svg>
+      <div style="font-size:14px;font-weight:800;opacity:.85">Ready for Tokyo? 🗼</div>
+      <div style="font-family:'Caprasimo',serif;font-size:58px;line-height:1;margin-top:6px">6 days</div>
+      <div style="font-size:13.5px;opacity:.85;margin-top:4px;font-weight:700">Jul 20 – 25, 2026</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+        <div style="display:flex">
+          <sc-for list="{{members}}" as="m" hint-placeholder-count="5">
+            <div style="width:32px;height:32px;border-radius:50%;background:{{m.color}};border:2px solid var(--prid);display:grid;place-items:center;font-size:15px;margin-left:-7px">{{m.e}}</div>
+          </sc-for>
+        </div>
+        <span style="font-size:12.5px;font-weight:800;opacity:.85">you + 4 friends</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- Variant C: compact list-first -->
+  <sc-if value="{{hvC}}" hint-placeholder-val="{{false}}">
+    <div style="padding:2px 2px 4px">
+      <div style="font-size:27px;font-weight:800;line-height:1.15">Hey Maya,<br>Tokyo is in <span style="color:var(--prid)">6 days</span> 🌱</div>
+      <div style="display:flex;gap:8px;margin-top:12px;overflow-x:auto">
+        <button onClick="{{goTrips}}" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;background:var(--sur);border:1.5px solid var(--pri);border-radius:999px;padding:9px 15px;font-size:13.5px;font-weight:800;color:var(--tx)">🗼 Tokyo '26 <span style="color:var(--prid);white-space:nowrap">· active</span></button>
+        <button onClick="{{goTrips}}" style="flex:none;white-space:nowrap;background:var(--sur2);border:1px solid var(--bd);border-radius:999px;padding:9px 15px;font-size:13.5px;font-weight:700;color:var(--mut)">🌮 Mexico '26</button>
+        <button onClick="{{goTrips}}" style="flex:none;white-space:nowrap;background:var(--sur2);border:1px solid var(--bd);border-radius:999px;padding:9px 15px;font-size:13.5px;font-weight:700;color:var(--mut)">+ New</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:18px 2px 8px">
+    <div style="font-size:13px;font-weight:800;letter-spacing:1.1px;color:var(--mut);text-transform:uppercase">Pinned</div>
+    <button onClick="{{togglePinEdit}}" style="background:none;border:none;color:var(--prid);font-size:13px;font-weight:800;padding:6px 4px">{{pinEditLabel}}</button>
+  </div>
+  <sc-if value="{{pinEdit}}" hint-placeholder-val="{{false}}">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:14px;box-shadow:var(--shs);margin-bottom:10px">
+      <sc-for list="{{pinOpts}}" as="po" hint-placeholder-count="9">
+        <button onClick="{{po.toggle}}" style="display:flex;align-items:center;gap:7px;background:{{po.bg}};color:{{po.fg}};border:{{po.bord}};border-radius:999px;padding:9px 14px;font-size:13px;font-weight:800;min-height:38px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex:none"><path d="{{po.d}}"/></svg>{{po.label}}
+          <sc-if value="{{po.pinned}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex:none"><path d="M4.5 12.5 10 18 19.5 7"/></svg></sc-if>
+        </button>
+      </sc-for>
+      <div style="width:100%;font-size:12px;color:var(--mut);font-weight:700;margin-top:2px">Tap to pin or unpin — swap them as the trip goes on.</div>
+    </div>
+  </sc-if>
+  <sc-if value="{{hasPins}}" hint-placeholder-val="{{true}}">
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <sc-for list="{{pinTiles}}" as="pt" hint-placeholder-count="3">
+        <button onClick="{{pt.go}}" style="flex:1;min-width:104px;display:flex;flex-direction:column;align-items:center;gap:7px;background:var(--sur);border:1px solid var(--bd);border-radius:18px;padding:14px 10px;color:var(--tx);box-shadow:var(--shs);min-height:48px">
+          <div style="width:36px;height:36px;border-radius:12px;background:var(--prit);display:grid;place-items:center;color:var(--prid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="{{pt.d}}"/></svg></div>
+          <span style="font-size:12.5px;font-weight:800">{{pt.label}}</span>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 2px 10px">
+    <div style="font-size:17px;font-weight:800">At a glance</div>
+    <button onClick="{{goTrips}}" style="background:none;border:none;color:var(--prid);font-size:13.5px;font-weight:800;padding:6px">My trips →</button>
+  </div>
+
+  <button onClick="{{goItin}}" style="width:100%;text-align:left;display:flex;gap:14px;align-items:center;background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:15px 16px;box-shadow:var(--shs);margin-bottom:10px;color:var(--tx)">
+    <div style="width:44px;height:44px;flex:none;border-radius:14px;background:var(--prit);display:grid;place-items:center;color:var(--prid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM4 10h16M8 3v4M16 3v4"/></svg></div>
+    <div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15px">First up: Land at Haneda</div><div style="font-size:13px;color:var(--mut);margin-top:1px">Mon Jul 20 · 4:40 PM · then ramen at Ichiran</div></div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-linecap="round" style="width:18px;height:18px;flex:none"><path d="M10 6l6 6-6 6"/></svg>
+  </button>
+
+  <button onClick="{{goFin}}" style="width:100%;text-align:left;display:flex;gap:14px;align-items:center;background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:15px 16px;box-shadow:var(--shs);margin-bottom:10px;color:var(--tx)">
+    <div style="width:44px;height:44px;flex:none;border-radius:14px;background:var(--acct);display:grid;place-items:center;color:var(--accd)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M9 4a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zM16.8 8a5.5 5.5 0 1 1-6.9 8.4"/></svg></div>
+    <div style="flex:1;min-width:0"><div style="font-weight:800;font-size:15px">You're owed ¥12,400</div><div style="font-size:13px;color:var(--mut);margin-top:1px">¥341,200 tracked so far · tap to settle up</div></div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-linecap="round" style="width:18px;height:18px;flex:none"><path d="M10 6l6 6-6 6"/></svg>
+  </button>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button onClick="{{goOutfits}}" style="text-align:left;background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:15px 16px;box-shadow:var(--shs);color:var(--tx)">
+      <div style="display:flex;align-items:center;gap:7px;color:var(--accd)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg><span style="font-weight:800;font-size:14px">75–88°F</span></div>
+      <div style="font-size:12.5px;color:var(--mut);margin-top:4px;font-weight:700">Tokyo · sunny &amp; humid</div>
+    </button>
+    <button onClick="{{goPacking}}" style="text-align:left;background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:15px 16px;box-shadow:var(--shs);color:var(--tx)">
+      <div style="display:flex;align-items:center;gap:7px;color:var(--pinkd)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M6 8h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2zM9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg><span style="font-weight:800;font-size:14px">{{packSummary}}</span></div>
+      <div style="font-size:12.5px;color:var(--mut);margin-top:4px;font-weight:700">Packing list</div>
+    </button>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 2px 10px">
+    <div style="font-size:17px;font-weight:800">Latest from the group</div>
+    <button onClick="{{goSettings}}" style="background:none;border:none;color:var(--prid);font-size:13.5px;font-weight:800;padding:6px">See all →</button>
+  </div>
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:16px 17px;box-shadow:var(--shs);display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;gap:10px;font-size:13.5px;font-weight:600;color:var(--mut);align-items:flex-start"><div style="width:26px;height:26px;flex:none;border-radius:50%;background:#E8B4B8;display:grid;place-items:center;font-size:12px">🌸</div><span style="line-height:1.4"><b style="color:var(--tx)">Sofia</b> added "Izakaya night" to Day 2 · 2h ago</span></div>
+    <div style="display:flex;gap:10px;font-size:13.5px;font-weight:600;color:var(--mut);align-items:flex-start"><div style="width:26px;height:26px;flex:none;border-radius:50%;background:#D8CDEA;display:grid;place-items:center;font-size:12px">✨</div><span style="line-height:1.4"><b style="color:var(--tx)">Priya</b> recommended "Golden Gai bar hop" · 5h ago</span></div>
+    <div style="display:flex;gap:10px;font-size:13.5px;font-weight:600;color:var(--mut);align-items:flex-start"><div style="width:26px;height:26px;flex:none;border-radius:50%;background:#F5E3A8;display:grid;place-items:center;font-size:12px">🌻</div><span style="line-height:1.4"><b style="color:var(--tx)">Amara</b> planned her Day 2 outfit · yesterday</span></div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== MY TRIPS ======== -->
+<sc-if value="{{sTrips}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="My Trips" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 16px">
+    <div style="font-size:28px;font-weight:800">My Trips</div>
+    <button onClick="{{goCreate}}" class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:11px 18px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:6px;box-shadow:var(--shs)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>New Trip</button>
+  </div>
+  <div style="font-size:12.5px;font-weight:800;letter-spacing:1.2px;color:var(--mut);text-transform:uppercase;margin:4px 4px 10px">Active</div>
+  <button onClick="{{goHome}}" style="width:100%;text-align:left;background:var(--sur);border:1.5px solid var(--pri);border-radius:24px;padding:18px;box-shadow:var(--sh);color:var(--tx);margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:24px">🗼</span><span style="font-size:18px;font-weight:800;flex:1">Tokyo, Girls' Trip '26</span><span style="background:var(--prit);color:var(--prid);font-size:11px;font-weight:800;letter-spacing:1px;border-radius:999px;padding:5px 11px">ACTIVE</span></div>
+    <div style="font-size:14px;color:var(--mut);margin:8px 0 12px;font-weight:600">Tokyo, Japan · Jul 20 – 25, 2026 · JPY</div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex">
+        <sc-for list="{{members}}" as="m" hint-placeholder-count="5">
+          <div style="width:32px;height:32px;border-radius:50%;background:{{m.color}};border:2px solid var(--sur);display:grid;place-items:center;font-size:15px;margin-left:-7px">{{m.e}}</div>
+        </sc-for>
+      </div>
+      <div style="flex:none;white-space:nowrap;font-size:13px;font-weight:800;color:var(--prid)">6 days to go →</div>
+    </div>
+  </button>
+  <button onClick="{{goHome}}" style="width:100%;text-align:left;background:var(--sur);border:1px solid var(--bd);border-radius:24px;padding:18px;box-shadow:var(--shs);color:var(--tx)">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:24px">🌮</span><span style="font-size:17px;font-weight:800;flex:1">Mexico '26</span></div>
+    <div style="font-size:14px;color:var(--mut);margin-top:6px;font-weight:600">Cancún · Jul 11 – 14, 2026 · MXN · 2 travelers</div>
+  </button>
+  <div style="font-size:12.5px;font-weight:800;letter-spacing:1.2px;color:var(--mut);text-transform:uppercase;margin:22px 4px 10px">Archived</div>
+  <div style="background:var(--sur2);border:1px dashed var(--bd);border-radius:24px;padding:16px 18px;display:flex;align-items:center;gap:10px;opacity:.8">
+    <span style="font-size:21px;filter:saturate(.4)">🍂</span>
+    <div style="flex:1"><div style="font-size:15px;font-weight:800;color:var(--mut)">Savannah, Bach Weekend</div><div style="font-size:13px;color:var(--mut)">Oct 2025 · archived</div></div>
+    <button style="background:none;border:1px solid var(--bd);border-radius:999px;color:var(--mut);font-size:12.5px;font-weight:800;padding:8px 13px">Restore</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== CREATE TRIP ======== -->
+<sc-if value="{{sCreate}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Create Trip" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 0 14px">
+    <button onClick="{{goTrips}}" style="width:44px;height:44px;border-radius:50%;background:var(--sur);border:1px solid var(--bd);display:grid;place-items:center;color:var(--tx)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M14 6l-6 6 6 6"/></svg></button>
+    <div><div style="font-size:24px;font-weight:800">New Trip</div><div style="font-size:13px;color:var(--mut)">You'll be the owner and can invite others</div></div>
+  </div>
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:24px;padding:20px;box-shadow:var(--shs);display:flex;flex-direction:column;gap:16px">
+    <div><div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">Trip name</div><input placeholder="e.g. Bali Girls' Trip 2027" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:13px 16px;font-size:16px;color:var(--tx)"></div>
+    <div><div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">Destination</div><input placeholder="e.g. Bali, Indonesia" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:13px 16px;font-size:16px;color:var(--tx)"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">Start</div><input value="Jul 20, 2026" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:13px 14px;font-size:15px;color:var(--tx)"></div>
+      <div><div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">End</div><input value="Jul 25, 2026" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:13px 14px;font-size:15px;color:var(--tx)"></div>
+    </div>
+    <div><div style="font-size:13px;font-weight:800;margin:0 0 6px 4px">Primary currency</div>
+      <button onClick="{{openCurrency}}" style="width:100%;display:flex;align-items:center;gap:10px;background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:13px 16px;font-size:16px;color:var(--tx);text-align:left">
+        <span style="font-size:18px">{{curFlag}}</span><span style="flex:1;font-weight:700">{{curLabel}}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+  </div>
+  <button onClick="{{goHome}}" class="prib" style="width:100%;margin-top:16px;background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:16px;font-size:16.5px;font-weight:800;box-shadow:var(--shs)">Create Trip</button>
+</div>
+</sc-if>
+
+<!-- ======== ITINERARY ======== -->
+<sc-if value="{{sItin}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Itinerary" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 12px">
+    <div style="font-size:28px;font-weight:800">Itinerary</div>
+    <button onClick="{{openEvent}}" class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;width:44px;height:44px;display:grid;place-items:center;box-shadow:var(--shs)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:20px;height:20px"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+  <div style="display:flex;gap:8px;overflow-x:auto;padding:2px 2px 14px;margin:0 -2px">
+    <sc-for list="{{dayChips}}" as="d" hint-placeholder-count="6">
+      <button onClick="{{d.go}}" style="flex:none;background:{{d.bg}};color:{{d.fg}};border:{{d.bord}};border-radius:999px;padding:9px 15px;font-size:13.5px;font-weight:800">{{d.label}}</button>
+    </sc-for>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <button onClick="{{dayPrev}}" style="width:44px;height:44px;border-radius:50%;background:var(--sur);border:1px solid var(--bd);display:grid;place-items:center;color:var(--tx)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 6l-6 6 6 6"/></svg></button>
+    <div style="text-align:center"><div style="font-size:19px;font-weight:800">{{dayTitle}}</div><div style="font-size:13px;color:var(--mut);font-weight:700">{{dayDate}} · swipe for more</div></div>
+    <button onClick="{{dayNext}}" style="width:44px;height:44px;border-radius:50%;background:var(--sur);border:1px solid var(--bd);display:grid;place-items:center;color:var(--tx)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M10 6l6 6-6 6"/></svg></button>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--bd);border-radius:18px;padding:12px 15px;margin-bottom:14px;box-shadow:var(--shs)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--accd)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="{{dayWIcon}}"/></svg>
+    <div style="flex:1"><span style="font-weight:800;font-size:15px">{{dayTemp}}</span> <span style="color:var(--mut);font-size:13.5px;font-weight:700">· {{dayCond}} · Tokyo</span></div>
+    <span style="background:var(--prit);color:var(--prid);font-size:10.5px;font-weight:800;letter-spacing:1px;border-radius:999px;padding:4px 9px">LIVE</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{dayEvents}}" as="ev" hint-placeholder-count="3">
+      <div style="display:flex;gap:12px;background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:14px 15px;box-shadow:var(--shs)">
+        <div style="flex:none;width:52px;text-align:center"><div style="font-size:14px;font-weight:800;color:var(--prid)">{{ev.t}}</div><div style="width:2px;height:100%;max-height:26px;background:var(--bd);margin:6px auto 0;border-radius:2px"></div></div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:800;font-size:15.5px;flex:1">{{ev.title}}</span><span style="flex:none;background:{{ev.tagBg}};color:{{ev.tagFg}};font-size:11px;font-weight:800;border-radius:999px;padding:4px 10px">{{ev.cat}}</span></div>
+          <div style="font-size:13px;color:var(--mut);margin-top:3px;font-weight:600;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M12 21c-4.5-3.8-7-7.2-7-10.5a7 7 0 0 1 14 0c0 3.3-2.5 6.7-7 10.5zM12 8a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/></svg>{{ev.loc}}</div>
+          <div style="display:flex;margin-top:8px">
+            <sc-for list="{{ev.who}}" as="w" hint-placeholder-count="2">
+              <div style="width:24px;height:24px;border-radius:50%;background:{{w.color}};border:2px solid var(--sur);display:grid;place-items:center;font-size:11px;margin-left:-5px">{{w.e}}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+    <button onClick="{{openEvent}}" style="border:1.5px dashed var(--bd);background:none;border-radius:20px;padding:15px;color:var(--mut);font-size:14.5px;font-weight:800">+ Add event to {{dayTitle}}</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== FLIGHTS ======== -->
+<sc-if value="{{sFlights}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Flights" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 14px">
+    <div style="font-size:28px;font-weight:800">Flights</div>
+    <button onClick="{{openFlight}}" class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:11px 18px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:6px;box-shadow:var(--shs)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Add flight</button>
+  </div>
+  <div style="font-size:12.5px;font-weight:800;letter-spacing:1.2px;color:var(--mut);text-transform:uppercase;margin:2px 4px 10px">Arrivals · Mon Jul 20</div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px">
+    <sc-for list="{{arrivals}}" as="f" hint-placeholder-count="3">
+      <div style="background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:15px 16px;box-shadow:var(--shs)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;flex:none;border-radius:50%;background:{{f.color}};display:grid;place-items:center;font-size:16px">{{f.e}}</div>
+          <div style="flex:1"><div style="font-weight:800;font-size:15px">{{f.name}}</div><div style="font-size:12.5px;color:var(--mut);font-weight:700">{{f.airline}}</div></div>
+          <span style="background:var(--prit);color:var(--prid);font-size:11px;font-weight:800;border-radius:999px;padding:5px 11px">{{f.status}}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:13px;padding-top:13px;border-top:1px dashed var(--bd)">
+          <div style="text-align:center"><div style="font-size:19px;font-weight:800">{{f.from}}</div><div style="font-size:11.5px;color:var(--mut);font-weight:700">{{f.dep}}</div></div>
+          <div style="flex:1;display:flex;align-items:center;gap:4px"><div style="flex:1;height:2px;background:var(--bd);border-radius:2px"></div><svg viewBox="0 0 24 24" fill="none" stroke="var(--pri)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;transform:rotate(45deg)"><path d="M21 3 3 10.5l7.5 3M21 3l-6 18-4.5-7.5M21 3 10.5 13.5"/></svg><div style="flex:1;height:2px;background:var(--bd);border-radius:2px"></div></div>
+          <div style="text-align:center"><div style="font-size:19px;font-weight:800">HND</div><div style="font-size:11.5px;color:var(--mut);font-weight:700">{{f.arr}}</div></div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="font-size:12.5px;font-weight:800;letter-spacing:1.2px;color:var(--mut);text-transform:uppercase;margin:2px 4px 10px">Departures · Sat Jul 25</div>
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:15px 16px;box-shadow:var(--shs)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex"><div style="width:36px;height:36px;border-radius:50%;background:#F2C48A;border:2px solid var(--sur);display:grid;place-items:center;font-size:16px">🦊</div><div style="width:36px;height:36px;border-radius:50%;background:#E8B4B8;border:2px solid var(--sur);display:grid;place-items:center;font-size:16px;margin-left:-9px">🌸</div><div style="width:36px;height:36px;border-radius:50%;background:#BFD3EA;border:2px solid var(--sur);display:grid;place-items:center;font-size:16px;margin-left:-9px">🌙</div></div>
+      <div style="flex:1"><div style="font-weight:800;font-size:15px">Maya, Sofia &amp; Jess</div><div style="font-size:12.5px;color:var(--mut);font-weight:700">United UA 838 · HND → SFO</div></div>
+      <span style="background:var(--acct);color:var(--accd);font-size:11px;font-weight:800;border-radius:999px;padding:5px 11px">5:25 PM</span>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== STAYS ======== -->
+<sc-if value="{{sStays}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Stays" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 14px">
+    <div style="font-size:28px;font-weight:800">Stays</div>
+    <button class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:11px 18px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:6px;box-shadow:var(--shs)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Add stay</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="background:var(--sur);border:1px solid var(--bd);border-radius:24px;overflow:hidden;box-shadow:var(--shs)">
+      <div style="height:110px;background:linear-gradient(135deg,var(--prit),var(--acct));display:grid;place-items:center;color:var(--prid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;opacity:.7"><path d="M3 18v-7M3 14h18v4M21 14v-2a2 2 0 0 0-2-2h-9v4M3 11V6M8.5 10.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/></svg></div>
+      <div style="padding:16px 18px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16.5px;font-weight:800;flex:1">Shibuya Loft — Airbnb</span><span style="background:var(--prit);color:var(--prid);font-size:11px;font-weight:800;border-radius:999px;padding:5px 11px">Nights 1–3</span></div>
+        <div style="font-size:13.5px;color:var(--mut);margin-top:4px;font-weight:600">Jul 20 – 23 · Check-in 4 PM · Sakura House, Jinnan 1-12</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+          <div style="display:flex">
+            <sc-for list="{{members}}" as="m" hint-placeholder-count="5">
+              <div style="width:26px;height:26px;border-radius:50%;background:{{m.color}};border:2px solid var(--sur);display:grid;place-items:center;font-size:12px;margin-left:-6px">{{m.e}}</div>
+            </sc-for>
+          </div>
+          <span style="font-size:13.5px;font-weight:800">¥18,400<span style="color:var(--mut);font-weight:700"> / night</span></span>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--sur);border:1px solid var(--bd);border-radius:24px;overflow:hidden;box-shadow:var(--shs)">
+      <div style="height:110px;background:linear-gradient(135deg,var(--pinkt),var(--prit));display:grid;place-items:center;color:var(--pinkd)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;opacity:.7"><path d="M3 18v-7M3 14h18v4M21 14v-2a2 2 0 0 0-2-2h-9v4M3 11V6M8.5 10.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/></svg></div>
+      <div style="padding:16px 18px">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16.5px;font-weight:800;flex:1">Ryokan Kiku, Hakone ♨</span><span style="background:var(--pinkt);color:var(--pinkd);font-size:11px;font-weight:800;border-radius:999px;padding:5px 11px">Night 4</span></div>
+        <div style="font-size:13.5px;color:var(--mut);margin-top:4px;font-weight:600">Jul 23 – 24 · Onsen + kaiseki dinner · booking #RK-2214</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+          <span style="font-size:13px;color:var(--prid);font-weight:800">Booking link →</span>
+          <span style="font-size:13.5px;font-weight:800">¥21,000<span style="color:var(--mut);font-weight:700"> / person</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== FINANCE ======== -->
+<sc-if value="{{sFin}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Finance" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 14px">
+    <div style="font-size:28px;font-weight:800">Finance</div>
+    <button onClick="{{openExpense}}" class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:11px 18px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:6px;box-shadow:var(--shs)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+  </div>
+  <sc-if value="{{hasOwed}}" hint-placeholder-val="{{true}}">
+  <div style="background:var(--prit);border:1.5px solid var(--pri);border-radius:24px;padding:18px 20px;box-shadow:var(--shs)">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1.4px;color:var(--prid);text-transform:uppercase">You are still owed</div>
+    <div style="font-size:32px;font-weight:800;color:var(--prid);margin-top:2px">{{finOwedTotal}}<span style="font-size:14px;color:var(--mut);font-weight:800"> JPY</span></div>
+    <div style="border-top:1px solid var(--bd);margin-top:12px;padding-top:6px">
+      <sc-for list="{{finOwedRows}}" as="r" hint-placeholder-count="2">
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0">
+          <div style="width:28px;height:28px;flex:none;border-radius:50%;background:{{r.color}};display:grid;place-items:center;font-size:13px">{{r.e}}</div>
+          <span style="flex:1;font-weight:800;font-size:14.5px">{{r.n}}</span>
+          <span style="font-weight:800;font-size:14.5px;color:var(--prid)">{{r.amt}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+  <sc-if value="{{hasOwe}}" hint-placeholder-val="{{true}}">
+  <div style="background:var(--pinkt);border:1.5px solid var(--pink);border-radius:24px;padding:18px 20px;box-shadow:var(--shs);margin-top:12px">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1.4px;color:var(--pinkd);text-transform:uppercase">You still owe</div>
+    <div style="font-size:32px;font-weight:800;color:var(--pinkd);margin-top:2px">{{finOweTotal}}<span style="font-size:14px;color:var(--mut);font-weight:800"> JPY</span></div>
+    <div style="border-top:1px solid var(--bd);margin-top:12px;padding-top:6px">
+      <sc-for list="{{finOweRows}}" as="r" hint-placeholder-count="1">
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0">
+          <div style="width:28px;height:28px;flex:none;border-radius:50%;background:{{r.color}};display:grid;place-items:center;font-size:13px">{{r.e}}</div>
+          <span style="flex:1;font-weight:800;font-size:14.5px">{{r.n}}</span>
+          <span style="font-weight:800;font-size:14.5px;color:var(--pinkd)">{{r.amt}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <button onClick="{{gsToggle}}" style="width:100%;display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--bd);border-radius:18px;padding:14px 16px;margin-top:12px;color:var(--tx);box-shadow:var(--shs)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--prid)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M9 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM2.5 20a6.5 6.5 0 0 1 13 0M16 5a4 4 0 0 1 0 7M17.5 14.5a6 6 0 0 1 4 5.5"/></svg>
+    <span style="flex:1;text-align:left;font-weight:800;font-size:15px">Group summary</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+  <sc-if value="{{gsOpen}}" hint-placeholder-val="{{true}}">
+    <div style="background:var(--sur);border:1px solid var(--bd);border-radius:20px;margin-top:8px;overflow:hidden;box-shadow:var(--shs)">
+      <sc-for list="{{gsRows}}" as="g" hint-placeholder-count="5">
+        <button onClick="{{g.toggleRow}}" style="width:100%;display:flex;align-items:center;gap:10px;padding:12px 16px;border:none;border-bottom:1px solid var(--bd);background:none;color:var(--tx);text-align:left;min-height:48px">
+          <div style="width:30px;height:30px;flex:none;border-radius:50%;background:{{g.color}};display:grid;place-items:center;font-size:14px">{{g.e}}</div>
+          <span style="flex:1;font-weight:800;font-size:14.5px;min-width:0">{{g.n}}</span>
+          <span style="flex:none;background:{{g.bBg}};color:{{g.bFg}};font-size:10.5px;font-weight:800;letter-spacing:.8px;border-radius:999px;padding:5px 10px">{{g.badge}}</span>
+          <span style="flex:none;font-weight:800;font-size:14.5px;color:{{g.amtC}}">{{g.amt}}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex:none;transform:{{g.arrow}};transition:transform .2s"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <sc-if value="{{g.open}}" hint-placeholder-val="{{false}}">
+          <div style="background:var(--sur2);border-bottom:1px solid var(--bd);padding:4px 16px 4px 50px">
+            <sc-for list="{{g.details}}" as="d" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--bd)">
+                <span style="flex:1;font-size:13.5px;font-weight:700;color:var(--mut)">{{d.label}}</span>
+                <span style="flex:none;font-weight:800;font-size:13.5px;color:{{d.amtC}}">{{d.amt}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;align-items:center;gap:10px;margin:18px 0 10px">
+    <div style="display:flex;background:var(--sur2);border-radius:999px;padding:3px;flex:none">
+      <button onClick="{{setFinOwed}}" style="background:{{tabOwedBg}};color:{{tabOwedFg}};border:none;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:800">Owed</button>
+      <button onClick="{{setFinPaid}}" style="background:{{tabPaidBg}};color:{{tabPaidFg}};border:none;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:800">Paid</button>
+    </div>
+    <div style="flex:1"></div>
+    <button style="display:flex;align-items:center;gap:6px;background:var(--sur);border:1px solid var(--bd);border-radius:999px;padding:9px 14px;font-size:13px;font-weight:800;color:var(--tx)">All people <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M6 9l6 6 6-6"/></svg></button>
+  </div>
+  <div style="display:flex;align-items:center;gap:9px;background:var(--sur);border:1.5px solid var(--bd);border-radius:16px;padding:12px 14px;margin-bottom:12px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-linecap="round" style="width:17px;height:17px"><path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM15.5 15.5 21 21"/></svg>
+    <input placeholder="Search vendor, description, person…" style="flex:1;border:none;background:none;font-size:14.5px;color:var(--tx);outline:none;font-weight:700;min-width:0">
+  </div>
+
+  <sc-if value="{{finEmpty}}" hint-placeholder-val="{{false}}">
+    <div style="text-align:center;padding:36px 26px">
+      <div style="width:60px;height:60px;margin:0 auto 12px;border-radius:20px;background:var(--prit);display:grid;place-items:center;color:var(--prid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><path d="M4.5 12.5 10 18 19.5 7"/></svg></div>
+      <div style="font-size:16px;font-weight:800">Nothing here</div>
+      <div style="font-size:13.5px;color:var(--mut);margin-top:4px;font-weight:600">Settled expenses will show under Paid.</div>
+    </div>
+  </sc-if>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <sc-for list="{{finPairs}}" as="fp" hint-placeholder-count="3">
+      <div style="background:var(--sur);border:1px solid var(--bd);border-radius:22px;overflow:hidden;box-shadow:var(--shs)">
+        <div style="display:flex;align-items:center;gap:10px;padding:15px 16px;border-bottom:1px solid var(--bd)">
+          <div style="width:38px;height:38px;flex:none;border-radius:50%;background:{{fp.fromC}};display:grid;place-items:center;font-size:17px">{{fp.fromE}}</div>
+          <div style="flex:1;min-width:0;line-height:1.25"><span style="font-weight:800;font-size:15px">{{fp.fromN}}</span> <span style="font-size:13px;color:var(--mut);font-weight:700">owes</span> <span style="font-weight:800;font-size:15px">{{fp.toN}}</span></div>
+          <span style="flex:none;font-weight:800;font-size:16.5px;color:{{fp.amtC}}">{{fp.amt}}</span>
+        </div>
+        <sc-for list="{{fp.items}}" as="it" hint-placeholder-count="2">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bd)">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:800;font-size:14.5px">{{it.v}}</div>
+              <sc-if value="{{it.hasD}}" hint-placeholder-val="{{true}}"><div style="font-size:12.5px;color:var(--mut);font-weight:700">{{it.d}}</div></sc-if>
+              <div style="font-size:12px;color:var(--mut);font-weight:700;margin-top:1px">{{it.date}}</div>
+            </div>
+            <span style="flex:none;font-weight:800;font-size:14px">{{it.pp}}</span>
+            <button onClick="{{it.toggle}}" style="width:30px;height:30px;flex:none;border-radius:50%;border:2.5px solid {{it.boxBd}};background:{{it.boxBg}};display:grid;place-items:center;color:var(--onpri)">
+              <sc-if value="{{it.done}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M4.5 12.5 10 18 19.5 7"/></svg></sc-if>
+            </button>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== MY EXPENSES ======== -->
+<sc-if value="{{sMyExp}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="My Expenses" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 4px">
+    <div><div style="font-size:28px;font-weight:800">My Expenses</div><div style="font-size:13px;color:var(--mut);font-weight:700">Maya's personal log</div></div>
+    <div style="background:var(--prit);color:var(--prid);border-radius:999px;padding:9px 15px;font-size:15px;font-weight:800">¥46,900</div>
+  </div>
+  <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 2px;margin:0 -2px">
+    <sc-for list="{{expChips}}" as="ch" hint-placeholder-count="5">
+      <button style="flex:none;background:{{ch.bg}};color:{{ch.fg}};border:{{ch.bord}};border-radius:999px;padding:8px 14px;font-size:13px;font-weight:800">{{ch.label}}</button>
+    </sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{myExp}}" as="x" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;gap:12px;background:var(--sur);border:1px solid var(--bd);border-radius:18px;padding:13px 15px;box-shadow:var(--shs)">
+        <div style="width:38px;height:38px;flex:none;border-radius:12px;background:{{x.bg}};display:grid;place-items:center;color:{{x.fg}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="{{x.d}}"/></svg></div>
+        <div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14.5px">{{x.title}}</div><div style="font-size:12.5px;color:var(--mut);font-weight:700">{{x.sub}}</div></div>
+        <span style="font-weight:800;font-size:15px">{{x.amt}}</span>
+      </div>
+    </sc-for>
+  </div>
+  <button onClick="{{openExpense}}" style="width:100%;margin-top:12px;border:1.5px dashed var(--bd);background:none;border-radius:18px;padding:14px;color:var(--mut);font-size:14.5px;font-weight:800">+ Add expense</button>
+</div>
+</sc-if>
+
+<!-- ======== RECS ======== -->
+<sc-if value="{{sRecs}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Recs" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 12px">
+    <div style="font-size:28px;font-weight:800">Tips &amp; Recs</div>
+    <button class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:11px 18px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:6px;box-shadow:var(--shs)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>Add rec</button>
+  </div>
+  <div style="display:flex;gap:8px;overflow-x:auto;padding:2px 2px 14px;margin:0 -2px">
+    <sc-for list="{{recChips}}" as="ch" hint-placeholder-count="6">
+      <button onClick="{{ch.go}}" style="flex:none;background:{{ch.bg}};color:{{ch.fg}};border:{{ch.bord}};border-radius:999px;padding:9px 15px;font-size:13.5px;font-weight:800">{{ch.label}}</button>
+    </sc-for>
+  </div>
+  <sc-if value="{{recsEmpty}}" hint-placeholder-val="{{false}}">
+    <div style="text-align:center;padding:46px 26px">
+      <div style="width:72px;height:72px;margin:0 auto 16px;border-radius:24px;background:var(--pinkt);display:grid;place-items:center;color:var(--pinkd)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:34px;height:34px"><path d="M12 12m-2.5 0a2.5 2.5 0 1 0 5 0 2.5 2.5 0 1 0-5 0M12 9.5V4M12 14.5V20M9.8 10.2 5.5 6.5M14.2 13.8l4.3 3.7M9.8 13.8 5.5 17.5M14.2 10.2l4.3-3.7"/></svg></div>
+      <div style="font-size:18px;font-weight:800">Nothing here yet</div>
+      <div style="font-size:14px;color:var(--mut);margin:6px auto 18px;max-width:240px;line-height:1.5">Share the spots, eats and tips you're excited about — everyone on the trip sees them.</div>
+      <button class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:13px 22px;font-size:14.5px;font-weight:800">+ Add the first one</button>
+    </div>
+  </sc-if>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{recList}}" as="r" hint-placeholder-count="4">
+      <div style="background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:15px 16px;box-shadow:var(--shs)">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:800;font-size:15.5px;flex:1">{{r.title}}</span><span style="background:{{r.tagBg}};color:{{r.tagFg}};font-size:11px;font-weight:800;border-radius:999px;padding:4px 10px">{{r.cat}}</span></div>
+        <div style="font-size:13.5px;color:var(--mut);margin-top:5px;line-height:1.45;font-weight:600">{{r.body}}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:11px">
+          <div style="width:22px;height:22px;border-radius:50%;background:{{r.color}};display:grid;place-items:center;font-size:10.5px">{{r.e}}</div>
+          <span style="font-size:12px;color:var(--mut);font-weight:700">{{r.byline}}</span>
+          <div style="flex:1"></div>
+          <button style="background:var(--sur2);border:none;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800;color:var(--tx)">♡ {{r.likes}}</button>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== PACKING ======== -->
+<sc-if value="{{sPacking}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Packing" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 12px">
+    <div style="font-size:28px;font-weight:800">Packing</div>
+    <div style="display:flex;gap:6px"><span style="background:var(--prit);color:var(--prid);border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:800">{{packedN}} packed</span><span style="background:var(--acct);color:var(--accd);border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:800">{{togoN}} to go</span></div>
+  </div>
+  <div style="height:10px;border-radius:99px;background:var(--sur2);overflow:hidden;margin-bottom:18px"><div style="width:{{packPct}}%;height:100%;background:var(--pri);border-radius:99px;transition:width .3s"></div></div>
+  <sc-for list="{{packCats}}" as="pc" hint-placeholder-count="3">
+    <div style="margin-bottom:18px">
+      <div style="font-size:12.5px;font-weight:800;letter-spacing:1.2px;color:var(--mut);text-transform:uppercase;margin:0 4px 8px">{{pc.name}}</div>
+      <div style="background:var(--sur);border:1px solid var(--bd);border-radius:20px;overflow:hidden;box-shadow:var(--shs)">
+        <sc-for list="{{pc.items}}" as="it" hint-placeholder-count="3">
+          <button onClick="{{it.toggle}}" style="width:100%;display:flex;align-items:center;gap:12px;background:none;border:none;border-bottom:1px solid var(--bd);padding:13px 16px;text-align:left;color:var(--tx)">
+            <div style="width:24px;height:24px;flex:none;border-radius:8px;border:2px solid {{it.boxBd}};background:{{it.boxBg}};display:grid;place-items:center;color:var(--onpri)"><sc-if value="{{it.done}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M4.5 12.5 10 18 19.5 7"/></svg></sc-if></div>
+            <span style="flex:1;font-size:15px;font-weight:700;text-decoration:{{it.deco}};color:{{it.txc}}">{{it.name}}</span>
+            <sc-if value="{{it.fromFriend}}" hint-placeholder-val="{{false}}"><span style="background:var(--pinkt);color:var(--pinkd);font-size:10.5px;font-weight:800;border-radius:999px;padding:4px 9px">🌸 Sofia's idea</span></sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-for>
+  <button onClick="{{openSuggest}}" style="width:100%;display:flex;align-items:center;gap:12px;background:var(--pinkt);border:none;border-radius:20px;padding:15px 17px;color:var(--tx);text-align:left">
+    <div style="width:40px;height:40px;flex:none;border-radius:13px;background:var(--sur);display:grid;place-items:center;color:var(--pinkd)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 21c-6-3.6-8-7-8-9.5A4.5 4.5 0 0 1 12 8a4.5 4.5 0 0 1 8 3.5c0 2.5-2 5.9-8 9.5z"/></svg></div>
+    <div style="flex:1"><div style="font-weight:800;font-size:14.5px">Suggest an item to a friend</div><div style="font-size:12.5px;color:var(--mut);font-weight:700">"Don't forget your rain jacket!"</div></div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--pinkd)" stroke-width="2.2" stroke-linecap="round" style="width:18px;height:18px"><path d="M10 6l6 6-6 6"/></svg>
+  </button>
+</div>
+</sc-if>
+
+<!-- ======== OUTFITS ======== -->
+<sc-if value="{{sOutfits}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Outfits" style="padding:6px 20px 110px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 12px">
+    <div style="font-size:28px;font-weight:800">Outfits</div>
+    <div style="display:flex;background:var(--sur2);border-radius:999px;padding:3px">
+      <button style="background:var(--sur);border:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:800;color:var(--tx);box-shadow:var(--shs)">Day</button>
+      <button style="background:none;border:none;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--mut)">All days</button>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <button onClick="{{dayPrev}}" style="width:44px;height:44px;border-radius:50%;background:var(--sur);border:1px solid var(--bd);display:grid;place-items:center;color:var(--tx)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 6l-6 6 6 6"/></svg></button>
+    <div style="text-align:center"><div style="font-size:19px;font-weight:800">{{dayTitle}}</div><div style="font-size:13px;color:var(--mut);font-weight:700">{{dayDate}}</div></div>
+    <button onClick="{{dayNext}}" style="width:44px;height:44px;border-radius:50%;background:var(--sur);border:1px solid var(--bd);display:grid;place-items:center;color:var(--tx)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M10 6l6 6-6 6"/></svg></button>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,var(--prit),var(--acct));border-radius:20px;padding:15px 17px;margin-bottom:12px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--accd)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:30px;height:30px"><path d="{{dayWIcon}}"/></svg>
+    <div style="flex:1"><div style="font-weight:800;font-size:16px">{{dayTemp}}</div><div style="font-size:12.5px;color:var(--mut);font-weight:700">{{dayCond}} · Tokyo</div></div>
+    <span style="background:var(--sur);color:var(--prid);font-size:10.5px;font-weight:800;letter-spacing:1px;border-radius:999px;padding:5px 10px">LIVE</span>
+  </div>
+  <div style="display:flex;gap:10px;background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--shs)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--accd)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex:none;margin-top:2px"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
+    <div style="font-size:13.5px;line-height:1.5;font-weight:600;color:var(--tx)"><b>Suggestion:</b> {{daySugg}}</div>
+  </div>
+  <div style="font-size:12.5px;font-weight:800;letter-spacing:1.2px;color:var(--mut);text-transform:uppercase;margin:0 4px 8px">My outfit</div>
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:20px;padding:14px;box-shadow:var(--shs)">
+    <div style="width:100%;height:300px;border-radius:14px;overflow:hidden">
+      <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{outfitSlotId}}" shape="rounded" radius="14" placeholder="Drop your outfit pic 📸" hint-size="100%,300px" style="width:100%;height:300px"></x-import>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px">
+      <sc-for list="{{dayOutfit}}" as="o" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px;background:var(--sur2);border-radius:14px;padding:11px 14px">
+          <span style="width:7px;height:7px;flex:none;border-radius:50%;background:var(--pri)"></span>
+          <span style="font-size:14.5px;font-weight:700">{{o}}</span>
+        </div>
+      </sc-for>
+      <button style="display:flex;align-items:center;gap:10px;background:none;border:1.5px dashed var(--bd);border-radius:14px;padding:11px 14px;font-size:14px;font-weight:800;color:var(--mut);text-align:left">+ Add an item</button>
+    </div>
+    <div style="font-size:13px;color:var(--mut);font-weight:600;font-style:italic;margin-top:12px">City vibes — lots of walking</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--bd)">
+      <button style="flex:none;display:flex;align-items:center;gap:6px;background:var(--sur2);border:none;border-radius:999px;padding:9px 15px;font-size:13px;font-weight:800;color:var(--tx)">✏ Edit</button>
+      <div style="flex:1"></div>
+      <div style="width:22px;height:22px;border-radius:50%;background:#E8B4B8;display:grid;place-items:center;font-size:10.5px">🌸</div>
+      <span style="font-size:12.5px;color:var(--mut);font-weight:700">Sofia planned hers — peek 👀</span>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== MAP ======== -->
+<sc-if value="{{sMap}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Map" style="padding:6px 20px 110px">
+  <div style="font-size:28px;font-weight:800;padding:10px 2px 12px">Map</div>
+  <div style="position:relative;border-radius:24px;overflow:hidden;border:1px solid var(--bd);box-shadow:var(--shs)">
+    <svg viewBox="0 0 350 300" style="display:block;width:100%">
+      <rect width="350" height="300" fill="var(--sur2)"/>
+      <path d="M0 210 C60 190 90 230 150 215 S260 190 350 205 L350 300 L0 300 Z" fill="var(--prit)"/>
+      <path d="M-20 60 C40 90 120 40 190 70 S320 60 370 90" fill="none" stroke="var(--acct)" stroke-width="26" stroke-linecap="round"/>
+      <path d="M-20 60 C40 90 120 40 190 70 S320 60 370 90" fill="none" stroke="var(--acc)" stroke-width="3" stroke-dasharray="1 10" stroke-linecap="round"/>
+      <path d="M60 -10 C80 60 50 140 90 220 S110 280 100 320" fill="none" stroke="var(--bg)" stroke-width="14" stroke-linecap="round"/>
+      <path d="M230 -10 C210 80 260 150 240 230 S230 280 245 320" fill="none" stroke="var(--bg)" stroke-width="14" stroke-linecap="round"/>
+      <circle cx="120" cy="140" r="34" fill="var(--prit)"/><circle cx="105" cy="128" r="7" fill="var(--pri)" opacity=".55"/><circle cx="132" cy="150" r="9" fill="var(--pri)" opacity=".45"/><circle cx="122" cy="132" r="5" fill="var(--pri)" opacity=".5"/>
+      <circle cx="295" cy="220" r="26" fill="var(--pinkt)"/><circle cx="290" cy="212" r="6" fill="var(--pink)" opacity=".6"/><circle cx="302" cy="226" r="7" fill="var(--pink)" opacity=".5"/>
+      <g><circle cx="150" cy="92" r="15" fill="var(--prid)"/><path d="M150 118 l-8-13h16z" fill="var(--prid)"/><text x="150" y="97" text-anchor="middle" font-size="13">🍜</text></g>
+      <g><circle cx="118" cy="150" r="15" fill="var(--pinkd)"/><path d="M118 176 l-8-13h16z" fill="var(--pinkd)"/><text x="118" y="155" text-anchor="middle" font-size="13">⛩</text></g>
+      <g><circle cx="255" cy="120" r="15" fill="var(--accd)"/><path d="M255 146 l-8-13h16z" fill="var(--accd)"/><text x="255" y="125" text-anchor="middle" font-size="13">🛍</text></g>
+      <g><circle cx="200" cy="235" r="15" fill="var(--prid)"/><path d="M200 261 l-8-13h16z" fill="var(--prid)"/><text x="200" y="240" text-anchor="middle" font-size="13">🏠</text></g>
+    </svg>
+    <div style="position:absolute;top:12px;left:12px;right:12px;display:flex;align-items:center;gap:8px;background:var(--sur);border-radius:999px;padding:11px 16px;box-shadow:var(--sh)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-linecap="round" style="width:17px;height:17px"><path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM15.5 15.5 21 21"/></svg>
+      <span style="font-size:14px;color:var(--mut);font-weight:700">Search saved places…</span>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+    <sc-for list="{{pins}}" as="p" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;gap:12px;background:var(--sur);border:1px solid var(--bd);border-radius:18px;padding:12px 15px">
+        <div style="width:36px;height:36px;flex:none;border-radius:12px;background:{{p.bg}};display:grid;place-items:center;font-size:16px">{{p.e}}</div>
+        <div style="flex:1"><div style="font-weight:800;font-size:14.5px">{{p.name}}</div><div style="font-size:12.5px;color:var(--mut);font-weight:700">{{p.sub}}</div></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-linecap="round" style="width:17px;height:17px"><path d="M10 6l6 6-6 6"/></svg>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ======== TRIP SETTINGS ======== -->
+<sc-if value="{{sSettings}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Trip Settings" style="padding:6px 20px 110px">
+  <div style="font-size:28px;font-weight:800;padding:10px 2px 14px">Trip Settings</div>
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:22px;padding:18px;box-shadow:var(--shs);display:flex;flex-direction:column;gap:13px">
+    <div style="font-size:16px;font-weight:800">Details</div>
+    <div><div style="font-size:12.5px;font-weight:800;margin:0 0 5px 4px;color:var(--mut)">Trip name</div><input value="Tokyo, Girls' Trip '26" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--tx);font-weight:700"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><div style="font-size:12.5px;font-weight:800;margin:0 0 5px 4px;color:var(--mut)">Start</div><input value="Jul 20, 2026" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:14.5px;color:var(--tx);font-weight:700"></div>
+      <div><div style="font-size:12.5px;font-weight:800;margin:0 0 5px 4px;color:var(--mut)">End</div><input value="Jul 25, 2026" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:14.5px;color:var(--tx);font-weight:700"></div>
+    </div>
+    <button class="prib" style="align-self:flex-end;background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:800">Save changes</button>
+  </div>
+
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:22px;padding:18px;box-shadow:var(--shs);margin-top:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:16px;font-weight:800">Appearance</span>
+      <div style="display:flex;background:var(--sur2);border-radius:999px;padding:3px">
+        <button onClick="{{setLight}}" style="display:flex;align-items:center;gap:6px;background:{{lightBg}};border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:800;color:{{lightFg}};box-shadow:{{lightSh}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:14px;height:14px"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>Light</button>
+        <button onClick="{{setDark}}" style="display:flex;align-items:center;gap:6px;background:{{darkBg}};border:none;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:800;color:{{darkFg}};box-shadow:{{darkSh}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z"/></svg>Dark</button>
+      </div>
+    </div>
+    <div style="font-size:12.5px;color:var(--mut);margin-top:8px;font-weight:600">Follows your system setting until you choose.</div>
+  </div>
+
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:22px;padding:18px;box-shadow:var(--shs);margin-top:14px">
+    <div style="font-size:16px;font-weight:800">Currencies &amp; rates</div>
+    <div style="font-size:12.5px;color:var(--mut);font-weight:600;margin:4px 0 12px">Pick every currency the group pays in. Set each rate yourself so it matches the day you paid.</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <sc-for list="{{curRows}}" as="c" hint-placeholder-count="5">
+        <div style="border-bottom:1px solid var(--bd);padding:4px 0 10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <button onClick="{{c.toggle}}" style="flex:1;display:flex;align-items:center;gap:9px;background:{{c.chipBg}};color:{{c.chipFg}};border:{{c.chipBd}};border-radius:14px;padding:10px 13px;font-size:14px;font-weight:800;text-align:left;min-height:44px">
+              <span style="font-size:17px">{{c.flag}}</span><span style="flex:1">{{c.name}}</span><span style="font-size:12.5px">{{c.code}}</span>
+              <sc-if value="{{c.on}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M4.5 12.5 10 18 19.5 7"/></svg></sc-if>
+            </button>
+            <sc-if value="{{c.primary}}" hint-placeholder-val="{{false}}"><span style="flex:none;background:var(--acct);color:var(--accd);font-size:10.5px;font-weight:800;border-radius:999px;padding:5px 10px">Primary</span></sc-if>
+          </div>
+          <sc-if value="{{c.showRate}}" hint-placeholder-val="{{false}}">
+            <div style="display:flex;align-items:center;gap:8px;margin:8px 2px 0;padding-left:8px">
+              <span style="font-size:13px;font-weight:800;color:var(--mut)">1 {{c.code}} =</span>
+              <span style="font-size:14px;font-weight:800">¥</span>
+              <input onInput="{{c.onRate}}" value="{{c.rate}}" style="width:92px;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:10px;padding:8px 10px;font-size:14px;font-weight:800;color:var(--tx)">
+              <span style="font-size:11.5px;font-weight:700;color:var(--mut);flex:1">edit to match payment day</span>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:22px;padding:18px;box-shadow:var(--shs);margin-top:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span style="font-size:16px;font-weight:800">Members (5)</span><button style="background:var(--prit);color:var(--prid);border:none;border-radius:999px;padding:9px 15px;font-size:13px;font-weight:800">⚲ Invite</button></div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <sc-for list="{{members}}" as="m" hint-placeholder-count="5">
+        <div style="display:flex;align-items:center;gap:11px;padding:8px 2px">
+          <div style="width:36px;height:36px;border-radius:50%;background:{{m.color}};display:grid;place-items:center;font-size:16px">{{m.e}}</div>
+          <span style="font-weight:800;font-size:14.5px;flex:1">{{m.n}}</span>
+          <sc-if value="{{m.you}}" hint-placeholder-val="{{false}}"><span style="background:var(--sur2);color:var(--mut);font-size:11px;font-weight:800;border-radius:999px;padding:4px 10px">You</span></sc-if>
+          <sc-if value="{{m.owner}}" hint-placeholder-val="{{false}}"><span style="background:var(--acct);color:var(--accd);font-size:11px;font-weight:800;border-radius:999px;padding:4px 10px">Owner</span></sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:22px;padding:18px;box-shadow:var(--shs);margin-top:14px">
+    <div style="font-size:16px;font-weight:800;margin-bottom:4px">Customize menu</div>
+    <div style="font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:10px">Hide pages you don't use. Home, Itinerary &amp; Finance always stay.</div>
+    <sc-for list="{{visRows}}" as="v" hint-placeholder-count="6">
+      <div style="display:flex;align-items:center;gap:11px;padding:9px 2px;border-bottom:1px solid var(--bd)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px;flex:none"><path d="{{v.d}}"/></svg>
+        <span style="font-weight:800;font-size:14.5px;flex:1">{{v.label}}</span>
+        <button onClick="{{v.toggle}}" style="width:50px;height:30px;flex:none;border:none;border-radius:999px;background:{{v.trackBg}};position:relative;transition:background .2s"><div style="position:absolute;top:3px;left:{{v.knobL}}px;width:24px;height:24px;border-radius:50%;background:var(--sur);box-shadow:var(--shs);transition:left .2s"></div></button>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:22px;padding:18px;box-shadow:var(--shs);margin-top:14px">
+    <div style="font-size:16px;font-weight:800;margin-bottom:10px">Activity</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px;font-size:13px;font-weight:600;color:var(--mut)"><div style="width:22px;height:22px;flex:none;border-radius:50%;background:#E8B4B8;display:grid;place-items:center;font-size:10.5px">🌸</div><span><b style="color:var(--tx)">Sofia</b> added "Izakaya night" to Day 2 · 2h ago</span></div>
+      <div style="display:flex;gap:10px;font-size:13px;font-weight:600;color:var(--mut)"><div style="width:22px;height:22px;flex:none;border-radius:50%;background:#D8CDEA;display:grid;place-items:center;font-size:10.5px">✨</div><span><b style="color:var(--tx)">Priya</b> logged ¥8,200 — teamLab tickets · 5h ago</span></div>
+      <div style="display:flex;gap:10px;font-size:13px;font-weight:600;color:var(--mut)"><div style="width:22px;height:22px;flex:none;border-radius:50%;background:#F5E3A8;display:grid;place-items:center;font-size:10.5px">🌻</div><span><b style="color:var(--tx)">Amara</b> joined the trip · yesterday</span></div>
+    </div>
+  </div>
+
+  <button onClick="{{openRemove}}" style="width:100%;margin-top:14px;background:var(--dant);color:var(--dan);border:none;border-radius:999px;padding:15px;font-size:15px;font-weight:800">Remove trip…</button>
+</div>
+</sc-if>
+
+<!-- ======== PROFILE ======== -->
+<sc-if value="{{sProfile}}" hint-placeholder-val="{{false}}">
+<div data-screen-label="Profile" style="padding:6px 20px 110px">
+  <div style="font-size:28px;font-weight:800;padding:10px 2px 14px">Profile</div>
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:22px;padding:20px;box-shadow:var(--shs);display:flex;align-items:center;gap:14px">
+    <div style="width:62px;height:62px;border-radius:50%;background:#F2C48A;display:grid;place-items:center;font-size:30px;border:3px solid var(--sur);box-shadow:var(--shs)">🦊</div>
+    <div style="flex:1"><div style="font-size:19px;font-weight:800">Maya</div><div style="font-size:13.5px;color:var(--mut);font-weight:700">@maya</div></div>
+    <button style="background:var(--sur2);border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:800;color:var(--tx)">Edit</button>
+  </div>
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:22px;padding:18px;box-shadow:var(--shs);margin-top:14px;display:flex;flex-direction:column;gap:14px">
+    <div style="font-size:16px;font-weight:800">Display info</div>
+    <div><div style="font-size:12.5px;font-weight:800;margin:0 0 5px 4px;color:var(--mut)">Name</div><input value="Maya" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--tx);font-weight:700"></div>
+    <div><div style="font-size:12.5px;font-weight:800;margin:0 0 8px 4px;color:var(--mut)">Avatar</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{emojiOpts}}" as="e" hint-placeholder-count="8">
+          <button style="width:44px;height:44px;border-radius:14px;background:var(--bg);border:{{e.bord}};font-size:20px;display:grid;place-items:center">{{e.c}}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div><div style="font-size:12.5px;font-weight:800;margin:0 0 8px 4px;color:var(--mut)">Color</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <sc-for list="{{colorOpts}}" as="c" hint-placeholder-count="6">
+          <button style="width:36px;height:36px;border-radius:50%;background:{{c.hex}};border:none;box-shadow:{{c.ring}}"></button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="background:var(--sur);border:1px solid var(--bd);border-radius:22px;padding:18px;box-shadow:var(--shs);margin-top:14px">
+    <div style="font-size:16px;font-weight:800;margin-bottom:12px">Account</div>
+    <div style="display:flex;gap:10px">
+      <button style="flex:1;background:var(--sur2);border:none;border-radius:999px;padding:13px;font-size:13.5px;font-weight:800;color:var(--tx)">Change username</button>
+      <button style="flex:1;background:var(--sur2);border:none;border-radius:999px;padding:13px;font-size:13.5px;font-weight:800;color:var(--tx)">Change password</button>
+    </div>
+  </div>
+  <button onClick="{{goLogin}}" style="width:100%;margin-top:14px;background:var(--dant);color:var(--dan);border:none;border-radius:999px;padding:15px;font-size:15px;font-weight:800">Log out</button>
+</div>
+</sc-if>
+
+</div><!-- /content -->
+
+<!-- ============ TAB BAR ============ -->
+<sc-if value="{{showTabs}}" hint-placeholder-val="{{true}}">
+<sc-if value="{{isAndroid}}" hint-placeholder-val="{{false}}">
+  <div style="flex:none;background:var(--sur);border-top:1px solid var(--bd);padding:8px 8px 14px;display:flex">
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+      <button onClick="{{t.go}}" style="flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;color:{{t.fg}}">
+        <div style="width:56px;height:30px;border-radius:999px;background:{{t.pillBg}};display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px"><path d="{{t.d}}"/></svg></div>
+        <span style="font-size:11.5px;font-weight:800">{{t.label}}</span>
+      </button>
+    </sc-for>
+  </div>
+</sc-if>
+<sc-if value="{{isIos}}" hint-placeholder-val="{{true}}">
+  <div style="flex:none;background:var(--sur);border-top:1px solid var(--bd);padding:9px 8px 4px;display:flex">
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+      <button onClick="{{t.go}}" style="flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 0 6px;color:{{t.fg}};min-height:48px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:23px;height:23px"><path d="{{t.d}}"/></svg>
+        <span style="font-size:10.5px;font-weight:800">{{t.label}}</span>
+      </button>
+    </sc-for>
+  </div>
+  <div style="flex:none;height:22px;background:var(--sur);display:grid;place-items:center"><div style="width:130px;height:5px;border-radius:99px;background:var(--tx);opacity:.85"></div></div>
+</sc-if>
+</sc-if>
+
+<!-- ============ SHEETS ============ -->
+<sc-if value="{{shAny}}" hint-placeholder-val="{{false}}">
+<div onClick="{{closeSheet}}" style="position:absolute;inset:0;background:rgba(40,32,18,.45);animation:tpFade .2s;z-index:5"></div>
+</sc-if>
+
+<!-- More menu -->
+<sc-if value="{{shMore}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute;left:0;right:0;bottom:0;background:var(--sur);border-radius:28px 28px 0 0;padding:10px 18px 30px;z-index:6;animation:tpSheet .25s;box-shadow:var(--sh)">
+  <div style="width:40px;height:5px;border-radius:99px;background:var(--bd);margin:4px auto 14px"></div>
+  <div style="font-size:17px;font-weight:800;margin:0 4px 12px">More</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+    <sc-for list="{{moreItems}}" as="mi" hint-placeholder-count="9">
+      <button onClick="{{mi.go}}" style="background:var(--bg);border:1px solid var(--bd);border-radius:18px;padding:14px 6px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--tx);min-height:48px">
+        <div style="width:38px;height:38px;border-radius:13px;background:{{mi.bg}};display:grid;place-items:center;color:{{mi.fg}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="{{mi.d}}"/></svg></div>
+        <span style="font-size:12px;font-weight:800">{{mi.label}}</span>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- Currency picker -->
+<sc-if value="{{shCurrency}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute;left:0;right:0;bottom:0;top:12%;background:var(--sur);border-radius:28px 28px 0 0;padding:10px 20px 20px;z-index:6;animation:tpSheet .25s;display:flex;flex-direction:column;box-shadow:var(--sh)">
+  <div style="width:40px;height:5px;border-radius:99px;background:var(--bd);margin:4px auto 14px;flex:none"></div>
+  <div style="font-size:17px;font-weight:800;margin:0 2px 12px;flex:none">Primary currency</div>
+  <div style="display:flex;align-items:center;gap:9px;background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:12px 14px;flex:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.2" stroke-linecap="round" style="width:18px;height:18px"><path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM15.5 15.5 21 21"/></svg>
+    <input onInput="{{onCurQ}}" value="{{curQ}}" placeholder="Search currencies…" style="flex:1;border:none;background:none;font-size:15.5px;color:var(--tx);outline:none;font-weight:700">
+  </div>
+  <div style="flex:1;overflow-y:auto;margin-top:10px">
+    <sc-for list="{{curList}}" as="c" hint-placeholder-count="6">
+      <button onClick="{{c.pick}}" style="width:100%;display:flex;align-items:center;gap:12px;background:none;border:none;border-bottom:1px solid var(--bd);padding:14px 6px;text-align:left;color:var(--tx)">
+        <span style="font-size:21px">{{c.flag}}</span>
+        <span style="flex:1;font-size:15px;font-weight:800">{{c.name}}</span>
+        <span style="font-size:13.5px;color:var(--mut);font-weight:800">{{c.code}}</span>
+        <sc-if value="{{c.sel}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" fill="none" stroke="var(--prid)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:19px;height:19px"><path d="M4.5 12.5 10 18 19.5 7"/></svg></sc-if>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- Add expense sheet -->
+<sc-if value="{{shExpense}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute;left:0;right:0;bottom:0;top:8%;background:var(--sur);border-radius:28px 28px 0 0;padding:10px 20px 0;z-index:6;animation:tpSheet .25s;box-shadow:var(--sh);display:flex;flex-direction:column">
+  <div style="width:40px;height:5px;border-radius:99px;background:var(--bd);margin:4px auto 12px;flex:none"></div>
+  <div style="font-size:17px;font-weight:800;margin:0 2px 12px;flex:none">New expense</div>
+  <div style="flex:1;overflow-y:auto;padding-bottom:28px;display:flex;flex-direction:column;gap:13px">
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:10px">
+      <div><div style="font-size:12px;font-weight:800;letter-spacing:1px;margin:0 0 5px 2px;color:var(--mut);text-transform:uppercase">Date</div><input value="Jul 21" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--tx);font-weight:700"></div>
+      <div><div style="font-size:12px;font-weight:800;letter-spacing:1px;margin:0 0 5px 2px;color:var(--mut);text-transform:uppercase">Vendor <span style="color:var(--dan)">*</span></div><input placeholder="e.g. Ichiran Ramen" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--tx);font-weight:700"></div>
+    </div>
+    <div><div style="font-size:12px;font-weight:800;letter-spacing:1px;margin:0 0 5px 2px;color:var(--mut);text-transform:uppercase">Description <span style="letter-spacing:0;text-transform:none;font-weight:700">(optional)</span></div><input placeholder="What was this for?" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--tx);font-weight:700"></div>
+    <div><div style="font-size:12px;font-weight:800;letter-spacing:1px;margin:0 0 5px 2px;color:var(--mut);text-transform:uppercase">Amount <span style="color:var(--dan)">*</span></div>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{cycleExpCur}}" style="flex:none;display:flex;align-items:center;gap:7px;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;font-weight:800;color:var(--tx)">{{expCurFlag}} {{expCurCode}} <svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></button>
+        <input value="4,800" style="flex:1;min-width:0;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:18px;color:var(--tx);font-weight:800">
+      </div>
+    </div>
+    <div><div style="font-size:12px;font-weight:800;letter-spacing:1px;margin:0 0 5px 2px;color:var(--mut);text-transform:uppercase">Category</div>
+      <button style="width:100%;display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;font-weight:700;color:var(--mut)"><span style="flex:1;text-align:left">— none —</span><svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></button>
+    </div>
+    <div><div style="font-size:12px;font-weight:800;letter-spacing:1px;margin:0 0 5px 2px;color:var(--mut);text-transform:uppercase">Paid by</div>
+      <button style="width:100%;display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;font-weight:800;color:var(--tx)"><span>🦊</span><span style="flex:1;text-align:left">Maya</span><svg viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></button>
+    </div>
+    <div><div style="font-size:12px;font-weight:800;letter-spacing:1px;margin:0 0 7px 2px;color:var(--mut);text-transform:uppercase">Split among</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{expSplitChips}}" as="ch" hint-placeholder-count="6">
+          <button onClick="{{ch.toggle}}" style="background:{{ch.bg}};color:{{ch.fg}};border:none;border-radius:999px;padding:10px 15px;font-size:13.5px;font-weight:800;min-height:40px">{{ch.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div><div style="font-size:12px;font-weight:800;letter-spacing:1px;margin:0 0 7px 2px;color:var(--mut);text-transform:uppercase">Split type</div>
+      <div style="display:flex;background:var(--sur2);border-radius:999px;padding:3px;width:fit-content">
+        <button onClick="{{setExpEq}}" style="background:{{expEqBg}};color:{{expEqFg}};box-shadow:{{expEqSh}};border:none;border-radius:999px;padding:9px 20px;font-size:13.5px;font-weight:800">Equal</button>
+        <button onClick="{{setExpInd}}" style="background:{{expIndBg}};color:{{expIndFg}};box-shadow:{{expIndSh}};border:none;border-radius:999px;padding:9px 20px;font-size:13.5px;font-weight:800">Individual</button>
+      </div>
+    </div>
+    <sc-if value="{{expIndOn}}" hint-placeholder-val="{{false}}">
+      <div>
+        <div style="font-size:12px;font-weight:800;letter-spacing:1px;margin:0 0 7px 2px;color:var(--mut);text-transform:uppercase">Amount per person</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{expIndRows}}" as="r" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:9px 14px">
+              <span style="font-size:17px">{{r.e}}</span>
+              <span style="flex:1;font-weight:800;font-size:14.5px">{{r.n}}</span>
+              <span style="font-size:12px;font-weight:800;color:var(--mut)">{{expCurCode}}</span>
+              <input onInput="{{r.onIn}}" value="{{r.val}}" placeholder="0.00" style="width:86px;box-sizing:border-box;background:var(--sur);border:1.5px solid var(--bd);border-radius:10px;padding:9px 10px;font-size:15px;font-weight:800;color:var(--tx);text-align:right">
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:var(--sur2);border-radius:12px;padding:11px 14px;text-align:center;font-size:13.5px;font-weight:800;color:var(--mut);margin-top:8px">{{expTotalLine}}</div>
+      </div>
+    </sc-if>
+    <div><div style="font-size:12px;font-weight:800;letter-spacing:1px;margin:0 0 5px 2px;color:var(--mut);text-transform:uppercase">Notes</div><input placeholder="Optional" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--tx);font-weight:700"></div>
+    <button onClick="{{closeSheet}}" class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:15px;font-size:16px;font-weight:800;margin-top:2px">Add expense · ¥960 each</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- Add flight sheet -->
+<sc-if value="{{shFlight}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute;left:0;right:0;bottom:0;background:var(--sur);border-radius:28px 28px 0 0;padding:10px 20px 28px;z-index:6;animation:tpSheet .25s;box-shadow:var(--sh)">
+  <div style="width:40px;height:5px;border-radius:99px;background:var(--bd);margin:4px auto 14px"></div>
+  <div style="font-size:17px;font-weight:800;margin:0 2px 14px">Add flight</div>
+  <div style="display:flex;flex-direction:column;gap:13px">
+    <div style="display:flex;background:var(--sur2);border-radius:999px;padding:3px">
+      <button style="flex:1;background:var(--sur);border:none;border-radius:999px;padding:10px;font-size:13.5px;font-weight:800;color:var(--tx);box-shadow:var(--shs)">🛬 Arrival</button>
+      <button style="flex:1;background:none;border:none;border-radius:999px;padding:10px;font-size:13.5px;font-weight:700;color:var(--mut)">🛫 Departure</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><div style="font-size:12.5px;font-weight:800;margin:0 0 5px 4px;color:var(--mut)">From</div><input value="SFO" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:16px;font-weight:800;color:var(--tx);text-transform:uppercase"></div>
+      <div><div style="font-size:12.5px;font-weight:800;margin:0 0 5px 4px;color:var(--mut)">To</div><input value="HND" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:16px;font-weight:800;color:var(--tx);text-transform:uppercase"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:10px">
+      <div><div style="font-size:12.5px;font-weight:800;margin:0 0 5px 4px;color:var(--mut)">Airline &amp; flight #</div><input placeholder="e.g. UA 837" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--tx);font-weight:700"></div>
+      <div><div style="font-size:12.5px;font-weight:800;margin:0 0 5px 4px;color:var(--mut)">Lands</div><input value="4:40 PM" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--tx);font-weight:700"></div>
+    </div>
+    <div>
+      <div style="font-size:12.5px;font-weight:800;margin:0 0 8px 2px;color:var(--mut)">Who's flying</div>
+      <div style="display:flex;gap:8px">
+        <sc-for list="{{members}}" as="m" hint-placeholder-count="5">
+          <div style="width:44px;height:44px;border-radius:50%;background:{{m.color}};display:grid;place-items:center;font-size:19px;border:2.5px solid {{m.pickBd}}">{{m.e}}</div>
+        </sc-for>
+      </div>
+    </div>
+    <button onClick="{{closeSheet}}" class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:15px;font-size:16px;font-weight:800">Add flight</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- Add event sheet -->
+<sc-if value="{{shEvent}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute;left:0;right:0;bottom:0;background:var(--sur);border-radius:28px 28px 0 0;padding:10px 20px 28px;z-index:6;animation:tpSheet .25s;box-shadow:var(--sh)">
+  <div style="width:40px;height:5px;border-radius:99px;background:var(--bd);margin:4px auto 14px"></div>
+  <div style="font-size:17px;font-weight:800;margin:0 2px 14px">New event · {{dayTitle}}</div>
+  <div style="display:flex;flex-direction:column;gap:13px">
+    <input placeholder="What's happening?" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:14px 16px;font-size:16px;color:var(--tx);font-weight:700">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><div style="font-size:12.5px;font-weight:800;margin:0 0 5px 4px;color:var(--mut)">Starts</div><input value="10:00 AM" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--tx);font-weight:700"></div>
+      <div><div style="font-size:12.5px;font-weight:800;margin:0 0 5px 4px;color:var(--mut)">Where</div><input placeholder="Location" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--tx);font-weight:700"></div>
+    </div>
+    <div style="display:flex;gap:8px;overflow-x:auto">
+      <span style="flex:none;background:var(--prid);color:var(--onpri);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:800">Activity</span>
+      <span style="flex:none;background:var(--sur2);color:var(--mut);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:800">Food</span>
+      <span style="flex:none;background:var(--sur2);color:var(--mut);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:800">Transport</span>
+      <span style="flex:none;background:var(--sur2);color:var(--mut);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:800">Stay</span>
+    </div>
+    <button onClick="{{closeSheet}}" class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:15px;font-size:16px;font-weight:800">Add to plan</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- Suggest item sheet -->
+<sc-if value="{{shSuggest}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute;left:0;right:0;bottom:0;background:var(--sur);border-radius:28px 28px 0 0;padding:10px 20px 28px;z-index:6;animation:tpSheet .25s;box-shadow:var(--sh)">
+  <div style="width:40px;height:5px;border-radius:99px;background:var(--bd);margin:4px auto 14px"></div>
+  <div style="font-size:17px;font-weight:800;margin:0 2px 4px">Suggest an item</div>
+  <div style="font-size:13px;color:var(--mut);font-weight:600;margin:0 2px 14px">Nudge a friend to pack something — it lands in their inbox.</div>
+  <div style="display:flex;flex-direction:column;gap:13px">
+    <div>
+      <div style="font-size:12.5px;font-weight:800;margin:0 0 8px 2px;color:var(--mut)">Send to</div>
+      <div style="display:flex;gap:8px">
+        <sc-for list="{{friends}}" as="m" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:46px;height:46px;border-radius:50%;background:{{m.color}};display:grid;place-items:center;font-size:20px;border:2.5px solid {{m.suggBd}}">{{m.e}}</div>
+            <span style="font-size:10.5px;font-weight:800;color:var(--mut)">{{m.n}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <input value="Rain jacket — it's tsuyu season!" style="width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--bd);border-radius:16px;padding:14px 16px;font-size:15px;color:var(--tx);font-weight:700">
+    <button onClick="{{closeSheet}}" class="prib" style="background:var(--prid);color:var(--onpri);border:none;border-radius:999px;padding:15px;font-size:16px;font-weight:800">Send suggestion 🌸</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- Remove trip: iOS action sheet -->
+<sc-if value="{{shRemoveIos}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute;left:10px;right:10px;bottom:14px;z-index:6;animation:tpSheet .25s">
+  <div style="background:var(--sur);border-radius:20px;overflow:hidden;box-shadow:var(--sh)">
+    <div style="padding:16px;text-align:center;border-bottom:1px solid var(--bd)"><div style="font-size:13.5px;font-weight:800">Remove "Tokyo, Girls' Trip '26"?</div><div style="font-size:12.5px;color:var(--mut);margin-top:3px;font-weight:600">Other members keep the trip. Your expenses stay in the group log.</div></div>
+    <button style="width:100%;background:none;border:none;border-bottom:1px solid var(--bd);padding:16px;font-size:16.5px;font-weight:800;color:var(--dan)">Remove from my trips</button>
+    <button style="width:100%;background:none;border:none;padding:16px;font-size:16.5px;font-weight:700;color:var(--mut)">Archive instead</button>
+  </div>
+  <button onClick="{{closeSheet}}" style="width:100%;margin-top:9px;background:var(--sur);border:none;border-radius:20px;padding:16px;font-size:16.5px;font-weight:800;color:var(--prid);box-shadow:var(--sh)">Cancel</button>
+</div>
+</sc-if>
+
+<!-- Remove trip: Android M3 dialog -->
+<sc-if value="{{shRemoveAnd}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute;left:28px;right:28px;top:50%;transform:translateY(-50%);z-index:6;background:var(--sur);border-radius:28px;padding:24px;box-shadow:var(--sh);animation:tpFade .2s">
+  <div style="font-size:19px;font-weight:800">Remove trip?</div>
+  <div style="font-size:14px;color:var(--mut);margin-top:8px;line-height:1.5;font-weight:600">"Tokyo, Girls' Trip '26" will be removed from your trips. Other members keep the trip.</div>
+  <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:20px">
+    <button onClick="{{closeSheet}}" style="background:none;border:none;border-radius:999px;padding:11px 16px;font-size:14px;font-weight:800;color:var(--prid)">Cancel</button>
+    <button onClick="{{closeSheet}}" style="background:none;border:none;border-radius:999px;padding:11px 16px;font-size:14px;font-weight:800;color:var(--dan)">Remove</button>
+  </div>
+</div>
+</sc-if>
+
+</div><!-- /column -->
+</div><!-- /device -->
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:880},&quot;platform&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ios&quot;,&quot;android&quot;],&quot;default&quot;:&quot;ios&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Device&quot;},&quot;width&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;360&quot;,&quot;375&quot;,&quot;390&quot;,&quot;430&quot;,&quot;1024&quot;],&quot;default&quot;:&quot;390&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Device&quot;},&quot;height&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;number|null&quot;,&quot;section&quot;:&quot;Device&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;palette&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dusk&quot;,&quot;garden&quot;,&quot;matcha&quot;,&quot;fern&quot;],&quot;default&quot;:&quot;dusk&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;homeVariant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;],&quot;default&quot;:&quot;b&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;signup&quot;,&quot;start&quot;,&quot;join&quot;,&quot;home&quot;,&quot;trips&quot;,&quot;create&quot;,&quot;itinerary&quot;,&quot;flights&quot;,&quot;stays&quot;,&quot;finance&quot;,&quot;myexpenses&quot;,&quot;recs&quot;,&quot;packing&quot;,&quot;outfits&quot;,&quot;map&quot;,&quot;settings&quot;,&quot;profile&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navigation&quot;}}">
+class Component extends DCLogic {
+  state = { screen: null, sheet: null, day: 0, recF: 'All', curQ: '', cur: 'JPY',
+    pack: { p0:true,p1:true,p2:false,p3:true, t0:true,t1:false,t2:true, d0:true,d1:false, x0:true,x1:false,x2:false },
+    vis: { flights:true, stays:true, myexp:true, recs:true, packing:true, outfits:true },
+    homePins: ['flights','itinerary','packing'], pinEdit: false,
+    finTab:'owed', finDone:{}, gsOpen:true, gsExp:{}, expSplit:{0:true,1:true,2:true,3:true,4:true}, expType:'equal',
+    expCur:'JPY', expAmts:{}, tripCurs:{JPY:true,USD:true,EUR:false,GBP:false,KRW:false}, rates:{USD:'155.20',EUR:'168.90',GBP:'196.40',KRW:'0.105'},
+    themeOv: null };
+
+  nav(s){ this.setState({ screen:s, sheet:null }); }
+  sheet(s){ this.setState({ sheet:s }); }
+
+  renderVals(){
+    const st = this.state, P = this.props;
+    const screen = st.screen || P.screen || 'home';
+    const theme = st.themeOv || P.theme || 'light';
+    const platform = P.platform || 'ios';
+    const isAndroid = platform === 'android';
+    const w = Number(P.width) || 390;
+    const isTablet = w >= 700;
+    const hOuter = P.height ? Number(P.height) : (isTablet ? 800 : Math.round(w * 2.164));
+    const hv = P.homeVariant || 'b';
+    const nav = (s)=>()=>this.nav(s);
+    const sheet = (s)=>()=>this.sheet(s);
+
+    const I = {
+      home:'M3 10.5 12 3l9 7.5M5 9.7V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.7M9.5 21v-5.5h5V21',
+      compass:'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM15.2 8.8l-1.8 4.6-4.6 1.8 1.8-4.6z',
+      plane:'M21 3 3 10.5l7.5 3M21 3l-6 18-4.5-7.5M21 3 10.5 13.5',
+      cal:'M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM4 10h16M8 3v4M16 3v4',
+      bed:'M3 18v-7M3 14h18v4M21 14v-2a2 2 0 0 0-2-2h-9v4M3 11V6M8.5 10.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0',
+      coins:'M9 4a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zM16.8 8a5.5 5.5 0 1 1-6.9 8.4',
+      receipt:'M6 3h12v18l-2-1.5-2 1.5-2-1.5L10 21l-2-1.5L6 21zM9.5 8h5M9.5 12h5M9.5 16h3',
+      flower:'M12 12m-2.5 0a2.5 2.5 0 1 0 5 0 2.5 2.5 0 1 0-5 0M12 9.5V4M12 14.5V20M9.8 10.2 5.5 6.5M14.2 13.8l4.3 3.7M9.8 13.8 5.5 17.5M14.2 10.2l4.3-3.7',
+      case:'M6 8h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2zM9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M9 8v13M15 8v13',
+      hanger:'M12 7a2 2 0 1 1 2-2M12 7v1.8l8.2 5.7a1.4 1.4 0 0 1-.8 2.5H4.6a1.4 1.4 0 0 1-.8-2.5L12 8.8',
+      pin:'M12 21c-4.5-3.8-7-7.2-7-10.5a7 7 0 0 1 14 0c0 3.3-2.5 6.7-7 10.5zM12 8a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z',
+      tune:'M4 7h6M16 7h4M4 17h4M12 17h8M16 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0M12 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0',
+      user:'M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM4.5 21a7.5 7.5 0 0 1 15 0',
+      grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+      sun:'M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8',
+      cloud:'M7 18a4.5 4.5 0 1 1 .8-8.9A6 6 0 0 1 19.5 11 3.5 3.5 0 0 1 18.5 18z',
+      rain:'M7 15a4.5 4.5 0 1 1 .8-8.9A6 6 0 0 1 19.5 8 3.5 3.5 0 0 1 18.5 15zM8.5 18.5v1.8M12.5 18v2.5M16.5 18.5v1.8',
+      cart:'M4 5h2l2.2 11h10.3l2-8H7M10 20a1 1 0 1 1-.01 0M18 20a1 1 0 1 1-.01 0',
+      food:'M5 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3M7 3v18M17 3c-1.7 0-3 2.2-3 5 0 2.2 1 3.6 2 4v9M17 3c1 0 2 .8 2 3v6h-2'
+    };
+
+    const membersRaw = [
+      { n:'Maya', e:'🦊', color:'#F2C48A', you:true, owner:true },
+      { n:'Sofia', e:'🌸', color:'#E8B4B8' },
+      { n:'Priya', e:'✨', color:'#D8CDEA' },
+      { n:'Jess', e:'🌙', color:'#BFD3EA' },
+      { n:'Amara', e:'🌻', color:'#F5E3A8' }
+    ];
+    const members = membersRaw.map((m,i)=>({ ...m, pickBd: i<3 ? 'var(--prid)' : 'var(--bd)', suggBd: i===1 ? 'var(--pinkd)' : 'var(--bd)' }));
+
+    const days = [
+      { label:'Day 1', date:'Mon, Jul 20', temp:'75–88°F', cond:'Sunny & humid', icon:I.sun,
+        sugg:'Travel-day comfy: breathable set for the flight, then a light dress for ramen night.',
+        outfit:['Linen set','White sneakers','Crossbody bag'],
+        events:[
+          { t:'4:40p', title:'Land at Haneda ✈', loc:'HND Terminal 3', cat:'Transport', who:[0,1,2,3,4] },
+          { t:'7:00p', title:'Check in — Shibuya Loft', loc:'Jinnan 1-12, Shibuya', cat:'Stay', who:[0,1,2,3,4] },
+          { t:'8:30p', title:'First ramen at Ichiran', loc:'Shibuya crossing', cat:'Food', who:[0,1,2,3,4] } ] },
+      { label:'Day 2', date:'Tue, Jul 21', temp:'76–90°F', cond:'Hot & clear', icon:I.sun,
+        sugg:'Hot one! Flowy sundress or shorts + breathable top, sandals, sun hat, SPF.',
+        outfit:['Flowy sundress','Sandals','Sun hat'],
+        events:[
+          { t:'9:00a', title:'Meiji Shrine walk', loc:'Yoyogi Park entrance', cat:'Activity', who:[0,1,2,3,4] },
+          { t:'12:00p', title:'Harajuku crepes & shopping', loc:'Takeshita Street', cat:'Food', who:[0,1,3] },
+          { t:'8:00p', title:'Izakaya night — Sofia\u2019s pick', loc:'Omoide Yokocho', cat:'Food', who:[0,1,2,3,4] } ] },
+      { label:'Day 3', date:'Wed, Jul 22', temp:'77–86°F', cond:'Rain showers', icon:I.rain,
+        sugg:'Warm & rainy: light layers, packable rain jacket, waterproof sandals or sneakers.',
+        outfit:['Shorts + breezy top','Rain jacket','Waterproof sneakers'],
+        events:[
+          { t:'10:00a', title:'teamLab Planets', loc:'Toyosu', cat:'Activity', who:[0,1,2,3,4] },
+          { t:'2:00p', title:'Sushi brunch', loc:'Tsukiji outer market', cat:'Food', who:[0,2,4] } ] },
+      { label:'Day 4', date:'Thu, Jul 23', temp:'76–89°F', cond:'Sunny', icon:I.sun,
+        sugg:'Onsen day — easy slip-on layers, swimsuit packed on top, comfy shoes for the ropeway.',
+        outfit:['Slip dress','Slides','Tote'],
+        events:[
+          { t:'8:30a', title:'Romancecar to Hakone', loc:'Shinjuku Station', cat:'Transport', who:[0,1,2,3,4] },
+          { t:'4:00p', title:'Check in — Ryokan Kiku ♨', loc:'Hakone', cat:'Stay', who:[0,1,2,3,4] },
+          { t:'7:00p', title:'Kaiseki dinner', loc:'At the ryokan', cat:'Food', who:[0,1,2,3,4] } ] },
+      { label:'Day 5', date:'Fri, Jul 24', temp:'75–87°F', cond:'Partly cloudy', icon:I.cloud,
+        sugg:'Walking day: comfy shoes non-negotiable. Light layers for temple-to-karaoke.',
+        outfit:['Jeans + tank','Comfy sneakers','Light cardigan'],
+        events:[
+          { t:'10:30a', title:'Sensō-ji & Nakamise-dōri', loc:'Asakusa', cat:'Activity', who:[0,1,2,3,4] },
+          { t:'9:00p', title:'Karaoke till late 🎤', loc:'Shibuya', cat:'Activity', who:[0,1,2,3,4] } ] },
+      { label:'Day 6', date:'Sat, Jul 25', temp:'76–88°F', cond:'Sunny', icon:I.sun,
+        sugg:'Airport comfy + room in the tote for last-minute konbini snacks.',
+        outfit:['Matching set','Sneakers','Neck pillow'],
+        events:[
+          { t:'11:00a', title:'Souvenir run — Tokyu Hands', loc:'Shibuya', cat:'Activity', who:[0,1,3] },
+          { t:'5:25p', title:'Fly home ✈', loc:'HND Terminal 3', cat:'Transport', who:[0,1,3] } ] }
+    ];
+    const di = Math.max(0, Math.min(days.length-1, st.day));
+    const D = days[di];
+    const catTag = (c)=> c==='Food' ? ['var(--acct)','var(--accd)'] : c==='Stay' ? ['var(--pinkt)','var(--pinkd)'] : c==='Transport' ? ['var(--sur2)','var(--mut)'] : ['var(--prit)','var(--prid)'];
+
+    const tabDefs = [
+      { key:'home', label:'Home', d:I.home, go:nav('home'), match:['home','trips','create'] },
+      { key:'itin', label:'Itinerary', d:I.cal, go:nav('itinerary'), match:['itinerary'] },
+      { key:'fin', label:'Finance', d:I.coins, go:nav('finance'), match:['finance','myexpenses'] },
+      { key:'more', label:'More', d:I.grid, go:sheet('more'), match:['flights','stays','recs','packing','outfits','map','settings','profile'] }
+    ];
+    const tabs = tabDefs.map(t=>{
+      const act = t.match.includes(screen);
+      return { ...t, fg: act ? 'var(--prid)' : 'var(--mut)', pillBg: act ? 'var(--prit)' : 'transparent' };
+    });
+
+    const moreDefs = [
+      ['Flights', I.plane, 'flights'], ['Stays', I.bed, 'stays'], ['Packing', I.case, 'packing'],
+      ['Outfits', I.hanger, 'outfits'], ['Map', I.pin, 'map'], ['Recs', I.flower, 'recs'],
+      ['My Expenses', I.receipt, 'myexpenses'], ['Settings', I.tune, 'settings'], ['Profile', I.user, 'profile']
+    ];
+    const tints = [['var(--prit)','var(--prid)'],['var(--acct)','var(--accd)'],['var(--pinkt)','var(--pinkd)']];
+    const moreItems = moreDefs.map((m,i)=>({ label:m[0], d:m[1], go:nav(m[2]), bg:tints[i%3][0], fg:tints[i%3][1] }));
+
+    const sideDefs = [ ['Home',I.home,'home'],['My Trips',I.compass,'trips'],['Itinerary',I.cal,'itinerary'],['Flights',I.plane,'flights'],['Stays',I.bed,'stays'],['Finance',I.coins,'finance'],['My Expenses',I.receipt,'myexpenses'],['Recs',I.flower,'recs'],['Packing',I.case,'packing'],['Outfits',I.hanger,'outfits'],['Map',I.pin,'map'],['Settings',I.tune,'settings'] ];
+    const sideItems = sideDefs.map(s=>{
+      const act = s[2]===screen;
+      return { label:s[0], d:s[1], go:nav(s[2]), bg: act?'var(--prit)':'transparent', fg: act?'var(--prid)':'var(--mut)' };
+    });
+
+    const emojiOpts = ['🦊','🌸','✨','🌙','🌻','🦋','🍑','🐬','🌈','🌿','⭐','🐚'].map((c,i)=>({ c, bord: i===0 ? '2px solid var(--prid)' : '1.5px solid var(--bd)' }));
+    const colorOpts = ['#F2C48A','#E8B4B8','#D8CDEA','#BFD3EA','#F5E3A8','#BFE3C8','#F0C9B2','#D9E5C9'].map((hex,i)=>({ hex, ring: i===0 ? '0 0 0 3px var(--sur), 0 0 0 5.5px var(--prid)' : 'none' }));
+
+    const curAll = [
+      ['🇯🇵','Japanese Yen','JPY'],['🇺🇸','US Dollar','USD'],['🇪🇺','Euro','EUR'],['🇬🇧','British Pound','GBP'],
+      ['🇲🇽','Mexican Peso','MXN'],['🇨🇦','Canadian Dollar','CAD'],['🇦🇺','Australian Dollar','AUD'],
+      ['🇰🇷','Korean Won','KRW'],['🇹🇭','Thai Baht','THB'],['🇻🇳','Vietnamese Dong','VND'],['🇮🇩','Indonesian Rupiah','IDR'],['🇮🇳','Indian Rupee','INR']
+    ];
+    const q = st.curQ.toLowerCase();
+    const curList = curAll.filter(c=>!q || c[1].toLowerCase().includes(q) || c[2].toLowerCase().includes(q))
+      .map(c=>({ flag:c[0], name:c[1], code:c[2], sel:c[2]===st.cur, pick:()=>this.setState({cur:c[2], sheet:null, curQ:''}) }));
+    const curSel = curAll.find(c=>c[2]===st.cur) || curAll[0];
+
+    const finCats = [
+      { name:'Stays', d:I.bed, amt:'¥120,000', pct:20, bg:'var(--pinkt)', fg:'var(--pinkd)', bar:'var(--pink)' },
+      { name:'Food & drink', d:I.food, amt:'¥98,400', pct:16, bg:'var(--acct)', fg:'var(--accd)', bar:'var(--acc)' },
+      { name:'Transport', d:I.plane, amt:'¥52,800', pct:9, bg:'var(--sur2)', fg:'var(--mut)', bar:'var(--mut)' },
+      { name:'Activities', d:I.flower, amt:'¥46,000', pct:8, bg:'var(--prit)', fg:'var(--prid)', bar:'var(--pri)' },
+      { name:'Shopping', d:I.cart, amt:'¥24,000', pct:4, bg:'var(--prit)', fg:'var(--prid)', bar:'var(--prid)' }
+    ];
+    const recentExp = [
+      { e:'✨', color:'#D8CDEA', title:'teamLab tickets', sub:'Priya · split 5 ways', amt:'¥8,200' },
+      { e:'🌸', color:'#E8B4B8', title:'Izakaya deposit', sub:'Sofia · split 5 ways', amt:'¥15,000' },
+      { e:'🦊', color:'#F2C48A', title:'Airport limousine bus', sub:'You · split 5 ways', amt:'¥4,800' }
+    ];
+    const fmtY = (n)=>'¥'+n.toLocaleString('en-US');
+    const pairsDef = [
+      { from:1, to:0, items:[
+        { k:'s1', v:'Izakaya Omoide', d:'dinner deposit', date:'Jul 21', pp:1680 },
+        { k:'s2', v:'Ryokan Kiku', d:'onsen night hold', date:'Jul 23', pp:4680 },
+        { k:'s3', v:'Karaoke Kan', d:'room + drinks', date:'Jul 24', pp:2040 } ] },
+      { from:3, to:0, items:[
+        { k:'j1', v:'Airport Limousine Bus', d:'HND → Shibuya', date:'Jul 20', pp:960 },
+        { k:'j2', v:'Ryokan Kiku', d:'onsen night hold', date:'Jul 23', pp:4680 } ] },
+      { from:0, to:2, items:[
+        { k:'p1', v:'teamLab Planets', d:'tickets · your share of 5', date:'Jul 22', pp:1640 } ] }
+    ];
+    const fd = st.finDone, tab = st.finTab;
+    const mkItem = (it)=>({ v:it.v, d:it.d, date:it.date, pp:fmtY(it.pp)+'/pp', hasD:!!it.d,
+      toggle:()=>this.setState(s=>({ finDone:{...s.finDone,[it.k]:!s.finDone[it.k]} })),
+      boxBd: fd[it.k]?'var(--prid)':'var(--bd)', boxBg: fd[it.k]?'var(--prid)':'transparent', done:!!fd[it.k] });
+    const finPairs = pairsDef.map(p=>{
+      const items = p.items.filter(it=> tab==='paid' ? fd[it.k] : !fd[it.k]);
+      if(!items.length) return null;
+      const amt = items.reduce((a,it)=>a+it.pp,0);
+      const F = membersRaw[p.from], T = membersRaw[p.to];
+      return { fromE:F.e, fromC:F.color, toE:T.e, toC:T.color,
+        fromN: p.from===0?'You':F.n, toN: p.to===0?'you':T.n,
+        amt: fmtY(amt), amtC: p.to===0?'var(--prid)':'var(--pinkd)', items: items.map(mkItem) };
+    }).filter(Boolean);
+    const remain = (p)=> p.items.filter(it=>!fd[it.k]).reduce((a,it)=>a+it.pp,0);
+    const owedPairs = pairsDef.filter(p=>p.to===0 && remain(p)>0);
+    const owePairs = pairsDef.filter(p=>p.from===0 && remain(p)>0);
+    const finOwedRows = owedPairs.map(p=>({ e:membersRaw[p.from].e, color:membersRaw[p.from].color, n:membersRaw[p.from].n, amt:fmtY(remain(p)) }));
+    const finOweRows = owePairs.map(p=>({ e:membersRaw[p.to].e, color:membersRaw[p.to].color, n:membersRaw[p.to].n, amt:fmtY(remain(p)) }));
+    const finOwedTotal = fmtY(owedPairs.reduce((a,p)=>a+remain(p),0));
+    const finOweTotal = fmtY(owePairs.reduce((a,p)=>a+remain(p),0));
+    const net = [0,0,0,0,0];
+    pairsDef.forEach(p=>{ const r = remain(p); net[p.to]+=r; net[p.from]-=r; });
+    const gsRows = membersRaw.map((m,i)=>{
+      const v = net[i];
+      const details = [];
+      pairsDef.forEach(p=>{
+        const r = remain(p); if(!r) return;
+        if(p.from===i) details.push({ label:'owes '+membersRaw[p.to].e+' '+(p.to===0?'Maya':membersRaw[p.to].n), amt:fmtY(r), amtC:'var(--pinkd)' });
+        if(p.to===i) details.push({ label:membersRaw[p.from].e+' '+(p.from===0?'Maya':membersRaw[p.from].n)+' owes them', amt:fmtY(r), amtC:'var(--prid)' });
+      });
+      return { e:m.e, color:m.color, n: i===0 ? 'Maya (you)' : m.n,
+        badge: v>0?'IS OWED':(v<0?'OWES':'SETTLED'),
+        bBg: v>0?'var(--prit)':(v<0?'var(--pinkt)':'var(--sur2)'),
+        bFg: v>0?'var(--prid)':(v<0?'var(--pinkd)':'var(--mut)'),
+        amt: v===0?'':fmtY(Math.abs(v)), amtC: v>0?'var(--prid)':'var(--pinkd)',
+        details, hasDetails: details.length>0, open: !!st.gsExp[i],
+        arrow: st.gsExp[i] ? 'rotate(180deg)' : 'rotate(0deg)',
+        toggleRow:()=>this.setState(s=>({ gsExp:{...s.gsExp,[i]:!s.gsExp[i]} })) };
+    });
+    const curMeta = { JPY:['🇯🇵','¥'], USD:['🇺🇸','$'], EUR:['🇪🇺','€'], GBP:['🇬🇧','£'], KRW:['🇰🇷','₩'] };
+    const enabledCurs = Object.keys(st.tripCurs).filter(c=>st.tripCurs[c]);
+    const expCur = enabledCurs.includes(st.expCur) ? st.expCur : enabledCurs[0];
+    const curRows = ['JPY','USD','EUR','GBP','KRW'].map(c=>({
+      code:c, flag:curMeta[c][0], name:(curAll.find(x=>x[2]===c)||[])[1]||c,
+      on: !!st.tripCurs[c], primary: c==='JPY',
+      chipBg: st.tripCurs[c]?'var(--prit)':'var(--sur2)', chipFg: st.tripCurs[c]?'var(--prid)':'var(--mut)',
+      chipBd: st.tripCurs[c]?'1.5px solid var(--pri)':'1px solid var(--bd)',
+      showRate: !!st.tripCurs[c] && c!=='JPY',
+      rate: st.rates[c]||'', onRate:(e)=>{ const v=e.target.value; this.setState(s=>({ rates:{...s.rates,[c]:v} })); },
+      toggle:()=> c==='JPY' ? null : this.setState(s=>({ tripCurs:{...s.tripCurs,[c]:!s.tripCurs[c]} }))
+    }));
+    const sp = st.expSplit, allSel = [0,1,2,3,4].every(i=>sp[i]);
+    const expIndRows = membersRaw.map((m,i)=> sp[i] ? { e:m.e, n:m.n, val: st.expAmts[i]||'',
+      onIn:(e)=>{ const v=e.target.value; this.setState(s=>({ expAmts:{...s.expAmts,[i]:v} })); } } : null).filter(Boolean);
+    const expTotal = expIndRows.reduce((a,r)=>a+(parseFloat(String(r.val).replace(/,/g,''))||0),0);
+    const expSplitChips = [
+      { label:'All', bg: allSel?'var(--prid)':'var(--sur2)', fg: allSel?'var(--onpri)':'var(--mut)',
+        toggle:()=>this.setState({ expSplit: allSel?{}:{0:true,1:true,2:true,3:true,4:true} }) },
+      ...membersRaw.map((m,i)=>({ label:m.e+' '+m.n, bg: sp[i]?'var(--prid)':'var(--sur2)', fg: sp[i]?'var(--onpri)':'var(--mut)',
+        toggle:()=>this.setState(s=>({ expSplit:{...s.expSplit,[i]:!s.expSplit[i]} })) }))
+    ];
+    const expChipDefs = ['All','Food','Transport','Activities','Shopping'];
+    const expChips = expChipDefs.map((c,i)=>({ label:c, bg: i===0?'var(--prid)':'var(--sur)', fg: i===0?'var(--onpri)':'var(--mut)', bord: i===0?'none':'1px solid var(--bd)' }));
+    const myExp = [
+      { d:I.food, bg:'var(--acct)', fg:'var(--accd)', title:'Ichiran ramen', sub:'Jul 20 · Food', amt:'¥1,200' },
+      { d:I.plane, bg:'var(--sur2)', fg:'var(--mut)', title:'Suica top-up', sub:'Jul 20 · Transport', amt:'¥3,000' },
+      { d:I.cart, bg:'var(--pinkt)', fg:'var(--pinkd)', title:'Vintage kimono jacket', sub:'Jul 21 · Shopping', amt:'¥6,500' },
+      { d:I.flower, bg:'var(--prit)', fg:'var(--prid)', title:'Onsen towel set', sub:'Jul 23 · Activities', amt:'¥1,800' }
+    ];
+
+    const recAll = [
+      { title:'Ichiran Ramen — solo booths!', cat:'Food', body:'Order at the machine, extra-firm noodles. Go at 3pm to skip the line.', by:1, likes:4 },
+      { title:'Golden Gai bar hop', cat:'Drink', body:'Tiny 6-seat bars. Bring cash, some have cover — Albatross is friendliest.', by:2, likes:3 },
+      { title:'Shimokitazawa thrifting', cat:'Places', body:'Best vintage district. New York Joe Exchange for the good stuff.', by:3, likes:5 },
+      { title:'teamLab Planets barefoot', cat:'Activities', body:'You wade through water — wear shorts or roll-up pants!', by:2, likes:2 },
+      { title:'Konbini breakfast rule', cat:'Tips', body:'7-Eleven egg sando + iced matcha latte = perfect ¥500 breakfast.', by:4, likes:6 },
+      { title:'Shrine etiquette', cat:'Culture', body:'Bow at the torii, cleanse hands at the fountain, two bows–two claps–one bow.', by:0, likes:3 }
+    ];
+    const recFilters = ['All','Food','Drink','Places','Activities','Tips','Culture'];
+    const recChips = recFilters.map(f=>({ label:f, go:()=>this.setState({recF:f}),
+      bg: f===st.recF?'var(--prid)':'var(--sur)', fg: f===st.recF?'var(--onpri)':'var(--mut)', bord: f===st.recF?'none':'1px solid var(--bd)' }));
+    const recFiltered = recAll.filter(r=>st.recF==='All'||r.cat===st.recF);
+    const recList = recFiltered.map(r=>{
+      const m = membersRaw[r.by]; const tg = catTag(r.cat==='Drink'?'Food':r.cat==='Culture'?'Stay':r.cat==='Tips'?'Transport':r.cat==='Places'?'Activity':r.cat);
+      return { ...r, tagBg:tg[0], tagFg:tg[1], color:m.color, e:m.e, byline:'by '+m.n, likes:r.likes };
+    });
+
+    const packDefs = [
+      { name:'Clothes', items:[['p0','Flowy sundress ×2'],['p1','Swimsuit (onsen day!)'],['p2','Rain jacket',true],['p3','Comfy sneakers']] },
+      { name:'Toiletries', items:[['t0','SPF 50 + after-sun'],['t1','Mini skincare set'],['t2','Meds & motion sickness']] },
+      { name:'Tech & docs', items:[['x0','Passport + copy'],['x1','Plug adapter (Type A)'],['x2','Portable charger']] }
+    ];
+    let packedN = 0, totalN = 0;
+    const packCats = packDefs.map(pc=>({ name:pc.name, items: pc.items.map(([k, name, fromFriend])=>{
+      const done = !!st.pack[k]; totalN++; if(done) packedN++;
+      return { name, done, fromFriend:!!fromFriend,
+        toggle:()=>this.setState(s=>({ pack:{...s.pack,[k]:!s.pack[k]} })),
+        boxBd: done?'var(--prid)':'var(--bd)', boxBg: done?'var(--prid)':'transparent',
+        deco: done?'line-through':'none', txc: done?'var(--mut)':'var(--tx)' };
+    })}));
+
+    const pins = [
+      { e:'🍜', bg:'var(--acct)', name:'Ichiran Shibuya', sub:'Food · saved by Sofia' },
+      { e:'⛩', bg:'var(--pinkt)', name:'Meiji Shrine', sub:'Places · Day 2 itinerary' },
+      { e:'🛍', bg:'var(--prit)', name:'Shimokitazawa', sub:'Shopping · saved by Jess' },
+      { e:'🏠', bg:'var(--prit)', name:'Shibuya Loft', sub:'Our stay · Jul 20–23' }
+    ];
+
+    const visDefs = [ ['Flights',I.plane,'flights'],['Stays',I.bed,'stays'],['My Expenses',I.receipt,'myexp'],['Recs',I.flower,'recs'],['Packing',I.case,'packing'],['Outfits',I.hanger,'outfits'] ];
+    const visRows = visDefs.map(v=>{
+      const on = st.vis[v[2]];
+      return { label:v[0], d:v[1], trackBg: on?'var(--pri)':'var(--sur2)', knobL: on?23:3,
+        toggle:()=>this.setState(s=>({ vis:{...s.vis,[v[2]]:!s.vis[v[2]]} })) };
+    });
+
+    const arrivals = [
+      { name:'Maya (you)', e:'🦊', color:'#F2C48A', airline:'United UA 837', from:'SFO', dep:'11:05 AM', arr:'4:40 PM', status:'On time' },
+      { name:'Sofia & Jess', e:'🌸', color:'#E8B4B8', airline:'Delta DL 7', from:'LAX', dep:'10:30 AM', arr:'3:55 PM', status:'On time' },
+      { name:'Priya', e:'✨', color:'#D8CDEA', airline:'Air Canada AC 5', from:'YVR', dep:'12:10 PM', arr:'4:10 PM', status:'On time' },
+      { name:'Amara', e:'🌻', color:'#F5E3A8', airline:'ANA NH 111', from:'ORD', dep:'11:45 AM', arr:'5:05 PM', status:'Delayed 20m' }
+    ];
+
+    const pinnable = [ ['itinerary','Itinerary',I.cal],['flights','Flights',I.plane],['stays','Stays',I.bed],['finance','Finance',I.coins],['packing','Packing',I.case],['outfits','Outfits',I.hanger],['recs','Recs',I.flower],['map','Map',I.pin],['myexpenses','My Expenses',I.receipt] ];
+    const togglePin = (key)=>()=>this.setState(s=>({ homePins: s.homePins.includes(key) ? s.homePins.filter(k=>k!==key) : [...s.homePins, key] }));
+    const pinTiles = st.homePins.map(k=>{ const p = pinnable.find(x=>x[0]===k); return p && { key:k, label:p[1], d:p[2], go:nav(k) }; }).filter(Boolean);
+    const pinOpts = pinnable.map(p=>({ key:p[0], label:p[1], d:p[2], pinned:st.homePins.includes(p[0]), toggle:togglePin(p[0]),
+      bg: st.homePins.includes(p[0])?'var(--prit)':'var(--sur)', fg: st.homePins.includes(p[0])?'var(--prid)':'var(--mut)', bord: st.homePins.includes(p[0])?'1.5px solid var(--pri)':'1px solid var(--bd)' }));
+
+    const isAuth = ['login','signup','start','join'].includes(screen);
+    const sh = st.sheet;
+    const evWho = (idx)=> idx.map(i=>({ e:membersRaw[i].e, color:membersRaw[i].color }));
+
+    return {
+      theme, palette: P.palette || 'dusk', wOuter:w, hOuter, bezelR: isTablet?28:(isAndroid?32:47), statusH:52,
+      isAndroid, isIos:!isAndroid, isTablet,
+      sLogin:screen==='login', sSignup:screen==='signup', sStart:screen==='start', sJoin:screen==='join',
+      sHome:screen==='home', sTrips:screen==='trips', sCreate:screen==='create', sItin:screen==='itinerary',
+      sFlights:screen==='flights', sStays:screen==='stays', sFin:screen==='finance', sMyExp:screen==='myexpenses',
+      sRecs:screen==='recs', sPacking:screen==='packing', sOutfits:screen==='outfits', sMap:screen==='map',
+      sSettings:screen==='settings', sProfile:screen==='profile',
+      hvA:hv==='a', hvB:hv==='b', hvC:hv==='c',
+      showTabs: !isAuth && !isTablet,
+      goHome:nav('home'), goTrips:nav('trips'), goCreate:nav('create'), goItin:nav('itinerary'),
+      goFin:nav('finance'), goMyExp:nav('myexpenses'), goFlights:nav('flights'), goStays:nav('stays'),
+      goRecs:nav('recs'), goPacking:nav('packing'), goOutfits:nav('outfits'), goMap:nav('map'),
+      goSettings:nav('settings'), goProfile:nav('profile'), goLogin:nav('login'), goSignup:nav('signup'),
+      goStart:nav('start'), goJoin:nav('join'),
+      tabs, moreItems, sideItems, members, friends: members.slice(1), emojiOpts, colorOpts,
+      shAny: !!sh, shMore: sh==='more', shCurrency: sh==='currency', shExpense: sh==='expense',
+      shFlight: sh==='flight', shEvent: sh==='event', shSuggest: sh==='suggest',
+      shRemoveIos: sh==='remove' && !isAndroid, shRemoveAnd: sh==='remove' && isAndroid,
+      openCurrency:sheet('currency'), openExpense:sheet('expense'), openFlight:sheet('flight'),
+      openEvent:sheet('event'), openSuggest:sheet('suggest'), openRemove:sheet('remove'),
+      closeSheet:()=>this.setState({sheet:null}),
+      dayChips: days.map((d,i)=>({ label:d.label, go:()=>this.setState({day:i}),
+        bg: i===di?'var(--prid)':'var(--sur)', fg: i===di?'var(--onpri)':'var(--mut)', bord: i===di?'none':'1px solid var(--bd)' })),
+      dayPrev:()=>this.setState(s=>({day: Math.max(0, s.day-1)})),
+      dayNext:()=>this.setState(s=>({day: Math.min(days.length-1, s.day+1)})),
+      dayTitle:D.label, dayDate:D.date, dayTemp:D.temp, dayCond:D.cond, dayWIcon:D.icon, daySugg:D.sugg,
+      dayOutfit:D.outfit, outfitSlotId:'outfit-day-'+(di+1),
+      dayEvents: D.events.map(ev=>{ const tg = catTag(ev.cat); return { ...ev, who:evWho(ev.who), tagBg:tg[0], tagFg:tg[1] }; }),
+      arrivals, finCats, recentExp, expChips, myExp, recChips, recList, recsEmpty: recFiltered.length===0,
+      finPairs, finEmpty: finPairs.length===0, finOwedRows, finOweRows, finOwedTotal, finOweTotal,
+      hasOwed: finOwedRows.length>0, hasOwe: finOweRows.length>0,
+      gsRows, gsOpen: st.gsOpen, gsToggle:()=>this.setState(s=>({gsOpen:!s.gsOpen})),
+      finTabPaid: tab==='paid',
+      setFinOwed:()=>this.setState({finTab:'owed'}), setFinPaid:()=>this.setState({finTab:'paid'}),
+      tabOwedBg: tab==='owed'?'var(--prid)':'transparent', tabOwedFg: tab==='owed'?'var(--onpri)':'var(--mut)',
+      tabPaidBg: tab==='paid'?'var(--prid)':'transparent', tabPaidFg: tab==='paid'?'var(--onpri)':'var(--mut)',
+      expSplitChips, expIndRows, expIndOn: st.expType==='individual',
+      expCurFlag: curMeta[expCur][0], expCurCode: expCur, expCurSym: curMeta[expCur][1],
+      cycleExpCur:()=>{ const i = enabledCurs.indexOf(expCur); this.setState({ expCur: enabledCurs[(i+1)%enabledCurs.length] }); },
+      expTotalLine: 'Total entered: '+curMeta[expCur][1]+expTotal.toLocaleString('en-US')+' / '+curMeta[expCur][1]+'4,800',
+      curRows,
+      expEqBg: st.expType==='equal'?'var(--sur)':'transparent', expEqFg: st.expType==='equal'?'var(--tx)':'var(--mut)', expEqSh: st.expType==='equal'?'var(--shs)':'none',
+      expIndBg: st.expType==='individual'?'var(--sur)':'transparent', expIndFg: st.expType==='individual'?'var(--tx)':'var(--mut)', expIndSh: st.expType==='individual'?'var(--shs)':'none',
+      setExpEq:()=>this.setState({expType:'equal'}), setExpInd:()=>this.setState({expType:'individual'}),
+      packCats, packedN, togoN: totalN-packedN, packPct: Math.round(packedN/totalN*100),
+      packSummary: packedN+' of '+totalN+' packed',
+      pins, visRows,
+      pinTiles, pinOpts, pinEdit: st.pinEdit, hasPins: pinTiles.length > 0,
+      togglePinEdit:()=>this.setState(s=>({ pinEdit: !s.pinEdit })),
+      pinEditLabel: st.pinEdit ? 'Done' : 'Edit',
+      curQ: st.curQ, onCurQ:(e)=>this.setState({curQ:e.target.value}),
+      curList, curFlag:curSel[0], curLabel:curSel[2]+' — '+curSel[1],
+      setLight:()=>this.setState({themeOv:'light'}), setDark:()=>this.setState({themeOv:'dark'}),
+      lightBg: theme==='light'?'var(--sur)':'transparent', lightFg: theme==='light'?'var(--tx)':'var(--mut)', lightSh: theme==='light'?'var(--shs)':'none',
+      darkBg: theme==='dark'?'var(--sur)':'transparent', darkFg: theme==='dark'?'var(--tx)':'var(--mut)', darkSh: theme==='dark'?'var(--shs)':'none'
+    };
+  }
+}
+</script>
+</body>
+</html>
