@@ -1,6 +1,6 @@
 <div class="page-container">
   <div class="page-header">
-    <h2>🚗 Rental Car</h2>
+    <h2><app-icon name="car" [size]="22" /> Rental Car</h2>
     @if (dataService.isStale()) {
       <button class="btn btn-ghost btn-sm" (click)="refresh()">↻ Refresh</button>
     }

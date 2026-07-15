@@ -103,6 +103,15 @@ h2 { font-size: 1.4rem; font-weight: 700; }
 h3 { font-size: 1.1rem; font-weight: 700; }
 p  { line-height: 1.6; }
 
+// Custom icon inside a page title (DP2-5) — aligns + tints the leading icon.
+h1 > app-icon, h2 > app-icon {
+  color: var(--primary-dark);
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+  margin-right: 0.4rem;
+}
+
 // ── Shared layout ─────────────────────────────────────────────────────────────
 .page-container {
   padding: 1.5rem 2rem;

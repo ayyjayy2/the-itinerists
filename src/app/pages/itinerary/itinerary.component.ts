@@ -9,6 +9,7 @@ import { UsersService } from '../../services/users.service';
 import { FlightsService } from '../../services/flights.service';
 import { TripService } from '../../services/trip.service';
 import { ItineraryItemDoc } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 type ViewMode = 'list' | 'calendar';
 
@@ -36,7 +37,7 @@ function fallbackWindow(): string[] {
 
 @Component({
   selector: 'app-itinerary',
-  imports: [CommonModule, FormsModule, DragDropModule, RouterLink],
+  imports: [IconComponent, CommonModule, FormsModule, DragDropModule, RouterLink],
   templateUrl: './itinerary.component.html',
   styleUrl: './itinerary.component.scss'
 })

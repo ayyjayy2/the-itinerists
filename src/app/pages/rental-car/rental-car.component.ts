@@ -3,6 +3,7 @@ import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data.service';
 import { RentalCar } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 type CarForm = Omit<RentalCar, 'drivers'>;
 
@@ -17,7 +18,7 @@ function blankForm(): CarForm {
 
 @Component({
   selector: 'app-rental-car',
-  imports: [CommonModule, NgTemplateOutlet, FormsModule],
+  imports: [IconComponent, CommonModule, NgTemplateOutlet, FormsModule],
   templateUrl: './rental-car.component.html',
   styleUrl: './rental-car.component.scss'
 })

@@ -2,7 +2,7 @@
 
   <!-- ── Header: title + List / Calendar ── -->
   <div class="page-header">
-    <h2>📅 Itinerary</h2>
+    <h2><app-icon name="itinerary" [size]="22" /> Itinerary</h2>
     <div class="view-toggle">
       <button class="btn btn-sm" [class.btn-primary]="view() === 'list'"     [class.btn-ghost]="view() !== 'list'"     (click)="setView('list')">List</button>
       <button class="btn btn-sm" [class.btn-primary]="view() === 'calendar'" [class.btn-ghost]="view() !== 'calendar'" (click)="setView('calendar')">Calendar</button>

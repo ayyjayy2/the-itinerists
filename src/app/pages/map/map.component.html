@@ -1,7 +1,7 @@
 <div class="map-page">
 
   <div class="map-header">
-    <h2>🗺️ Trip Map</h2>
+    <h2><app-icon name="map" [size]="22" /> Trip Map</h2>
     <div class="scope-tabs map-scope">
       <button [class.active]="!showAll()" (click)="setScope(false)">My Trip</button>
       <button [class.active]="showAll()"  (click)="setScope(true)">All</button>

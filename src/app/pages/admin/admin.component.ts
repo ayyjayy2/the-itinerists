@@ -6,10 +6,11 @@ import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { TripContextService } from '../../services/trip-context.service';
 import { FirestoreUser } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-admin',
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })

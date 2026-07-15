@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RecsService } from '../../services/recs.service';
 import { UserService } from '../../services/user.service';
 import { Rec, RecDoc } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 const CATEGORIES = ['Food', 'Drink', 'Places', 'Activities', 'Tips', 'Culture'];
 
@@ -11,7 +12,7 @@ type GroupedRecs = [string, RecDoc[]][];
 
 @Component({
   selector: 'app-recs',
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './recs.component.html',
   styleUrl: './recs.component.scss'
 })

@@ -5,10 +5,11 @@ import { StaysService } from '../../services/stays.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { AccommodationDoc } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-accommodations',
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './accommodations.component.html',
   styleUrl: './accommodations.component.scss'
 })

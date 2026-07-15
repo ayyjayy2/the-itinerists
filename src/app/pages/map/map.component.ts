@@ -9,6 +9,7 @@ import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 import { DataService } from '../../services/data.service';
 import { UserService } from '../../services/user.service';
 import { Flight, ItineraryItem, MapPin, TripUser } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 // Bump this to wipe the geocache and re-resolve all locations with new strategy
 const GEOCACHE_KEY         = 'ireland_geocache';
@@ -124,7 +125,7 @@ function customPinIcon(color: string): L.DivIcon {
 
 @Component({
   selector: 'app-map',
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './map.component.html',
   styleUrl: './map.component.scss',
 })

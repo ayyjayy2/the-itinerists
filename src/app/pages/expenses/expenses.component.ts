@@ -6,6 +6,7 @@ import { FinanceService } from '../../services/finance.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 const CATEGORIES = ['Food', 'Drink', 'Transport', 'Shopping', 'Accommodation', 'Activity', 'Other'];
 
@@ -22,7 +23,7 @@ interface DisplayExpense {
 
 @Component({
   selector: 'app-expenses',
-  imports: [CommonModule, NgClass, FormsModule],
+  imports: [IconComponent, CommonModule, NgClass, FormsModule],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss'
 })

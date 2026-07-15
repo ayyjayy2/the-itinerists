@@ -10,6 +10,7 @@ import { ItineraryService } from '../../services/itinerary.service';
 import { FlightsService } from '../../services/flights.service';
 import { TripService } from '../../services/trip.service';
 import { OutfitEntry } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 /** Inclusive YYYY-MM-DD range builder. */
 function dateRange(start: string, end: string): string[] {
@@ -62,7 +63,7 @@ interface DayData {
 
 @Component({
   selector: 'app-outfits',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [IconComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './outfits.component.html',
   styleUrl: './outfits.component.scss'
 })
