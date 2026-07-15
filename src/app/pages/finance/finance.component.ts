@@ -5,6 +5,7 @@ import { FinanceService } from '../../services/finance.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 interface DirectDebt {
   from: string;
@@ -15,7 +16,7 @@ interface DirectDebt {
 
 @Component({
   selector: 'app-finance',
-  imports: [CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './finance.component.html',
   styleUrl: './finance.component.scss'
 })
