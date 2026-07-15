@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
-import { ThemeService, ThemePref } from '../../services/theme.service';
+import { ThemeService } from '../../services/theme.service';
 import { TripDoc, TripMember, ActivityLogEntry } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 
@@ -23,15 +23,10 @@ export class TripSettingsComponent {
   private themeService = inject(ThemeService);
   private router      = inject(Router);
 
-  // Appearance (DP2-4) — hidden while dark mode is disabled (DP2-7).
-  readonly appearanceEnabled = this.themeService.darkModeEnabled;
-  readonly themePref = this.themeService.pref;
-  readonly themeOptions: { value: ThemePref; label: string; icon: string }[] = [
-    { value: 'light',  label: 'Light',  icon: '☀️' },
-    { value: 'system', label: 'System', icon: '🖥️' },
-    { value: 'dark',   label: 'Dark',   icon: '🌙' },
-  ];
-  setTheme(pref: ThemePref): void { this.themeService.set(pref); }
+  // Appearance (DP2-9) — multi-theme picker (Light / Medium / Dark).
+  readonly themes = this.themeService.themes;
+  readonly currentTheme = this.themeService.theme;
+  setTheme(id: string): void { this.themeService.set(id); }
 
   readonly trip     = this.tripService.activeTrip;
   readonly members  = this.tripService.activeMembers;

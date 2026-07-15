@@ -1,63 +1,56 @@
 import { Injectable, signal, effect } from '@angular/core';
 
-export type ThemePref = 'light' | 'dark' | 'system';
+export interface AppTheme {
+  id: string;
+  label: string;
+  group: 'Light' | 'Medium' | 'Dark';
+  /** [ground, card, accent] preview swatch colours. */
+  swatch: [string, string, string];
+}
+
+/** User-selectable themes (DP2-9). Deep Moss (5b) is kept in styles.scss as a
+ *  backup but intentionally not listed here. */
+export const THEMES: AppTheme[] = [
+  { id: 'light',        label: 'Light',        group: 'Light',  swatch: ['#F8F4EF', '#FFFFFF', '#8BAF7C'] },
+  { id: 'dusk-meadow',  label: 'Dusk Meadow',  group: 'Medium', swatch: ['#BFC6A9', '#EFE6D2', '#7E6FA8'] },
+  { id: 'golden-hour',  label: 'Golden Hour',  group: 'Medium', swatch: ['#C4AFB6', '#F1E4C8', '#E8B4B8'] },
+  { id: 'plum-dusk',    label: 'Plum Dusk',    group: 'Dark',   swatch: ['#221B20', '#2C242A', '#CDB4DE'] },
+  { id: 'night-garden', label: 'Night Garden', group: 'Dark',   swatch: ['#1A1F17', '#2C2530', '#F0B7C6'] },
+];
+
+const THEME_IDS = new Set(THEMES.map(t => t.id));
 const STORAGE_KEY = 'tripplanner_theme';
 
 /**
- * Light / dark / system theme (DP2-4). The resolved theme is written as
- * `data-theme="light|dark"` on <html>; `styles.scss` swaps the token values.
- * The choice persists to localStorage and follows the OS when set to "system".
+ * App theme (DP2-9). The chosen theme id is written as `data-theme` on <html>;
+ * `styles.scss` swaps the token values per theme. Persists to localStorage.
  */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  /**
-   * Dark mode is fully built but DISABLED for now — its colour scheme needs
-   * re-tuning. While false, the app is light-only and the Appearance toggle is
-   * hidden. Flip to `true` (and re-tune the [data-theme="dark"] tokens) to bring
-   * it back. (DP2-7)
-   */
-  readonly darkModeEnabled = false;
-
-  readonly pref = signal<ThemePref>(readStored());
-
-  private readonly media = typeof window !== 'undefined'
-    ? window.matchMedia('(prefers-color-scheme: dark)')
-    : null;
+  readonly themes = THEMES;
+  readonly theme = signal<string>(readStored());
 
   constructor() {
-    // Re-apply whenever the preference changes.
-    effect(() => this.apply(this.pref()));
-    // Follow the OS while on "system".
-    this.media?.addEventListener('change', () => {
-      if (this.pref() === 'system') this.apply('system');
-    });
+    effect(() => this.apply(this.theme()));
   }
 
-  /** True when the currently-resolved theme is dark. */
-  isDark(): boolean {
-    if (!this.darkModeEnabled) return false;
-    const p = this.pref();
-    return p === 'dark' || (p === 'system' && !!this.media?.matches);
+  set(id: string): void {
+    if (!THEME_IDS.has(id)) return;
+    this.theme.set(id);
+    try { localStorage.setItem(STORAGE_KEY, id); } catch { /* storage unavailable */ }
   }
 
-  set(pref: ThemePref): void {
-    this.pref.set(pref);
-    try { localStorage.setItem(STORAGE_KEY, pref); } catch { /* storage unavailable */ }
-  }
-
-  private apply(pref: ThemePref): void {
+  private apply(id: string): void {
     if (typeof document === 'undefined') return;
-    const dark = this.darkModeEnabled
-      && (pref === 'dark' || (pref === 'system' && !!this.media?.matches));
-    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', id);
   }
 }
 
-function readStored(): ThemePref {
+function readStored(): string {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
-    return v === 'light' || v === 'dark' || v === 'system' ? v : 'system';
+    return v && THEME_IDS.has(v) ? v : 'light';   // old 'dark'/'system' fall back to light
   } catch {
-    return 'system';
+    return 'light';
   }
 }
