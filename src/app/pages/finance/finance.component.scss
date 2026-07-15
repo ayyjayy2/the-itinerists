@@ -3,7 +3,7 @@
   position: fixed;
   bottom: 1.5rem;
   right: 1.5rem;
-  background: #1a4a2e;
+  background: var(--primary-dark);
   color: #fff;
   padding: 0.65rem 1.1rem;
   border-radius: var(--radius);
@@ -29,7 +29,7 @@
   height: 52px;
   border-radius: 50%;
   background: var(--primary);
-  color: #1a4a2e;
+  color: var(--primary-dark);
   border: none;
   font-size: 1.75rem;
   font-weight: 300;
@@ -158,7 +158,7 @@
 
 // ── Form validation ────────────────────────────────────────────────────────────
 .required-star {
-  color: #c0392b;
+  color: var(--danger);
   font-weight: 700;
   margin-left: 1px;
 }
@@ -170,9 +170,9 @@
 }
 
 .field-error {
-  border-color: #c0392b !important;
-  background: #fff5f5 !important;
-  &:focus { outline-color: #c0392b; }
+  border-color: var(--danger) !important;
+  background: var(--danger-tint) !important;
+  &:focus { outline-color: var(--danger); }
 }
 
 // ── Add Expense Modal ──────────────────────────────────────────────────────────
@@ -294,7 +294,7 @@
   border-radius: var(--radius-sm);
 
   &.gs-tag-owed  { background: rgba(136, 201, 161, 0.18); color: var(--primary-dark); }
-  &.gs-tag-owes  { background: #fff0f0; color: #c0392b; }
+  &.gs-tag-owes  { background: var(--danger-tint); color: var(--danger); }
 }
 
 .gs-amount {
@@ -302,7 +302,7 @@
   font-weight: 800;
 
   .gs-positive & { color: var(--primary-dark); }
-  .gs-negative & { color: #c0392b; }
+  .gs-negative & { color: var(--danger); }
 
   .gs-code { font-size: 0.65rem; font-weight: 600; color: var(--text-muted); }
 }
@@ -359,7 +359,7 @@
   font-weight: 800;
   flex-shrink: 0;
 
-  .gs-detail-owes & { color: #c0392b; }
+  .gs-detail-owes & { color: var(--danger); }
   .gs-detail-owed & { color: var(--primary-dark); }
 }
 
@@ -453,11 +453,11 @@
   gap: 0.25rem;
 
   &.banner-negative {
-    background: linear-gradient(135deg, #fff5f5, #ffe8e8);
-    border: 1.5px solid #f5c2c2;
+    background: linear-gradient(135deg, var(--danger-tint), var(--danger-tint));
+    border: 1.5px solid var(--danger-tint);
   }
   &.banner-positive {
-    background: linear-gradient(135deg, #f0faf5, #e8f5ee);
+    background: linear-gradient(135deg, var(--primary-tint), var(--primary-tint));
     border: 1.5px solid var(--primary);
   }
   &.banner-settled {
@@ -488,7 +488,7 @@
   font-weight: 800;
   line-height: 1.1;
 
-  .banner-negative & { color: #c0392b; }
+  .banner-negative & { color: var(--danger); }
   .banner-positive & { color: var(--primary-dark); }
 
   .b-code {
@@ -526,7 +526,7 @@
   font-size: 0.84rem;
   font-weight: 700;
 
-  .banner-negative & { color: #c0392b; }
+  .banner-negative & { color: var(--danger); }
   .banner-positive & { color: var(--primary-dark); }
 
   .b-code {
@@ -1002,8 +1002,8 @@
 }
 
 .btn-danger {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--danger-tint);
+  color: var(--danger);
   border: none;
   border-radius: var(--radius-sm);
   padding: 0.4rem 0.85rem;
@@ -1012,7 +1012,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
-  &:hover { background: #fecaca; }
+  &:hover { background: var(--danger-tint); }
 }
 
 // ── Split Mode ─────────────────────────────────────────────────────────────────
@@ -1102,8 +1102,8 @@
   }
 
   &.indiv-mismatch {
-    background: #fff5f5;
-    border-color: #f5c2c2;
-    color: #c0392b;
+    background: var(--danger-tint);
+    border-color: var(--danger-tint);
+    color: var(--danger);
   }
 }
