@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../shared/icon/icon.component';
@@ -6,145 +6,161 @@ import { UserService } from '../../services/user.service';
 import { FlightCountdownService } from '../../services/flight-countdown.service';
 import { FlightsService } from '../../services/flights.service';
 import { TripService } from '../../services/trip.service';
-
-interface QuickLink {
-  path: string;
-  label: string;
-  icon: string;
-  description: string;
-  color: string;
-}
+import { ItineraryService } from '../../services/itinerary.service';
+import { FinanceService } from '../../services/finance.service';
+import { PackingService } from '../../services/packing.service';
+import { WeatherService } from '../../services/weather.service';
+import { TripDoc, ActivityLogEntry } from '../../models/trip.models';
 
 @Component({
   selector: 'app-home',
   imports: [CommonModule, RouterLink, IconComponent],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.scss'
+  styleUrl: './home.component.scss',
 })
 export class HomeComponent implements OnInit, OnDestroy {
   userService     = inject(UserService);
   flightCountdown = inject(FlightCountdownService);
   flightsService  = inject(FlightsService);
   tripService     = inject(TripService);
+  itineraryService = inject(ItineraryService);
+  financeService   = inject(FinanceService);
+  packingService   = inject(PackingService);
+  weatherService   = inject(WeatherService);
 
   currentUser = this.userService.currentUser;
   isAdmin     = this.userService.isAdmin;
 
-  /** The active trip drives the home dashboard (TP-14). */
   readonly activeTrip    = this.tripService.activeTrip;
   readonly hasActiveTrip = computed(() => this.activeTrip() !== null);
+  readonly members       = this.tripService.activeMembers;
 
   private now = signal(Date.now());
   private countdownTimer: ReturnType<typeof setInterval> | null = null;
 
-  // `icon` is an <app-icon> name (custom line-icon set); `color` tints the card's top accent.
-  private readonly baseLinks: QuickLink[] = [
-    { path: '/flights',        label: 'Flights',      icon: 'flights',   description: 'Arrivals & departures', color: 'var(--primary)' },
-    { path: '/itinerary',      label: 'Itinerary',    icon: 'itinerary', description: 'Day-by-day plans',      color: 'var(--accent)' },
-    { path: '/accommodations', label: 'Stays',        icon: 'stays',     description: 'Hotels & check-in',     color: 'var(--lavender)' },
-    { path: '/finance',        label: 'Finance',      icon: 'finance',   description: 'Shared expenses',       color: 'var(--primary)' },
-    { path: '/recs',           label: 'Recs',         icon: 'recs',      description: 'Local tips & spots',    color: 'var(--highlight)' },
-    { path: '/packing',        label: 'Packing',      icon: 'packing',   description: 'Your packing list',     color: 'var(--accent)' },
-    { path: '/outfits',        label: 'Outfits',      icon: 'outfits',   description: 'Plan your looks',       color: 'var(--highlight)' },
-    { path: '/profile',        label: 'Profile',      icon: 'profile',   description: 'Settings & account',    color: 'var(--lavender)' },
-  ];
+  /** The user's trips, for the switcher row. */
+  readonly trips = signal<TripDoc[]>([]);
 
-  readonly quickLinks = computed(() => {
-    // Respect the member's hidden pages for the active trip (TP-15).
-    const hidden = this.tripService.hiddenPages();
-    const links = this.baseLinks.filter(l => !hidden.includes(l.path.slice(1)));
-    return this.isAdmin()
-      ? [...links, { path: '/admin', label: 'Admin', icon: 'admin', description: 'Trip & members', color: 'var(--lavender)' }]
-      : links;
-  });
+  constructor() {
+    // Load weather for the active trip so the glance card can show it.
+    effect(() => {
+      const t = this.activeTrip();
+      if (t?.startDate && t?.endDate && t?.destination) {
+        this.weatherService.load(t.startDate, t.endDate, t.destination);
+      }
+    });
+  }
 
-  /** Short destination for countdown copy: "Lisbon, Portugal" → "Lisbon". */
+  // ── Hero ───────────────────────────────────────────────────────────────────
   readonly destinationShort = computed(() => {
-    const trip = this.activeTrip();
-    if (!trip) return '';
-    return (trip.destination || trip.name || '').split(',')[0].trim();
+    const t = this.activeTrip();
+    return t ? (t.destination || t.name || '').split(',')[0].trim() : '';
   });
 
-  /** Hero subtitle. */
-  readonly locationLabel = computed(() => {
-    const trip = this.activeTrip();
-    if (!trip) return 'plan your next adventure';
-    return trip.destination || trip.name || 'your trip';
+  readonly heroMembers = computed(() => this.members().slice(0, 5));
+
+  readonly friendsLabel = computed(() => {
+    const n = (this.activeTrip()?.memberCount ?? this.members().length) - 1;
+    return n > 0 ? `you + ${n} friend${n !== 1 ? 's' : ''}` : 'just you';
   });
 
-  readonly flightLabel = computed(() => {
-    const uid     = this.currentUser()?.uid ?? '';
-    const flights = this.flightsService.flights();
-    this.now(); // subscribe to timer ticks
-    return this.flightCountdown.getCountdownForUid(uid, flights);
+  readonly dateRangeLabel = computed(() => {
+    const t = this.activeTrip();
+    if (!t?.startDate || !t?.endDate) return '';
+    const fmt = (s: string) => new Date(s + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const year = new Date(t.endDate + 'T00:00').getFullYear();
+    return `${fmt(t.startDate)} – ${fmt(t.endDate)}, ${year}`;
   });
 
-  readonly countdown = computed(() => {
-    const trip = this.activeTrip();
-    const now  = new Date(this.now());
-
-    if (!trip) {
-      return { label: 'No active trip — pick one in My Trips', type: 'unset' };
-    }
-    if (!trip.startDate || !trip.endDate) {
-      return { label: 'Trip dates not set yet', type: 'unset' };
-    }
-
-    const where     = this.destinationShort() || 'your trip';
-    const tripStart = new Date(trip.startDate + 'T00:00:00');
-    const tripEnd   = new Date(trip.endDate   + 'T00:00:00');
-    const diff      = tripStart.getTime() - now.getTime();
-
-    if (diff <= 0) {
-      const remaining = tripEnd.getTime() - now.getTime();
-      if (remaining > 0) {
-        const days = Math.ceil(remaining / (1000 * 60 * 60 * 24));
-        return { label: `Trip is live! ${days} day${days !== 1 ? 's' : ''} left 🌿`, type: 'live' };
-      }
-      return { label: `${trip.name} complete! 🌿`, type: 'done' };
-    }
-
-    const days  = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    return { label: `${days}d ${hours}h until ${where}!`, type: 'countdown' };
-  });
-
-  /**
-   * Hero countdown as a big number + caption (DP2-3 "bold countdown"):
-   * `big` is the day count (empty when there's nothing to count down to), and
-   * `small` is the caption underneath.
-   */
+  /** Countdown as a big number + caption (bold countdown hero). */
   readonly heroCountdown = computed(() => {
-    const trip = this.activeTrip();
-    const now  = new Date(this.now());
-    if (!trip)                            return { big: '', small: 'No active trip — pick one in My Trips' };
-    if (!trip.startDate || !trip.endDate) return { big: '', small: 'Trip dates not set yet' };
-
-    const where = this.destinationShort() || 'your trip';
-    const start = new Date(trip.startDate + 'T00:00:00');
-    const end   = new Date(trip.endDate   + 'T00:00:00');
+    const t = this.activeTrip();
+    const now = new Date(this.now());
+    if (!t)                              return { big: '', small: 'No active trip' };
+    if (!t.startDate || !t.endDate)      return { big: '', small: 'Dates not set yet' };
+    const start = new Date(t.startDate + 'T00:00:00');
+    const end   = new Date(t.endDate + 'T00:00:00');
     const diff  = start.getTime() - now.getTime();
-
     if (diff <= 0) {
-      const remaining = end.getTime() - now.getTime();
-      if (remaining > 0) {
-        const d = Math.ceil(remaining / 86_400_000);
-        return { big: String(d), small: `day${d !== 1 ? 's' : ''} left in ${where} 🌿` };
-      }
-      return { big: '', small: `${trip.name} complete 🌿` };
+      const rem = end.getTime() - now.getTime();
+      if (rem > 0) { const d = Math.ceil(rem / 86_400_000); return { big: String(d), small: `day${d !== 1 ? 's' : ''} left 🌿` }; }
+      return { big: '', small: 'Trip complete 🌿' };
     }
-
-    const days  = Math.floor(diff / 86_400_000);
-    const hours = Math.floor((diff % 86_400_000) / 3_600_000);
-    return { big: String(days), small: `days ${hours}h until ${where}` };
+    const days = Math.floor(diff / 86_400_000);
+    return { big: String(days), small: `day${days !== 1 ? 's' : ''} to go` };
   });
+
+  // ── At a glance ────────────────────────────────────────────────────────────
+  /** Next upcoming itinerary event (or the first one). */
+  readonly firstUp = computed(() => {
+    const items = [...this.itineraryService.items()];
+    if (!items.length) return null;
+    items.sort((a, b) => a.date === b.date ? a.sortOrder - b.sortOrder : a.date.localeCompare(b.date));
+    const today = new Date(this.now()).toISOString().slice(0, 10);
+    return items.find(i => i.date >= today) ?? items[0];
+  });
+
+  readonly firstUpWhen = computed(() => {
+    const e = this.firstUp();
+    if (!e) return '';
+    const d = new Date(e.date + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return e.time ? `${d} · ${e.time}` : d;
+  });
+
+  readonly packingSummary = computed(() => {
+    const items = this.packingService.items();
+    return { total: items.length, packed: items.filter(i => i.packed).length };
+  });
+
+  readonly expenseCount = computed(() => this.financeService.entries().length);
+
+  readonly weatherGlance = computed(() => {
+    const t = this.activeTrip();
+    if (!t) return null;
+    const w = this.weatherService.weather();
+    return w[t.startDate] ?? Object.values(w)[0] ?? null;
+  });
+
+  // ── Activity feed ──────────────────────────────────────────────────────────
+  readonly recentActivity = computed(() => {
+    const byUid = new Map(this.members().map(m => [m.uid, m]));
+    return [...this.tripService.activeActivity()]
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 4)
+      .map(a => ({ entry: a, member: byUid.get(a.performedByUid) }));
+  });
+
+  activityText(a: ActivityLogEntry): string {
+    switch (a.action) {
+      case 'member_added':    return `${a.targetName} joined the trip`;
+      case 'member_removed':  return `${a.performedByName} removed ${a.targetName}`;
+      case 'member_left':     return `${a.targetName} left the trip`;
+      case 'member_restored': return `${a.performedByName} added ${a.targetName} back`;
+      default:                return 'updated the trip';
+    }
+  }
+
+  timeAgo(ts: number): string {
+    const s = Math.floor((this.now() - ts) / 1000);
+    if (s < 3600) return `${Math.max(1, Math.floor(s / 60))}m ago`;
+    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+    return `${Math.floor(s / 86400)}d ago`;
+  }
+
+  // ── Switcher ───────────────────────────────────────────────────────────────
+  isActive(t: TripDoc): boolean { return t.id === this.activeTrip()?.id; }
+  async switchTo(t: TripDoc): Promise<void> {
+    if (this.isActive(t)) return;
+    await this.tripService.switchTrip(t.id);
+  }
 
   ngOnInit(): void {
     this.countdownTimer = setInterval(() => this.now.set(Date.now()), 60_000);
+    const uid = this.currentUser()?.uid;
+    if (uid) this.tripService.getUserTrips(uid).then(list => this.trips.set(list.filter(t => !t.archived)));
   }
 
   ngOnDestroy(): void {
     if (this.countdownTimer) clearInterval(this.countdownTimer);
   }
-
 }
