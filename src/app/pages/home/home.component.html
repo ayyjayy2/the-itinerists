@@ -1,14 +1,14 @@
 <div class="page-container">
 
-  <!-- Hero greeting -->
-  <div class="hero-card card">
-    <div class="hero-left">
+  <!-- Hero — bold countdown -->
+  <div class="hero-card">
+    <div class="hero-top">
       @if (currentUser()) {
         <div class="hero-avatar" [style.background]="currentUser()!.color">
           {{ currentUser()!.avatarEmoji }}
         </div>
       }
-      <div>
+      <div class="hero-greeting">
         <h1>Hey, {{ currentUser()?.name ?? 'traveller' }}! 👋</h1>
         @if (hasActiveTrip()) {
           <p>Ready for {{ locationLabel() }}?</p>
@@ -17,17 +17,24 @@
         }
       </div>
     </div>
-    <div class="countdown-badge"
-      [class.live]="countdown().type === 'live'"
-      [class.done]="countdown().type === 'done'"
-      [class.unset]="countdown().type === 'unset'">
-      {{ flightLabel() || countdown().label }}
-    </div>
+
+    @if (heroCountdown().big) {
+      <div class="hero-countdown">
+        <span class="cd-number display">{{ heroCountdown().big }}</span>
+        <span class="cd-caption">{{ heroCountdown().small }}</span>
+      </div>
+    } @else {
+      <div class="hero-countdown-text">{{ heroCountdown().small }}</div>
+    }
+
+    @if (flightLabel()) {
+      <div class="hero-flight">✈️ {{ flightLabel() }}</div>
+    }
   </div>
 
   @if (!hasActiveTrip()) {
     <a class="no-trip-cta card" routerLink="/trips">
-      <span class="no-trip-emoji">🧭</span>
+      <span class="no-trip-icon"><app-icon name="trips" [size]="24" /></span>
       <div>
         <strong>No trip selected</strong>
         <p>Pick a trip or create one to start planning.</p>
@@ -44,7 +51,7 @@
   <div class="links-grid">
     @for (link of quickLinks(); track link.path) {
       <a class="link-card" [routerLink]="link.path" [style.--card-accent]="link.color">
-        <span class="link-icon">{{ link.icon }}</span>
+        <span class="link-icon"><app-icon [name]="link.icon" [size]="24" /></span>
         <span class="link-label">{{ link.label }}</span>
         <span class="link-desc">{{ link.description }}</span>
       </a>
