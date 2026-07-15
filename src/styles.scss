@@ -47,6 +47,41 @@
 // Caprasimo display face — hero numbers, wordmark, big headings (DP2).
 .display { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; }
 
+// ── Dark mode — warm espresso ground, not grey (DP2-4) ────────────────────────
+// Applied via data-theme="dark" on <html> by ThemeService.
+[data-theme="dark"] {
+  --bg:            #211D15;   // warm espresso ground
+  --surface:       #2B2518;   // cards
+  --surface-2:     #342D1E;   // sunken/secondary
+  --card-bg:       #2B2518;
+
+  --primary:       #9CC08B;   // lifted sage (borders, icons, active text)
+  --primary-dark:  #7AA269;   // button fills (white text OK on bold)
+  --primary-tint:  rgba(156, 192, 139, 0.16);
+
+  --lavender:      #C3B7E0;
+  --lavender-dark: #B4A6D4;
+  --lavender-tint: rgba(180, 166, 212, 0.20);
+
+  --accent:        #F2C48A;
+  --accent-dark:   #E7B577;
+  --accent-tint:   rgba(242, 196, 138, 0.16);
+
+  --highlight:     #E8B4B8;
+  --highlight-dk:  #E3A2A8;
+  --highlight-tint:rgba(232, 180, 184, 0.16);
+
+  --danger:        #E0857A;
+  --danger-tint:   rgba(224, 133, 122, 0.18);
+
+  --text:          #F3ECE0;   // cream
+  --text-muted:    #B3A892;
+  --border:        #3E3728;
+
+  --shadow:        0 2px 12px rgba(0, 0, 0, 0.35);
+  --shadow-md:     0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
 // ── Reset & Base ──────────────────────────────────────────────────────────────
 *, *::before, *::after {
   box-sizing: border-box;

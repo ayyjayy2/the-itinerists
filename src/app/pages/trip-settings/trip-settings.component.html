@@ -93,6 +93,24 @@
       </section>
     }
 
+    <!-- Appearance (DP2-4) -->
+    <section class="card">
+      <h2>Appearance</h2>
+      <p class="muted">Choose light, dark, or match your device. Applies on all your devices.</p>
+      <div class="theme-seg">
+        @for (opt of themeOptions; track opt.value) {
+          <button
+            class="theme-opt"
+            [class.active]="themePref() === opt.value"
+            (click)="setTheme(opt.value)"
+          >
+            <span class="theme-opt-icon">{{ opt.icon }}</span>
+            <span>{{ opt.label }}</span>
+          </button>
+        }
+      </div>
+    </section>
+
     <!-- Customize Menu (page toggles) -->
     <section class="card">
       <h2>Customize Menu</h2>
