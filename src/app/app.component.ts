@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, computed, effect } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { Component, OnInit, inject, computed, effect, signal } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from './shared/icon/icon.component';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
 import { UserService } from './services/user.service';
@@ -26,7 +27,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -52,19 +53,20 @@ export class AppComponent implements OnInit {
   sidebarOpen  = false;
   navCollapsed = localStorage.getItem('tripplanner_nav_collapsed') === 'true';
 
+  // `icon` is now a name resolved by <app-icon> (custom line-icon set), not an emoji.
   readonly baseNavItems: NavItem[] = [
-    { path: '/home',           label: 'Home',            icon: '🏠' },
-    { path: '/trips',          label: 'My Trips',        icon: '🧭' },
-    { path: '/flights',        label: 'Flights',         icon: '✈️' },
-    { path: '/itinerary',      label: 'Itinerary',       icon: '📅' },
-    { path: '/accommodations', label: 'Stays',           icon: '🏨' },
-    { path: '/finance',        label: 'Finance',         icon: '💵' },
-    { path: '/expenses',       label: 'My Expenses',     icon: '🧾' },
-    { path: '/recs',           label: 'Recs',            icon: '🌸' },
-    { path: '/packing',        label: 'Packing',         icon: '🧳' },
-    { path: '/outfits',        label: 'Outfits',         icon: '👗' },
-    { path: '/trip-settings',  label: 'Trip Settings',   icon: '⚙️' },
-    { path: '/profile',        label: 'Profile',         icon: '👤' },
+    { path: '/home',           label: 'Home',            icon: 'home' },
+    { path: '/trips',          label: 'My Trips',        icon: 'trips' },
+    { path: '/flights',        label: 'Flights',         icon: 'flights' },
+    { path: '/itinerary',      label: 'Itinerary',       icon: 'itinerary' },
+    { path: '/accommodations', label: 'Stays',           icon: 'stays' },
+    { path: '/finance',        label: 'Finance',         icon: 'finance' },
+    { path: '/expenses',       label: 'My Expenses',     icon: 'expenses' },
+    { path: '/recs',           label: 'Recs',            icon: 'recs' },
+    { path: '/packing',        label: 'Packing',         icon: 'packing' },
+    { path: '/outfits',        label: 'Outfits',         icon: 'outfits' },
+    { path: '/trip-settings',  label: 'Trip Settings',   icon: 'settings' },
+    { path: '/profile',        label: 'Profile',         icon: 'profile' },
   ];
 
   readonly navItems = computed<NavItem[]>(() => {
@@ -72,14 +74,38 @@ export class AppComponent implements OnInit {
     const hidden = this.tripService.hiddenPages();
     const items = this.baseNavItems.filter(i => !hidden.includes(i.path.slice(1)));
     if (this.userService.isAdmin()) {
-      items.push({ path: '/admin', label: 'Admin', icon: '⚙️' });
+      items.push({ path: '/admin', label: 'Admin', icon: 'admin' });
     }
     return items;
   });
 
+  // ── Bottom tab bar (mobile) — 3 primary tabs + a "More" sheet for the rest ──
+  readonly TAB_PATHS = ['/home', '/itinerary', '/finance'];
+  readonly tabItems = computed<NavItem[]>(() =>
+    this.TAB_PATHS.map(p => this.baseNavItems.find(i => i.path === p)!).filter(Boolean),
+  );
+  readonly moreItems = computed<NavItem[]>(() =>
+    this.navItems().filter(i => !this.TAB_PATHS.includes(i.path)),
+  );
+  moreOpen = signal(false);
+  private currentUrl = signal(this.router.url);
+  /** True when the active route lives under the "More" menu (highlights the More tab). */
+  readonly moreActive = computed(() => {
+    const url = this.currentUrl();
+    return !this.TAB_PATHS.some(p => url.startsWith(p));
+  });
+
+  toggleMore(): void { this.moreOpen.update(v => !v); }
+  closeMore(): void  { this.moreOpen.set(false); }
+
   currentUser = this.userService.currentUser;
 
   constructor() {
+    // Track the active URL (for the More-tab highlight) and close the sheet on navigation.
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(e => { this.currentUrl.set(e.urlAfterRedirects); this.closeMore(); });
+
     // When a user logs in, start all data listeners
     effect(() => {
       if (this.userService.currentUser()) {
