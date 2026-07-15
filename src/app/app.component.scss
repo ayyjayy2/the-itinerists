@@ -2,7 +2,11 @@
 .app-shell {
   display: flex;
   height: 100vh;
+  height: 100dvh;   // dynamic viewport height so the bottom bar never falls off on iOS
   overflow: hidden;
+
+  // On phones the shell stacks: content fills, tab bar sits in-flow at the bottom.
+  @media (max-width: 768px) { flex-direction: column; }
 }
 
 // ── Sidebar (wide screens only) ───────────────────────────────────────────────
@@ -203,25 +207,21 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding-bottom: 1.5rem;
-
-  // clear the fixed bottom tab bar on mobile
-  @media (max-width: 768px) {
-    padding-bottom: calc(66px + env(safe-area-inset-bottom));
-  }
+  // Tab bar is now in-flow, so no extra bottom padding is needed to clear it.
 }
 
 // ── Bottom tab bar (mobile) ───────────────────────────────────────────────────
 .tab-bar {
   display: none;
 
+  // In-flow (not fixed) so it can't slide under the home indicator / Safari bar;
+  // the safe-area padding keeps the icons clear of the home indicator.
   @media (max-width: 768px) {
     display: flex;
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
+    flex-shrink: 0;
     background: var(--surface);
     border-top: 1px solid var(--border);
     padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
-    z-index: 150;
     box-shadow: 0 -4px 20px rgba(139, 175, 124, 0.10);
   }
 }
