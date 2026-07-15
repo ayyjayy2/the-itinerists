@@ -136,38 +136,58 @@ h1 { margin-bottom: 1rem; }
   margin-top: 0.85rem;
 }
 
-// ── Appearance segmented control (DP2-4) ──────────────────────────────────────
-.theme-seg {
-  display: flex;
-  gap: 6px;
-  background: var(--surface-2);
-  border-radius: 999px;
-  padding: 5px;
-  margin-top: 0.5rem;
+// ── Appearance theme picker (DP2-9) ───────────────────────────────────────────
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.6rem;
 }
 
-.theme-opt {
-  flex: 1;
+.theme-card {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.6rem 0.5rem;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-muted);
-  font-family: var(--font);
-  font-size: 0.85rem;
-  font-weight: 800;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
   cursor: pointer;
+  font-family: var(--font);
   transition: all 0.15s;
+  text-align: left;
 
-  .theme-opt-icon { font-size: 1rem; }
-
+  &:hover { border-color: var(--primary); }
   &.active {
-    background: var(--surface);
-    color: var(--text);
-    box-shadow: var(--shadow);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-tint);
   }
+}
+
+.theme-swatch {
+  display: inline-flex;
+  flex-shrink: 0;
+  .sw {
+    width: 18px;
+    height: 26px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    &:first-child { border-radius: 6px 0 0 6px; }
+    &:last-child  { border-radius: 0 6px 6px 0; }
+    & + .sw { margin-left: -1px; }
+  }
+}
+
+.theme-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  .theme-name  { font-size: 0.9rem; font-weight: 800; color: var(--text); }
+  .theme-group { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+}
+
+.theme-check {
+  color: var(--primary-dark);
+  font-weight: 800;
+  flex-shrink: 0;
 }

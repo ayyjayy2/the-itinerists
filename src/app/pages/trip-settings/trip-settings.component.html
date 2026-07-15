@@ -93,25 +93,27 @@
       </section>
     }
 
-    <!-- Appearance (DP2-4) — hidden while dark mode is disabled (DP2-7) -->
-    @if (appearanceEnabled) {
+    <!-- Appearance (DP2-9) — theme picker -->
     <section class="card">
       <h2>Appearance</h2>
-      <p class="muted">Choose light, dark, or match your device. Applies on all your devices.</p>
-      <div class="theme-seg">
-        @for (opt of themeOptions; track opt.value) {
-          <button
-            class="theme-opt"
-            [class.active]="themePref() === opt.value"
-            (click)="setTheme(opt.value)"
-          >
-            <span class="theme-opt-icon">{{ opt.icon }}</span>
-            <span>{{ opt.label }}</span>
+      <p class="muted">Pick a theme. Applies on all your devices.</p>
+      <div class="theme-grid">
+        @for (t of themes; track t.id) {
+          <button class="theme-card" [class.active]="currentTheme() === t.id" (click)="setTheme(t.id)">
+            <span class="theme-swatch">
+              <span class="sw" [style.background]="t.swatch[0]"></span>
+              <span class="sw" [style.background]="t.swatch[1]"></span>
+              <span class="sw" [style.background]="t.swatch[2]"></span>
+            </span>
+            <span class="theme-meta">
+              <span class="theme-name">{{ t.label }}</span>
+              <span class="theme-group">{{ t.group }}</span>
+            </span>
+            @if (currentTheme() === t.id) { <span class="theme-check">✓</span> }
           </button>
         }
       </div>
     </section>
-    }
 
     <!-- Customize Menu (page toggles) -->
     <section class="card">

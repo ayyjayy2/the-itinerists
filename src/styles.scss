@@ -47,39 +47,61 @@
 // Caprasimo display face — hero numbers, wordmark, big headings (DP2).
 .display { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; }
 
-// ── Dark mode — warm espresso ground, not grey (DP2-4) ────────────────────────
-// Applied via data-theme="dark" on <html> by ThemeService.
-[data-theme="dark"] {
-  --bg:            #211D15;   // warm espresso ground
-  --surface:       #2B2518;   // cards
-  --surface-2:     #342D1E;   // sunken/secondary
-  --card-bg:       #2B2518;
+// ── Themes (DP2-9) — applied via data-theme="<id>" on <html> by ThemeService ──
+// Light is :root above. Medium themes keep dark text on cream cards over a
+// muted colour ground; dark themes flip to cream text on dark cards with solid
+// dark chip tints. Deep Moss is a kept-but-unlisted backup.
 
-  --primary:       #9CC08B;   // lifted sage (borders, icons, active text)
-  --primary-dark:  #7AA269;   // button fills (white text OK on bold)
-  --primary-tint:  rgba(156, 192, 139, 0.16);
+// Medium · Dusk Meadow (7a) — sage-fog ground, warm cream cards.
+[data-theme="dusk-meadow"] {
+  --bg: #BFC6A9; --surface: #EFE6D2; --surface-2: #E4DAC3; --card-bg: #EFE6D2;
+  --border: #CDBFA4;
+  --primary-dark: #4F6F44; --primary-tint: #DEE6CF;
+  --shadow: 0 2px 12px rgba(70, 80, 55, 0.18); --shadow-md: 0 4px 24px rgba(70, 80, 55, 0.22);
+}
 
-  --lavender:      #C3B7E0;
-  --lavender-dark: #B4A6D4;
-  --lavender-tint: rgba(180, 166, 212, 0.20);
+// Medium · Golden Hour (7b) — mauve ground, buttery cards.
+[data-theme="golden-hour"] {
+  --bg: #C4AFB6; --surface: #F1E4C8; --surface-2: #E7D7B8; --card-bg: #F1E4C8;
+  --border: #D6C6A6;
+  --primary-dark: #5E7F4C; --primary-tint: #E3E9D1;
+  --shadow: 0 2px 12px rgba(90, 65, 72, 0.18); --shadow-md: 0 4px 24px rgba(90, 65, 72, 0.22);
+}
 
-  --accent:        #F2C48A;
-  --accent-dark:   #E7B577;
-  --accent-tint:   rgba(242, 196, 138, 0.16);
+// Dark · Plum Dusk (5c) — mauve-brown ground; pink & lavender glow.
+[data-theme="plum-dusk"] {
+  --bg: #221B20; --surface: #2C242A; --surface-2: #362C34; --card-bg: #2C242A; --border: #3D3340;
+  --text: #F3EAEE; --text-muted: #AC9AA6;
+  --primary: #9DBF8E; --primary-dark: #7AA269; --primary-tint: rgba(157, 191, 142, 0.16);
+  --lavender: #CDB4DE; --lavender-dark: #CDB4DE; --lavender-tint: #3A2D3A;
+  --accent: #F2C48A; --accent-dark: #EAB877; --accent-tint: #3C2F1E;
+  --highlight: #E8B4B8; --highlight-dk: #ECAAB0; --highlight-tint: #3E2A2D;
+  --danger: #E68B80; --danger-tint: #3E2622;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.4); --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
 
-  --highlight:     #E8B4B8;
-  --highlight-dk:  #E3A2A8;
-  --highlight-tint:rgba(232, 180, 184, 0.16);
+// Dark · Night Garden (7c) — moss ground, plum cards.
+[data-theme="night-garden"] {
+  --bg: #1A1F17; --surface: #2C2530; --surface-2: #352C3A; --card-bg: #2C2530; --border: #403646;
+  --text: #F0EFE2; --text-muted: #A9A38F;
+  --primary: #A8CB96; --primary-dark: #7DA76B; --primary-tint: rgba(168, 203, 150, 0.16);
+  --lavender: #C9B7DE; --lavender-dark: #C9B7DE; --lavender-tint: #3A2F42;
+  --accent: #EFC98D; --accent-dark: #E9BE77; --accent-tint: #41371F;
+  --highlight: #F0B7C6; --highlight-dk: #F0B7C6; --highlight-tint: #4A3040;
+  --danger: #E88A80; --danger-tint: #402626;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.42); --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.52);
+}
 
-  --danger:        #E0857A;
-  --danger-tint:   rgba(224, 133, 122, 0.18);
-
-  --text:          #F3ECE0;   // cream
-  --text-muted:    #B3A892;
-  --border:        #3E3728;
-
-  --shadow:        0 2px 12px rgba(0, 0, 0, 0.35);
-  --shadow-md:     0 4px 24px rgba(0, 0, 0, 0.45);
+// Dark · Deep Moss (5b) — BACKUP, not listed in the picker.
+[data-theme="deep-moss"] {
+  --bg: #191E16; --surface: #222921; --surface-2: #2B332A; --card-bg: #222921; --border: #303A2E;
+  --text: #EEF1E4; --text-muted: #9FAB92;
+  --primary: #A8CB96; --primary-dark: #7DA76B; --primary-tint: rgba(168, 203, 150, 0.16);
+  --lavender: #C3B7E0; --lavender-dark: #C3B7E0; --lavender-tint: #2E2A3A;
+  --accent: #F2C48A; --accent-dark: #EAB877; --accent-tint: #33301E;
+  --highlight: #E8B4B8; --highlight-dk: #ECAAB0; --highlight-tint: #33262A;
+  --danger: #E68B80; --danger-tint: #362422;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.4); --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
 // ── Reset & Base ──────────────────────────────────────────────────────────────
