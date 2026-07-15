@@ -10,6 +10,14 @@ const STORAGE_KEY = 'tripplanner_theme';
  */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
+  /**
+   * Dark mode is fully built but DISABLED for now — its colour scheme needs
+   * re-tuning. While false, the app is light-only and the Appearance toggle is
+   * hidden. Flip to `true` (and re-tune the [data-theme="dark"] tokens) to bring
+   * it back. (DP2-7)
+   */
+  readonly darkModeEnabled = false;
+
   readonly pref = signal<ThemePref>(readStored());
 
   private readonly media = typeof window !== 'undefined'
@@ -27,6 +35,7 @@ export class ThemeService {
 
   /** True when the currently-resolved theme is dark. */
   isDark(): boolean {
+    if (!this.darkModeEnabled) return false;
     const p = this.pref();
     return p === 'dark' || (p === 'system' && !!this.media?.matches);
   }
@@ -38,7 +47,8 @@ export class ThemeService {
 
   private apply(pref: ThemePref): void {
     if (typeof document === 'undefined') return;
-    const dark = pref === 'dark' || (pref === 'system' && !!this.media?.matches);
+    const dark = this.darkModeEnabled
+      && (pref === 'dark' || (pref === 'system' && !!this.media?.matches));
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   }
 }
