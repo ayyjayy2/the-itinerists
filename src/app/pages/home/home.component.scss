@@ -1,13 +1,72 @@
+// ── Hero — bold countdown (DP2-3) ─────────────────────────────────────────────
 .hero-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
   margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-  background: linear-gradient(135deg, #f0faf5, #fff9ee);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(150deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  box-shadow: var(--shadow-md);
 }
 
+.hero-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hero-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.hero-greeting {
+  min-width: 0;
+  h1 { font-size: 1.3rem; color: #fff; }
+  p  {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    margin-top: 0.15rem;
+    a { color: #fff; text-decoration: underline; }
+  }
+}
+
+.hero-countdown {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-top: 1.1rem;
+
+  .cd-number  { font-size: 3.4rem; line-height: 1; color: #fff; }
+  .cd-caption { font-size: 0.95rem; font-weight: 800; color: rgba(255, 255, 255, 0.92); }
+}
+
+.hero-countdown-text {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.hero-flight {
+  margin-top: 0.9rem;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+// ── No-trip CTA ───────────────────────────────────────────────────────────────
 .no-trip-cta {
   display: flex;
   align-items: center;
@@ -19,47 +78,13 @@
 
   &:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
-  .no-trip-emoji { font-size: 1.6rem; }
+  .no-trip-icon { display: inline-flex; color: var(--primary-dark); }
   strong { display: block; }
-  p { margin: 0.15rem 0 0; color: var(--text-muted, #6b7280); font-size: 0.9rem; }
+  p { margin: 0.15rem 0 0; color: var(--text-muted); font-size: 0.9rem; }
   .no-trip-arrow { margin-left: auto; font-size: 1.3rem; color: var(--primary); }
 }
 
-.hero-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-
-  h1 { font-size: 1.3rem; }
-  p  { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.15rem; }
-}
-
-.hero-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
-  flex-shrink: 0;
-  box-shadow: var(--shadow);
-}
-
-.countdown-badge {
-  background: var(--accent);
-  color: #7a6200;
-  padding: 0.4rem 1rem;
-  border-radius: 99px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  white-space: nowrap;
-
-  &.live  { background: var(--primary); color: #1a4a2e; }
-  &.done  { background: var(--border);  color: var(--text-muted); }
-  &.unset { background: var(--border);  color: var(--text-muted); font-style: italic; }
-}
-
+// ── Quick Access ──────────────────────────────────────────────────────────────
 .section-title {
   display: flex;
   align-items: center;
@@ -79,7 +104,7 @@
   align-items: flex-start;
   gap: 0.3rem;
   padding: 1.1rem;
-  background: var(--card-bg);
+  background: var(--surface);
   border-radius: var(--radius);
   border: 1px solid var(--border);
   text-decoration: none;
@@ -91,28 +116,30 @@
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 4px;
     background: var(--card-accent);
     border-radius: var(--radius) var(--radius) 0 0;
   }
 
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
-  }
+  &:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 }
 
 .link-icon {
-  font-size: 1.6rem;
-  margin-bottom: 0.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: var(--primary-tint);
+  color: var(--primary-dark);
+  margin-bottom: 0.25rem;
 }
 
 .link-label {
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text);
 }
 
@@ -121,9 +148,8 @@
   color: var(--text-muted);
 }
 
-.map-section-title {
-  margin-top: 1.5rem;
-}
+// ── Home map (if present) ─────────────────────────────────────────────────────
+.map-section-title { margin-top: 1.5rem; }
 
 .map-expand-link {
   font-size: 0.82rem;
