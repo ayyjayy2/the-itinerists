@@ -114,6 +114,9 @@
   min-height: 0;
   width: 100%;
   position: relative;
+  // Contain Leaflet's internal z-indexes (panes/controls go up to 1000) so the
+  // map can never paint over app chrome like the bottom "More" sheet or modals.
+  isolation: isolate;
 }
 
 .map-container {
