@@ -181,10 +181,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     for (const item of items) {
       if (!isBlankLoc(item.location) && !seen.has(item.date)) {
         seen.add(item.date);
-        days.push({ date: item.date, label: item.dayLabel });
+        // Fall back to a compact date when the itinerary day has no label set.
+        const label = item.dayLabel?.trim()
+          || new Date(item.date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        days.push({ date: item.date, label });
       }
     }
-    return days;
+    return days.sort((a, b) => a.date.localeCompare(b.date));
   });
 
   tripUsers = computed((): TripUser[] => this.dataService.data()?.users ?? []);
