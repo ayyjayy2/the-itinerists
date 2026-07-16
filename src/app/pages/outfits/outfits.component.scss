@@ -129,18 +129,24 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+  background: var(--lavender-tint);
+  border: 1.5px solid var(--lavender);
   border-radius: var(--radius);
   padding: 0.75rem 1rem;
   flex: 1;
 }
 
-.travel-icon { font-size: 1.8rem; flex-shrink: 0; }
+.travel-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--lavender-dark);
+  flex-shrink: 0;
+}
 
 .travel-info {
   flex: 1;
-  .travel-label { font-weight: 800; font-size: 1.05rem; color: #3730a3; }
-  .travel-sub   { font-size: 0.78rem; color: #6366f1; }
+  .travel-label { font-weight: 800; font-size: 1.05rem; color: var(--lavender-dark); }
+  .travel-sub   { font-size: 0.78rem; color: var(--text-muted); }
 }
 
 // ── Activities ─────────────────────────────────────────────────────────────────
@@ -176,22 +182,30 @@
 // ── Suggestion Pill ────────────────────────────────────────────────────────────
 .suggestion-card {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.6rem;
   align-items: flex-start;
-  background: linear-gradient(135deg, #fffbeb, #fef3c7);
-  border: 1.5px solid #f9d460;
+  background: var(--accent-tint);
+  border: 1.5px solid var(--accent);
   border-radius: var(--radius);
   padding: 0.85rem 1rem;
 }
 
-.suggestion-icon { font-size: 1.2rem; flex-shrink: 0; }
+.suggestion-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent-dark);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
 
 .suggestion-text {
   font-size: 0.88rem;
   line-height: 1.5;
-  color: #7a5800;
+  color: var(--accent-dark);
   font-weight: 600;
 }
+
+.empty-icon app-icon { color: var(--text-muted); }
 
 // ── Outfit Display ─────────────────────────────────────────────────────────────
 .outfit-display {
@@ -430,8 +444,17 @@
 }
 
 .weather-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   font-size: 0.82rem;
   color: var(--text-muted);
+  app-icon { color: var(--lavender-dark); }
 }
 
-.outfit-status { font-size: 0.72rem; }
+.outfit-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+}
