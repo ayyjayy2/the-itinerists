@@ -169,6 +169,8 @@
   }
 }
 
+.empty-icon app-icon { color: var(--text-muted); }
+
 .item-label {
   flex: 1;
   font-size: 0.92rem;
@@ -201,12 +203,16 @@
 }
 
 .packed-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0.75rem 0 0.4rem;
+  app-icon { color: var(--primary-dark); }
 }
 
 // Suggestions
