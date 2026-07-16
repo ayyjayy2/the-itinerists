@@ -68,6 +68,15 @@
             </div>
           }
 
+          <!-- Transportation event banners (rental car / train / bus / ferry …) -->
+          @for (t of transportEventsForDate(group[0]); track t.label) {
+            <div class="transport-banner">
+              <span class="tb-ic"><app-icon [name]="t.icon" [size]="16" /></span>
+              <span class="tb-time">{{ t.time }}</span>
+              <span class="tb-label">{{ t.label }}</span>
+            </div>
+          }
+
           <div class="items-list"
                cdkDropList
                [cdkDropListData]="group[1]"
