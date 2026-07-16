@@ -19,17 +19,19 @@ const GEOCACHE_VERSION     = '4';
 // Nominatim viewbox covering Ireland → Iceland (biases toward trip region, bounded=0 allows US)
 const NOMINATIM_VIEWBOX = 'viewbox=-26,51,-4,70&bounded=0';
 
+// Dusk Garden palette (light-theme hexes — the map tiles are always light).
+// Markers carry a white outline, so these muted tones still read on the map.
 const CAT_COLOR: Record<string, string> = {
-  food:          '#F59E0B',
-  drink:         '#A78BFA',
-  sightseeing:   '#10B981',
-  transport:     '#60A5FA',
-  accommodation: '#F472B6',
-  lodging:       '#F472B6',
-  hotel:         '#F472B6',
-  activity:      '#F97316',
-  shopping:      '#EC4899',
-  other:         '#94A3B8',
+  food:          '#B97F35', // gold
+  drink:         '#7E6FA8', // lavender
+  sightseeing:   '#6A8F5E', // sage
+  transport:     '#6E8BA6', // slate-blue (distinct)
+  accommodation: '#B96A76', // pink
+  lodging:       '#B96A76',
+  hotel:         '#B96A76',
+  activity:      '#C0564A', // terracotta
+  shopping:      '#A76B86', // mauve
+  other:         '#9A8E7C', // warm grey
 };
 const CATEGORIES = ['Food', 'Drink', 'Sightseeing', 'Activity', 'Transport',
                     'Accommodation', 'Shopping', 'Other'];
@@ -582,7 +584,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         .bindPopup(`
           <div style="min-width:190px;max-width:250px;font-family:'Nunito',sans-serif;">
             <div style="font-weight:800;font-size:13px;margin-bottom:8px;color:#1a4a2e;
-                        padding-bottom:6px;border-bottom:2px solid #88C9A1;">📍 ${location}</div>
+                        padding-bottom:6px;border-bottom:2px solid #8BAF7C;">📍 ${location}</div>
             ${rows}
           </div>`, { maxWidth: 260 })
         .addTo(this.itinLayer);
@@ -619,7 +621,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       const popup = `
         <div style="min-width:180px;max-width:230px;font-family:'Nunito',sans-serif;">
           <div style="font-weight:800;font-size:13px;margin-bottom:6px;color:#1a4a2e;
-                      padding-bottom:5px;border-bottom:2px solid #F472B6;">
+                      padding-bottom:5px;border-bottom:2px solid #B96A76;">
             🏠 ${acc.name}
           </div>
           <div style="font-size:11px;color:#888;">
@@ -630,7 +632,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           ${acc.notes ? `<div style="font-size:11px;color:#666;margin-top:4px;">${acc.notes}</div>` : ''}
         </div>`;
 
-      L.marker([coords.lat, coords.lng], { icon: accomPinIcon('#F472B6') })
+      L.marker([coords.lat, coords.lng], { icon: accomPinIcon('#B96A76') })
         .bindPopup(popup, { maxWidth: 240 })
         .addTo(this.accomLayer);
     }
@@ -647,7 +649,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     );
 
     for (const pin of pins) {
-      const adderColor = users.find(u => u.name === pin.addedBy)?.color ?? '#88C9A1';
+      const adderColor = users.find(u => u.name === pin.addedBy)?.color ?? '#8BAF7C';
       const popupId    = `del-pin-${pin.id}`;
       const canDelete  = pin.addedBy === userName;
 

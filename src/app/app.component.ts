@@ -63,6 +63,7 @@ export class AppComponent implements OnInit {
     { path: '/flights',        label: 'Flights',         icon: 'flights' },
     { path: '/itinerary',      label: 'Itinerary',       icon: 'itinerary' },
     { path: '/accommodations', label: 'Stays',           icon: 'stays' },
+    { path: '/map',            label: 'Map',             icon: 'map' },
     { path: '/finance',        label: 'Finance',         icon: 'finance' },
     { path: '/expenses',       label: 'My Expenses',     icon: 'expenses' },
     { path: '/recs',           label: 'Recs',            icon: 'recs' },
