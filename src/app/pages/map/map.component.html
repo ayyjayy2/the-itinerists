@@ -45,13 +45,13 @@
   </div>
 
   <div class="map-legend">
-    <span class="legend-item"><span class="dot" style="background:#10B981"></span>Sightseeing</span>
-    <span class="legend-item"><span class="dot" style="background:#F59E0B"></span>Food</span>
-    <span class="legend-item"><span class="dot" style="background:#F97316"></span>Activity</span>
-    <span class="legend-item"><span class="dot" style="background:#A78BFA"></span>Drink</span>
-    <span class="legend-item"><span class="legend-house">🏠</span>Stay</span>
+    <span class="legend-item"><span class="dot" style="background:#6A8F5E"></span>Sightseeing</span>
+    <span class="legend-item"><span class="dot" style="background:#B97F35"></span>Food</span>
+    <span class="legend-item"><span class="dot" style="background:#C0564A"></span>Activity</span>
+    <span class="legend-item"><span class="dot" style="background:#7E6FA8"></span>Drink</span>
+    <span class="legend-item"><app-icon class="legend-ic stay" name="stays" [size]="15" />Stay</span>
     <span class="legend-item"><span class="legend-flight"></span>Flight</span>
-    <span class="legend-item"><span class="dot dot-star">⭐</span>Custom pin</span>
+    <span class="legend-item"><app-icon class="legend-ic star" name="star" [size]="15" />Custom pin</span>
   </div>
 
 </div>
@@ -60,7 +60,7 @@
 @if (showAddForm()) {
   <div class="modal-backdrop" (click)="closeAddForm()">
     <div class="modal-card card" (click)="$event.stopPropagation()">
-      <h3>📍 Add a Pin</h3>
+      <h3><app-icon name="pin" [size]="20" /> Add a Pin</h3>
 
       <div class="form-group">
         <label>Address / Location</label>

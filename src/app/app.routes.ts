@@ -60,6 +60,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'map',
+    loadComponent: () => import('./pages/map/map.component').then(m => m.MapComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'finance',
     loadComponent: () => import('./pages/finance/finance.component').then(m => m.FinanceComponent),
     canActivate: [authGuard]
