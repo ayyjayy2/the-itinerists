@@ -44,6 +44,39 @@ export class HomeComponent implements OnInit, OnDestroy {
   /** The user's trips, for the switcher row. */
   readonly trips = signal<TripDoc[]>([]);
 
+  // ── Pinned quick-shortcuts (customizable) ──────────────────────────────────
+  private readonly PINS_KEY = 'tripplanner_home_pins';
+  readonly pinnablePages = [
+    { path: '/itinerary',      label: 'Itinerary',   icon: 'itinerary' },
+    { path: '/flights',        label: 'Flights',     icon: 'flights' },
+    { path: '/accommodations', label: 'Stays',       icon: 'stays' },
+    { path: '/finance',        label: 'Finance',     icon: 'finance' },
+    { path: '/expenses',       label: 'My Expenses', icon: 'expenses' },
+    { path: '/recs',           label: 'Recs',        icon: 'recs' },
+    { path: '/packing',        label: 'Packing',     icon: 'packing' },
+    { path: '/outfits',        label: 'Outfits',     icon: 'outfits' },
+    { path: '/map',            label: 'Map',         icon: 'map' },
+    { path: '/profile',        label: 'Profile',     icon: 'profile' },
+  ];
+  readonly pins = signal<string[]>(this.readPins());
+  pinEdit = signal(false);
+  readonly pinnedTiles = computed(() => {
+    const set = new Set(this.pins());
+    return this.pinnablePages.filter(p => set.has(p.path));
+  });
+  togglePinEdit(): void { this.pinEdit.update(v => !v); }
+  isPinned(path: string): boolean { return this.pins().includes(path); }
+  togglePin(path: string): void {
+    const cur = this.pins();
+    const next = cur.includes(path) ? cur.filter(p => p !== path) : [...cur, path];
+    this.pins.set(next);
+    try { localStorage.setItem(this.PINS_KEY, JSON.stringify(next)); } catch { /* storage unavailable */ }
+  }
+  private readPins(): string[] {
+    try { const v = localStorage.getItem(this.PINS_KEY); if (v) return JSON.parse(v); } catch { /* ignore */ }
+    return ['/itinerary', '/finance', '/packing', '/recs']; // sensible defaults
+  }
+
   /** Feature teaser shown on the zero-trips welcome state. */
   readonly teaserFeatures = [
     { icon: 'itinerary', label: 'Itinerary' },

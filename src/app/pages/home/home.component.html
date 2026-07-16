@@ -79,6 +79,36 @@
   }
 
   @if (hasActiveTrip()) {
+    <!-- Pinned quick-shortcuts -->
+    <div class="section-head">
+      <h2>Pinned</h2>
+      <button class="see-link plain" (click)="togglePinEdit()">{{ pinEdit() ? 'Done' : 'Edit' }}</button>
+    </div>
+    @if (pinEdit()) {
+      <div class="pin-editor card">
+        <div class="pin-opts">
+          @for (p of pinnablePages; track p.path) {
+            <button class="pin-opt" [class.on]="isPinned(p.path)" (click)="togglePin(p.path)">
+              <app-icon [name]="p.icon" [size]="16" /> {{ p.label }}
+              @if (isPinned(p.path)) { <span class="pin-check">✓</span> }
+            </button>
+          }
+        </div>
+        <div class="pin-hint">Tap to pin or unpin — swap them as the trip goes on.</div>
+      </div>
+    } @else if (pinnedTiles().length) {
+      <div class="pin-tiles">
+        @for (t of pinnedTiles(); track t.path) {
+          <a class="pin-tile" [routerLink]="t.path">
+            <span class="pin-tile-ic"><app-icon [name]="t.icon" [size]="19" /></span>
+            <span class="pin-tile-label">{{ t.label }}</span>
+          </a>
+        }
+      </div>
+    } @else {
+      <div class="pin-empty card">No pins yet — tap <b>Edit</b> to add quick shortcuts.</div>
+    }
+
     <!-- At a glance -->
     <div class="section-head">
       <h2>At a glance</h2>
