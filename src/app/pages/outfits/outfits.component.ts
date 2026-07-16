@@ -37,20 +37,20 @@ function suggestOutfit(minF: number, maxF: number, code: number, activities: str
   const isDining = /dinner|restaurant|dining|bistro|grey|lunch/.test(actStr);
   const isNight  = /ghost|bar|drink|pub|rooftop/.test(actStr);
 
-  if (isRain && avg > 70) return '🌦️ Warm & rainy: light sundress or shorts + breezy top, a packable rain jacket, and waterproof sandals or sneakers.';
-  if (isRain)             return '🌧️ Rain expected: light waterproof layer, jeans or leggings, comfortable sneakers.';
-  if (avg >= 82)          return '🌞 Hot & humid! Flowy sundress or shorts + breathable top, sandals, sun hat, and SPF. Stay hydrated!';
+  if (isRain && avg > 70) return 'Warm & rainy: light sundress or shorts + breezy top, a packable rain jacket, and waterproof sandals or sneakers.';
+  if (isRain)             return 'Rain expected: light waterproof layer, jeans or leggings, comfortable sneakers.';
+  if (avg >= 82)          return 'Hot & humid! Flowy sundress or shorts + breathable top, sandals, sun hat, and SPF. Stay hydrated!';
   if (avg >= 74) {
-    if (isDining) return '✨ Warm dinner night: a cute sundress or linen pants + blouse, strappy sandals, light cardigan for A/C.';
-    if (isNight)  return '🌙 Warm night out: flowy dress or chic shorts + top, sandals, light layer for the bar A/C.';
-    if (isWalk)   return '🌿 Perfect walking weather! Sundress or shorts + tee, comfortable sneakers or sandals, light layer for indoor A/C.';
-    return '🌤️ Beautiful weather! Light outfit — dress, shorts, or jeans + breezy top. Comfortable shoes for exploring.';
+    if (isDining) return 'Warm dinner night: a cute sundress or linen pants + blouse, strappy sandals, light cardigan for A/C.';
+    if (isNight)  return 'Warm night out: flowy dress or chic shorts + top, sandals, light layer for the bar A/C.';
+    if (isWalk)   return 'Perfect walking weather! Sundress or shorts + tee, comfortable sneakers or sandals, light layer for indoor A/C.';
+    return 'Beautiful weather! Light outfit — dress, shorts, or jeans + breezy top. Comfortable shoes for exploring.';
   }
   if (avg >= 65) {
-    if (isWalk) return '🌸 Lovely day to explore! Jeans or a midi skirt, a cute top, and comfortable walking shoes. Light jacket for the evening.';
-    return '🌤️ Warm-ish and pleasant. Jeans + a nice top or light dress, comfortable shoes, and a light jacket just in case.';
+    if (isWalk) return 'Lovely day to explore! Jeans or a midi skirt, a cute top, and comfortable walking shoes. Light jacket for the evening.';
+    return 'Warm-ish and pleasant. Jeans + a nice top or light dress, comfortable shoes, and a light jacket just in case.';
   }
-  return '🧥 Cooler evening — layer up! Jeans, a cozy top, and a light jacket. Comfortable shoes for walking.';
+  return 'Cooler evening — layer up! Jeans, a cozy top, and a light jacket. Comfortable shoes for walking.';
 }
 
 interface DayData {
@@ -165,8 +165,8 @@ export class OutfitsComponent implements OnInit {
         .flatMap(f => [f.departureDate, f.arrivalDate].filter(Boolean))
     );
 
-    const staticSuggestion = '🌸 Pack light layers, breathable fabrics, and comfortable walking shoes. Live weather will show up within 16 days of the trip.';
-    const travelSuggestion = '✈️ Travel day! Comfy leggings or joggers, an oversized tee or soft knit, slip-on shoes, and a warm wrap for the cabin.';
+    const staticSuggestion = 'Pack light layers, breathable fabrics, and comfortable walking shoes. Live weather will show up within 16 days of the trip.';
+    const travelSuggestion = 'Travel day! Comfy leggings or joggers, an oversized tee or soft knit, slip-on shoes, and a warm wrap for the cabin.';
 
     return this.tripDays().map((date): DayData => {
       const allItems  = this.itineraryService.items().filter(i => i.date === date);

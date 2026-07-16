@@ -10,13 +10,13 @@
 
   @if (!hasActiveTrip()) {
     <div class="empty-state">
-      <span class="empty-icon">👗</span>
+      <span class="empty-icon"><app-icon name="outfits" [size]="40" /></span>
       <p>No active trip yet. <a routerLink="/trips">Pick or create a trip</a> to plan outfits.</p>
     </div>
   } @else if (!hasTripDates()) {
     <!-- Trip exists but no dates: still addable (fallback days), with a nudge to set them. -->
     <div class="dates-banner">
-      <span>📅 Trip dates aren't set yet — showing the week ahead.</span>
+      <span><app-icon name="itinerary" [size]="16" /> Trip dates aren't set yet — showing the week ahead.</span>
       @if (isAdmin()) {
         <a class="btn btn-sm btn-primary" routerLink="/trip-settings">Set trip dates</a>
       }
@@ -38,7 +38,7 @@
     <div class="day-card">
       @if (day.isTravelDay) {
         <div class="travel-day-card">
-          <span class="travel-icon">✈️</span>
+          <span class="travel-icon"><app-icon name="flights" [size]="22" /></span>
           <div class="travel-info">
             <div class="travel-label">Travel Day</div>
             <div class="travel-sub">Airports &amp; flights — pack cozy &amp; comfortable</div>
@@ -70,7 +70,7 @@
 
       @if (day.suggestion) {
         <div class="suggestion-card">
-          <span class="suggestion-icon">✨</span>
+          <span class="suggestion-icon"><app-icon name="sparkle" [size]="18" /></span>
           <div class="suggestion-text">{{ day.suggestion }}</div>
         </div>
       }
@@ -99,12 +99,12 @@
             </div>
             <div class="all-day-meta">
               @if (day.isTravelDay) {
-                <span class="weather-mini">✈️ Travel Day</span>
+                <span class="weather-mini"><app-icon name="flights" [size]="14" /> Travel Day</span>
               } @else if (day.liveWeather) {
                 <span class="weather-mini">{{ weatherEmoji(day.liveWeather.code) }} {{ day.liveWeather.minF }}–{{ day.liveWeather.maxF }}°F</span>
               }
               @if (myOutfitsByDate()[day.date]) {
-                <span class="chip chip-primary outfit-status">✓ Planned</span>
+                <span class="chip chip-primary outfit-status"><app-icon name="check" [size]="13" /> Planned</span>
               } @else {
                 <span class="chip chip-muted outfit-status">+ Add</span>
               }
@@ -114,7 +114,7 @@
           <div class="day-card">
             @if (day.isTravelDay) {
               <div class="travel-day-card">
-                <span class="travel-icon">✈️</span>
+                <span class="travel-icon"><app-icon name="flights" [size]="22" /></span>
                 <div class="travel-info">
                   <div class="travel-label">Travel Day</div>
                   <div class="travel-sub">Airports &amp; flights — pack cozy &amp; comfortable</div>
@@ -146,7 +146,7 @@
 
             @if (day.suggestion) {
               <div class="suggestion-card">
-                <span class="suggestion-icon">✨</span>
+                <span class="suggestion-icon"><app-icon name="sparkle" [size]="18" /></span>
                 <div class="suggestion-text">{{ day.suggestion }}</div>
               </div>
             }
@@ -186,7 +186,7 @@
         </div>
       } @else {
         <button class="btn btn-ghost btn-sm" (click)="photoInput.click()">
-          📷 {{ editPhotoDataUrl ? 'Change Photo' : 'Upload Photo' }}
+          <app-icon name="camera" [size]="16" /> {{ editPhotoDataUrl ? 'Change Photo' : 'Upload Photo' }}
         </button>
       }
     </div>
@@ -211,7 +211,7 @@
     </div>
     <div class="form-actions">
       @if (myOutfitsByDate()[date]) {
-        <button class="btn btn-danger btn-sm" (click)="deleteOutfit(date)">🗑 Delete</button>
+        <button class="btn btn-danger btn-sm" (click)="deleteOutfit(date)"><app-icon name="trash" [size]="15" /> Delete</button>
       }
       <div class="form-actions-right">
         <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
@@ -246,6 +246,6 @@
     @if (outfit.notes) {
       <p class="outfit-notes">{{ outfit.notes }}</p>
     }
-    <button class="btn btn-ghost btn-sm edit-outfit-btn" (click)="startEdit(date)">✏️ Edit</button>
+    <button class="btn btn-ghost btn-sm edit-outfit-btn" (click)="startEdit(date)"><app-icon name="edit" [size]="15" /> Edit</button>
   </div>
 </ng-template>
