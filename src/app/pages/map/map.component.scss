@@ -9,6 +9,16 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow-y: auto;          // scroll the page to reveal the list below the map
+  overflow-x: hidden;
+}
+
+// Fills the visible area exactly (same map size as before the list existed);
+// the locations list follows below and the page scrolls to it.
+.map-viewport {
+  flex: 0 0 100%;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -246,20 +256,14 @@
   align-self: center;
 }
 
-// ── Locations list (below the map) ────────────────────────────────────────────
+// ── Locations list (below the map, revealed by scrolling the page) ────────────
 .location-list {
   flex: 0 0 auto;
-  max-height: 33vh;
-  overflow-y: auto;
   background: var(--card-bg);
   border-top: 1.5px solid var(--border);
-  -webkit-overflow-scrolling: touch;
 }
 
 .loc-head {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   display: flex;
   align-items: center;
   gap: 0.5rem;
