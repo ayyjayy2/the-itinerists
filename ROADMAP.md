@@ -169,6 +169,30 @@
 - [ ] Full-screen viewer with caption + uploader name
 - [ ] Photo count badge on "More" tab
 
+### 3.6 Event & Flight Reminders (scheduled, time-based)
+> Distinct from §3.4 (which notifies on *create* events). This is opt-in
+> **reminders ahead of an event's scheduled time** — e.g. a reservation you
+> can't miss, boarding, check-in. Builds on the time-aware itinerary/flight
+> parsing already used by the Home "First up" card (`eventCutoffMs`/`parseTime`
+> in `home.component.ts`) — factor that time-parsing into a shared util first.
+- [ ] Extract itinerary/flight time parsing into a shared `datetime.util.ts`
+  (start/end → absolute ms), reused by "First up", reminders, and any
+  future schedule logic.
+- [ ] Any itinerary event or flight **with a time** is reminder-eligible.
+- [ ] Per-item reminder opt-in: a bell/toggle on each itinerary event & flight
+  card. Support "remind me about **all** timed events" as a trip-level default,
+  plus per-item override (e.g. flag a can't-miss reservation individually).
+- [ ] Lead-time choice per reminder (at time / 15 min / 1 hr / 1 day before);
+  sensible defaults per type (flights earlier than a dinner res).
+- [ ] Schedule via `@capacitor/local-notifications` on device (works offline,
+  no server round-trip); reconcile the schedule when events are edited/deleted
+  or times change.
+- [ ] Persist reminder prefs on the item (or a `trips/{tripId}/reminders`
+  sub-collection) so they sync across a user's devices.
+- [ ] Respect timezone: events store local time — resolve against the trip
+  destination's TZ, not the device TZ, so a reminder fires at the right moment.
+- [ ] Reminder tap → deep link into the itinerary/flight detail (see §3.4).
+
 ---
 
 ## Phase 4 — Native App & Distribution (Weeks 17–20)
