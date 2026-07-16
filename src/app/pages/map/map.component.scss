@@ -15,13 +15,26 @@
 .map-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0.65rem 1.25rem;
   background: var(--card-bg);
-  border-bottom: 1.5px solid var(--border);
   flex-shrink: 0;
   gap: 0.75rem;
 
   h2 { margin: 0; flex-shrink: 0; }
+}
+
+// Second header row: scope tabs + geocoding status (keeps the header from
+// overflowing on narrow phones, which cut off the Add Pin button).
+.map-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 1.25rem 0.6rem;
+  background: var(--card-bg);
+  border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0;
 }
 
 .map-scope {
@@ -32,7 +45,7 @@
 
 .map-status { flex-shrink: 0; }
 
-.add-pin-btn { margin-left: auto; flex-shrink: 0; }
+.add-pin-btn { flex-shrink: 0; }
 
 .status-chip {
   font-size: 0.8rem;
