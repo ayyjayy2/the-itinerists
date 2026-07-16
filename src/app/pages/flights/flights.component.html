@@ -21,7 +21,7 @@
 
   @if (allJourneys().length === 0) {
     <div class="empty-state">
-      <span class="empty-icon">✈️</span>
+      <span class="empty-icon"><app-icon name="flights" [size]="40" /></span>
       <p>No flights yet.</p>
       <button class="btn btn-primary" (click)="openAddModal()">Add your first flight</button>
     </div>
@@ -29,7 +29,7 @@
 
   @if (arrivals().length > 0) {
     <div class="section-header arrivals">
-      <span class="section-icon">🛬</span>
+      <span class="section-icon"><app-icon name="flights" [size]="20" /></span>
       <span>Arrivals to {{ destination() }}</span>
     </div>
     @for (journey of arrivals(); track journey.uid + journey.section) {
@@ -39,7 +39,7 @@
 
   @if (departures().length > 0) {
     <div class="section-header departures">
-      <span class="section-icon">🛫</span>
+      <span class="section-icon"><app-icon name="flights" [size]="20" /></span>
       <span>Departures</span>
     </div>
     @for (journey of departures(); track journey.uid + journey.section) {
@@ -61,7 +61,7 @@
         <span class="section-badge" [class.dep]="journey.section === 'DEPARTURES'">
           {{ journey.section === 'ARRIVALS' ? '↓ Arrival' : '↑ Departure' }}
         </span>
-        <button class="edit-btn" title="Edit" (click)="openEditModal(journey)">✏️</button>
+        <button class="edit-btn" title="Edit" (click)="openEditModal(journey)"><app-icon name="edit" [size]="16" /></button>
       </div>
     </div>
 

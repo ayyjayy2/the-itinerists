@@ -73,7 +73,7 @@
   <!-- ── Stays list ── -->
   @if (displayedStays().length === 0 && !adding()) {
     <div class="empty-state">
-      <span class="empty-icon">🏨</span>
+      <span class="empty-icon"><app-icon name="stays" [size]="40" /></span>
       <p>No stays yet. Tap <strong>+ Add Stay</strong> to get started.</p>
     </div>
   } @else {
@@ -87,7 +87,7 @@
               <div>
                 <h3>{{ stay.name }}</h3>
                 @if (stay.address) {
-                  <p class="stay-address">📍 {{ stay.address }}</p>
+                  <p class="stay-address"><app-icon name="pin" [size]="15" /> {{ stay.address }}</p>
                 }
               </div>
               <div class="stay-header-right">
@@ -97,7 +97,7 @@
                     <span class="nights-label">nights</span>
                   </div>
                 }
-                <button class="edit-btn" (click)="startEdit(stay)" title="Edit">✏️</button>
+                <button class="edit-btn" (click)="startEdit(stay)" title="Edit"><app-icon name="edit" [size]="16" /></button>
               </div>
             </div>
 
@@ -118,7 +118,7 @@
                 <span class="chip chip-muted">Ref: {{ stay.bookingRef }}</span>
               }
               @if (stay.link) {
-                <a class="chip chip-muted link-chip" [href]="stay.link" target="_blank" rel="noopener">🔗 Booking</a>
+                <a class="chip chip-muted link-chip" [href]="stay.link" target="_blank" rel="noopener"><app-icon name="link" [size]="13" /> Booking</a>
               }
               @if (stay.forWho !== 'All') {
                 <span class="chip chip-highlight">{{ stay.forWho }}</span>
@@ -128,7 +128,7 @@
             </div>
 
             @if (stay.notes) {
-              <p class="stay-notes">📌 {{ stay.notes }}</p>
+              <p class="stay-notes"><app-icon name="pin" [size]="14" /> {{ stay.notes }}</p>
             }
           </div>
 

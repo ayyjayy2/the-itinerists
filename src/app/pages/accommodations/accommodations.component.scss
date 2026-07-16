@@ -158,3 +158,12 @@
     gap: 0;
   }
 }
+
+// ── Custom icons (DP2-17) ─────────────────────────────────────────────────────
+.stay-address, .stay-notes {
+  display: flex; align-items: center; gap: 0.35rem;
+  app-icon { color: var(--text-muted); flex-shrink: 0; }
+}
+.edit-btn app-icon { color: var(--text-muted); display: inline-flex; }
+.empty-icon app-icon { color: var(--text-muted); }
+.link-chip app-icon { vertical-align: -2px; }
