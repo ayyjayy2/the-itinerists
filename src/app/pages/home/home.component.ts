@@ -141,14 +141,46 @@ export class HomeComponent implements OnInit, OnDestroy {
   });
 
   // ── At a glance ────────────────────────────────────────────────────────────
-  /** Next upcoming itinerary event (or the first one). */
+  /**
+   * The next thing on the schedule — time-aware. An event stays "first up" until
+   * it finishes (its end time, or its start time when no end is set), then the
+   * card rolls to the next one. Events with no time hold for their whole day.
+   * When everything has passed, we fall back to the last event.
+   */
   readonly firstUp = computed(() => {
     const items = [...this.itineraryService.items()];
     if (!items.length) return null;
     items.sort((a, b) => a.date === b.date ? a.sortOrder - b.sortOrder : a.date.localeCompare(b.date));
-    const today = new Date(this.now()).toISOString().slice(0, 10);
-    return items.find(i => i.date >= today) ?? items[0];
+    const now = this.now();
+    return items.find(i => this.eventCutoffMs(i) >= now) ?? items[items.length - 1];
   });
+
+  /** Ms after which an event is considered past: end time, else start, else end-of-day. */
+  private eventCutoffMs(i: { date: string; time: string; endTime: string }): number {
+    const [y, m, d] = i.date.split('-').map(Number);
+    const t = this.parseTime(i.endTime) ?? this.parseTime(i.time);
+    return t
+      ? new Date(y, m - 1, d, t.h, t.min).getTime()
+      : new Date(y, m - 1, d, 23, 59, 59).getTime(); // no time set → holds for the whole day
+  }
+
+  /** Parses "2:30 PM", "9 am", "14:30" (any trailing TZ ignored) → 24h parts, or null. */
+  private parseTime(raw?: string): { h: number; min: number } | null {
+    if (!raw) return null;
+    const s = raw.trim().toLowerCase();
+    const ampm = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)/);
+    if (ampm) {
+      let h = parseInt(ampm[1], 10) % 12;
+      if (ampm[3] === 'pm') h += 12;
+      return { h, min: ampm[2] ? parseInt(ampm[2], 10) : 0 };
+    }
+    const h24 = s.match(/^(\d{1,2}):(\d{2})/);
+    if (h24) {
+      const h = parseInt(h24[1], 10), min = parseInt(h24[2], 10);
+      if (h < 24 && min < 60) return { h, min };
+    }
+    return null;
+  }
 
   readonly firstUpWhen = computed(() => {
     const e = this.firstUp();
