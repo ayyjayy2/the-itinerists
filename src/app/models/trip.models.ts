@@ -285,9 +285,14 @@ export interface RecDoc extends Rec {
   createdAt: number;
 }
 
-// ── Rental Car ────────────────────────────────────────────────────────────────
+// ── Transportation ─────────────────────────────────────────────────────────────
+// Stored in the `cars` sub-collection (kept for back-compat); each entry is a
+// transportation booking whose `mode` selects rental car / train / bus / etc.
+
+export type TransportMode = 'Rental Car' | 'Train' | 'Bus' | 'Ferry' | 'Rideshare' | 'Other';
 
 export interface RentalCar {
+  mode?: TransportMode;   // transportation type (defaults to Rental Car for legacy rows)
   company: string;
   confirmationNumber: string;
   pickupDate: string;

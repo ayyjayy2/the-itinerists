@@ -2,13 +2,16 @@ import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data.service';
-import { RentalCar } from '../../models/trip.models';
+import { RentalCar, TransportMode } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 
 type CarForm = Omit<RentalCar, 'drivers'>;
 
+const MODES: TransportMode[] = ['Rental Car', 'Train', 'Bus', 'Ferry', 'Rideshare', 'Other'];
+
 function blankForm(): CarForm {
   return {
+    mode: 'Rental Car',
     company: '', confirmationNumber: '', rentalName: '', passengers: '',
     location: '', platform: '', pickupDate: '', pickupTime: '',
     pickupLocation: '', dropoffDate: '', dropoffTime: '', dropoffLocation: '',
@@ -28,15 +31,47 @@ export class RentalCarComponent {
   cars  = computed(() => this.dataService.data()?.rentalCar ?? []);
   users = computed(() => this.dataService.data()?.users ?? []);
 
+  readonly modes = MODES;
+
   showAddForm  = signal(false);
   editingIndex = signal<number | null>(null);
 
   addForm  = blankForm();
   editForm = blankForm();
 
+  /** Line-icon for a transportation mode. */
+  modeIcon(mode?: TransportMode): string {
+    switch (mode) {
+      case 'Train': return 'train';
+      case 'Bus':   return 'bus';
+      case 'Ferry': return 'boat';
+      default:      return 'car'; // Rental Car / Rideshare / Other
+    }
+  }
+
+  /** Journey leg labels — "Pick-up / Drop-off" for a car, "Depart / Arrive" otherwise. */
+  legLabels(mode?: TransportMode): { start: string; end: string } {
+    return mode && mode !== 'Rental Car' && mode !== 'Rideshare'
+      ? { start: 'Depart', end: 'Arrive' }
+      : { start: 'Pick-up', end: 'Drop-off' };
+  }
+
+  /** Provider field label per mode. */
+  providerLabel(mode?: TransportMode): string {
+    switch (mode) {
+      case 'Train': return 'Train line';
+      case 'Bus':   return 'Bus company';
+      case 'Ferry': return 'Ferry operator';
+      case 'Rideshare': return 'Service';
+      case 'Other': return 'Provider';
+      default:      return 'Rental company';
+    }
+  }
+
   startEdit(index: number): void {
     const car = this.cars()[index];
     this.editForm = {
+      mode:               car.mode ?? 'Rental Car',
       company:            car.company,
       confirmationNumber: car.confirmationNumber,
       rentalName:         car.rentalName  ?? '',
@@ -58,6 +93,7 @@ export class RentalCarComponent {
   saveEdit(index: number): void {
     if (!this.editForm.company.trim()) return;
     this.dataService.patchRentalCar(index, {
+      mode:               this.editForm.mode ?? 'Rental Car',
       company:            this.editForm.company.trim(),
       confirmationNumber: this.editForm.confirmationNumber.trim(),
       rentalName:         (this.editForm.rentalName ?? '').trim(),
@@ -81,7 +117,7 @@ export class RentalCarComponent {
   }
 
   deleteRentalCar(index: number): void {
-    if (!confirm('Delete this rental car entry?')) return;
+    if (!confirm('Delete this transportation entry?')) return;
     this.editingIndex.set(null);
     this.dataService.deleteRentalCar(index);
   }
@@ -108,7 +144,7 @@ export class RentalCarComponent {
 
   formatDate(d: string): string {
     if (!d) return '';
-    return new Date(d + 'T00:00').toLocaleDateString('en-IE', { weekday: 'short', month: 'short', day: 'numeric' });
+    return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
   refresh(): void { this.dataService.refresh(); }
