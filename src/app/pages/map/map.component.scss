@@ -245,3 +245,99 @@
   flex-shrink: 0;
   align-self: center;
 }
+
+// ── Locations list (below the map) ────────────────────────────────────────────
+.location-list {
+  flex: 0 0 auto;
+  max-height: 33vh;
+  overflow-y: auto;
+  background: var(--card-bg);
+  border-top: 1.5px solid var(--border);
+  -webkit-overflow-scrolling: touch;
+}
+
+.loc-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem 0.4rem;
+  background: var(--card-bg);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+
+  .loc-count {
+    background: var(--primary-tint);
+    color: var(--primary-dark);
+    border-radius: 99px;
+    padding: 0.05rem 0.5rem;
+    letter-spacing: 0;
+  }
+}
+
+.loc-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.5rem 1.25rem;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  text-align: left;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover, &:active { background: var(--bg); }
+}
+
+.loc-dot {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+.loc-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  .loc-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .loc-detail {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.loc-go { flex: none; color: var(--text-muted); font-size: 1.3rem; line-height: 1; }
+
+.loc-empty {
+  padding: 1rem 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
