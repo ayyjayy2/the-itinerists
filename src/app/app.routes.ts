@@ -65,6 +65,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'transportation',
+    loadComponent: () => import('./pages/rental-car/rental-car.component').then(m => m.RentalCarComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'finance',
     loadComponent: () => import('./pages/finance/finance.component').then(m => m.FinanceComponent),
     canActivate: [authGuard]

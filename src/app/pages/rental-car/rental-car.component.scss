@@ -48,8 +48,13 @@
   margin-bottom: 1rem;
 
   .car-company {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
     font-size: 1.2rem;
     font-weight: 800;
+    min-width: 0;
+    .mode-ic { color: var(--primary-dark); flex: none; display: inline-flex; }
   }
 }
 
@@ -79,12 +84,18 @@
 
   .leg-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
   .leg-date  { font-weight: 700; }
-  .leg-loc   { font-size: 0.83rem; color: var(--text-muted); }
+  .leg-loc   {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    font-size: 0.83rem; color: var(--text-muted);
+    app-icon { color: var(--highlight-dk); flex: none; }
+  }
 }
 
 .journey-arrow {
-  font-size: 1.5rem;
-  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  margin-top: 1.1rem;
+  color: var(--primary-dark);
 }
 
 .car-drivers {
@@ -101,6 +112,14 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+  justify-content: flex-end;
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    app-icon { flex: none; }
+  }
 }
 
 .car-meta {
@@ -120,10 +139,12 @@
 }
 
 .car-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   margin-top: 0.5rem;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--primary-dark);
   text-decoration: none;
   &:hover { text-decoration: underline; }
@@ -135,4 +156,37 @@
   background: var(--bg);
   padding: 0.4rem 0.7rem;
   border-radius: var(--radius-sm);
+}
+
+.empty-icon app-icon { color: var(--text-muted); }
+
+// ── Mode selector ─────────────────────────────────────────────────────────────
+.mode-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.mode-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s ease;
+
+  app-icon { flex: none; }
+  &:hover { border-color: var(--primary); color: var(--text); }
+  &.active {
+    background: var(--primary-tint);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+  }
 }

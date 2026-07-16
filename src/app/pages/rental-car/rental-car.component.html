@@ -1,23 +1,23 @@
 <div class="page-container">
   <div class="page-header">
-    <h2><app-icon name="car" [size]="22" /> Rental Car</h2>
+    <h2><app-icon name="car" [size]="22" /> Transportation</h2>
     @if (dataService.isStale()) {
       <button class="btn btn-ghost btn-sm" (click)="refresh()">↻ Refresh</button>
     }
   </div>
 
   @if (dataService.loading()) {
-    <div class="loading-overlay"><div class="spinner"></div><p>Loading rental info…</p></div>
+    <div class="loading-overlay"><div class="spinner"></div><p>Loading transportation…</p></div>
   } @else if (dataService.isStale()) {
-    <div class="stale-banner">⚠️ Offline — cached data <button (click)="refresh()">Retry</button></div>
+    <div class="stale-banner">Offline — showing cached data <button (click)="refresh()">Retry</button></div>
   }
 
   <!-- Add form toggle -->
   @if (!showAddForm()) {
-    <button class="btn btn-primary add-btn" (click)="showAddForm.set(true)">+ Add Rental Car</button>
+    <button class="btn btn-primary add-btn" (click)="showAddForm.set(true)">+ Add Transportation</button>
   } @else {
     <div class="add-form card">
-      <h3>New Rental Car</h3>
+      <h3>New Transportation</h3>
       <ng-container *ngTemplateOutlet="carFormFields; context: { form: addForm }"></ng-container>
       <div class="form-actions">
         <button class="btn btn-ghost" (click)="showAddForm.set(false)">Cancel</button>
@@ -28,8 +28,8 @@
 
   @if (cars().length === 0 && !dataService.loading()) {
     <div class="empty-state">
-      <span class="empty-icon">🚗</span>
-      <p>No rental car info yet — add one above!</p>
+      <span class="empty-icon"><app-icon name="car" [size]="40" /></span>
+      <p>No transportation yet — add a rental car, train, bus, or ferry above!</p>
     </div>
   } @else {
     @for (car of cars(); track car.confirmationNumber || car.company; let i = $index) {
@@ -37,10 +37,10 @@
       @if (editingIndex() === i) {
         <!-- Inline edit form -->
         <div class="add-form card">
-          <h3>Edit Rental Car</h3>
+          <h3>Edit Transportation</h3>
           <ng-container *ngTemplateOutlet="carFormFields; context: { form: editForm }"></ng-container>
           <div class="form-actions">
-            <button class="btn btn-danger btn-sm" (click)="deleteRentalCar(i)">🗑 Delete</button>
+            <button class="btn btn-danger btn-sm" (click)="deleteRentalCar(i)"><app-icon name="trash" [size]="15" /> Delete</button>
             <div class="form-actions-right">
               <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
               <button class="btn btn-primary" (click)="saveEdit(i)" [disabled]="!editForm.company.trim()">Save</button>
@@ -52,17 +52,21 @@
         <!-- Card view -->
         <div class="car-card card">
           <div class="car-header">
-            <div class="car-company">{{ car.company }}</div>
+            <div class="car-company">
+              <span class="mode-ic"><app-icon [name]="modeIcon(car.mode)" [size]="18" /></span>
+              {{ car.company }}
+            </div>
             <div class="car-header-right">
               <div class="car-header-chips">
+                <span class="chip chip-primary">{{ car.mode || 'Rental Car' }}</span>
                 @if (car.confirmationNumber) {
                   <span class="chip chip-accent">Conf: {{ car.confirmationNumber }}</span>
                 }
                 @if (car.location) {
-                  <span class="chip chip-muted">📍 {{ car.location }}</span>
+                  <span class="chip chip-muted"><app-icon name="pin" [size]="12" /> {{ car.location }}</span>
                 }
               </div>
-              <button class="btn btn-ghost btn-sm edit-btn" (click)="startEdit(i)">✏️ Edit</button>
+              <button class="btn btn-ghost btn-sm edit-btn" (click)="startEdit(i)"><app-icon name="edit" [size]="15" /> Edit</button>
             </div>
           </div>
 
@@ -83,15 +87,15 @@
 
           <div class="journey">
             <div class="journey-leg">
-              <span class="leg-label">Pick-up</span>
+              <span class="leg-label">{{ legLabels(car.mode).start }}</span>
               <span class="leg-date">{{ formatDate(car.pickupDate) }} {{ car.pickupTime }}</span>
-              <span class="leg-loc">📍 {{ car.pickupLocation }}</span>
+              @if (car.pickupLocation) { <span class="leg-loc"><app-icon name="pin" [size]="13" /> {{ car.pickupLocation }}</span> }
             </div>
-            <div class="journey-arrow">🚗</div>
+            <div class="journey-arrow"><app-icon [name]="modeIcon(car.mode)" [size]="20" /></div>
             <div class="journey-leg">
-              <span class="leg-label">Drop-off</span>
+              <span class="leg-label">{{ legLabels(car.mode).end }}</span>
               <span class="leg-date">{{ formatDate(car.dropoffDate) }} {{ car.dropoffTime }}</span>
-              <span class="leg-loc">📍 {{ car.dropoffLocation }}</span>
+              @if (car.dropoffLocation) { <span class="leg-loc"><app-icon name="pin" [size]="13" /> {{ car.dropoffLocation }}</span> }
             </div>
           </div>
 
@@ -103,11 +107,11 @@
           }
 
           @if (car.notes) {
-            <p class="car-notes">📌 {{ car.notes }}</p>
+            <p class="car-notes">{{ car.notes }}</p>
           }
 
           @if (car.link) {
-            <a class="car-link" [href]="car.link" target="_blank" rel="noopener">🔗 View Booking</a>
+            <a class="car-link" [href]="car.link" target="_blank" rel="noopener"><app-icon name="link" [size]="15" /> View booking</a>
           }
         </div>
       }
@@ -117,10 +121,21 @@
 
 <!-- Shared form fields template -->
 <ng-template #carFormFields let-form="form">
+  <div class="form-group">
+    <label>Mode</label>
+    <div class="mode-chips">
+      @for (m of modes; track m) {
+        <button type="button" class="mode-chip" [class.active]="(form.mode || 'Rental Car') === m" (click)="form.mode = m">
+          <app-icon [name]="modeIcon(m)" [size]="16" /> {{ m }}
+        </button>
+      }
+    </div>
+  </div>
+
   <div class="form-row">
     <div class="form-group">
-      <label>Rental Company <span class="required">*</span></label>
-      <input type="text" [(ngModel)]="form.company" placeholder="e.g. Enterprise">
+      <label>{{ providerLabel(form.mode) }} <span class="required">*</span></label>
+      <input type="text" [(ngModel)]="form.company" placeholder="e.g. Enterprise, Renfe, FlixBus">
     </div>
     <div class="form-group">
       <label>Confirmation #</label>
@@ -130,26 +145,26 @@
 
   <div class="form-row">
     <div class="form-group">
-      <label>Rental In Name Of</label>
+      <label>Booked in name of</label>
       <input type="text" [(ngModel)]="form.rentalName" placeholder="e.g. Alayna">
     </div>
     <div class="form-group">
       <label>Location / Region</label>
-      <input type="text" [(ngModel)]="form.location" placeholder="e.g. Dublin, Galway">
+      <input type="text" [(ngModel)]="form.location" placeholder="e.g. Lisbon, Porto">
     </div>
   </div>
 
   <div class="form-group">
     <label>Passengers</label>
-    <input type="text" [(ngModel)]="form.passengers" placeholder="e.g. Alayna, Dad, Caitlin">
+    <input type="text" [(ngModel)]="form.passengers" placeholder="e.g. Alayna, Maya, Sofia">
   </div>
 
   <div class="form-group">
-    <label>Platform Booked Through</label>
-    <input type="text" [(ngModel)]="form.platform" placeholder="e.g. Expedia, Enterprise.com">
+    <label>Booked through</label>
+    <input type="text" [(ngModel)]="form.platform" placeholder="e.g. Expedia, Omio, operator site">
   </div>
 
-  <div class="form-section-label">Pick-up</div>
+  <div class="form-section-label">{{ legLabels(form.mode).start }}</div>
   <div class="form-row">
     <div class="form-group">
       <label>Date</label>
@@ -161,11 +176,11 @@
     </div>
   </div>
   <div class="form-group">
-    <label>Pick-up Location</label>
-    <input type="text" [(ngModel)]="form.pickupLocation" placeholder="e.g. Dublin Airport T1">
+    <label>{{ legLabels(form.mode).start }} location</label>
+    <input type="text" [(ngModel)]="form.pickupLocation" placeholder="e.g. Lisbon Airport, Santa Apolónia station">
   </div>
 
-  <div class="form-section-label">Drop-off</div>
+  <div class="form-section-label">{{ legLabels(form.mode).end }}</div>
   <div class="form-row">
     <div class="form-group">
       <label>Date</label>
@@ -177,13 +192,13 @@
     </div>
   </div>
   <div class="form-group">
-    <label>Drop-off Location</label>
-    <input type="text" [(ngModel)]="form.dropoffLocation" placeholder="e.g. Dublin Airport T1">
+    <label>{{ legLabels(form.mode).end }} location</label>
+    <input type="text" [(ngModel)]="form.dropoffLocation" placeholder="e.g. Porto Campanhã station">
   </div>
 
   <div class="form-group">
     <label>Notes</label>
-    <textarea [(ngModel)]="form.notes" rows="2" placeholder="e.g. Full coverage insurance included, manual transmission"></textarea>
+    <textarea [(ngModel)]="form.notes" rows="2" placeholder="e.g. Seat 14A, platform 3, luggage included"></textarea>
   </div>
 
   <div class="form-group">
