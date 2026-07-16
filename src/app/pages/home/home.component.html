@@ -19,7 +19,7 @@
       </svg>
       <div class="hero-kicker">Ready for {{ destinationShort() }}? ✨</div>
       @if (heroCountdown().big) {
-        <div class="hero-number display">{{ heroCountdown().big }} <span class="hero-unit">{{ heroCountdown().small }}</span></div>
+        <div class="hero-number display">{{ heroCountdown().big }}</div>
       } @else {
         <div class="hero-number-text">{{ heroCountdown().small }}</div>
       }
@@ -134,9 +134,15 @@
     <a class="glance-row" routerLink="/finance">
       <span class="glance-ic gold"><app-icon name="finance" [size]="22" /></span>
       <span class="glance-body">
-        @if (expenseCount() > 0) {
-          <span class="glance-title">{{ expenseCount() }} expense{{ expenseCount() !== 1 ? 's' : '' }} tracked</span>
-          <span class="glance-sub">Tap to see who owes who &amp; settle up</span>
+        @if (financeNet() !== null && expenseCount() > 0) {
+          @if (financeNet()! > 0.01) {
+            <span class="glance-title owed">You're owed {{ money(financeNet()!) }}</span>
+          } @else if (financeNet()! < -0.01) {
+            <span class="glance-title owe">You owe {{ money(-financeNet()!) }}</span>
+          } @else {
+            <span class="glance-title">You're all settled up 🎉</span>
+          }
+          <span class="glance-sub">{{ expenseCount() }} expense{{ expenseCount() !== 1 ? 's' : '' }} · tap to settle up</span>
         } @else {
           <span class="glance-title">Shared expenses</span>
           <span class="glance-sub">Track who paid &amp; who owes who</span>

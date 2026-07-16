@@ -56,10 +56,10 @@
 .hero-kicker { font-size: 0.9rem; font-weight: 800; opacity: 0.9; }
 
 .hero-number {
-  font-size: 3.6rem;
+  font-size: 3.4rem;
   line-height: 1;
   margin-top: 6px;
-  .hero-unit { font-family: var(--font); font-size: 1rem; font-weight: 800; opacity: 0.9; }
+  white-space: nowrap;
 }
 .hero-number-text { font-size: 1.05rem; font-weight: 800; margin-top: 10px; opacity: 0.92; }
 
@@ -231,7 +231,10 @@
 
 .glance-body {
   flex: 1; min-width: 0; display: flex; flex-direction: column;
-  .glance-title { font-weight: 800; font-size: 0.95rem; }
+  .glance-title { font-weight: 800; font-size: 0.95rem;
+    &.owed { color: var(--primary-dark); }
+    &.owe  { color: var(--danger); }
+  }
   .glance-sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 1px; }
 }
 .glance-arrow { color: var(--text-muted); font-size: 1.3rem; flex: none; }
