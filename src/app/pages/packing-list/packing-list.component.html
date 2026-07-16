@@ -67,12 +67,12 @@
 
     @if (filteredItems().length === 0 && items().length === 0) {
       <div class="empty-state">
-        <span class="empty-icon">🧳</span>
+        <span class="empty-icon"><app-icon name="packing" [size]="40" /></span>
         <p>Your list is empty — start adding items!</p>
       </div>
     } @else if (filteredItems().length === 0) {
       <div class="empty-state">
-        <span class="empty-icon">🗂️</span>
+        <span class="empty-icon"><app-icon name="packing" [size]="40" /></span>
         <p>No items in <strong>{{ selectedCategory() }}</strong> yet.</p>
       </div>
     } @else {
@@ -100,12 +100,12 @@
 
         <!-- Packed section -->
         @if (filteredPackedCount() > 0) {
-          <div class="packed-header">✅ Packed ({{ filteredPackedCount() }})</div>
+          <div class="packed-header"><app-icon name="check" [size]="15" /> Packed ({{ filteredPackedCount() }})</div>
           @for (item of filteredItems(); track item.id) {
             @if (item.packed) {
               <div class="packing-item packed">
                 <button class="check-btn packed" (click)="toggle(item.id)">
-                  <span class="check-circle packed">✓</span>
+                  <span class="check-circle packed"><app-icon name="check" [size]="13" /></span>
                 </button>
                 <span class="item-label">{{ item.label }}</span>
                 @if (selectedCategory() === 'All' && item.category) {
@@ -124,7 +124,7 @@
   @if (tab() === 'suggestions') {
     @if (inbox().length === 0) {
       <div class="empty-state">
-        <span class="empty-icon">📬</span>
+        <span class="empty-icon"><app-icon name="inbox" [size]="40" /></span>
         <p>No suggestions yet! Others can send you packing ideas.</p>
       </div>
     } @else {
