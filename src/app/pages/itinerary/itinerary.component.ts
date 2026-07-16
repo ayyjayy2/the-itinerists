@@ -8,6 +8,7 @@ import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { FlightsService } from '../../services/flights.service';
 import { TripService } from '../../services/trip.service';
+import { DataService } from '../../services/data.service';
 import { ItineraryItemDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 
@@ -47,6 +48,7 @@ export class ItineraryComponent implements OnInit {
   usersService      = inject(UsersService);
   flightsService    = inject(FlightsService);
   tripService       = inject(TripService);
+  dataService       = inject(DataService);
 
   view         = signal<ViewMode>('list');
   selectedDate = signal<string>('All');
@@ -140,6 +142,43 @@ export class ItineraryComponent implements OnInit {
     return events;
   });
 
+  /** Auto-generated transportation events (pick-up/drop-off or depart/arrive) — not editable here. */
+  readonly transportEvents = computed(() => {
+    const cars = this.dataService.data()?.rentalCar ?? [];
+    const events: Array<{ date: string; label: string; time: string; icon: string }> = [];
+    for (const c of cars) {
+      if (!c.company) continue;
+      const icon = this.transportIcon(c.mode);
+      const isVehicle = !c.mode || c.mode === 'Rental Car' || c.mode === 'Rideshare';
+      if (c.pickupDate) {
+        events.push({
+          date: c.pickupDate, time: c.pickupTime, icon,
+          label: `${isVehicle ? 'Pick up' : 'Depart'}: ${c.company}${c.pickupLocation ? ' – ' + c.pickupLocation : ''}`,
+        });
+      }
+      if (c.dropoffDate) {
+        events.push({
+          date: c.dropoffDate, time: c.dropoffTime, icon,
+          label: `${isVehicle ? 'Drop off' : 'Arrive'}: ${c.company}${c.dropoffLocation ? ' – ' + c.dropoffLocation : ''}`,
+        });
+      }
+    }
+    return events;
+  });
+
+  private transportIcon(mode?: string): string {
+    switch (mode) {
+      case 'Train': return 'train';
+      case 'Bus':   return 'bus';
+      case 'Ferry': return 'boat';
+      default:      return 'car';
+    }
+  }
+
+  transportEventsForDate(date: string) {
+    return this.transportEvents().filter(e => e.date === date);
+  }
+
   readonly tripUsers = this.usersService.tripUsers;
 
   // ── User flight range for "My Trip" ───────────────────────────────────────
@@ -162,9 +201,10 @@ export class ItineraryComponent implements OnInit {
     const days  = this.tripDays();
 
     // Include any dates with items that aren't in the trip days list
-    const itemDates  = new Set(this.allItems().map(i => i.date));
-    const flightDates = new Set(this.flightEvents().map(e => e.date));
-    const allDates   = [...new Set([...days, ...itemDates, ...flightDates])].sort();
+    const itemDates      = new Set(this.allItems().map(i => i.date));
+    const flightDates    = new Set(this.flightEvents().map(e => e.date));
+    const transportDates = new Set(this.transportEvents().map(e => e.date));
+    const allDates   = [...new Set([...days, ...itemDates, ...flightDates, ...transportDates])].sort();
 
     if (all || !range) return allDates;
     return allDates.filter(d =>

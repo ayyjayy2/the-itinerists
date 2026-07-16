@@ -125,6 +125,37 @@
   }
 }
 
+// ── Transportation banners (car / train / bus / ferry …) ────────────────────
+.transport-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.75rem;
+  margin-bottom: 0.4rem;
+  background: var(--accent-tint);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+
+  .tb-ic {
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent-dark);
+  }
+
+  .tb-time {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    min-width: 48px;
+  }
+
+  .tb-label {
+    color: var(--accent-dark);
+    font-weight: 700;
+  }
+}
+
 .items-list {
   display: flex;
   flex-direction: column;
