@@ -127,6 +127,16 @@ function customPinIcon(color: string): L.DivIcon {
 }
 
 
+/** One row in the locations list below the map (mirrors a map marker). */
+interface LocationEntry {
+  id: string;                                    // matches the marker key
+  name: string;
+  detail: string;
+  color: string;
+  type: 'itinerary' | 'stay' | 'flight' | 'pin';
+  num?: number;                                  // itinerary sequence when a day is selected
+}
+
 @Component({
   selector: 'app-map',
   imports: [IconComponent, CommonModule, FormsModule],
@@ -198,6 +208,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   addError     = signal('');
   addForm = { address: '', name: '', category: 'Sightseeing', notes: '' };
   addForWhoMap: Record<string, boolean> = {};
+
+  /** Locations shown below the map for the current scope/day; rebuilt on each render. */
+  readonly locations = signal<LocationEntry[]>([]);
+  /** Marker lookup by LocationEntry id, so tapping a list row can fly to & open it. */
+  private markerByKey = new Map<string, L.Marker>();
 
   private map: L.Map | null = null;
   private flightLayer = L.layerGroup();
@@ -507,14 +522,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   private updateAll(): void {
-    this.updateFlightMarkers();
-    this.updateItinMarkers();
+    this.markerByKey.clear();
+    const entries: LocationEntry[] = [];
+    this.updateItinMarkers(entries);   // itinerary first — it drives fitBounds
+    this.updateAccomMarkers(entries);
+    this.updateFlightMarkers(entries);
     this.updateRouteLines();
-    this.updateAccomMarkers();
-    this.updateCustomMarkers();
+    this.updateCustomMarkers(entries);
+    this.ngZone.run(() => this.locations.set(entries));
   }
 
-  private updateFlightMarkers(): void {
+  private updateFlightMarkers(entries: LocationEntry[]): void {
     if (!this.map) return;
     this.flightLayer.clearLayers();
     const data     = this.dataService.data();
@@ -564,14 +582,21 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         </div>`;
 
       if (toCoords) {
-        L.marker([toCoords.lat, toCoords.lng], { icon: flightPinIcon() })
-          .bindPopup(popup, { maxWidth: 240 })
-          .addTo(this.flightLayer);
+        const key = `flight:${routeKey}:${flight.flightNumber}`;
+        const marker = L.marker([toCoords.lat, toCoords.lng], { icon: flightPinIcon() })
+          .bindPopup(popup, { maxWidth: 240 });
+        marker.addTo(this.flightLayer);
+        this.markerByKey.set(key, marker);
+        entries.push({
+          id: key, type: 'flight', color: '#94A3B8',
+          name: `Flight to ${flight.to}`,
+          detail: [flight.airline, flight.flightNumber].filter(Boolean).join(' ') || 'Flight',
+        });
       }
     }
   }
 
-  private updateItinMarkers(): void {
+  private updateItinMarkers(entries: LocationEntry[]): void {
     if (!this.map) return;
     this.itinLayer.clearLayers();
     const data      = this.dataService.data();
@@ -631,14 +656,23 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         </div>`).join('');
 
       const num = day ? locationOrder.get(location) : undefined;
-      L.marker([coords.lat, coords.lng], { icon: itinPinIcon(catColor(locItems[0]?.category ?? ''), num) })
+      const cat = locItems[0]?.category ?? '';
+      const key = `itin:${location}`;
+      const marker = L.marker([coords.lat, coords.lng], { icon: itinPinIcon(catColor(cat), num) })
         .bindPopup(`
           <div style="min-width:190px;max-width:250px;font-family:'Nunito',sans-serif;">
             <div style="font-weight:800;font-size:13px;margin-bottom:8px;color:#1a4a2e;
                         padding-bottom:6px;border-bottom:2px solid #8BAF7C;">📍 ${location}</div>
             ${rows}
-          </div>`, { maxWidth: 260 })
-        .addTo(this.itinLayer);
+          </div>`, { maxWidth: 260 });
+      marker.addTo(this.itinLayer);
+      this.markerByKey.set(key, marker);
+      const extra = locItems.length - 1;
+      entries.push({
+        id: key, type: 'itinerary', color: catColor(cat), num,
+        name: location,
+        detail: (locItems[0]?.activity ?? cat) + (extra > 0 ? ` +${extra} more` : ''),
+      });
       bounds.push([coords.lat, coords.lng]);
     }
     this.fitBoundsIfNeeded(bounds);
@@ -650,7 +684,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.routeLayer.clearLayers();
   }
 
-  private updateAccomMarkers(): void {
+  private updateAccomMarkers(entries: LocationEntry[]): void {
     if (!this.map) return;
     this.accomLayer.clearLayers();
     const data     = this.dataService.data();
@@ -683,13 +717,20 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           ${acc.notes ? `<div style="font-size:11px;color:#666;margin-top:4px;">${acc.notes}</div>` : ''}
         </div>`;
 
-      L.marker([coords.lat, coords.lng], { icon: accomPinIcon('#B96A76') })
-        .bindPopup(popup, { maxWidth: 240 })
-        .addTo(this.accomLayer);
+      const key = `stay:${acc.address}`;
+      const marker = L.marker([coords.lat, coords.lng], { icon: accomPinIcon('#B96A76') })
+        .bindPopup(popup, { maxWidth: 240 });
+      marker.addTo(this.accomLayer);
+      this.markerByKey.set(key, marker);
+      entries.push({
+        id: key, type: 'stay', color: '#B96A76',
+        name: acc.name || acc.address,
+        detail: acc.checkIn ? `Check-in ${this.formatDate(acc.checkIn)}` : 'Stay',
+      });
     }
   }
 
-  private updateCustomMarkers(): void {
+  private updateCustomMarkers(entries: LocationEntry[]): void {
     if (!this.map) return;
     this.customLayer.clearLayers();
     const data     = this.dataService.data();
@@ -732,7 +773,24 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         });
       }
       marker.addTo(this.customLayer);
+
+      const key = `pin:${pin.id}`;
+      this.markerByKey.set(key, marker);
+      entries.push({
+        id: key, type: 'pin', color: adderColor,
+        name: pin.name,
+        detail: [pin.category, pin.addedBy && `Added by ${pin.addedBy}`].filter(Boolean).join(' · '),
+      });
     }
+  }
+
+  /** Tapping a list row flies the map to that marker and opens its popup. */
+  focusLocation(entry: LocationEntry): void {
+    const marker = this.markerByKey.get(entry.id);
+    if (!marker || !this.map) return;
+    const ll = marker.getLatLng();
+    this.map.flyTo(ll, Math.max(this.map.getZoom(), 14), { duration: 0.6 });
+    marker.openPopup();
   }
 
   private fitBoundsIfNeeded(bounds: [number, number][]): void {

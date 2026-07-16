@@ -57,6 +57,26 @@
     <span class="legend-item"><app-icon class="legend-ic star" name="star" [size]="15" />Custom pin</span>
   </div>
 
+  <!-- Locations for the current scope/day — tap a row to zoom to it -->
+  <div class="location-list">
+    <div class="loc-head">
+      {{ selectedDay() ? 'This day' : 'All locations' }}
+      <span class="loc-count">{{ locations().length }}</span>
+    </div>
+    @for (loc of locations(); track loc.id) {
+      <button class="loc-row" (click)="focusLocation(loc)">
+        <span class="loc-dot" [style.background]="loc.color">{{ loc.num || '' }}</span>
+        <span class="loc-body">
+          <span class="loc-name">{{ loc.name }}</span>
+          @if (loc.detail) { <span class="loc-detail">{{ loc.detail }}</span> }
+        </span>
+        <span class="loc-go">›</span>
+      </button>
+    } @empty {
+      <div class="loc-empty">No pinned locations for this view.</div>
+    }
+  </div>
+
 </div>
 
 <!-- Add Pin modal -->
