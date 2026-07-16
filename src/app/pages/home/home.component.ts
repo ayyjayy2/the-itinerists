@@ -220,6 +220,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     return net;
   });
 
+  /** Running total of every expense logged for the trip — "tracked so far". */
+  readonly trackedTotal = computed(() =>
+    this.financeService.entries().reduce((sum, e) => sum + (e.amount || 0), 0),
+  );
+
   money(amount: number): string {
     const cur = this.activeTrip()?.currency || 'USD';
     try {

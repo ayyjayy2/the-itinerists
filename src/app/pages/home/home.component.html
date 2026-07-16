@@ -142,7 +142,7 @@
           } @else {
             <span class="glance-title">You're all settled up 🎉</span>
           }
-          <span class="glance-sub">{{ expenseCount() }} expense{{ expenseCount() !== 1 ? 's' : '' }} · tap to settle up</span>
+          <span class="glance-sub">{{ money(trackedTotal()) }} tracked so far · tap to settle up</span>
         } @else {
           <span class="glance-title">Shared expenses</span>
           <span class="glance-sub">Track who paid &amp; who owes who</span>
