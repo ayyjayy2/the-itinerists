@@ -6,6 +6,7 @@ import { UserService } from '../../services/user.service';
 import { FlightCountdownService } from '../../services/flight-countdown.service';
 import { FlightsService } from '../../services/flights.service';
 import { TripService } from '../../services/trip.service';
+import { TripContextService } from '../../services/trip-context.service';
 import { ItineraryService } from '../../services/itinerary.service';
 import { FinanceService } from '../../services/finance.service';
 import { PackingService } from '../../services/packing.service';
@@ -23,6 +24,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   flightCountdown = inject(FlightCountdownService);
   flightsService  = inject(FlightsService);
   tripService     = inject(TripService);
+  tripContext     = inject(TripContextService);
   itineraryService = inject(ItineraryService);
   financeService   = inject(FinanceService);
   packingService   = inject(PackingService);
@@ -157,7 +159,16 @@ export class HomeComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.countdownTimer = setInterval(() => this.now.set(Date.now()), 60_000);
     const uid = this.currentUser()?.uid;
-    if (uid) this.tripService.getUserTrips(uid).then(list => this.trips.set(list.filter(t => !t.archived)));
+    if (!uid) return;
+    this.tripService.getUserTrips(uid).then(list => {
+      const active = list.filter(t => !t.archived);
+      this.trips.set(active);
+      // If nothing is validly selected (no pointer, or a stale/purged one), pick a trip
+      // so the dashboard shows instead of the empty "no trip" state.
+      const current = this.tripContext.activeTripId();
+      const valid = active.some(t => t.id === current);
+      if (!valid && active.length) void this.tripService.switchTrip(active[0].id);
+    });
   }
 
   ngOnDestroy(): void {
