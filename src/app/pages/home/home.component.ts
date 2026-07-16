@@ -50,6 +50,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     { path: '/itinerary',      label: 'Itinerary',   icon: 'itinerary' },
     { path: '/flights',        label: 'Flights',     icon: 'flights' },
     { path: '/accommodations', label: 'Stays',       icon: 'stays' },
+    { path: '/transportation', label: 'Transportation', icon: 'car' },
     { path: '/finance',        label: 'Finance',     icon: 'finance' },
     { path: '/expenses',       label: 'My Expenses', icon: 'expenses' },
     { path: '/recs',           label: 'Recs',        icon: 'recs' },
