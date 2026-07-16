@@ -17,7 +17,7 @@
 
   @if (hasActiveTrip() && !hasTripDates()) {
     <div class="dates-banner">
-      <span>📅 Trip dates aren't set yet — showing the week ahead.</span>
+      <span><app-icon name="itinerary" [size]="16" /> Trip dates aren't set yet — showing the week ahead.</span>
       @if (isAdmin()) {
         <a class="btn btn-sm btn-primary" routerLink="/trip-settings">Set trip dates</a>
       }
@@ -38,7 +38,7 @@
   @if (view() === 'list') {
     @if (groupedByDay().length === 0) {
       <div class="empty-state">
-        <span class="empty-icon">📅</span>
+        <span class="empty-icon"><app-icon name="itinerary" [size]="40" /></span>
         <p>No items to show. Switch to <strong>All</strong> or select a different day.</p>
       </div>
     } @else {
@@ -53,7 +53,7 @@
                 <button class="label-cancel-btn" (click)="cancelLabelEdit()">✕</button>
               } @else {
                 <h3>{{ effectiveDayLabel(group[0]) }}</h3>
-                <button class="label-edit-btn" (click)="startLabelEdit(group[0])" title="Edit day label">✏️</button>
+                <button class="label-edit-btn" (click)="startLabelEdit(group[0])" title="Edit day label"><app-icon name="edit" [size]="14" /></button>
               }
               <span class="day-date">{{ formatDate(group[0]) }}</span>
             </div>
@@ -62,6 +62,7 @@
           <!-- Flight event banners -->
           @for (flight of flightEventsForDate(group[0]); track flight.label) {
             <div class="flight-banner">
+              <span class="flight-ic"><app-icon name="flights" [size]="16" /></span>
               <span class="flight-time">{{ flight.time }}</span>
               <span class="flight-label">{{ flight.label }}</span>
             </div>
@@ -91,7 +92,7 @@
                   <div class="item-body">
                     <div class="item-title">{{ item.activity }}</div>
                     @if (item.location) {
-                      <div class="item-location">📍 {{ item.location }}</div>
+                      <div class="item-location"><app-icon name="pin" [size]="14" /> {{ item.location }}</div>
                     }
                     @if (item.notes) {
                       <div class="item-notes">{{ item.notes }}</div>
@@ -107,7 +108,7 @@
                         <span class="chip chip-highlight">{{ item.forWho }}</span>
                       }
                     </div>
-                    <button class="edit-btn" (click)="startEdit(item)" title="Edit">✏️</button>
+                    <button class="edit-btn" (click)="startEdit(item)" title="Edit"><app-icon name="edit" [size]="16" /></button>
                   </div>
 
                 } @else {

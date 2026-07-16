@@ -101,10 +101,16 @@
   gap: 0.6rem;
   padding: 0.45rem 0.75rem;
   margin-bottom: 0.4rem;
-  background: #E8F4FF;
-  border-left: 3px solid #B5D5F5;
+  background: var(--lavender-tint);
+  border-left: 3px solid var(--lavender);
   border-radius: var(--radius-sm);
   font-size: 0.82rem;
+
+  .flight-ic {
+    display: inline-flex;
+    align-items: center;
+    color: var(--lavender-dark);
+  }
 
   .flight-time {
     font-weight: 700;
@@ -114,8 +120,8 @@
   }
 
   .flight-label {
-    color: #2a5280;
-    font-weight: 600;
+    color: var(--lavender-dark);
+    font-weight: 700;
   }
 }
 
@@ -200,7 +206,11 @@
   min-width: 0;
 
   .item-title    { font-weight: 700; font-size: 0.95rem; }
-  .item-location { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; }
+  .item-location {
+    display: flex; align-items: center; gap: 0.28rem;
+    font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;
+    app-icon { color: var(--highlight-dk); flex: none; }
+  }
   .item-notes    { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; font-style: italic; }
 }
 
