@@ -1,5 +1,9 @@
 <div class="map-page">
 
+  <!-- Full-height viewport section: keeps the map the same size as before; the
+       locations list sits below it and the page scrolls to reveal it. -->
+  <div class="map-viewport">
+
   <div class="map-header">
     <h2><app-icon name="map" [size]="22" /> Trip Map</h2>
     <button class="btn btn-primary btn-sm add-pin-btn" (click)="openAddForm()">+ Add Pin</button>
@@ -56,6 +60,8 @@
     <span class="legend-item"><span class="legend-flight"></span>Flight</span>
     <span class="legend-item"><app-icon class="legend-ic star" name="star" [size]="15" />Custom pin</span>
   </div>
+
+  </div><!-- .map-viewport -->
 
   <!-- Locations for the current scope/day — tap a row to zoom to it -->
   <div class="location-list">
