@@ -130,12 +130,12 @@ export class ItineraryComponent implements OnInit {
     // Last arrival leg per date
     const arrivalsByDate = mine.filter(f => f.section === 'ARRIVALS');
     for (const f of arrivalsByDate) {
-      events.push({ date: f.arrivalDate, label: `✈️ Arrive at ${f.to} – ${dest}`, time: f.arrivalTime });
+      events.push({ date: f.arrivalDate, label: `Arrive at ${f.to} – ${dest}`, time: f.arrivalTime });
     }
     // First departure leg per date
     const departuresByDate = mine.filter(f => f.section === 'DEPARTURES');
     for (const f of departuresByDate) {
-      events.push({ date: f.departureDate, label: `✈️ Depart from ${f.from}`, time: f.departureTime });
+      events.push({ date: f.departureDate, label: `Depart from ${f.from}`, time: f.departureTime });
     }
     return events;
   });
