@@ -386,3 +386,9 @@
   &:hover { background: #b52b27; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
+
+// ── Custom icons (DP2-17) ─────────────────────────────────────────────────────
+.section-icon { display: inline-flex; align-items: center; app-icon { color: currentColor; } }
+.section-header.departures { color: var(--accent-dark); }
+.edit-btn app-icon { color: var(--text-muted); display: inline-flex; }
+.empty-icon app-icon { color: var(--text-muted); }
