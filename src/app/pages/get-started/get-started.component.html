@@ -11,7 +11,7 @@
     @if (mode() === 'choose') {
       <div class="onboard-options">
         <button class="option-card" (click)="createTrip()">
-          <span class="option-icon">🧳</span>
+          <span class="option-icon"><app-icon name="trips" [size]="24" /></span>
           <span class="option-text">
             <span class="option-title">Set up a trip</span>
             <span class="option-desc">Start a new trip and invite others</span>
@@ -20,7 +20,7 @@
         </button>
 
         <button class="option-card" (click)="openCodeEntry()">
-          <span class="option-icon">🎟️</span>
+          <span class="option-icon"><app-icon name="link" [size]="24" /></span>
           <span class="option-text">
             <span class="option-title">I have an invite code</span>
             <span class="option-desc">Join a trip someone shared with you</span>

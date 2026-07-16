@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 const EMOJI_OPTIONS = [
   '🌸','🌿','✨','🦋','🐘','🌼','🍑','🌺','🦊','🐬',
@@ -18,7 +19,7 @@ const EMOJI_OPTIONS = [
  */
 @Component({
   selector: 'app-signup',
-  imports: [BrandComponent, CommonModule, FormsModule, RouterLink],
+  imports: [BrandComponent, IconComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.scss',
 })

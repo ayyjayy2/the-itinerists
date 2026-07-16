@@ -70,7 +70,13 @@
     box-shadow: var(--shadow-sm);
   }
 
-  .option-icon { font-size: 1.8rem; line-height: 1; }
+  .option-icon {
+    width: 44px; height: 44px; flex: none;
+    border-radius: 14px;
+    display: grid; place-items: center;
+    background: var(--primary-tint);
+    color: var(--primary-dark);
+  }
 
   .option-text {
     display: flex;
