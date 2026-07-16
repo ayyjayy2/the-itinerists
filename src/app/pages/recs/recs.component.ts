@@ -56,16 +56,17 @@ export class RecsComponent {
     });
   });
 
-  categoryIcon(cat: string): string {
-    const map: Record<string, string> = {
-      'Food':       '🍽️',
-      'Drink':      '🍹',
-      'Places':     '📍',
-      'Activities': '🌿',
-      'Tips':       '💡',
-      'Culture':    '🎭',
+  /** Line-icon + Dusk Garden colour per category (falls back for custom ones). */
+  categoryMeta(cat: string): { icon: string; color: string } {
+    const map: Record<string, { icon: string; color: string }> = {
+      'Food':       { icon: 'food',     color: 'var(--accent-dark)' },
+      'Drink':      { icon: 'drink',    color: 'var(--highlight-dk)' },
+      'Places':     { icon: 'pin',      color: 'var(--primary-dark)' },
+      'Activities': { icon: 'activity', color: 'var(--lavender-dark)' },
+      'Tips':       { icon: 'sparkle',  color: 'var(--accent-dark)' },
+      'Culture':    { icon: 'culture',  color: 'var(--highlight-dk)' },
     };
-    return map[cat] ?? '⭐';
+    return map[cat] ?? { icon: 'star', color: 'var(--primary-dark)' };
   }
 
   toggleCustomCategory(val: boolean): void {

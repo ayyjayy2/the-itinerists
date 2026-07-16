@@ -15,7 +15,7 @@
           <div class="category-row">
             <select [(ngModel)]="form.category">
               @for (cat of categories.slice(1); track cat) {
-                <option [value]="cat">{{ categoryIcon(cat) }} {{ cat }}</option>
+                <option [value]="cat">{{ cat }}</option>
               }
             </select>
             <button class="btn btn-ghost btn-sm" type="button" (click)="toggleCustomCategory(true)">+ New</button>
@@ -54,7 +54,7 @@
   <div class="filter-chips">
     @for (cat of categories; track cat) {
       <button class="chip" [class.chip-primary]="selectedCategory() === cat" (click)="setCategory(cat)">
-        @if (cat !== 'All') { {{ categoryIcon(cat) }}  }{{ cat }}
+        @if (cat !== 'All') { <app-icon [name]="categoryMeta(cat).icon" [size]="15" /> }{{ cat }}
       </button>
     }
   </div>
@@ -62,10 +62,13 @@
   <!-- ── Grouped recs ── -->
   @for (group of groupedByCat(); track group[0]) {
     <div class="rec-group">
-      <h3 class="rec-group-title">{{ categoryIcon(group[0]) }} {{ group[0] }}</h3>
+      <h3 class="rec-group-title">
+        <app-icon [name]="categoryMeta(group[0]).icon" [size]="17" [style.color]="categoryMeta(group[0]).color" />
+        {{ group[0] }}
+      </h3>
       <div class="rec-cards">
         @for (rec of group[1]; track rec.id) {
-          <div class="rec-card card">
+          <div class="rec-card card" [style.border-left-color]="categoryMeta(group[0]).color">
             <div class="rec-card-header">
               <div class="rec-title">{{ rec.title }}</div>
               @if (canDelete(rec)) {
@@ -76,7 +79,7 @@
               <p class="rec-desc">{{ rec.description }}</p>
             }
             @if (rec.extra) {
-              <p class="rec-extra">💡 {{ rec.extra }}</p>
+              <p class="rec-extra"><app-icon name="sparkle" [size]="13" /> {{ rec.extra }}</p>
             }
           </div>
         }
@@ -87,7 +90,7 @@
   <!-- ── Empty state ── -->
   @if (allRecs().length === 0) {
     <div class="recs-empty">
-      <div class="recs-empty-icon">🌸</div>
+      <div class="recs-empty-icon"><app-icon name="recs" [size]="40" /></div>
       <h3>No recs yet</h3>
       <p>Share the spots, eats, and tips you're excited about — they'll show up here for everyone on the trip.</p>
       <button class="btn btn-primary" (click)="showForm.set(true)">+ Add the first rec</button>
