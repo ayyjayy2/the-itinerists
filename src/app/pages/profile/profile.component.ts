@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 const EMOJI_OPTIONS = [
   '🌸','🌿','✨','🦋','🐘','🌼','🍑','🌺','🦊','🐬',
@@ -13,7 +14,7 @@ const EMOJI_OPTIONS = [
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
