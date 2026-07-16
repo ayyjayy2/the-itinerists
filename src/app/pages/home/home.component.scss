@@ -82,16 +82,70 @@
   .hero-people-label { font-size: 0.8rem; font-weight: 800; opacity: 0.9; }
 }
 
-// ── No-trip CTA ───────────────────────────────────────────────────────────────
-.no-trip-cta {
-  display: flex; align-items: center; gap: 0.85rem;
-  text-decoration: none; color: inherit;
+// ── Zero-trips welcome (designed empty state) ─────────────────────────────────
+.welcome { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.welcome-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(150deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  border-radius: var(--radius-lg);
+  padding: 30px 22px 26px;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+
+  app-brand { --primary-dark: #fff; color: #fff; }
+  ::ng-deep .wm-getaway { color: #fff; }
+  ::ng-deep .wm-club { color: #fff; opacity: 0.85; }
+
+  .welcome-kicker { font-size: 0.95rem; font-weight: 800; opacity: 0.9; margin-top: 14px; }
+  .welcome-title { font-size: 1.7rem; line-height: 1.15; margin-top: 4px; }
+}
+
+.welcome-actions { display: flex; flex-direction: column; gap: 10px; }
+
+.welcome-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 15px 16px;
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: var(--text);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
   &:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-  .no-trip-icon { display: inline-flex; color: var(--primary-dark); }
-  strong { display: block; }
-  p { margin: 0.15rem 0 0; color: var(--text-muted); font-size: 0.9rem; }
-  .no-trip-arrow { margin-left: auto; font-size: 1.3rem; color: var(--primary); }
+
+  .wc-icon {
+    width: 44px; height: 44px; flex: none; border-radius: 14px;
+    display: grid; place-items: center;
+    &.sage { background: var(--primary-tint); color: var(--primary-dark); }
+    &.lav  { background: var(--lavender-tint); color: var(--lavender-dark); }
+  }
+  .wc-body { flex: 1; min-width: 0; display: flex; flex-direction: column;
+    .wc-title { font-weight: 800; font-size: 0.98rem; }
+    .wc-sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 1px; }
+  }
+  .wc-arrow { color: var(--text-muted); font-size: 1.4rem; flex: none; }
+}
+
+.welcome-teaser {
+  .teaser-title {
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin: 0.25rem 4px 0.7rem;
+  }
+  .teaser-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .teaser-tile {
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 8px;
+    .teaser-ic { display: inline-flex; color: var(--primary-dark); }
+    .teaser-label { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-align: center; }
+  }
 }
 
 // ── Section heads ─────────────────────────────────────────────────────────────

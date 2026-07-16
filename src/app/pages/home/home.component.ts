@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, computed, signal, effect } from '
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { BrandComponent } from '../../shared/brand/brand.component';
 import { UserService } from '../../services/user.service';
 import { FlightCountdownService } from '../../services/flight-countdown.service';
 import { FlightsService } from '../../services/flights.service';
@@ -15,7 +16,7 @@ import { TripDoc, ActivityLogEntry } from '../../models/trip.models';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, RouterLink, IconComponent],
+  imports: [CommonModule, RouterLink, IconComponent, BrandComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -42,6 +43,16 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   /** The user's trips, for the switcher row. */
   readonly trips = signal<TripDoc[]>([]);
+
+  /** Feature teaser shown on the zero-trips welcome state. */
+  readonly teaserFeatures = [
+    { icon: 'itinerary', label: 'Itinerary' },
+    { icon: 'finance',   label: 'Shared budget' },
+    { icon: 'flights',   label: 'Flights' },
+    { icon: 'stays',     label: 'Stays' },
+    { icon: 'packing',   label: 'Packing' },
+    { icon: 'outfits',   label: 'Outfits' },
+  ];
 
   constructor() {
     // Load weather for the active trip so the glance card can show it.
