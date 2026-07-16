@@ -44,12 +44,12 @@ export class TripSettingsComponent {
 
   /** Pages a member may hide from their own navigation (core pages stay). */
   readonly hideablePages: HideablePage[] = [
-    { key: 'flights',        label: 'Flights',     icon: '✈️' },
-    { key: 'accommodations', label: 'Stays',       icon: '🏨' },
-    { key: 'expenses',       label: 'My Expenses', icon: '🧾' },
-    { key: 'recs',           label: 'Recs',        icon: '🌸' },
-    { key: 'packing',        label: 'Packing',     icon: '🧳' },
-    { key: 'outfits',        label: 'Outfits',     icon: '👗' },
+    { key: 'flights',        label: 'Flights',     icon: 'flights' },
+    { key: 'accommodations', label: 'Stays',       icon: 'stays' },
+    { key: 'expenses',       label: 'My Expenses', icon: 'expenses' },
+    { key: 'recs',           label: 'Recs',        icon: 'recs' },
+    { key: 'packing',        label: 'Packing',     icon: 'packing' },
+    { key: 'outfits',        label: 'Outfits',     icon: 'outfits' },
   ];
 
   // Editable form fields, seeded from the active trip.
@@ -175,12 +175,13 @@ export class TripSettingsComponent {
     }
   }
 
-  activityIcon(e: ActivityLogEntry): string {
+  /** Colour tone for the activity-log status dot (replaces status emoji). */
+  activityTone(e: ActivityLogEntry): string {
     switch (e.action) {
-      case 'member_removed':  return '🔴';
-      case 'member_left':     return '🚪';
-      case 'member_restored': return '♻️';
-      default:                return '🟢';
+      case 'member_removed':  return 'danger';
+      case 'member_left':     return 'muted';
+      case 'member_restored': return 'accent';
+      default:                return 'ok';
     }
   }
 
