@@ -118,7 +118,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     return `${fmt(t.startDate)} – ${fmt(t.endDate)}, ${year}`;
   });
 
-  /** Countdown as a big number + caption (bold countdown hero). */
+  /**
+   * Countdown as a single big Caprasimo phrase (e.g. "76 days") — matches the
+   * prototype where the number and "days" share the same display font/size.
+   * `big` is the display phrase; `small` is only used for non-count states.
+   */
   readonly heroCountdown = computed(() => {
     const t = this.activeTrip();
     const now = new Date(this.now());
@@ -129,11 +133,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     const diff  = start.getTime() - now.getTime();
     if (diff <= 0) {
       const rem = end.getTime() - now.getTime();
-      if (rem > 0) { const d = Math.ceil(rem / 86_400_000); return { big: String(d), small: `day${d !== 1 ? 's' : ''} left 🌿` }; }
+      if (rem > 0) { const d = Math.ceil(rem / 86_400_000); return { big: `${d} day${d !== 1 ? 's' : ''} left`, small: '' }; }
       return { big: '', small: 'Trip complete 🌿' };
     }
     const days = Math.floor(diff / 86_400_000);
-    return { big: String(days), small: `day${days !== 1 ? 's' : ''} to go` };
+    return { big: `${days} day${days !== 1 ? 's' : ''}`, small: '' };
   });
 
   // ── At a glance ────────────────────────────────────────────────────────────
@@ -159,6 +163,39 @@ export class HomeComponent implements OnInit, OnDestroy {
   });
 
   readonly expenseCount = computed(() => this.financeService.entries().length);
+
+  /**
+   * Current user's net balance for the trip: positive = owed to you, negative =
+   * you owe. A glance summary in the trip's currency (the Finance page is the
+   * authoritative, settlement-aware view).
+   */
+  readonly financeNet = computed<number | null>(() => {
+    const entries = this.financeService.entries();
+    const me = this.currentUser()?.name;
+    if (!me || !entries.length) return null;
+    const memberNames = this.members().map(m => m.displayName);
+    let net = 0;
+    for (const e of entries) {
+      const people = e.splitAmong === 'All'
+        ? memberNames
+        : e.splitAmong.split(',').map(s => s.trim()).filter(Boolean);
+      if (!people.length) continue;
+      const share = e.amount / people.length;
+      const iAmIn = people.includes(me);
+      if (e.paidBy === me)      net += e.amount - (iAmIn ? share : 0); // others owe me
+      else if (iAmIn)          net -= share;                          // I owe the payer
+    }
+    return net;
+  });
+
+  money(amount: number): string {
+    const cur = this.activeTrip()?.currency || 'USD';
+    try {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur, maximumFractionDigits: 2 }).format(amount);
+    } catch {
+      return `${amount.toFixed(2)} ${cur}`;
+    }
+  }
 
   readonly weatherGlance = computed(() => {
     const t = this.activeTrip();
