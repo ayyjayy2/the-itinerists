@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
 import { BrandComponent } from '../../shared/brand/brand.component';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 /**
  * Post-auth onboarding prompt (TP-25). Shown when a signed-in user has no trips
@@ -13,7 +14,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
  */
 @Component({
   selector: 'app-get-started',
-  imports: [BrandComponent, CommonModule, FormsModule],
+  imports: [BrandComponent, IconComponent, CommonModule, FormsModule],
   templateUrl: './get-started.component.html',
   styleUrl: './get-started.component.scss',
 })

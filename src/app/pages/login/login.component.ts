@@ -7,10 +7,11 @@ import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-login',
-  imports: [BrandComponent, CommonModule, FormsModule, RouterLink],
+  imports: [BrandComponent, IconComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
