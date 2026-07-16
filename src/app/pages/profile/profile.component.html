@@ -1,5 +1,7 @@
 <div class="page-container">
-  <h1>Profile Settings</h1>
+  <div class="page-header">
+    <h2><app-icon name="profile" [size]="22" /> Profile Settings</h2>
+  </div>
 
   @if (firestoreUser(); as user) {
 
@@ -62,8 +64,8 @@
     <div class="card section-card">
       <h2>Account</h2>
       <div class="account-actions">
-        <button class="btn btn-secondary" (click)="openUsernameModal()">Change Username</button>
-        <button class="btn btn-secondary" (click)="openPasswordModal()">Change Password</button>
+        <button class="btn btn-ghost" (click)="openUsernameModal()">Change Username</button>
+        <button class="btn btn-ghost" (click)="openPasswordModal()">Change Password</button>
       </div>
     </div>
 
