@@ -52,11 +52,11 @@
         <!-- Card view -->
         <div class="car-card card">
           <div class="car-header">
-            <div class="car-company">
-              <span class="mode-ic"><app-icon [name]="modeIcon(car.mode)" [size]="18" /></span>
-              {{ car.company }}
-            </div>
-            <div class="car-header-right">
+            <div class="car-title-block">
+              <div class="car-company">
+                <span class="mode-ic"><app-icon [name]="modeIcon(car.mode)" [size]="18" /></span>
+                {{ car.company }}
+              </div>
               <div class="car-header-chips">
                 <span class="chip chip-primary">{{ car.mode || 'Rental Car' }}</span>
                 @if (car.confirmationNumber) {
@@ -66,8 +66,8 @@
                   <span class="chip chip-muted"><app-icon name="pin" [size]="12" /> {{ car.location }}</span>
                 }
               </div>
-              <button class="btn btn-ghost btn-sm edit-btn" (click)="startEdit(i)"><app-icon name="edit" [size]="15" /> Edit</button>
             </div>
+            <button class="btn btn-ghost btn-sm edit-btn" (click)="startEdit(i)"><app-icon name="edit" [size]="15" /> Edit</button>
           </div>
 
           @if (car.rentalName || car.passengers) {
