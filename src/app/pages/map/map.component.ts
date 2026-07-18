@@ -126,6 +126,20 @@ function customPinIcon(color: string): L.DivIcon {
   });
 }
 
+function transportPinIcon(color: string): L.DivIcon {
+  // Teardrop pin with a small vehicle glyph (body + wheels) in white.
+  return L.divIcon({
+    className: '',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 20 12 20S24 21 24 12C24 5.37 18.63 0 12 0z"
+        fill="${color}" stroke="white" stroke-width="1.5"/>
+      <rect x="7" y="7.5" width="10" height="6.5" rx="1.6" fill="white"/>
+      <circle cx="9.3" cy="15.2" r="1.4" fill="white"/><circle cx="14.7" cy="15.2" r="1.4" fill="white"/>
+    </svg>`,
+    iconSize: [24, 32], iconAnchor: [12, 32], popupAnchor: [0, -34],
+  });
+}
+
 
 /** One row in the locations list below the map (mirrors a map marker). */
 interface LocationEntry {
@@ -133,7 +147,7 @@ interface LocationEntry {
   name: string;
   detail: string;
   color: string;
-  type: 'itinerary' | 'stay' | 'flight' | 'pin';
+  type: 'itinerary' | 'stay' | 'flight' | 'pin' | 'transport';
   num?: number;                                  // itinerary sequence when a day is selected
 }
 
@@ -215,11 +229,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private markerByKey = new Map<string, L.Marker>();
 
   private map: L.Map | null = null;
-  private flightLayer = L.layerGroup();
-  private routeLayer  = L.layerGroup();
-  private accomLayer  = L.layerGroup();
-  private itinLayer   = L.layerGroup();
-  private customLayer = L.layerGroup();
+  private flightLayer    = L.layerGroup();
+  private routeLayer     = L.layerGroup();
+  private accomLayer     = L.layerGroup();
+  private itinLayer      = L.layerGroup();
+  private customLayer    = L.layerGroup();
+  private transportLayer = L.layerGroup();
 
   private geocodedLocations = new Map<string, { lat: number; lng: number }>();
   // Only successful geocodes are stored here (no null caching)
@@ -305,6 +320,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.accomLayer.addTo(this.map);
     this.itinLayer.addTo(this.map);
     this.customLayer.addTo(this.map);
+    this.transportLayer.addTo(this.map);
 
     await this.waitForData();
     if (this.destroyed) return;
@@ -465,6 +481,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     for (const a of data.accommodations ?? []) add(a.address, dest);
     // Flights: departure and arrival airports (no destination context)
     for (const f of data.flights ?? []) { add(f.from, ''); add(f.to, ''); }
+    // Transportation: pick-up / drop-off (or depart / arrive) locations
+    for (const t of data.rentalCar ?? []) { add(t.pickupLocation, dest); add(t.dropoffLocation, dest); }
 
     return [...byLoc].map(([loc, ctx]) => ({ loc, ctx }));
   }
@@ -526,6 +544,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     const entries: LocationEntry[] = [];
     this.updateItinMarkers(entries);   // itinerary first — it drives fitBounds
     this.updateAccomMarkers(entries);
+    this.updateTransportMarkers(entries);
     this.updateFlightMarkers(entries);
     this.updateRouteLines();
     this.updateCustomMarkers(entries);
@@ -730,6 +749,54 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private updateTransportMarkers(entries: LocationEntry[]): void {
+    if (!this.map) return;
+    this.transportLayer.clearLayers();
+    const data = this.dataService.data();
+    if (!data) return;
+
+    const day   = this.selectedDay();
+    const color = CAT_COLOR['transport'];
+
+    for (const t of data.rentalCar ?? []) {
+      if (!t.company) continue;
+      const isVehicle = !t.mode || t.mode === 'Rental Car' || t.mode === 'Rideshare';
+      const legs = [
+        { k: 'pick', loc: t.pickupLocation,  date: t.pickupDate,  time: t.pickupTime,  verb: isVehicle ? 'Pick-up' : 'Depart' },
+        { k: 'drop', loc: t.dropoffLocation, date: t.dropoffDate, time: t.dropoffTime, verb: isVehicle ? 'Drop-off' : 'Arrive' },
+      ];
+      for (const leg of legs) {
+        if (!leg.loc) continue;
+        if (day && leg.date && leg.date !== day) continue;
+        const coords = this.geocodedLocations.get(leg.loc);
+        if (!coords) continue;
+
+        const popup = `
+          <div style="min-width:180px;max-width:230px;font-family:'Nunito',sans-serif;">
+            <div style="font-weight:800;font-size:13px;margin-bottom:6px;color:#1a4a2e;
+                        padding-bottom:5px;border-bottom:2px solid ${color};">
+              ${t.mode || 'Rental Car'} · ${t.company}
+            </div>
+            <div style="font-size:11px;color:#555;line-height:1.6;">
+              <b>${leg.verb}:</b> ${leg.loc}${leg.date ? '<br>' + this.formatDate(leg.date) + (leg.time ? ' · ' + leg.time : '') : ''}
+            </div>
+            ${t.notes ? `<div style="font-size:11px;color:#888;margin-top:4px;">${t.notes}</div>` : ''}
+          </div>`;
+
+        const key = `transport:${t.company}:${leg.k}`;
+        const marker = L.marker([coords.lat, coords.lng], { icon: transportPinIcon(color) })
+          .bindPopup(popup, { maxWidth: 240 });
+        marker.addTo(this.transportLayer);
+        this.markerByKey.set(key, marker);
+        entries.push({
+          id: key, type: 'transport', color,
+          name: `${leg.verb}: ${t.company}`,
+          detail: [t.mode || 'Rental Car', leg.loc].filter(Boolean).join(' · '),
+        });
+      }
+    }
+  }
+
   private updateCustomMarkers(entries: LocationEntry[]): void {
     if (!this.map) return;
     this.customLayer.clearLayers();
@@ -788,6 +855,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   focusLocation(entry: LocationEntry): void {
     const marker = this.markerByKey.get(entry.id);
     if (!marker || !this.map) return;
+    // The list sits below the full-size map, so scroll the map back into view.
+    document.getElementById('trip-map')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     const ll = marker.getLatLng();
     this.map.flyTo(ll, Math.max(this.map.getZoom(), 14), { duration: 0.6 });
     marker.openPopup();
