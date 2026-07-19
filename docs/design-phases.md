@@ -72,10 +72,19 @@ DP2-25 (#77), DP2-26 (#78), DP2-27 (#79), DP2-28 (#80), DP2-29 (#81), DP2-30 (#8
 To restore Phase 2 as the *live* site later: `git checkout design-phase-2`, `npm run build`,
 `firebase deploy --only hosting` (or deploy to a persistent preview channel).
 
+---
+
+## After Phase 2 — feature work (not a design phase)
+
+Work merged **after** the `design-phase-2` tag is **functional feature work**, not more visual
+redesign, so it's logged separately in **`docs/feature-log.md`** (Milestone 1: Map &
+Transportation, PRs #84–#93). The `design-phase-2` tag stays put as the clean visual-redesign
+boundary. If/when the next *visual* redesign starts, it becomes Design Phase 3 with its own tag.
+
 ### Convention going forward
 - Every commit **after** the `design-phase-1` tag and **before** the `design-phase-2` tag is
-  Design Phase 2. Git makes this unambiguous: `git log design-phase-1..HEAD` lists exactly the
-  Phase 2 commits.
+  Design Phase 2. Git makes this unambiguous: `git log design-phase-1..design-phase-2` lists exactly
+  the Phase 2 commits.
 - Keep story PRs (`TP-##` / a `DP2-##` prefix if we want phase-explicit branches) listed above as
   they merge, so there's a human-readable index too.
 - Freeze each future phase with a `design-phase-N` tag + GitHub Release the same way.
