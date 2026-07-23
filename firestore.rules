@@ -83,9 +83,11 @@ service cloud.firestore {
       allow read, write: if isSignedIn();
     }
 
-    // ── Legacy per-user aggregates keyed by name (any signed-in user) ───────
-    match /userExpenses/{name} {
-      allow read, write: if isSignedIn();
+    // ── Per-user "My Expenses" — private to the owner ──────────────────────
+    // Keyed by uid; only the signed-in owner may read/write (same pattern as
+    // userTrips). The shared trip finance lives at trips/{tripId}/finance.
+    match /userExpenses/{userId} {
+      allow read, write: if isSignedIn() && userId == uid();
     }
 
     // ── Trips and their sub-collections ────────────────────────────────────

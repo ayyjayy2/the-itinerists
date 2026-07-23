@@ -19,13 +19,16 @@ export class ExpensesService {
 
   init(): void {
     const user = this.userService.currentUser();
-    if (!user) return;
+    if (!user?.uid) return;
 
     // Clean up any existing listener before creating a new one
     this._unsubscribe?.();
 
     const username  = user.name;
-    const docRef    = doc(this.firestore, 'userExpenses', username);
+    // Firestore doc is keyed by uid and owner-gated (private to this user).
+    // localStorage keys stay name-based so the seed-from-backup path below can
+    // still recover any locally-cached expenses into the uid-keyed doc.
+    const docRef    = doc(this.firestore, 'userExpenses', user.uid);
     const localKey  = STORAGE_KEY_PREFIX + username;
     const backupKey = BACKUP_KEY_PREFIX + username;
 
@@ -153,12 +156,12 @@ export class ExpensesService {
 
   private save(items: Expense[]): void {
     const user = this.userService.currentUser();
-    if (!user) return;
+    if (!user?.uid) return;
     const backupKey = BACKUP_KEY_PREFIX + user.name;
     // Always write to localStorage immediately so new additions survive Firestore errors
     this.writeBackup(backupKey, items);
     this.errorLogger.trackWrite();
-    setDoc(doc(this.firestore, 'userExpenses', user.name), { items })
+    setDoc(doc(this.firestore, 'userExpenses', user.uid), { items })
       .catch(err => {
         console.error('[Expenses] Failed to save:', err);
         this.errorLogger.logError(err, 'firebase_error');
