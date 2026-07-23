@@ -42,7 +42,7 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
   (username → synthetic email `username@trip-planner.local`).
 - **Firebase project:** `trip-planner-ayyjayy2`. Web config lives in the app env + repeated in
   the scratchpad scripts.
-- **Repo:** `ayyjayy2/trip-planner` (private). Default branch `master`.
+- **Repo:** `ayyjayy2/getaway-club` (private; formerly `trip-planner`). Default branch `master`.
 - **Data model:** `trips/{tripId}` + per-trip sub-collections (members, itinerary, finance, stays,
   recs, cars, pins, flights, outfits, dayLabels, packing, packingSuggestions, invites,
   activityLog); `userTrips/{uid}` index; `inviteIndex/{code}` global lookup. Plus top-level

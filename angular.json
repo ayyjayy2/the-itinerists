@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "trip-planner": {
+    "getaway-club": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,7 +20,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/trip-planner",
+            "outputPath": "dist/getaway-club",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -76,10 +76,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "trip-planner:build:production"
+              "buildTarget": "getaway-club:build:production"
             },
             "development": {
-              "buildTarget": "trip-planner:build:development"
+              "buildTarget": "getaway-club:build:development"
             }
           },
           "defaultConfiguration": "development"
