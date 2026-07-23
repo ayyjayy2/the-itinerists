@@ -43,6 +43,7 @@ async function seed() {
       setDoc(doc(db, 'trips', 'T', 'itinerary', 'i1'), { title: 'Day 1' }),
       setDoc(doc(db, 'trips', 'T', 'packing', 'bob'),  { items: [] }),
       setDoc(doc(db, 'trips', 'T', 'packingSuggestions', 's1'), { from: 'bob', to: 'alice' }),
+      setDoc(doc(db, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob'), { dataUrl: 'data:x', ownerUid: 'bob', date: '2026-01-01' }),
       setDoc(doc(db, 'trips', 'T', 'invites', 'CODE1'), { tripId: 'T', usedBy: [] }),
       setDoc(doc(db, 'inviteIndex', 'CODE1'), { tripId: 'T', expiresAt: 9999999999999 }),
       setDoc(doc(db, 'userTrips', 'alice'), { tripIds: ['T'] }),
@@ -128,6 +129,19 @@ await t('anon reads geocache', 'deny', () => getDoc(doc(anon, 'geocache', 'g1'))
 await t('signed-in writes geocache', 'allow', () => setDoc(doc(bob, 'geocache', 'g2'), { x: 2 }));
 await t('anon creates _appLogs', 'allow', () => setDoc(doc(anon, '_appLogs', 'l2'), { m: 'y' }));
 await t('anon reads _appLogs', 'deny', () => getDoc(doc(anon, '_appLogs', 'l1')));
+
+console.log('\nOutfit photos (owner-private)');
+await t('owner reads own outfit photo', 'allow', () => getDoc(doc(bob, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
+await t('member reads another member photo', 'deny', () => getDoc(doc(alice, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
+await t('non-member reads a photo', 'deny', () => getDoc(doc(carol, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
+await t('anon reads a photo', 'deny', () => getDoc(doc(anon, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
+await t('owner creates own photo', 'allow', () => setDoc(doc(alice, 'trips', 'T', 'outfitPhotos', '2026-01-02_alice'), { dataUrl: 'data:y', ownerUid: 'alice', date: '2026-01-02' }));
+await t('create photo with spoofed ownerUid', 'deny', () => setDoc(doc(alice, 'trips', 'T', 'outfitPhotos', '2026-01-02_alice'), { dataUrl: 'data:y', ownerUid: 'bob', date: '2026-01-02' }));
+await t('non-member creates a photo', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'outfitPhotos', '2026-01-02_carol'), { dataUrl: 'data:z', ownerUid: 'carol', date: '2026-01-02' }));
+await t('owner updates own photo', 'allow', () => updateDoc(doc(bob, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob'), { dataUrl: 'data:new' }));
+await t('member updates another member photo', 'deny', () => updateDoc(doc(alice, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob'), { dataUrl: 'data:hack' }));
+await t('owner deletes own photo', 'allow', () => deleteDoc(doc(bob, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
+await t('non-member deletes a photo', 'deny', () => deleteDoc(doc(carol, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
 
 await testEnv.cleanup();
 console.log(`\n${fail === 0 ? '✅' : '❌'} rules tests: ${pass} passed, ${fail} failed`);

@@ -109,13 +109,19 @@ export class OutfitsComponent implements OnInit {
       }
     });
 
-    // Eagerly resolve stored outfit photos from Firestore
+    // Eagerly resolve the current user's own stored outfit photos from Firestore.
+    // Photos are owner-private, so we only ever fetch our own (and the template
+    // only renders our own).
     effect(() => {
-      const stored = this.outfitsService.outfits().filter(o => o.photoUrl === 'stored');
+      const me     = this.currentUser();
+      const tripId = this.tripService.activeTrip()?.id;
+      if (!me?.uid || !tripId) return;
+      const stored = this.outfitsService.outfits()
+        .filter(o => o.photoUrl === 'stored' && o.user === me.name);
       for (const o of stored) {
-        const key = `${o.date}_${o.user}`;
+        const key = `${o.date}_${me.name}`;
         if (!this.photoCache()[key]) {
-          this.photoService.getPhoto(o.date, o.user).then(url => {
+          this.photoService.getPhoto(tripId, o.date, me.uid).then(url => {
             if (url) this.ngZone.run(() =>
               this.photoCache.update(c => ({ ...c, [key]: url }))
             );
@@ -236,11 +242,12 @@ export class OutfitsComponent implements OnInit {
   removeItem(i: number): void { this.editForm.items.splice(i, 1); }
 
   uploadPhoto(event: Event, date: string): void {
-    const user = this.currentUser();
-    if (!user) return;
+    const user   = this.currentUser();
+    const tripId = this.tripService.activeTrip()?.id;
+    if (!user?.uid || !tripId) return;
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
-    this.photoService.upload(file, date, user.name).then(url => {
+    this.photoService.upload(tripId, date, user.uid, file).then(url => {
       this.ngZone.run(() => {
         const key = `${date}_${user.name}`;
         this.photoCache.update(c => ({ ...c, [key]: url }));
