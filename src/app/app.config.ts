@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideFirebaseApp, initializeApp, getApp } from '@angular/fire/app';
-import { provideFirestore, initializeFirestore, memoryLocalCache } from '@angular/fire/firestore';
+import { provideFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from '@angular/fire/firestore';
 import { provideStorage, getStorage } from '@angular/fire/storage';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 
@@ -18,7 +18,10 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => initializeFirestore(getApp(), {
-      localCache: memoryLocalCache(),
+      // Durable offline cache (IndexedDB): offline writes are queued to disk and
+      // survive reloads/crashes, then auto-sync on reconnect. Cold-start offline
+      // still shows last-synced data. Multi-tab manager keeps tabs consistent.
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
     })),
     provideStorage(() => getStorage()),
     provideAuth(() => getAuth()),
