@@ -6,6 +6,7 @@ import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 
 const EMOJI_OPTIONS = [
   '🌸','🌿','✨','🦋','🐘','🌼','🍑','🌺','🦊','🐬',
@@ -145,11 +146,16 @@ export class ProfileComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
+  /** Live password-requirement checklist for the change-password form. */
+  get passwordChecklist() {
+    return passwordRules(this.newPassword);
+  }
+
   async changePassword(): Promise<void> {
     this.passwordError.set('');
     this.passwordSuccess.set(false);
-    if (this.newPassword.length < 6) {
-      this.passwordError.set('New password must be at least 6 characters.'); return;
+    if (!isPasswordValid(this.newPassword)) {
+      this.passwordError.set(passwordProblems(this.newPassword)); return;
     }
     if (this.newPassword !== this.confirmPassword) {
       this.passwordError.set('Passwords do not match.'); return;
