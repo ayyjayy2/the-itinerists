@@ -6,6 +6,7 @@ import { provideFirebaseApp, initializeApp, getApp } from '@angular/fire/app';
 import { provideFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from '@angular/fire/firestore';
 import { provideStorage, getStorage } from '@angular/fire/storage';
 import { provideAuth, getAuth } from '@angular/fire/auth';
+import { provideAppCheck, initializeAppCheck, ReCaptchaV3Provider } from '@angular/fire/app-check';
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -25,6 +26,16 @@ export const appConfig: ApplicationConfig = {
     })),
     provideStorage(() => getStorage()),
     provideAuth(() => getAuth()),
+
+    // App Check (optional): activates only when RECAPTCHA_SITE_KEY is set in .env.
+    // Attests that requests come from the genuine app, blocking key abuse. Until a
+    // site key is configured this contributes no providers — a safe no-op.
+    ...(environment.recaptchaSiteKey
+      ? [provideAppCheck(() => initializeAppCheck(getApp(), {
+          provider: new ReCaptchaV3Provider(environment.recaptchaSiteKey),
+          isTokenAutoRefreshEnabled: true,
+        }))]
+      : []),
 
     { provide: ErrorHandler, useClass: AppErrorHandler },
 
