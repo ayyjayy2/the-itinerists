@@ -8,6 +8,7 @@ import { UserService } from '../../services/user.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 
 const EMOJI_OPTIONS = [
   '🌸','🌿','✨','🦋','🐘','🌼','🍑','🌺','🦊','🐬',
@@ -97,12 +98,17 @@ export class JoinComponent implements OnInit {
     this.color = color;
   }
 
+  /** Live password-requirement checklist for the template. */
+  get passwordChecklist() {
+    return passwordRules(this.password);
+  }
+
   async submit(): Promise<void> {
     this.error.set('');
 
     if (!this.displayName.trim()) { this.error.set('Please enter your name.'); return; }
     if (!this.username.trim())    { this.error.set('Please choose a username.'); return; }
-    if (this.password.length < 6) { this.error.set('Password must be at least 6 characters.'); return; }
+    if (!isPasswordValid(this.password)) { this.error.set(passwordProblems(this.password)); return; }
     if (this.password !== this.confirmPass) { this.error.set('Passwords do not match.'); return; }
 
     this.loading.set(true);
