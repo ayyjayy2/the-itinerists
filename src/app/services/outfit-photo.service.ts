@@ -47,9 +47,14 @@ export class OutfitPhotoService {
 
   uploading = signal(false);
 
-  private docKey(date: string, user: string) { return `${date}_${user}`; }
+  private docKey(date: string, uid: string) { return `${date}_${uid}`; }
 
-  async upload(file: File, date: string, userName: string): Promise<string> {
+  /**
+   * Upload the current user's outfit photo for a day. Stored owner-private at
+   * `trips/{tripId}/outfitPhotos/{date}_{uid}` with `ownerUid` so the security
+   * rules can gate read/write to the uploader alone.
+   */
+  async upload(tripId: string, date: string, uid: string, file: File): Promise<string> {
     this.cancelled = false;
     this.uploading.set(true);
     try {
@@ -58,26 +63,28 @@ export class OutfitPhotoService {
       const dataUrl = await blobToDataUrl(blob);
       if (this.cancelled) throw new Error('cancelled');
 
-      const key = this.docKey(date, userName);
+      const key = this.docKey(date, uid);
       await runInInjectionContext(this.injector, () =>
-        setDoc(doc(this.firestore, 'outfitPhotos', key), { dataUrl })
+        setDoc(doc(this.firestore, 'trips', tripId, 'outfitPhotos', key), { dataUrl, ownerUid: uid, date })
       );
-      this.cache.set(key, dataUrl);
+      this.cache.set(`${tripId}/${key}`, dataUrl);
       return dataUrl;
     } finally {
       this.ngZone.run(() => this.uploading.set(false));
     }
   }
 
-  async getPhoto(date: string, userName: string): Promise<string | null> {
-    const key = this.docKey(date, userName);
-    if (this.cache.has(key)) return this.cache.get(key)!;
+  /** Read the current user's own outfit photo for a day (owner-private). */
+  async getPhoto(tripId: string, date: string, uid: string): Promise<string | null> {
+    const key      = this.docKey(date, uid);
+    const cacheKey = `${tripId}/${key}`;
+    if (this.cache.has(cacheKey)) return this.cache.get(cacheKey)!;
     const snap = await runInInjectionContext(this.injector, () =>
-      getDoc(doc(this.firestore, 'outfitPhotos', key))
+      getDoc(doc(this.firestore, 'trips', tripId, 'outfitPhotos', key))
     );
     if (!snap.exists()) return null;
     const dataUrl = snap.data()['dataUrl'] as string;
-    this.cache.set(key, dataUrl);
+    this.cache.set(cacheKey, dataUrl);
     return dataUrl;
   }
 

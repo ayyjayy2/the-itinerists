@@ -87,9 +87,6 @@ service cloud.firestore {
     match /userExpenses/{name} {
       allow read, write: if isSignedIn();
     }
-    match /outfitPhotos/{key} {
-      allow read, write: if isSignedIn();
-    }
 
     // ── Trips and their sub-collections ────────────────────────────────────
     match /trips/{tripId} {
@@ -111,6 +108,18 @@ service cloud.firestore {
       match /invites/{code} {
         allow read:  if true;
         allow write: if isMember(tripId);
+      }
+
+      // Outfit photos: PRIVATE to the uploader. A trip member can read/write
+      // only their own photos (doc carries ownerUid); other members and
+      // outsiders get nothing. Kept out of the shared {sub}/{doc} allowlist
+      // below so this stricter rule is the only grant.
+      match /outfitPhotos/{photoId} {
+        allow read:   if isMember(tripId) && resource.data.ownerUid == uid();
+        allow create: if isMember(tripId) && request.resource.data.ownerUid == uid();
+        allow update: if isMember(tripId) && resource.data.ownerUid == uid()
+                                          && request.resource.data.ownerUid == uid();
+        allow delete: if isMember(tripId) && resource.data.ownerUid == uid();
       }
 
       // Collaborative + per-user trip data. Enumerated so the wildcard can't
