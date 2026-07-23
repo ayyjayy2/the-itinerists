@@ -48,6 +48,7 @@ async function seed() {
       setDoc(doc(db, 'inviteIndex', 'CODE1'), { tripId: 'T', expiresAt: 9999999999999 }),
       setDoc(doc(db, 'userTrips', 'alice'), { tripIds: ['T'] }),
       setDoc(doc(db, 'userTrips', 'bob'),   { tripIds: ['T'] }),
+      setDoc(doc(db, 'userExpenses', 'bob'), { items: [] }),
       setDoc(doc(db, 'geocache', 'g1'), { x: 1 }),
       setDoc(doc(db, '_appLogs', 'l1'), { m: 'hi' }),
     ]);
@@ -114,6 +115,14 @@ await t('read another userTrips', 'deny', () => getDoc(doc(carol, 'userTrips', '
 await t('write own userTrips', 'allow', () => setDoc(doc(bob, 'userTrips', 'bob'), { tripIds: ['T'] }));
 await t('write another userTrips', 'deny', () => updateDoc(doc(carol, 'userTrips', 'bob'), { tripIds: [] }));
 await t('admin writes another userTrips (member removal)', 'allow', () => updateDoc(doc(admin, 'userTrips', 'bob'), { tripIds: [] }));
+
+console.log('\nuserExpenses (owner-private)');
+await t('owner reads own expenses', 'allow', () => getDoc(doc(bob, 'userExpenses', 'bob')));
+await t('read another users expenses', 'deny', () => getDoc(doc(alice, 'userExpenses', 'bob')));
+await t('owner writes own expenses', 'allow', () => setDoc(doc(bob, 'userExpenses', 'bob'), { items: [] }));
+await t('write another users expenses', 'deny', () => setDoc(doc(alice, 'userExpenses', 'bob'), { items: [] }));
+await t('admin reads another users expenses', 'deny', () => getDoc(doc(admin, 'userExpenses', 'bob')));
+await t('anon reads expenses', 'deny', () => getDoc(doc(anon, 'userExpenses', 'bob')));
 
 console.log('\nData sub-collections');
 await t('member reads itinerary', 'allow', () => getDoc(doc(bob, 'trips', 'T', 'itinerary', 'i1')));
