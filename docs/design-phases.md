@@ -24,7 +24,7 @@ identity, desktop-sidebar layout, Nunito, cream/sage/pink/gold palette.
 - **Tag:** `design-phase-1`
 - **Boundary commit:** `0ef2426` — _refactor(recs): make Recs user-driven per trip (TP-28) (#51)_
 - **Scope:** all commits reachable from the `design-phase-1` tag (project start → `0ef2426`).
-- **GitHub Release:** https://github.com/ayyjayy2/trip-planner/releases/tag/design-phase-1
+- **GitHub Release:** https://github.com/ayyjayy2/getaway-club/releases/tag/design-phase-1
 - **Deployed live:** https://trip-planner-ayyjayy2.web.app (release 2026-07-14 19:59; build `Jul 14 @ 7:45 PM`).
 - **What's in it:** multi-trip architecture (TP-4…24), open signup + `/get-started` onboarding
   (TP-25), searchable currency picker (TP-26), Firestore security rules locked down & deployed
@@ -44,7 +44,7 @@ mobile app** direction (iOS-first, Android too, responsive across phone sizes �
 - **Tag:** `design-phase-2`
 - **Boundary commit:** `9f45063` — _fix(map): destination-aware geocoding (#82)_
 - **Scope:** every commit in `design-phase-1..design-phase-2` (i.e. `git log design-phase-1..design-phase-2`).
-- **GitHub Release:** https://github.com/ayyjayy2/trip-planner/releases/tag/design-phase-2
+- **GitHub Release:** https://github.com/ayyjayy2/getaway-club/releases/tag/design-phase-2
 - **Deployed live:** https://trip-planner-ayyjayy2.web.app
 
 **What's in it** — a top-to-bottom visual system + per-screen restyle:

@@ -9,7 +9,8 @@
     "rules": "storage.rules"
   },
   "hosting": {
-    "public": "dist/trip-planner/browser",
+    "site": "getaway-club",
+    "public": "dist/getaway-club/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
