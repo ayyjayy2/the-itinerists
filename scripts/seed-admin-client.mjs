@@ -18,7 +18,7 @@ const firebaseConfig = {
   appId:             '1:861993541272:web:e18a674f266db2ce543aed',
 };
 
-const EMAIL    = 'makaela@trip-planner.local';
+const EMAIL    = 'makaela@the-itinerists.local';
 const PASSWORD = 'AdminMj96!';
 
 const app  = initializeApp(firebaseConfig);
