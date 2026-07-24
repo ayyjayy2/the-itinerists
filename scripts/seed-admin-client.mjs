@@ -8,18 +8,24 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { readEnv } from './read-env.js';
 
+const env = readEnv();
 const firebaseConfig = {
-  apiKey:            'AIzaSyAhu_RR_cGScZm6GZ96tC_f_kn5Qhbgl3M',
-  authDomain:        'trip-planner-ayyjayy2.firebaseapp.com',
-  projectId:         'trip-planner-ayyjayy2',
-  storageBucket:     'trip-planner-ayyjayy2.firebasestorage.app',
-  messagingSenderId: '861993541272',
-  appId:             '1:861993541272:web:e18a674f266db2ce543aed',
+  apiKey:            env.FIREBASE_API_KEY,
+  authDomain:        env.FIREBASE_AUTH_DOMAIN,
+  projectId:         env.FIREBASE_PROJECT_ID,
+  storageBucket:     env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID,
+  appId:             env.FIREBASE_APP_ID,
 };
 
-const EMAIL    = 'makaela@the-itinerists.local';
-const PASSWORD = 'AdminMj96!';
+const EMAIL    = env.SEED_ADMIN_EMAIL;
+const PASSWORD = env.SEED_ADMIN_PASSWORD;
+if (!EMAIL || !PASSWORD) {
+  console.error('ERROR: SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD must be set in .env');
+  process.exit(1);
+}
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -67,7 +73,7 @@ async function main() {
     console.log('Firestore profile created.');
   }
 
-  console.log('\n✓ Done! Login with:  makaela / AdminMj96!');
+  console.log('\n✓ Done! Login with the credentials from .env');
   process.exit(0);
 }
 

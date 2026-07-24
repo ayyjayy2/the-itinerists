@@ -10,6 +10,7 @@
 
 const admin = require('firebase-admin');
 const path  = require('path');
+const { readEnv } = require('./read-env');
 
 const KEY_PATH = path.join(__dirname, 'serviceAccountKey.json');
 
@@ -20,8 +21,13 @@ admin.initializeApp({
 const auth = admin.auth();
 const db   = admin.firestore();
 
-const EMAIL    = 'makaela@the-itinerists.local';
-const PASSWORD = 'AdminMj96!';
+const env      = readEnv();
+const EMAIL    = env.SEED_ADMIN_EMAIL;
+const PASSWORD = env.SEED_ADMIN_PASSWORD;
+if (!EMAIL || !PASSWORD) {
+  console.error('ERROR: SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD must be set in .env');
+  process.exit(1);
+}
 
 async function main() {
   let uid;
@@ -62,7 +68,7 @@ async function main() {
     console.log('Firestore profile created.');
   }
 
-  console.log('\n✓ Admin user ready — login with: makaela / AdminMj96!');
+  console.log('\n✓ Admin user ready — login with the credentials from .env');
   await admin.app().delete();
 }
 
