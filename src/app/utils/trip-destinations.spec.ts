@@ -1,4 +1,4 @@
-import { tripSummary, tripDestinations, activeLeg } from './trip-destinations';
+import { tripSummary, tripDestinations, activeLeg, buildEditedDestinations } from './trip-destinations';
 import { TripDestination, TripDoc } from '../models/trip.models';
 
 const leg = (over: Partial<TripDestination> = {}): TripDestination => ({
@@ -86,5 +86,39 @@ describe('activeLeg', () => {
 
   it('returns the only leg for a single-destination trip', () => {
     expect(activeLeg([leg({ destination: 'Bali' })], '2020-01-01').destination).toBe('Bali');
+  });
+});
+
+describe('buildEditedDestinations', () => {
+  it('trims destination text and carries dates/currency', () => {
+    const [d] = buildEditedDestinations([
+      { destination: '  Paris, France  ', startDate: '2026-03-01', endDate: '2026-03-05', currency: 'EUR' },
+    ]);
+    expect(d).toEqual({ destination: 'Paris, France', startDate: '2026-03-01', endDate: '2026-03-05', currency: 'EUR' });
+  });
+
+  it('preserves coords when the destination text is unchanged', () => {
+    const original = leg({ destination: 'Rome, Italy', destinationCoords: { lat: 41.9, lng: 12.5 }, destinationPlaceId: 'p1' });
+    const [d] = buildEditedDestinations([
+      { destination: 'Rome, Italy', startDate: '2026-03-05', endDate: '2026-03-10', currency: 'EUR', original },
+    ]);
+    expect(d.destinationCoords).toEqual({ lat: 41.9, lng: 12.5 });
+    expect(d.destinationPlaceId).toBe('p1');
+  });
+
+  it('drops coords when the destination text changed', () => {
+    const original = leg({ destination: 'Rome, Italy', destinationCoords: { lat: 41.9, lng: 12.5 }, destinationPlaceId: 'p1' });
+    const [d] = buildEditedDestinations([
+      { destination: 'Milan, Italy', startDate: '2026-03-05', endDate: '2026-03-10', currency: 'EUR', original },
+    ]);
+    expect(d.destinationCoords).toBeUndefined();
+    expect(d.destinationPlaceId).toBeUndefined();
+  });
+
+  it('leaves a brand-new row (no original) without coords', () => {
+    const [d] = buildEditedDestinations([
+      { destination: 'Lisbon', startDate: '2026-03-10', endDate: '2026-03-15', currency: 'EUR' },
+    ]);
+    expect(d.destinationCoords).toBeUndefined();
   });
 });

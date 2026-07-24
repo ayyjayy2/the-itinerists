@@ -17,26 +17,76 @@
         <label>Trip name</label>
         <input type="text" [(ngModel)]="name" maxlength="80" />
       </div>
-      <div class="form-group">
-        <label>Destination</label>
-        <input type="text" [(ngModel)]="destination" maxlength="120" />
-      </div>
-      <div class="form-row">
+
+      <!-- Multi-destination toggle -->
+      <label class="multi-toggle" [class.locked]="multiToggleLocked">
+        <input type="checkbox" [checked]="multiDest" [disabled]="multiToggleLocked"
+               (change)="toggleMulti($any($event.target).checked)" />
+        <span class="multi-toggle-track"><span class="multi-toggle-thumb"></span></span>
+        <span class="multi-toggle-label">
+          Multiple destinations
+          <small>
+            @if (multiToggleLocked) { Remove destinations to switch back to one. }
+            @else { Give each stop its own dates and currency. }
+          </small>
+        </span>
+      </label>
+
+      @if (!multiDest) {
         <div class="form-group">
-          <label>Start date</label>
-          <input type="date" [(ngModel)]="startDate" />
+          <label>Destination</label>
+          <input type="text" [(ngModel)]="destination" maxlength="120" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Start date</label>
+            <input type="date" [(ngModel)]="startDate" />
+          </div>
+          <div class="form-group">
+            <label>End date</label>
+            <input type="date" [(ngModel)]="endDate" />
+          </div>
         </div>
         <div class="form-group">
-          <label>End date</label>
-          <input type="date" [(ngModel)]="endDate" />
+          <label>Currency</label>
+          <app-currency-select [(value)]="currency" />
         </div>
-      </div>
-      <div class="form-group">
-        <label>Primary currency</label>
-        <select [(ngModel)]="currency">
-          @for (c of currencies; track c.code) { <option [value]="c.code">{{ c.label }}</option> }
-        </select>
-      </div>
+      } @else {
+        @for (leg of destRows; track $index; let i = $index) {
+          <div class="dest-card">
+            <div class="dest-card-head">
+              <span class="dest-card-num">Destination {{ i + 1 }}</span>
+              @if (destRows.length > 1) {
+                <button type="button" class="dest-remove" (click)="removeDestination(i)" aria-label="Remove destination">
+                  <app-icon name="close" [size]="16" />
+                </button>
+              }
+            </div>
+            <div class="form-group">
+              <label>Destination</label>
+              <input type="text" [(ngModel)]="leg.destination" [name]="'dest' + i" maxlength="120" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Start date</label>
+                <input type="date" [(ngModel)]="leg.startDate" [name]="'start' + i" />
+              </div>
+              <div class="form-group">
+                <label>End date</label>
+                <input type="date" [(ngModel)]="leg.endDate" [name]="'end' + i" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <app-currency-select [(value)]="leg.currency" />
+            </div>
+          </div>
+        }
+        <button type="button" class="btn btn-ghost add-dest" (click)="addDestination()">
+          <app-icon name="plus" [size]="16" /> Add another destination
+        </button>
+      }
+
       <div class="form-actions">
         @if (savedOk()) { <span class="saved-tag"><app-icon name="check" [size]="14" /> Saved</span> }
         <button class="btn btn-primary" (click)="saveDetails()" [disabled]="saving()">
