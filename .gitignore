@@ -58,6 +58,9 @@ scripts/serviceAccountKey.json
 src/environments/environment.ts
 src/environments/environment.prod.ts
 
+# Generated version stamp (scripts/set-version.js — runs on npm install and build)
+src/version.ts
+
 # Firebase emulator logs
 firestore-debug.log
 ui-debug.log
