@@ -3,7 +3,7 @@ import { Auth, authState } from '@angular/fire/auth';
 import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
 import { TripUser, FirestoreUser } from '../models/trip.models';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { filter, firstValueFrom } from 'rxjs';
+import { filter, firstValueFrom, map, merge } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -13,6 +13,7 @@ export class UserService {
 
   private _firestoreUser   = signal<FirestoreUser | null>(null);
   private _authInitialized = signal(false);
+  private _userLoadError   = signal<Error | null>(null);
 
   readonly firestoreUser   = this._firestoreUser.asReadonly();
   readonly authInitialized = this._authInitialized.asReadonly();
@@ -29,10 +30,19 @@ export class UserService {
 
   readonly authReadyPromise: Promise<void>;
   private readonly currentUser$ = toObservable(this.currentUser);
+  private readonly userLoadError$ = toObservable(this._userLoadError);
 
+  // Rejects if the profile listener errors (e.g. rules/App Check denial) — callers
+  // show their error state instead of spinning forever on a user that never comes.
   waitForUser(): Promise<TripUser> {
     return firstValueFrom(
-      this.currentUser$.pipe(filter((u): u is TripUser => u !== null))
+      merge(
+        this.currentUser$.pipe(filter((u): u is TripUser => u !== null)),
+        this.userLoadError$.pipe(
+          filter((e): e is Error => e !== null),
+          map(e => { throw e; }),
+        ),
+      )
     );
   }
 
@@ -57,6 +67,14 @@ export class UserService {
             } else {
               this._firestoreUser.set(null);
             }
+            this._userLoadError.set(null);
+            if (!initialized) { initialized = true; this._authInitialized.set(true); resolveReady(); }
+          }, err => {
+            // A denied listen (rules, App Check) otherwise fails silently and the
+            // listener stops — surface it so waitForUser() rejects and guards unblock.
+            console.error(`[UserService] users/${firebaseUser.uid} listener error:`, err);
+            this._firestoreUser.set(null);
+            this._userLoadError.set(err);
             if (!initialized) { initialized = true; this._authInitialized.set(true); resolveReady(); }
           });
         });
