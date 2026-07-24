@@ -10,59 +10,78 @@
       <input type="text" [(ngModel)]="name" placeholder="e.g. Bali Girls Trip 2026" maxlength="80" />
     </div>
 
-    <div class="form-group">
-      <label>Destination</label>
-      <input type="text" [(ngModel)]="destination" placeholder="e.g. Bali, Indonesia" maxlength="120" />
-    </div>
+    <!-- Multi-destination toggle -->
+    <label class="multi-toggle">
+      <input type="checkbox" [checked]="multiDest" (change)="toggleMulti($any($event.target).checked)" />
+      <span class="multi-toggle-track"><span class="multi-toggle-thumb"></span></span>
+      <span class="multi-toggle-label">
+        Multiple destinations
+        <small>Give each stop its own dates and currency.</small>
+      </span>
+    </label>
 
-    <div class="form-row">
+    @if (!multiDest) {
+      <!-- ── Single destination ─────────────────────────────────────────── -->
       <div class="form-group">
-        <label>Start date</label>
-        <input type="date" [(ngModel)]="startDate" />
+        <label>Destination</label>
+        <input type="text" [(ngModel)]="destination" placeholder="e.g. Bali, Indonesia" maxlength="120" />
       </div>
-      <div class="form-group">
-        <label>End date</label>
-        <input type="date" [(ngModel)]="endDate" />
-      </div>
-    </div>
 
-    <div class="form-group">
-      <label>Primary currency</label>
-      <div class="currency-combo">
-        <input
-          type="text"
-          class="currency-input"
-          [value]="currencyOpen() ? currencyQuery() : selectedCurrencyLabel()"
-          (focus)="openCurrency()"
-          (input)="onCurrencyInput($any($event.target).value)"
-          (keydown)="onCurrencyKeydown($event)"
-          (blur)="closeCurrency()"
-          placeholder="Type to search currencies…"
-          autocomplete="off"
-          role="combobox"
-          [attr.aria-expanded]="currencyOpen()"
-        />
-        @if (currencyOpen()) {
-          <ul class="currency-list" role="listbox">
-            @for (c of filteredCurrencies(); track c.code; let i = $index) {
-              <li
-                class="currency-option"
-                role="option"
-                [class.active]="i === activeIndex()"
-                [class.selected]="c.code === currency"
-                [attr.aria-selected]="c.code === currency"
-                (mousedown)="$event.preventDefault(); selectCurrency(c.code)"
-              >
-                <span class="currency-code">{{ c.code }}</span>
-                <span class="currency-name">{{ c.name }}</span>
-              </li>
-            } @empty {
-              <li class="currency-empty">No currencies match “{{ currencyQuery() }}”.</li>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Start date</label>
+          <input type="date" [(ngModel)]="startDate" />
+        </div>
+        <div class="form-group">
+          <label>End date</label>
+          <input type="date" [(ngModel)]="endDate" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Currency</label>
+        <app-currency-select [(value)]="currency" />
+      </div>
+    } @else {
+      <!-- ── Multiple destinations ──────────────────────────────────────── -->
+      @for (leg of destinations; track $index; let i = $index) {
+        <div class="dest-card">
+          <div class="dest-card-head">
+            <span class="dest-card-num">Destination {{ i + 1 }}</span>
+            @if (destinations.length > 1) {
+              <button type="button" class="dest-remove" (click)="removeDestination(i)" aria-label="Remove destination">
+                <app-icon name="close" [size]="16" />
+              </button>
             }
-          </ul>
-        }
-      </div>
-    </div>
+          </div>
+
+          <div class="form-group">
+            <label>Destination</label>
+            <input type="text" [(ngModel)]="leg.destination" [name]="'dest' + i" placeholder="e.g. Paris, France" maxlength="120" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Start date</label>
+              <input type="date" [(ngModel)]="leg.startDate" [name]="'start' + i" />
+            </div>
+            <div class="form-group">
+              <label>End date</label>
+              <input type="date" [(ngModel)]="leg.endDate" [name]="'end' + i" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Currency</label>
+            <app-currency-select [(value)]="leg.currency" />
+          </div>
+        </div>
+      }
+
+      <button type="button" class="btn btn-ghost add-dest" (click)="addDestination()">
+        <app-icon name="plus" [size]="16" /> Add another destination
+      </button>
+    }
 
     @if (error()) {
       <div class="alert-error">{{ error() }}</div>

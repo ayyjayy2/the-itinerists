@@ -7,19 +7,35 @@ import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
 import { AuthService } from './auth.service';
 import {
-  TripDoc, TripMember, UserTripsDoc, FirestoreUser, ActivityLogEntry, ActivityAction,
+  TripDoc, TripDestination, TripMember, UserTripsDoc, FirestoreUser, ActivityLogEntry, ActivityAction,
 } from '../models/trip.models';
 
 /** Fields collected by the Create Trip form (TP-13). */
 export interface CreateTripInput {
   name: string;
-  destination: string;
+  destination: string;          // primary destination (mirrors destinations[0])
   destinationPlaceId?: string;
   destinationCoords?: { lat: number; lng: number };
-  startDate: string;   // YYYY-MM-DD
-  endDate: string;     // YYYY-MM-DD
-  currency: string;    // ISO code, e.g. "USD"
+  startDate: string;   // YYYY-MM-DD (overall)
+  endDate: string;     // YYYY-MM-DD (overall)
+  currency: string;    // ISO code, e.g. "USD" (primary)
   coverPhotoUrl?: string;
+  // Per-leg destinations (multi-destination). When omitted, a single leg is
+  // derived from the flat fields above so every trip stores a destinations array.
+  destinations?: TripDestination[];
+}
+
+/** Derive one destination leg from the flat create-trip fields. */
+function buildLeg(input: CreateTripInput): TripDestination {
+  const leg: TripDestination = {
+    destination: input.destination.trim(),
+    startDate: input.startDate,
+    endDate: input.endDate,
+    currency: input.currency,
+  };
+  if (input.destinationPlaceId) leg.destinationPlaceId = input.destinationPlaceId;
+  if (input.destinationCoords)  leg.destinationCoords  = input.destinationCoords;
+  return leg;
 }
 
 /**
@@ -131,9 +147,17 @@ export class TripService {
       const tripId  = tripRef.id;
       const now     = Date.now();
 
+      // Every trip stores a destinations array. Multi-destination trips pass one
+      // in; single-destination trips get a one-leg array derived from the flat
+      // fields, so downstream code can rely on `destinations` being present.
+      const destinations: TripDestination[] = (input.destinations && input.destinations.length)
+        ? input.destinations
+        : [buildLeg(input)];
+
       const trip: TripDoc = {
         id: tripId,
         name: input.name.trim(),
+        destinations,
         destination: input.destination.trim(),
         startDate: input.startDate,
         endDate: input.endDate,

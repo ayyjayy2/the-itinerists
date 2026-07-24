@@ -43,6 +43,8 @@ const ICON_PATHS: Record<string, string> = {
   train:     'M7 4h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM5 10h14M9 16l-2.5 4M15 16l2.5 4M9.5 13h.01M14.5 13h.01',
   bus:       'M5 6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6zM5 11h14M7 21v-2M17 21v-2M8.5 14h.01M15.5 14h.01',
   boat:      'M3 14l1.5 5a1 1 0 0 0 1 .8h11a1 1 0 0 0 1-.8L20 14M4.5 14 12 11l7.5 3M12 11V6M12 6H8l4-3z',
+  plus:      'M12 5v14M5 12h14',
+  close:     'M6 6l12 12M18 6L6 18',
 };
 
 @Component({

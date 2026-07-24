@@ -49,19 +49,38 @@ export interface InviteIndexEntry {
 export type TripMemberRole = 'owner' | 'member';
 export type TravelMode = 'flying' | 'driving' | 'train' | 'bus' | 'other';
 
+/**
+ * One leg of a trip — a destination with its own dates and currency.
+ * Multi-destination trips carry an array of these (see TripDoc.destinations);
+ * single-destination trips carry a one-element array.
+ */
+export interface TripDestination {
+  destination: string;
+  destinationPlaceId?: string;
+  destinationCoords?: { lat: number; lng: number };
+  startDate: string;            // YYYY-MM-DD
+  endDate: string;              // YYYY-MM-DD
+  currency: string;             // ISO currency code
+}
+
 /** Stored at Firestore `/trips/{tripId}` — one doc per trip. */
 export interface TripDoc {
   id: string;                   // Firestore doc id (tripId)
   name: string;                 // "Bali Girls Trip 2026"
-  destination: string;          // "Bali, Indonesia"
+  // Per-leg destinations. Optional for back-compat with trips created before
+  // multi-destination; read via tripDestinations() which falls back to the flat
+  // fields below. The flat fields always mirror the primary (first) destination
+  // and the overall date range, so existing single-destination code keeps working.
+  destinations?: TripDestination[];
+  destination: string;          // "Bali, Indonesia" (primary)
   destinationPlaceId?: string;  // Google Places ID, for maps/weather (optional — freeform destinations have none)
   destinationCoords?: {         // lat/lng for the weather API + map centering
     lat: number;
     lng: number;
   };
-  startDate: string;            // YYYY-MM-DD
-  endDate: string;              // YYYY-MM-DD
-  currency: string;             // ISO currency code, e.g. "USD"
+  startDate: string;            // YYYY-MM-DD (overall: earliest leg start)
+  endDate: string;              // YYYY-MM-DD (overall: latest leg end)
+  currency: string;             // ISO currency code, e.g. "USD" (primary)
   coverPhotoUrl?: string;       // Firebase Storage URL
   createdBy: string;            // uid of the trip creator
   createdAt: number;            // unix ms
