@@ -96,8 +96,8 @@
   box-shadow: var(--shadow-md);
 
   app-brand { --primary-dark: #fff; color: #fff; }
-  ::ng-deep .wm-getaway { color: #fff; }
-  ::ng-deep .wm-club { color: #fff; opacity: 0.85; }
+  ::ng-deep .wm-name { color: #fff; }
+  ::ng-deep .wm-the { color: #fff; opacity: 0.85; }
 
   .welcome-kicker { font-size: 0.95rem; font-weight: 800; opacity: 0.9; margin-top: 14px; }
   .welcome-title { font-size: 1.7rem; line-height: 1.15; margin-top: 4px; }
