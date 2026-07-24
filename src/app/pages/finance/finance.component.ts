@@ -1,11 +1,17 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, inject, signal, computed, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, inject, signal, computed, effect, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FinanceService } from '../../services/finance.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
+import { TripService } from '../../services/trip.service';
+import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
+import { Rates, perCurrencySubtotals, convertedTotal } from '../../utils/currency';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
+
+const LAST_CURRENCY_PREFIX = 'tripplanner_last_currency_';
 
 interface DirectDebt {
   from: string;
@@ -16,7 +22,7 @@ interface DirectDebt {
 
 @Component({
   selector: 'app-finance',
-  imports: [IconComponent, CommonModule, FormsModule],
+  imports: [IconComponent, CurrencySelectComponent, CommonModule, FormsModule],
   templateUrl: './finance.component.html',
   styleUrl: './finance.component.scss'
 })
@@ -26,6 +32,35 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   financeService = inject(FinanceService);
   userService    = inject(UserService);
   usersService   = inject(UsersService);
+  tripService    = inject(TripService);
+  private rateService = inject(ExchangeRateService);
+
+  /** The trip's primary currency — the "home" currency for converted totals. */
+  readonly homeCurrency = computed(() => this.tripService.activeTrip()?.currency ?? 'USD');
+
+  // ── Multi-currency totals ─────────────────────────────────────────────────────
+  /** Date-specific rate tables (base = home currency), filled in as they load. */
+  private ratesByDate = signal<Record<string, Rates>>({});
+  /** Totals view: 'All' (converted to home) or a specific currency code. */
+  totalsCurrency = signal<string>('All');
+
+  constructor() {
+    // Load rates for each distinct expense date whenever entries or the home
+    // currency change, then publish them into ratesByDate for the totals.
+    effect(() => {
+      const home  = this.homeCurrency();
+      const dates = [...new Set(this.entries().map(e => e.date).filter(Boolean))];
+      if (!dates.length) return;
+      void this.loadRates(home, dates);
+    });
+  }
+
+  private async loadRates(home: string, dates: string[]): Promise<void> {
+    const results = await Promise.all(dates.map(async d => [d, await this.rateService.ratesFor(home, d)] as const));
+    const next: Record<string, Rates> = {};
+    for (const [d, r] of results) if (r) next[d] = r;
+    this.ratesByDate.set(next);
+  }
 
   currentUser  = this.userService.currentUser;
   financeUsers = this.usersService.tripUsers;
@@ -261,6 +296,31 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     this.enrichedEntries().reduce((sum, e) => sum + e.amount, 0)
   );
 
+  /** Distinct currencies used across the (filtered) expense log. */
+  readonly usedCurrencies = computed(() =>
+    [...new Set(this.enrichedEntries().map(e => e.currency))].sort());
+
+  readonly hasMixedCurrencies = computed(() => this.usedCurrencies().length > 1);
+
+  /** Exact native subtotals per currency. */
+  readonly currencySubtotals = computed(() => perCurrencySubtotals(this.enrichedEntries()));
+
+  /** Grand total converted to the home currency, plus how many couldn't convert. */
+  readonly convertedExpenseTotal = computed(() =>
+    convertedTotal(this.enrichedEntries(), this.ratesByDate(), this.homeCurrency()));
+
+  /** The amount shown for the selected totals view ('All' = converted home total). */
+  readonly totalsAmount = computed(() => {
+    const sel = this.totalsCurrency();
+    return sel === 'All' ? this.convertedExpenseTotal().total : (this.currencySubtotals()[sel] ?? 0);
+  });
+
+  /** The currency code shown for the selected totals view. */
+  readonly totalsCode = computed(() =>
+    this.totalsCurrency() === 'All' ? this.homeCurrency() : this.totalsCurrency());
+
+  setTotalsCurrency(c: string): void { this.totalsCurrency.set(c); }
+
   // ── Add expense ───────────────────────────────────────────────────────────────
   showAddForm      = signal(false);
   addFormSubmitted = signal(false);
@@ -280,8 +340,18 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.financeUsers().filter(u => this.addSplitMap[u.name]).map(u => u.name);
   }
 
+  /** Last currency used on this trip (persisted), falling back to the home currency. */
+  private lastUsedCurrency(): string {
+    const tripId = this.tripService.activeTrip()?.id;
+    return (tripId && localStorage.getItem(LAST_CURRENCY_PREFIX + tripId)) || this.homeCurrency();
+  }
+  private rememberCurrency(code: string): void {
+    const tripId = this.tripService.activeTrip()?.id;
+    if (tripId) { try { localStorage.setItem(LAST_CURRENCY_PREFIX + tripId, code); } catch { /* full */ } }
+  }
+
   startAdd(): void {
-    this.newEntry = { date: '', vendor: '', description: '', amount: 0, currency: 'USD',
+    this.newEntry = { date: '', vendor: '', description: '', amount: 0, currency: this.lastUsedCurrency(),
       paidBy: this.currentUser()?.name ?? '', category: '', notes: '', link: '' };
     this.addSplitMap = {};
     for (const u of this.financeUsers()) this.addSplitMap[u.name] = true;
@@ -301,7 +371,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       vendor:      this.newEntry.vendor      ?? '',
       description: this.newEntry.description ?? '',
       amount:      Number(this.newEntry.amount) || 0,
-      currency:    'USD',
+      currency:    this.newEntry.currency    || this.homeCurrency(),
       paidBy:      this.newEntry.paidBy      ?? '',
       splitAmong:  selected.length === this.financeUsers().length ? 'All' : selected.join(', '),
       category:    this.newEntry.category    ?? '',
@@ -314,6 +384,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       entry.splits = Object.fromEntries(selected.map(n => [n, Number(this.addIndivSplits[n]) || 0]));
     }
     await this.financeService.addEntry(entry);
+    this.rememberCurrency(entry.currency);
     this.addFormSubmitted.set(false);
     this.showAddForm.set(false);
     this.showToast(`✓ "${entry.vendor}" added`);
