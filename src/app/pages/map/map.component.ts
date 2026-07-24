@@ -269,6 +269,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.selectedDay();
       this.ngZone.runOutsideAngular(() => this.geocodeNewAndUpdateAll());
     });
+
+    // Trip-level destination anchors are context for the whole trip, so they
+    // only show on the "All Days" view — drilling into a specific day hides
+    // them, leaving just that day's pins.
+    effect(() => {
+      const showDest = this.selectedDay() === null;
+      if (!this.mapReady() || !this.map) return;
+      const onMap = this.map.hasLayer(this.destLayer);
+      if (showDest && !onMap) this.destLayer.addTo(this.map);
+      else if (!showDest && onMap) this.map.removeLayer(this.destLayer);
+    });
   }
 
   ngAfterViewInit(): void {
