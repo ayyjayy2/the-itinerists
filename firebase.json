@@ -10,7 +10,7 @@
   },
   "hosting": {
     "site": "getaway-club",
-    "public": "dist/getaway-club/browser",
+    "public": "dist/the-itinerists/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
