@@ -25,14 +25,15 @@ new account).
 
 ## 1. Data model
 
-`users/{uid}` gains one field:
+`users/{uid}` gains two fields:
 
 | Field | Value |
 |---|---|
 | `authEmail` | The email the Auth account actually uses. Synthetic (`username@the-itinerists.local`) by default; the real recovery email once one is added. |
+| `homePins` | Array of pinned page paths for the Home screen (personalization follows the account across devices). Absent → default `['/itinerary', '/finance', '/packing']`. |
 
-Existing docs without `authEmail` are treated as synthetic (fallback in code —
-no migration needed).
+Existing docs without these fields fall back in code (synthetic email /
+default pins) — no migration script needed.
 
 ## 2. Login (username-first, unchanged UX)
 
@@ -104,6 +105,16 @@ Looks up the user (Firestore username → uid), sets the password via
 **Prerequisite:** a service-account key for `trip-planner-ayyjayy2` — the key
 currently on disk belongs to the old `ireland-stpatricks` project. Download a
 fresh key from Firebase console when first needed.
+
+## 5b. Home pins move into the account
+
+Today pins live in `localStorage` (`tripplanner_home_pins`), so a customized
+Home doesn't follow the user to another device. Change: the Home page reads
+and writes `homePins` on the signed-in user's `users/{uid}` doc (covered by
+the existing owner-update rule; Firestore's persistent cache keeps it working
+offline). One-time migration in code: if `localStorage` has pins and the doc
+has no `homePins`, write the local set to the doc, then delete the local key.
+The `tripplanner_home_pins` key is retired.
 
 ## 6. Security rules
 
