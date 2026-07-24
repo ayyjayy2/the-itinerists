@@ -31,10 +31,22 @@ export const appConfig: ApplicationConfig = {
     // Attests that requests come from the genuine app, blocking key abuse. Until a
     // site key is configured this contributes no providers — a safe no-op.
     ...(environment.recaptchaSiteKey
-      ? [provideAppCheck(() => initializeAppCheck(getApp(), {
-          provider: new ReCaptchaV3Provider(environment.recaptchaSiteKey),
-          isTokenAutoRefreshEnabled: true,
-        }))]
+      ? [provideAppCheck(() => {
+          if (isDevMode()) {
+            // Local dev can't pass reCAPTCHA attestation (localhost isn't an
+            // allowed domain), so use a debug token instead. APPCHECK_DEBUG_TOKEN
+            // in .env pins a token already registered in Firebase console, valid
+            // on any browser/machine. Without it, the SDK generates a random
+            // token and prints it to the browser console — register that one in
+            // Firebase console → App Check → Apps → Manage debug tokens.
+            (self as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string }).FIREBASE_APPCHECK_DEBUG_TOKEN =
+              environment.appCheckDebugToken || true;
+          }
+          return initializeAppCheck(getApp(), {
+            provider: new ReCaptchaV3Provider(environment.recaptchaSiteKey),
+            isTokenAutoRefreshEnabled: true,
+          });
+        })]
       : []),
 
     { provide: ErrorHandler, useClass: AppErrorHandler },
