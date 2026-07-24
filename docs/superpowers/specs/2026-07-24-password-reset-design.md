@@ -63,6 +63,17 @@ Email-change verification setting: use direct `updateEmail` after fresh
 reauthentication (requires email-enumeration protection to stay off, its
 current state) so `authEmail` in Firestore can be updated in the same breath.
 
+## 3b. Password requirements shown upfront (signup)
+
+The server enforces a password policy (min 8 chars, upper + lower + number,
+from #101), and the join and profile pages already show a live ✓/○ requirement
+checklist while typing — but the standalone signup page was missed and only
+errors after submit. Fix as part of this work: the signup page shows the same
+live checklist as small print under the password field, reusing
+`utils/password.ts` and the join page's checklist markup/styles, so nobody is
+blindsided after inventing a password. (Firebase's hosted reset page enforces
+the same policy server-side for the forgot-password flow.)
+
 ## 4. Forgot-password page
 
 Route `/forgot-password`, linked from login ("Forgot password?"). Public
@@ -106,7 +117,7 @@ verify in rules tests: a user cannot update another user's `authEmail`
 
 - **Unit:** username→email resolution (doc found / missing field / no doc);
   forgot-password component states (sent, no-recovery-email, unknown user);
-  email masking.
+  email masking; signup password checklist renders and tracks the policy.
 - **Manual:** full loop with a real inbox — add recovery email on Profile,
   sign out, forgot-password, click emailed link, set new password, sign in by
   username on a second browser profile (cross-device check).
