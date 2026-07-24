@@ -5,6 +5,14 @@
     <h2><app-icon name="finance" [size]="22" /> Finance</h2>
   </div>
 
+  @if (hasMixedCurrencies()) {
+    <div class="currency-caveat">
+      <app-icon name="finance" [size]="15" />
+      This trip has expenses in {{ usedCurrencies().length }} currencies. Settlement figures below are
+      shown as entered and don't yet convert between currencies — multi-currency settle-up is coming soon.
+    </div>
+  }
+
   <!-- ── Balance Banners ── -->
   @if (settlementsStatus() === 'owed') {
 
@@ -152,9 +160,13 @@
             <input type="text" [(ngModel)]="newEntry.description" placeholder="What was this for?" />
           </div>
           <div class="form-field">
-            <label>Amount (USD) <span class="required-star">*</span></label>
+            <label>Amount <span class="required-star">*</span></label>
             <input type="number" [(ngModel)]="newEntry.amount" min="0" step="0.01" placeholder="0.00"
                    [class.field-error]="addFormSubmitted() && !newEntry.amount" />
+          </div>
+          <div class="form-field">
+            <label>Currency</label>
+            <app-currency-select [value]="newEntry.currency || homeCurrency()" (valueChange)="newEntry.currency = $event" />
           </div>
           <div class="form-field">
             <label>Category</label>
@@ -354,12 +366,12 @@
                 </div>
               </div>
               <span class="paidby-cell">{{ entry.paidBy }}</span>
-              <span class="amount-cell r">${{ entry.amount | number:'1.2-2' }}</span>
+              <span class="amount-cell r">{{ entry.amount | number:'1.2-2' }} <span class="cur-code">{{ entry.currency }}</span></span>
               <span class="pp-cell r">
                 @if (entry.isIndivSplit) {
                   <span class="pp-custom">custom</span>
                 } @else if (entry.amount > 0) {
-                  ${{ entry.ppAmount | number:'1.2-2' }}<span class="pp-split">/{{ entry.ppCount }}</span>
+                  {{ entry.ppAmount | number:'1.2-2' }}<span class="pp-split">/{{ entry.ppCount }}</span>
                 } @else {
                   <span class="pp-tbd">TBD</span>
                 }
@@ -379,9 +391,13 @@
                   </div>
                   <div class="form-field form-field-full"><label>Description</label><input type="text" [(ngModel)]="editEntryDraft.description" /></div>
                   <div class="form-field">
-                    <label>Amount (USD) <span class="required-star">*</span></label>
+                    <label>Amount <span class="required-star">*</span></label>
                     <input type="number" [(ngModel)]="editEntryDraft.amount" min="0" step="0.01"
                            [class.field-error]="editFormSubmitted() && !editEntryDraft.amount" />
+                  </div>
+                  <div class="form-field">
+                    <label>Currency</label>
+                    <app-currency-select [value]="editEntryDraft.currency || homeCurrency()" (valueChange)="editEntryDraft.currency = $event" />
                   </div>
                   <div class="form-field">
                     <label>Category</label>
@@ -451,10 +467,26 @@
           }
 
           @if (enrichedEntries().length > 0) {
+            @if (hasMixedCurrencies()) {
+              <div class="totals-toggle">
+                <button class="totals-chip" [class.active]="totalsCurrency() === 'All'" (click)="setTotalsCurrency('All')">All</button>
+                @for (c of usedCurrencies(); track c) {
+                  <button class="totals-chip" [class.active]="totalsCurrency() === c" (click)="setTotalsCurrency(c)">{{ c }}</button>
+                }
+              </div>
+            }
             <div class="table-totals-row">
               <span class="totals-label">{{ enrichedEntries().length }} expense{{ enrichedEntries().length !== 1 ? 's' : '' }}</span>
-              <span class="totals-amount">${{ expenseTotal() | number:'1.2-2' }} USD</span>
+              <span class="totals-amount">
+                @if (totalsCurrency() === 'All' && hasMixedCurrencies()) { ≈ }{{ totalsAmount() | number:'1.2-2' }} <span class="cur-code">{{ totalsCode() }}</span>
+              </span>
             </div>
+            @if (totalsCurrency() === 'All' && hasMixedCurrencies()) {
+              <div class="totals-note">
+                ≈ converted to {{ homeCurrency() }} at each expense's date rate.
+                @if (convertedExpenseTotal().missing > 0) { <span class="totals-warn">{{ convertedExpenseTotal().missing }} not converted (rate unavailable).</span> }
+              </div>
+            }
           }
         </div>
       }

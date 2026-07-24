@@ -1107,3 +1107,32 @@
     color: var(--danger);
   }
 }
+
+// ── Multi-currency (Phase 3a) ─────────────────────────────────────────────────
+.cur-code { font-size: 0.8em; color: var(--text-muted); font-weight: 600; }
+
+.currency-caveat {
+  display: flex; align-items: flex-start; gap: 0.5rem;
+  padding: 0.65rem 0.85rem; margin: 0 0 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--highlight, var(--card-bg));
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.82rem; line-height: 1.4;
+  app-icon { flex: 0 0 auto; margin-top: 1px; }
+}
+
+.totals-toggle {
+  display: flex; gap: 0.4rem; flex-wrap: wrap;
+  padding: 0.5rem 0 0.25rem; justify-content: flex-end;
+}
+.totals-chip {
+  padding: 0.25rem 0.6rem; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--card-bg);
+  color: var(--text-muted); font-size: 0.78rem; font-weight: 700; cursor: pointer;
+  &.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+}
+.totals-note {
+  text-align: right; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;
+  .totals-warn { color: var(--danger); display: block; }
+}
