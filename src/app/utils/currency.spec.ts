@@ -1,4 +1,4 @@
-import { convertAmount, perCurrencySubtotals, convertedTotal } from './currency';
+import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare } from './currency';
 
 // Frankfurter-style rates table: base = the "to" currency (here EUR), so
 // rates[X] = how many X per 1 EUR. EUR itself is implicitly 1.
@@ -62,5 +62,33 @@ describe('convertedTotal', () => {
     const { total, missing } = convertedTotal(entries, ratesByDate, 'EUR');
     expect(total).toBeCloseTo(100, 6); // only the EUR entry counted
     expect(missing).toBe(2);
+  });
+});
+
+describe('convertShare', () => {
+  const ratesByDate = { '2026-03-01': { USD: 1.10 } }; // base EUR
+  const latest = { USD: 1.20 }; // base EUR
+
+  it('passes through when already in the home currency', () => {
+    expect(convertShare(100, 'EUR', '2026-03-01', ratesByDate, latest, 'EUR'))
+      .toEqual({ amount: 100, estimated: false });
+  });
+
+  it('converts at the date rate when available (exact)', () => {
+    const r = convertShare(110, 'USD', '2026-03-01', ratesByDate, latest, 'EUR');
+    expect(r.amount).toBeCloseTo(100, 6); // 110 / 1.10
+    expect(r.estimated).toBe(false);
+  });
+
+  it('falls back to the latest rate when the date is missing (estimated)', () => {
+    const r = convertShare(120, 'USD', '2099-01-01', ratesByDate, latest, 'EUR');
+    expect(r.amount).toBeCloseTo(100, 6); // 120 / 1.20 (latest)
+    expect(r.estimated).toBe(true);
+  });
+
+  it('uses face value as a last resort for an unsupported currency (estimated)', () => {
+    const r = convertShare(500, 'XYZ', '2026-03-01', ratesByDate, latest, 'EUR');
+    expect(r.amount).toBe(500);
+    expect(r.estimated).toBe(true);
   });
 });

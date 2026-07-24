@@ -7,17 +7,24 @@ import { UsersService } from '../../services/users.service';
 import { TripService } from '../../services/trip.service';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
-import { Rates, perCurrencySubtotals, convertedTotal } from '../../utils/currency';
+import { Rates, perCurrencySubtotals, convertedTotal, convertShare } from '../../utils/currency';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
 
 const LAST_CURRENCY_PREFIX = 'tripplanner_last_currency_';
 
+interface DebtItem {
+  id: string; label: string; date: string; description: string; notes?: string;
+  amount: number;        // share converted to the home currency (drives netting)
+  origAmount: number;    // share in its original currency
+  origCurrency: string;
+  estimated: boolean;    // true when a fallback rate was used
+}
 interface DirectDebt {
   from: string;
   to:   string;
-  amountUsd: number;
-  items: Array<{ id: string; label: string; date: string; description: string; notes?: string; amount: number }>;
+  amountHome: number;
+  items: DebtItem[];
 }
 
 @Component({
@@ -41,12 +48,15 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Multi-currency totals ─────────────────────────────────────────────────────
   /** Date-specific rate tables (base = home currency), filled in as they load. */
   private ratesByDate = signal<Record<string, Rates>>({});
+  /** Latest rates (base = home) — settlement fallback when a date rate is missing. */
+  private latestRates = signal<Rates | null>(null);
   /** Totals view: 'All' (converted to home) or a specific currency code. */
   totalsCurrency = signal<string>('All');
 
   constructor() {
-    // Load rates for each distinct expense date whenever entries or the home
-    // currency change, then publish them into ratesByDate for the totals.
+    // Load rates for each distinct expense date (plus latest as a fallback)
+    // whenever entries or the home currency change, then publish them for the
+    // totals and the settlement conversion.
     effect(() => {
       const home  = this.homeCurrency();
       const dates = [...new Set(this.entries().map(e => e.date).filter(Boolean))];
@@ -56,10 +66,14 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private async loadRates(home: string, dates: string[]): Promise<void> {
-    const results = await Promise.all(dates.map(async d => [d, await this.rateService.ratesFor(home, d)] as const));
+    const [dated, latest] = await Promise.all([
+      Promise.all(dates.map(async d => [d, await this.rateService.ratesFor(home, d)] as const)),
+      this.rateService.ratesFor(home, 'latest'),
+    ]);
     const next: Record<string, Rates> = {};
-    for (const [d, r] of results) if (r) next[d] = r;
+    for (const [d, r] of dated) if (r) next[d] = r;
     this.ratesByDate.set(next);
+    this.latestRates.set(latest);
   }
 
   currentUser  = this.userService.currentUser;
@@ -106,8 +120,22 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Core data ─────────────────────────────────────────────────────────────────
   entries = this.financeService.entries;
 
+  /** True when any settlement item was converted from another currency. */
+  readonly settlementConverted = computed(() => {
+    const home = this.homeCurrency();
+    return this.directDebts().some(d => d.items.some(i => i.origCurrency !== home));
+  });
+  /** True when any settlement item used a fallback (non-date) rate. */
+  readonly settlementEstimated = computed(() =>
+    this.directDebts().some(d => d.items.some(i => i.estimated)));
+  /** "≈ " when settlement figures include converted amounts, else "". */
+  approxPrefix(): string { return this.settlementConverted() ? '≈ ' : ''; }
+
   directDebts = computed((): DirectDebt[] => {
     const userNames = this.financeUsers().map(u => u.name);
+    const home      = this.homeCurrency();
+    const ratesByDate = this.ratesByDate();
+    const latest      = this.latestRates();
     const map = new Map<string, DirectDebt>();
 
     for (const e of this.entries()) {
@@ -120,19 +148,25 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
 
       for (const debtor of splitNames) {
         if (debtor === e.paidBy) continue;
-        const share = e.splits ? (e.splits[debtor] ?? 0) : e.amount / splitNames.length;
-        const key   = `${debtor}__${e.paidBy}`;
-        if (!map.has(key)) map.set(key, { from: debtor, to: e.paidBy, amountUsd: 0, items: [] });
+        const origShare = e.splits ? (e.splits[debtor] ?? 0) : e.amount / splitNames.length;
+        const currency  = e.currency || home;
+        // Convert the share to the home currency for netting (date rate → latest → face value).
+        const { amount, estimated } = convertShare(origShare, currency, e.date, ratesByDate, latest, home);
+        const key = `${debtor}__${e.paidBy}`;
+        if (!map.has(key)) map.set(key, { from: debtor, to: e.paidBy, amountHome: 0, items: [] });
         const d = map.get(key)!;
-        d.amountUsd += share;
-        d.items.push({ id: e.id, label: e.vendor || e.description, date: e.date, description: e.description, notes: e.notes, amount: share });
+        d.amountHome += amount;
+        d.items.push({
+          id: e.id, label: e.vendor || e.description, date: e.date, description: e.description, notes: e.notes,
+          amount, origAmount: origShare, origCurrency: currency, estimated,
+        });
       }
     }
 
-    return [...map.values()].filter(d => d.amountUsd > 0.005);
+    return [...map.values()].filter(d => d.amountHome > 0.005);
   });
 
-  personNetBreakdown = computed((): { owed: Array<{ name: string; amountUsd: number }>; owing: Array<{ name: string; amountUsd: number }> } => {
+  personNetBreakdown = computed((): { owed: Array<{ name: string; amountHome: number }>; owing: Array<{ name: string; amountHome: number }> } => {
     const me = this.currentUser()?.name ?? '';
     if (!me) return { owed: [], owing: [] };
 
@@ -144,8 +178,8 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       if (d.to   === me) others.add(d.from);
     }
 
-    const owed:  Array<{ name: string; amountUsd: number }> = [];
-    const owing: Array<{ name: string; amountUsd: number }> = [];
+    const owed:  Array<{ name: string; amountHome: number }> = [];
+    const owing: Array<{ name: string; amountHome: number }> = [];
 
     for (const other of others) {
       const unpaid = (from: string, to: string) =>
@@ -155,25 +189,25 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
           .reduce((s, item) => s + item.amount, 0);
 
       const net = unpaid(other, me) - unpaid(me, other);
-      if      (net >  0.005) owed .push({ name: other, amountUsd:  net });
-      else if (net < -0.005) owing.push({ name: other, amountUsd: -net });
+      if      (net >  0.005) owed .push({ name: other, amountHome:  net });
+      else if (net < -0.005) owing.push({ name: other, amountHome: -net });
     }
 
     return { owed, owing };
   });
 
-  totalOwedToMeUsd = computed(() => this.personNetBreakdown().owed .reduce((s, p) => s + p.amountUsd, 0));
-  totalIOweUsd     = computed(() => this.personNetBreakdown().owing.reduce((s, p) => s + p.amountUsd, 0));
+  totalOwedToMeHome = computed(() => this.personNetBreakdown().owed .reduce((s, p) => s + p.amountHome, 0));
+  totalIOweHome     = computed(() => this.personNetBreakdown().owing.reduce((s, p) => s + p.amountHome, 0));
 
-  paidBalanceUsd = computed(() => {
+  paidBalanceHome = computed(() => {
     const me = this.currentUser()?.name ?? '';
     if (!me) return 0;
     return this.directDebts().reduce((sum, d) => {
-      const paidUsd = d.items
+      const paidHome = d.items
         .filter(item => this.isItemPaid(d.from, d.to, item.id))
         .reduce((s, item) => s + item.amount, 0);
-      if (d.to   === me) return sum + paidUsd;
-      if (d.from === me) return sum - paidUsd;
+      if (d.to   === me) return sum + paidHome;
+      if (d.from === me) return sum - paidHome;
       return sum;
     }, 0);
   });
@@ -181,19 +215,19 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   allUsersNetBalance = computed(() =>
     this.financeUsers().map(u => {
       const net = this.directDebts().reduce((sum, d) => {
-        const unpaidUsd = d.items
+        const unpaidHome = d.items
           .filter(item => !this.isItemPaid(d.from, d.to, item.id))
           .reduce((s, item) => s + item.amount, 0);
-        if (d.to   === u.name) return sum + unpaidUsd;
-        if (d.from === u.name) return sum - unpaidUsd;
+        if (d.to   === u.name) return sum + unpaidHome;
+        if (d.from === u.name) return sum - unpaidHome;
         return sum;
       }, 0);
-      return { name: u.name, emoji: u.avatarEmoji, amountUsd: net };
+      return { name: u.name, emoji: u.avatarEmoji, amountHome: net };
     })
   );
 
-  userDebtDetails(name: string): Array<{ counterpart: string; emoji: string; amountUsd: number; direction: 'owes' | 'owed' }> {
-    const details: Array<{ counterpart: string; emoji: string; amountUsd: number; direction: 'owes' | 'owed' }> = [];
+  userDebtDetails(name: string): Array<{ counterpart: string; emoji: string; amountHome: number; direction: 'owes' | 'owed' }> {
+    const details: Array<{ counterpart: string; emoji: string; amountHome: number; direction: 'owes' | 'owed' }> = [];
     for (const u of this.financeUsers()) {
       if (u.name === name) continue;
       const unpaid = (from: string, to: string) =>
@@ -203,8 +237,8 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
             .filter(item => !this.isItemPaid(d.from, d.to, item.id))
             .reduce((s, item) => s + item.amount, 0), 0);
       const net = unpaid(u.name, name) - unpaid(name, u.name);
-      if      (net >  0.005) details.push({ counterpart: u.name, emoji: u.avatarEmoji, amountUsd:  net, direction: 'owed' });
-      else if (net < -0.005) details.push({ counterpart: u.name, emoji: u.avatarEmoji, amountUsd: -net, direction: 'owes' });
+      if      (net >  0.005) details.push({ counterpart: u.name, emoji: u.avatarEmoji, amountHome:  net, direction: 'owed' });
+      else if (net < -0.005) details.push({ counterpart: u.name, emoji: u.avatarEmoji, amountHome: -net, direction: 'owes' });
     }
     return details;
   }
@@ -239,9 +273,9 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
           const itemsMatch = items.filter(item => this.matchesSearch(q, item.label, item.description, item.notes));
           if (!nameMatch && itemsMatch.length === 0) return [];
           const visible    = nameMatch ? items : itemsMatch;
-          return [{ ...d, items: visible, amountUsd: visible.reduce((s, i) => s + i.amount, 0) }];
+          return [{ ...d, items: visible, amountHome: visible.reduce((s, i) => s + i.amount, 0) }];
         }
-        return [{ ...d, items, amountUsd: items.reduce((s, i) => s + i.amount, 0) }];
+        return [{ ...d, items, amountHome: items.reduce((s, i) => s + i.amount, 0) }];
       });
   });
 
