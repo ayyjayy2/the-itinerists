@@ -29,6 +29,36 @@ export function perCurrencySubtotals(entries: { amount: number; currency: string
 }
 
 /**
+ * Convert a single expense share into the `home` currency for settlement:
+ *   1. already home → exact.
+ *   2. date rate available → convert, exact.
+ *   3. else latest rate available → convert, estimated.
+ *   4. else (unsupported currency) → face value as home, estimated (last resort;
+ *      never drops the amount from the settlement).
+ * `estimated` is true whenever the value isn't an exact date-rate conversion,
+ * so the UI can flag the settlement as approximate.
+ */
+export function convertShare(
+  amount: number,
+  currency: string,
+  date: string,
+  ratesByDate: Record<string, Rates>,
+  latestRates: Rates | null,
+  home: string,
+): { amount: number; estimated: boolean } {
+  if (currency === home) return { amount, estimated: false };
+
+  const dateRates = ratesByDate[date];
+  const exact = dateRates ? convertAmount(amount, currency, home, dateRates) : null;
+  if (exact !== null) return { amount: exact, estimated: false };
+
+  const viaLatest = latestRates ? convertAmount(amount, currency, home, latestRates) : null;
+  if (viaLatest !== null) return { amount: viaLatest, estimated: true };
+
+  return { amount, estimated: true }; // last resort: face value
+}
+
+/**
  * Sum of every entry converted to `home` at the rates for its own date.
  * `ratesByDate` maps an ISO date → a base=`home` rate table. Entries whose date
  * rates are missing, or whose currency has no rate, are skipped and counted in

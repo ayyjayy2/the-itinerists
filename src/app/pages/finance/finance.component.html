@@ -5,11 +5,10 @@
     <h2><app-icon name="finance" [size]="22" /> Finance</h2>
   </div>
 
-  @if (hasMixedCurrencies()) {
+  @if (settlementEstimated()) {
     <div class="currency-caveat">
       <app-icon name="finance" [size]="15" />
-      This trip has expenses in {{ usedCurrencies().length }} currencies. Settlement figures below are
-      shown as entered and don't yet convert between currencies — multi-currency settle-up is coming soon.
+      Settlement figures are approximate — some expenses used an estimated exchange rate.
     </div>
   }
 
@@ -26,13 +25,13 @@
       <div class="balance-banner banner-positive">
         <div class="banner-label">You are still owed</div>
         <div class="banner-amounts">
-          <span class="banner-amount">${{ totalOwedToMeUsd() | number:'1.2-2' }}<span class="b-code"> USD</span></span>
+          <span class="banner-amount">{{ approxPrefix() }}{{ totalOwedToMeHome() | number:'1.2-2' }}<span class="b-code"> {{ homeCurrency() }}</span></span>
         </div>
         <div class="banner-persons">
           @for (p of personNetBreakdown().owed; track p.name) {
             <div class="banner-person">
               <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-              <span class="banner-person-amounts">${{ p.amountUsd | number:'1.2-2' }}</span>
+              <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
             </div>
           }
         </div>
@@ -43,13 +42,13 @@
       <div class="balance-banner banner-negative">
         <div class="banner-label">You still owe</div>
         <div class="banner-amounts">
-          <span class="banner-amount">${{ totalIOweUsd() | number:'1.2-2' }}<span class="b-code"> USD</span></span>
+          <span class="banner-amount">{{ approxPrefix() }}{{ totalIOweHome() | number:'1.2-2' }}<span class="b-code"> {{ homeCurrency() }}</span></span>
         </div>
         <div class="banner-persons">
           @for (p of personNetBreakdown().owing; track p.name) {
             <div class="banner-person">
               <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-              <span class="banner-person-amounts">${{ p.amountUsd | number:'1.2-2' }}</span>
+              <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
             </div>
           }
         </div>
@@ -60,15 +59,15 @@
 
   @if (settlementsScope() === 'mine' && settlementsStatus() === 'paid') {
     <div class="balance-banner"
-      [class.banner-negative]="paidBalanceUsd() < 0"
-      [class.banner-positive]="paidBalanceUsd() > 0"
-      [class.banner-settled]="paidBalanceUsd() === 0">
-      @if (paidBalanceUsd() < 0) {
+      [class.banner-negative]="paidBalanceHome() < 0"
+      [class.banner-positive]="paidBalanceHome() > 0"
+      [class.banner-settled]="paidBalanceHome() === 0">
+      @if (paidBalanceHome() < 0) {
         <div class="banner-label">You've paid out</div>
-        <div class="banner-amounts"><span class="banner-amount">${{ -paidBalanceUsd() | number:'1.2-2' }}</span></div>
-      } @else if (paidBalanceUsd() > 0) {
+        <div class="banner-amounts"><span class="banner-amount">{{ -paidBalanceHome() | number:'1.2-2' }}</span></div>
+      } @else if (paidBalanceHome() > 0) {
         <div class="banner-label">You've been paid back</div>
-        <div class="banner-amounts"><span class="banner-amount">${{ paidBalanceUsd() | number:'1.2-2' }}</span></div>
+        <div class="banner-amounts"><span class="banner-amount">{{ paidBalanceHome() | number:'1.2-2' }}</span></div>
       } @else {
         <div class="banner-settled-text">Nothing settled yet.</div>
       }
@@ -86,16 +85,16 @@
       @for (u of allUsersNetBalance(); track u.name) {
         <div class="gs-user-block" [class.gs-expanded]="expandedGroupUsers().has(u.name)">
           <button class="gs-row" (click)="toggleGroupUser(u.name)"
-                  [class.gs-positive]="u.amountUsd > 0.005"
-                  [class.gs-negative]="u.amountUsd < -0.005">
+                  [class.gs-positive]="u.amountHome > 0.005"
+                  [class.gs-negative]="u.amountHome < -0.005">
             <span class="gs-name">{{ u.emoji }} {{ u.name }}</span>
             <span class="gs-status">
-              @if (u.amountUsd > 0.005) {
+              @if (u.amountHome > 0.005) {
                 <span class="gs-tag gs-tag-owed">is owed</span>
-                <span class="gs-amount">${{ u.amountUsd | number:'1.2-2' }}<span class="gs-code"> USD</span></span>
-              } @else if (u.amountUsd < -0.005) {
+                <span class="gs-amount">{{ u.amountHome | number:'1.2-2' }}<span class="gs-code"> {{ homeCurrency() }}</span></span>
+              } @else if (u.amountHome < -0.005) {
                 <span class="gs-tag gs-tag-owes">owes</span>
-                <span class="gs-amount">${{ -u.amountUsd | number:'1.2-2' }}<span class="gs-code"> USD</span></span>
+                <span class="gs-amount">{{ -u.amountHome | number:'1.2-2' }}<span class="gs-code"> {{ homeCurrency() }}</span></span>
               } @else {
                 <span class="gs-settled">✓ settled</span>
               }
@@ -118,7 +117,7 @@
                       <span>{{ d.emoji }} {{ d.counterpart }} owes them</span>
                     }
                   </span>
-                  <span class="gs-detail-amounts">${{ d.amountUsd | number:'1.2-2' }}</span>
+                  <span class="gs-detail-amounts">{{ d.amountHome | number:'1.2-2' }}</span>
                 </div>
               }
             </div>
@@ -204,7 +203,7 @@
           </div>
           @if (splitMode() === 'individual') {
             <div class="form-field form-field-full">
-              <label>Amount per person (USD)</label>
+              <label>Amount per person</label>
               <div class="indiv-splits">
                 @for (u of financeUsers(); track u.name) {
                   @if (addSplitMap[u.name]) {
@@ -215,7 +214,7 @@
                   }
                 }
                 <div class="indiv-total" [class.indiv-mismatch]="!splitIsValid" [class.indiv-match]="splitIsValid && addIndivTotal > 0">
-                  Total: ${{ addIndivTotal | number:'1.2-2' }} / ${{ (newEntry.amount ?? 0) | number:'1.2-2' }}
+                  Total: {{ addIndivTotal | number:'1.2-2' }} / {{ (newEntry.amount ?? 0) | number:'1.2-2' }}
                   @if (!splitIsValid) { <span class="indiv-warn">⚠ Must equal total</span> }
                   @if (splitIsValid && addIndivTotal > 0) { <span class="indiv-ok">✓</span> }
                 </div>
@@ -297,7 +296,7 @@
           </div>
           <div class="debt-right">
             <div class="debt-amounts">
-              <div class="debt-amount">${{ d.amountUsd | number:'1.2-2' }}<span class="d-code"> USD</span></div>
+              <div class="debt-amount">{{ approxPrefix() }}{{ d.amountHome | number:'1.2-2' }}<span class="d-code"> {{ homeCurrency() }}</span></div>
             </div>
           </div>
         </div>
@@ -313,7 +312,7 @@
                 <span class="di-date">{{ formatDate(item.date) }}</span>
               </div>
               <div class="di-right">
-                <span class="di-amount">${{ item.amount | number:'1.2-2' }}/pp</span>
+                <span class="di-amount">{{ item.origAmount | number:'1.2-2' }} {{ item.origCurrency }}/pp</span>
                 <button class="di-check"
                   [class.is-checked]="isItemPaid(d.from, d.to, item.id)"
                   (click)="toggleItemPaid(d.from, d.to, item.id)"
@@ -435,7 +434,7 @@
                   </div>
                   @if (editSplitMode() === 'individual') {
                     <div class="form-field form-field-full">
-                      <label>Amount per person (USD)</label>
+                      <label>Amount per person</label>
                       <div class="indiv-splits">
                         @for (u of financeUsers(); track u.name) {
                           @if (editSplitMap[u.name]) {
@@ -446,7 +445,7 @@
                           }
                         }
                         <div class="indiv-total" [class.indiv-mismatch]="!editSplitIsValid" [class.indiv-match]="editSplitIsValid && editIndivTotal > 0">
-                          Total: ${{ editIndivTotal | number:'1.2-2' }} / ${{ (editEntryDraft.amount ?? 0) | number:'1.2-2' }}
+                          Total: {{ editIndivTotal | number:'1.2-2' }} / {{ (editEntryDraft.amount ?? 0) | number:'1.2-2' }}
                           @if (!editSplitIsValid) { <span class="indiv-warn">⚠ Must equal total</span> }
                           @if (editSplitIsValid && editIndivTotal > 0) { <span class="indiv-ok">✓</span> }
                         </div>
