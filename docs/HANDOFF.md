@@ -18,7 +18,7 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
   Revived the two orphaned pages (Map, Transportation), destination-aware map geocoding, map
   locations list, multi-mode Transportation surfaced across Home/Itinerary/Map, finance
   "tracked so far" total. Full detail: **`docs/feature-log.md`**.
-- **App:** "The Itinerists" (formerly "Getaway Club") — Angular 19 multi-trip travel app. Live: https://trip-planner-ayyjayy2.web.app
+- **App:** "The Itinerists" (formerly "Getaway Club") — Angular 19 multi-trip travel app. Live: https://the-itinerists.web.app
 - **Branch:** `master` (clean, nothing uncommitted). **Open PRs:** none.
 - **No orphaned pages remain** — every `src/app/pages/*` is routed + in the nav.
 - **What's next (open, not started):** see §5 — mostly user-decision items (final app name,
@@ -39,7 +39,7 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
   React-Native/Expo rewrite was abandoned in favor of this Capacitor path.) Capacitor is NOT
   installed yet — that's ROADMAP Phase 4. See `docs/design-prompt.md`.
 - **Backend:** Firebase — Firestore (modular `@angular/fire`), Firebase Auth
-  (username → synthetic email `username@trip-planner.local`).
+  (username → synthetic email `username@the-itinerists.local`; formerly `@trip-planner.local`).
 - **Firebase project:** `trip-planner-ayyjayy2`. Web config lives in the app env + repeated in
   the scratchpad scripts.
 - **Repo:** `ayyjayy2/the-itinerists` (private; formerly `getaway-club`, `trip-planner`). Default branch `master`.

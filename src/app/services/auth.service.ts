@@ -27,7 +27,7 @@ import {
 } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 
-const EMAIL_DOMAIN = '@trip-planner.local';
+const EMAIL_DOMAIN = '@the-itinerists.local';
 
 function toEmail(username: string): string {
   return `${username.toLowerCase().trim()}${EMAIL_DOMAIN}`;
