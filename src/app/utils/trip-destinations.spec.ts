@@ -1,4 +1,4 @@
-import { tripSummary, tripDestinations } from './trip-destinations';
+import { tripSummary, tripDestinations, activeLeg } from './trip-destinations';
 import { TripDestination, TripDoc } from '../models/trip.models';
 
 const leg = (over: Partial<TripDestination> = {}): TripDestination => ({
@@ -49,5 +49,42 @@ describe('tripDestinations', () => {
       destination: 'Lisbon', startDate: '2026-05-01', endDate: '2026-05-08', currency: 'EUR',
       destinationCoords: { lat: 38.7, lng: -9.1 },
     }));
+  });
+});
+
+describe('activeLeg', () => {
+  const legs = [
+    leg({ destination: 'Paris',  startDate: '2026-03-01', endDate: '2026-03-05' }),
+    leg({ destination: 'Rome',   startDate: '2026-03-05', endDate: '2026-03-10' }),
+    leg({ destination: 'Lisbon', startDate: '2026-03-10', endDate: '2026-03-15' }),
+  ];
+
+  it('returns the leg whose range contains today', () => {
+    expect(activeLeg(legs, '2026-03-07').destination).toBe('Rome');
+  });
+
+  it('is inclusive of the start and end dates', () => {
+    expect(activeLeg(legs, '2026-03-01').destination).toBe('Paris');
+    expect(activeLeg(legs, '2026-03-15').destination).toBe('Lisbon');
+  });
+
+  it('returns the next upcoming leg before the trip starts', () => {
+    expect(activeLeg(legs, '2026-02-20').destination).toBe('Paris');
+  });
+
+  it('returns the next upcoming leg in a gap between legs', () => {
+    const gapped = [
+      leg({ destination: 'Paris', startDate: '2026-03-01', endDate: '2026-03-05' }),
+      leg({ destination: 'Rome',  startDate: '2026-03-20', endDate: '2026-03-25' }),
+    ];
+    expect(activeLeg(gapped, '2026-03-10').destination).toBe('Rome');
+  });
+
+  it('returns the last leg when the whole trip is past', () => {
+    expect(activeLeg(legs, '2026-05-01').destination).toBe('Lisbon');
+  });
+
+  it('returns the only leg for a single-destination trip', () => {
+    expect(activeLeg([leg({ destination: 'Bali' })], '2020-01-01').destination).toBe('Bali');
   });
 });

@@ -33,6 +33,22 @@
         <span class="hero-people-label">{{ friendsLabel() }}</span>
       </div>
     </div>
+
+    <!-- Destination legs (multi-destination trips) -->
+    @if (isMultiDest()) {
+      <div class="legs-strip">
+        @for (leg of legs(); track $index) {
+          <div class="leg-chip" [class.current]="isCurrentLeg(leg)">
+            <app-icon name="pin" [size]="15" />
+            <div class="leg-chip-text">
+              <span class="leg-name">{{ legShort(leg) }}</span>
+              <span class="leg-dates">{{ legDateRange(leg) }}</span>
+            </div>
+            @if (isCurrentLeg(leg)) { <span class="leg-now">now</span> }
+          </div>
+        }
+      </div>
+    }
   } @else {
     <!-- Zero-trips welcome (designed empty state) -->
     <div class="welcome">
@@ -160,7 +176,7 @@
           @else { <span>Weather</span> }
         </div>
         <div class="glance-mini-sub">
-          @if (weatherGlance()) { {{ destinationShort() }} · outfits } @else { Forecast nearer the trip }
+          @if (weatherGlance()) { {{ glanceLegShort() }} · outfits } @else { Forecast nearer the trip }
         </div>
       </a>
       <a class="glance-mini" routerLink="/packing">

@@ -12,7 +12,8 @@ import { ItineraryService } from '../../services/itinerary.service';
 import { FinanceService } from '../../services/finance.service';
 import { PackingService } from '../../services/packing.service';
 import { WeatherService } from '../../services/weather.service';
-import { TripDoc, ActivityLogEntry } from '../../models/trip.models';
+import { TripDoc, TripDestination, ActivityLogEntry } from '../../models/trip.models';
+import { tripDestinations, activeLeg } from '../../utils/trip-destinations';
 
 @Component({
   selector: 'app-home',
@@ -89,13 +90,41 @@ export class HomeComponent implements OnInit, OnDestroy {
   ];
 
   constructor() {
-    // Load weather for the active trip so the glance card can show it.
+    // Load weather for every destination leg so the glance shows the right city.
     effect(() => {
       const t = this.activeTrip();
-      if (t?.startDate && t?.endDate && t?.destination) {
-        this.weatherService.load(t.startDate, t.endDate, t.destination);
-      }
+      if (t) this.weatherService.loadMany(tripDestinations(t));
     });
+  }
+
+  // ── Destinations (multi-destination) ─────────────────────────────────────────
+  readonly legs = computed<TripDestination[]>(() => {
+    const t = this.activeTrip();
+    return t ? tripDestinations(t) : [];
+  });
+
+  readonly isMultiDest = computed(() => this.legs().length > 1);
+
+  /** The leg happening now, or the next upcoming one (for glances). */
+  readonly currentLeg = computed<TripDestination | null>(() => {
+    const t = this.activeTrip();
+    if (!t) return null;
+    const todayISO = new Date(this.now()).toISOString().slice(0, 10);
+    return activeLeg(this.legs(), todayISO);
+  });
+
+  legShort(leg: TripDestination): string {
+    return (leg.destination || '').split(',')[0].trim();
+  }
+
+  legDateRange(leg: TripDestination): string {
+    const fmt = (s: string) => new Date(s + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `${fmt(leg.startDate)} – ${fmt(leg.endDate)}`;
+  }
+
+  isCurrentLeg(leg: TripDestination): boolean {
+    const c = this.currentLeg();
+    return !!c && c.destination === leg.destination && c.startDate === leg.startDate;
   }
 
   // ── Hero ───────────────────────────────────────────────────────────────────
@@ -239,7 +268,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     const t = this.activeTrip();
     if (!t) return null;
     const w = this.weatherService.weather();
-    return w[t.startDate] ?? Object.values(w)[0] ?? null;
+    const todayISO = new Date(this.now()).toISOString().slice(0, 10);
+    const leg = this.currentLeg();
+    // Prefer today's forecast, else the current/next leg's first day, else any.
+    return w[todayISO] ?? (leg ? w[leg.startDate] : null) ?? w[t.startDate] ?? Object.values(w)[0] ?? null;
+  });
+
+  /** Short name of the leg the glance is showing (for multi-destination trips). */
+  readonly glanceLegShort = computed(() => {
+    const leg = this.currentLeg();
+    return leg ? this.legShort(leg) : this.destinationShort();
   });
 
   // ── Activity feed ──────────────────────────────────────────────────────────

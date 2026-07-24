@@ -40,19 +40,39 @@ export class WeatherService {
   private loadedFor: string | null = null;
 
   /**
-   * Load the forecast for a trip's destination + date range. Geocodes the
-   * destination (Nominatim) and asks Open-Meteo for that location, so the
-   * weather matches the actual trip rather than a hardcoded city (TP-27).
-   * No-ops until dates and a destination are available; reloads when they change.
+   * Load the forecast for a single destination + date range. Kept for
+   * back-compat; delegates to loadMany with one leg.
    */
   load(startDate?: string, endDate?: string, destination?: string): void {
-    const dest = destination?.trim();
-    if (!startDate || !endDate || !dest) return;
+    if (!startDate || !endDate || !destination?.trim()) return;
+    this.loadMany([{ destination, startDate, endDate }]);
+  }
 
-    const key = `${dest}|${startDate}|${endDate}`;
-    if (this.loadedFor === key) return;
+  /**
+   * Load forecasts for every destination leg of a trip, merging them into one
+   * date-keyed map. Because legs cover distinct date ranges, each date resolves
+   * to its own leg's city — so the Home glance and per-day outfits show the
+   * right location for the right days on a multi-destination trip.
+   * No-ops when the set of legs is unchanged.
+   */
+  loadMany(legs: { destination?: string; startDate?: string; endDate?: string }[]): void {
+    const cleaned = legs
+      .map(l => ({ destination: l.destination?.trim() ?? '', startDate: l.startDate ?? '', endDate: l.endDate ?? '' }))
+      .filter(l => l.destination && l.startDate && l.endDate);
+    if (!cleaned.length) return;
 
-    // Open-Meteo free tier: 16-day forecast only. Skip if the trip is too far out.
+    const comboKey = cleaned.map(l => `${l.destination}|${l.startDate}|${l.endDate}`).join('~');
+    if (this.loadedFor === comboKey) return;
+    this.loadedFor = comboKey;
+
+    // Clear the previous trip's data, then merge each leg in as it resolves.
+    this._weather.set({});
+    for (const leg of cleaned) this.loadLeg(leg.destination, leg.startDate, leg.endDate);
+  }
+
+  /** Load one leg, merging its days into the shared weather map. */
+  private loadLeg(dest: string, startDate: string, endDate: string): void {
+    // Open-Meteo free tier: 16-day forecast only. Skip legs too far out.
     const today       = new Date();
     const maxForecast = new Date(today);
     maxForecast.setDate(today.getDate() + FORECAST_DAYS);
@@ -63,15 +83,13 @@ export class WeatherService {
     const tripEnd  = new Date(endDate + 'T00:00');
     const fetchEnd = tripEnd > maxForecast ? maxForecast.toISOString().slice(0, 10) : endDate;
 
-    this.loadedFor = key;
-
     // Serve cached data (keyed by destination + range) if still fresh.
-    const cacheKey = CACHE_PREFIX + key;
+    const cacheKey = CACHE_PREFIX + `${dest}|${startDate}|${endDate}`;
     try {
       const raw = localStorage.getItem(cacheKey);
       if (raw) {
         const { data, timestamp } = JSON.parse(raw) as { data: Record<string, LiveWeather>; timestamp: string };
-        if (isCacheValid(timestamp)) { this._weather.set(data); return; }
+        if (isCacheValid(timestamp)) { this._weather.update(prev => ({ ...prev, ...data })); return; }
       }
     } catch { /* ignore */ }
 
@@ -82,7 +100,7 @@ export class WeatherService {
     const place = await this.geocode(dest);
     if (!place) {
       console.warn('[WeatherService] could not geocode destination:', dest);
-      this.loadedFor = null; // allow a retry on the next load()
+      this.loadedFor = null; // allow a retry on the next load()/loadMany()
       return;
     }
 
@@ -104,7 +122,7 @@ export class WeatherService {
             code:  weather_code[i] as number,
           };
         });
-        this._weather.set(results);
+        this._weather.update(prev => ({ ...prev, ...results }));
         try { localStorage.setItem(cacheKey, JSON.stringify({ data: results, timestamp: new Date().toISOString() })); }
         catch { /* storage full */ }
       },

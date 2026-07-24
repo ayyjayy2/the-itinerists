@@ -9,6 +9,7 @@ import { OutfitsService } from '../../services/outfits.service';
 import { ItineraryService } from '../../services/itinerary.service';
 import { FlightsService } from '../../services/flights.service';
 import { TripService } from '../../services/trip.service';
+import { tripDestinations } from '../../utils/trip-destinations';
 import { OutfitEntry } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 
@@ -101,12 +102,10 @@ export class OutfitsComponent implements OnInit {
   weatherEmoji = weatherEmoji;
 
   constructor() {
-    // Load weather once the active trip's dates are available
+    // Load weather for every destination leg so each day shows its city.
     effect(() => {
       const t = this.tripService.activeTrip();
-      if (t?.startDate && t?.endDate) {
-        this.weatherService.load(t.startDate, t.endDate, t.destination);
-      }
+      if (t) this.weatherService.loadMany(tripDestinations(t));
     });
 
     // Eagerly resolve the current user's own stored outfit photos from Firestore.
