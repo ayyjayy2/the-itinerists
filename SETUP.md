@@ -107,7 +107,7 @@ Do the same in `src/environments/environment.prod.ts`.
 ## 4. Run the app
 
 ```bash
-cd savannah-getaway
+cd the-itinerists
 npm install --legacy-peer-deps --cache /tmp/npm-cache
 ng serve                 # dev server at http://localhost:4200
 ng build                 # production build
@@ -115,7 +115,7 @@ ng build                 # production build
 
 ### Test offline (PWA):
 ```bash
-npx http-server dist/savannah-getaway/browser -p 8080
+npx http-server dist/the-itinerists/browser -p 8080
 # Open http://localhost:8080
 # Chrome DevTools → Application → Service Workers → check "Offline"
 ```
@@ -130,9 +130,9 @@ npx http-server dist/savannah-getaway/browser -p 8080
 ## 5. Share with the group
 
 1. Build the app: `ng build`
-2. Deploy `dist/savannah-getaway/browser/` to any static host:
+2. Deploy `dist/the-itinerists/browser/` to any static host:
    - **Netlify**: drag & drop the folder at netlify.com
-   - **Vercel**: `npx vercel dist/savannah-getaway/browser`
+   - **Vercel**: `npx vercel dist/the-itinerists/browser`
    - **GitHub Pages**: push to gh-pages branch
 3. Share the URL with all 8 people — they each select their name on first visit
 

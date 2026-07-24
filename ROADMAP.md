@@ -96,7 +96,7 @@
 - [ ] New app icon (all required sizes for iOS/Android)
 - [ ] Splash screen
 - [ ] Update all "Savannah" hardcoded strings to use TripContextService
-- [ ] Update all "savannah-getaway" references in code and configs
+- [x] Rename app to "The Itinerists" (formerly "Getaway Club"; earlier "savannah-getaway") — code, configs, infra (2026-07-24)
 - [ ] Dark mode (system-aware `prefers-color-scheme`)
 
 ### 2.3 Onboarding Flow
