@@ -1,14 +1,24 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TripService, CreateTripInput } from '../../services/trip.service';
-import { CURRENCIES } from '../../data/currencies';
+import { TripDestination } from '../../models/trip.models';
+import { tripSummary } from '../../utils/trip-destinations';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
+
+/** One editable destination row in multi-destination mode. */
+interface DestForm {
+  destination: string;
+  startDate: string;
+  endDate: string;
+  currency: string;
+}
 
 @Component({
   selector: 'app-create-trip',
-  imports: [IconComponent, CommonModule, FormsModule],
+  imports: [IconComponent, CurrencySelectComponent, CommonModule, FormsModule],
   templateUrl: './create-trip.component.html',
   styleUrl: './create-trip.component.scss',
 })
@@ -16,106 +26,77 @@ export class CreateTripComponent {
   private tripService = inject(TripService);
   private router      = inject(Router);
 
-  name        = '';
+  name = '';
+
+  // Single-destination mode (default).
   destination = '';
   startDate   = '';
   endDate     = '';
   currency    = 'USD';
 
-  // ── Currency combobox (type to filter all ISO 4217 currencies) ─────────────
-  readonly currencies = CURRENCIES;
-  currencyOpen  = signal(false);
-  currencyQuery = signal('');
-  activeIndex   = signal(0);
-
-  /** The full list when closed/empty, otherwise filtered by code or name. */
-  readonly filteredCurrencies = computed(() => {
-    const q = this.currencyQuery().trim().toLowerCase();
-    if (!q) return this.currencies;
-    return this.currencies.filter(c =>
-      c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
-  });
-
-  /**
-   * Label shown in the input when a currency is selected and not being edited.
-   * A method (not a computed) because `currency` is a plain field, not a signal —
-   * a computed would cache the initial value and never reflect later selections.
-   */
-  selectedCurrencyLabel(): string {
-    const c = this.currencies.find(x => x.code === this.currency);
-    return c ? `${c.code} — ${c.name}` : this.currency;
-  }
+  // Multi-destination mode.
+  multiDest    = false;
+  destinations: DestForm[] = [];
 
   saving = signal(false);
   error  = signal('');
 
-  openCurrency(): void {
-    this.currencyQuery.set('');
-    this.activeIndex.set(0);
-    this.currencyOpen.set(true);
+  private blankLeg(): DestForm {
+    return { destination: '', startDate: '', endDate: '', currency: 'USD' };
   }
 
-  onCurrencyInput(value: string): void {
-    this.currencyQuery.set(value);
-    this.activeIndex.set(0);
-    this.currencyOpen.set(true);
-  }
-
-  selectCurrency(code: string): void {
-    this.currency = code;
-    this.currencyQuery.set('');
-    this.currencyOpen.set(false);
-  }
-
-  closeCurrency(): void {
-    this.currencyOpen.set(false);
-  }
-
-  onCurrencyKeydown(event: KeyboardEvent): void {
-    if (!this.currencyOpen() && (event.key === 'ArrowDown' || event.key === 'Enter')) {
-      this.openCurrency();
-      return;
+  toggleMulti(on: boolean): void {
+    this.multiDest = on;
+    if (on && this.destinations.length === 0) {
+      // Seed the first leg from anything already typed in single mode.
+      this.destinations = [{
+        destination: this.destination,
+        startDate: this.startDate,
+        endDate: this.endDate,
+        currency: this.currency,
+      }];
     }
-    const list = this.filteredCurrencies();
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        this.activeIndex.set(Math.min(this.activeIndex() + 1, list.length - 1));
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        this.activeIndex.set(Math.max(this.activeIndex() - 1, 0));
-        break;
-      case 'Enter': {
-        event.preventDefault();
-        const choice = list[this.activeIndex()];
-        if (choice) this.selectCurrency(choice.code);
-        break;
-      }
-      case 'Escape':
-        this.closeCurrency();
-        break;
-    }
+  }
+
+  addDestination(): void {
+    this.destinations.push(this.blankLeg());
+  }
+
+  removeDestination(index: number): void {
+    if (this.destinations.length > 1) this.destinations.splice(index, 1);
   }
 
   async create(): Promise<void> {
     const name = this.name.trim();
-    const destination = this.destination.trim();
-    if (!name)                            { this.error.set('Please enter a trip name.'); return; }
-    if (!destination)                     { this.error.set('Please enter a destination.'); return; }
-    if (!this.startDate || !this.endDate) { this.error.set('Please choose start and end dates.'); return; }
-    if (this.endDate < this.startDate)    { this.error.set('End date can’t be before the start date.'); return; }
+    if (!name) { this.error.set('Please enter a trip name.'); return; }
+
+    let input: CreateTripInput;
+
+    if (this.multiDest) {
+      for (let i = 0; i < this.destinations.length; i++) {
+        const d = this.destinations[i], n = i + 1;
+        if (!d.destination.trim())      { this.error.set(`Destination ${n}: please enter a destination.`); return; }
+        if (!d.startDate || !d.endDate) { this.error.set(`Destination ${n}: please choose start and end dates.`); return; }
+        if (d.endDate < d.startDate)    { this.error.set(`Destination ${n}: end date can’t be before the start date.`); return; }
+      }
+      const destinations: TripDestination[] = this.destinations.map(d => ({
+        destination: d.destination.trim(),
+        startDate: d.startDate,
+        endDate: d.endDate,
+        currency: d.currency,
+      }));
+      input = { name, ...tripSummary(destinations), destinations };
+    } else {
+      const destination = this.destination.trim();
+      if (!destination)                     { this.error.set('Please enter a destination.'); return; }
+      if (!this.startDate || !this.endDate) { this.error.set('Please choose start and end dates.'); return; }
+      if (this.endDate < this.startDate)    { this.error.set('End date can’t be before the start date.'); return; }
+      input = { name, destination, startDate: this.startDate, endDate: this.endDate, currency: this.currency };
+    }
 
     this.error.set('');
     this.saving.set(true);
     try {
-      const input: CreateTripInput = {
-        name,
-        destination,
-        startDate: this.startDate,
-        endDate: this.endDate,
-        currency: this.currency,
-      };
       await this.tripService.createTrip(input);
       // createTrip sets the new trip active; land on Home.
       this.router.navigate(['/home']);
