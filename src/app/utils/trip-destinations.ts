@@ -48,6 +48,37 @@ export function activeLeg(destinations: TripDestination[], todayISO: string): Tr
   return destinations.reduce((latest, d) => (d.endDate > latest.endDate ? d : latest), destinations[0]);
 }
 
+/** A destination row from the edit form, carrying the leg it was loaded from. */
+export interface DestinationEdit {
+  destination: string;
+  startDate: string;
+  endDate: string;
+  currency: string;
+  original?: TripDestination;   // the stored leg this row came from (if any)
+}
+
+/**
+ * Build the destinations array from edit-form rows. Trims text and preserves a
+ * leg's geocoded coords/placeId only when its destination text is unchanged from
+ * the original — an edited destination drops its coords so the map re-geocodes.
+ */
+export function buildEditedDestinations(rows: DestinationEdit[]): TripDestination[] {
+  return rows.map(r => {
+    const destination = r.destination.trim();
+    const leg: TripDestination = {
+      destination,
+      startDate: r.startDate,
+      endDate: r.endDate,
+      currency: r.currency,
+    };
+    if (r.original && r.original.destination.trim() === destination) {
+      if (r.original.destinationCoords)  leg.destinationCoords  = r.original.destinationCoords;
+      if (r.original.destinationPlaceId) leg.destinationPlaceId = r.original.destinationPlaceId;
+    }
+    return leg;
+  });
+}
+
 /**
  * A trip's legs. Returns the stored `destinations` array when present, otherwise
  * derives a single leg from the flat fields (back-compat for pre-multi-destination

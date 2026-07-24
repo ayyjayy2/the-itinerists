@@ -254,7 +254,8 @@ export class TripService {
 
   /** Edit a trip's core details (any member). Only defined fields are written. */
   async updateTrip(tripId: string, patch: Partial<Pick<TripDoc,
-    'name' | 'destination' | 'startDate' | 'endDate' | 'currency'>>): Promise<void> {
+    'name' | 'destination' | 'destinationPlaceId' | 'destinationCoords'
+    | 'startDate' | 'endDate' | 'currency' | 'destinations'>>): Promise<void> {
     const data = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
     if (Object.keys(data).length === 0) return;
     await runInInjectionContext(this.injector, () =>

@@ -5,15 +5,26 @@ import { Router, RouterLink } from '@angular/router';
 import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
 import { ThemeService } from '../../services/theme.service';
-import { TripDoc, TripMember, ActivityLogEntry } from '../../models/trip.models';
+import { TripDoc, TripDestination, TripMember, ActivityLogEntry } from '../../models/trip.models';
+import { tripDestinations, tripSummary, buildEditedDestinations, DestinationEdit } from '../../utils/trip-destinations';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
 
 interface CurrencyOption { code: string; label: string; }
 interface HideablePage { key: string; label: string; icon: string; }
 
+/** One editable destination row, remembering the leg it was loaded from. */
+interface DestRow {
+  destination: string;
+  startDate: string;
+  endDate: string;
+  currency: string;
+  original?: TripDestination;
+}
+
 @Component({
   selector: 'app-trip-settings',
-  imports: [IconComponent, CommonModule, FormsModule, RouterLink],
+  imports: [IconComponent, CurrencySelectComponent, CommonModule, FormsModule, RouterLink],
   templateUrl: './trip-settings.component.html',
   styleUrl: './trip-settings.component.scss',
 })
@@ -54,6 +65,9 @@ export class TripSettingsComponent {
 
   // Editable form fields, seeded from the active trip.
   name = ''; destination = ''; startDate = ''; endDate = ''; currency = 'USD';
+  // Multi-destination editing.
+  multiDest = false;
+  destRows: DestRow[] = [];
   private seededId: string | null = null;
 
   saving      = signal(false);
@@ -85,6 +99,39 @@ export class TripSettingsComponent {
   private seedForm(t: TripDoc): void {
     this.name = t.name; this.destination = t.destination;
     this.startDate = t.startDate; this.endDate = t.endDate; this.currency = t.currency;
+    // Seed the destination rows from the trip's legs; open in multi mode when
+    // the trip already has more than one destination.
+    const legs = tripDestinations(t);
+    this.destRows = legs.map(leg => ({
+      destination: leg.destination,
+      startDate: leg.startDate,
+      endDate: leg.endDate,
+      currency: leg.currency,
+      original: leg,
+    }));
+    this.multiDest = legs.length > 1;
+  }
+
+  // ── Multi-destination editing ────────────────────────────────────────────────
+  /** The toggle can't be switched off while more than one leg exists. */
+  get multiToggleLocked(): boolean { return this.destRows.length > 1; }
+
+  toggleMulti(on: boolean): void {
+    if (this.multiToggleLocked) { this.multiDest = true; return; } // locked on
+    this.multiDest = on;
+    if (on && this.destRows.length === 0) {
+      this.destRows = [{ destination: this.destination, startDate: this.startDate, endDate: this.endDate, currency: this.currency }];
+    }
+  }
+
+  addDestination(): void {
+    this.destRows.push({ destination: '', startDate: '', endDate: '', currency: 'USD' });
+  }
+
+  removeDestination(index: number): void {
+    if (this.destRows.length > 1) this.destRows.splice(index, 1);
+    // Dropping back to a single leg unlocks the toggle but stays in multi view
+    // until the user chooses to collapse.
   }
 
   isMe(m: TripMember): boolean { return m.uid === this.currentUid(); }
@@ -93,17 +140,28 @@ export class TripSettingsComponent {
   async saveDetails(): Promise<void> {
     const t = this.trip();
     if (!t) return;
-    const name = this.name.trim(), destination = this.destination.trim();
-    if (!name)                            { this.error.set('Please enter a trip name.'); return; }
-    if (!destination)                     { this.error.set('Please enter a destination.'); return; }
-    if (!this.startDate || !this.endDate) { this.error.set('Please choose start and end dates.'); return; }
-    if (this.endDate < this.startDate)    { this.error.set('End date can’t be before the start date.'); return; }
+    const name = this.name.trim();
+    if (!name) { this.error.set('Please enter a trip name.'); return; }
+
+    // Assemble the destination rows to validate + persist (single mode = one row).
+    const rows: DestinationEdit[] = this.multiDest
+      ? this.destRows.map(r => ({ destination: r.destination, startDate: r.startDate, endDate: r.endDate, currency: r.currency, original: r.original }))
+      : [{ destination: this.destination, startDate: this.startDate, endDate: this.endDate, currency: this.currency, original: tripDestinations(t)[0] }];
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      const where = this.multiDest ? `Destination ${i + 1}: ` : '';
+      if (!r.destination.trim())    { this.error.set(`${where}please enter a destination.`); return; }
+      if (!r.startDate || !r.endDate) { this.error.set(`${where}please choose start and end dates.`); return; }
+      if (r.endDate < r.startDate)    { this.error.set(`${where}end date can’t be before the start date.`); return; }
+    }
+
+    const destinations = buildEditedDestinations(rows);
+    const patch: Parameters<typeof this.tripService.updateTrip>[1] = { name, ...tripSummary(destinations), destinations };
 
     this.error.set(''); this.savedOk.set(false); this.saving.set(true);
     try {
-      await this.tripService.updateTrip(t.id, {
-        name, destination, startDate: this.startDate, endDate: this.endDate, currency: this.currency,
-      });
+      await this.tripService.updateTrip(t.id, patch);
       this.savedOk.set(true);
       setTimeout(() => this.savedOk.set(false), 2500);
     } catch (e: unknown) {
