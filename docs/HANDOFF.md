@@ -1,4 +1,4 @@
-# Getaway Club — Session Handoff
+# The Itinerists — Session Handoff
 
 _Last updated: 2026-07-19. This is the authoritative "pick up where we left off" doc.
 (Note: `docs/SESSION-STATUS.md` is STALE — ignore it.)_
@@ -18,7 +18,7 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
   Revived the two orphaned pages (Map, Transportation), destination-aware map geocoding, map
   locations list, multi-mode Transportation surfaced across Home/Itinerary/Map, finance
   "tracked so far" total. Full detail: **`docs/feature-log.md`**.
-- **App:** "Getaway Club" — Angular 19 multi-trip travel app. Live: https://trip-planner-ayyjayy2.web.app
+- **App:** "The Itinerists" (formerly "Getaway Club") — Angular 19 multi-trip travel app. Live: https://trip-planner-ayyjayy2.web.app
 - **Branch:** `master` (clean, nothing uncommitted). **Open PRs:** none.
 - **No orphaned pages remain** — every `src/app/pages/*` is routed + in the nav.
 - **What's next (open, not started):** see §5 — mostly user-decision items (final app name,
@@ -29,8 +29,8 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
 
 ## 2. Project overview
 
-- **App:** Angular 19 standalone-components **"Getaway Club"** (working name; earlier "Trip
-  Planner" / "Savannah Getaway"), a multi-trip travel planning app. Signals throughout
+- **App:** Angular 19 standalone-components **"The Itinerists"** (formerly "Getaway Club";
+  earlier "Trip Planner" / "Savannah Getaway"), a multi-trip travel planning app. Signals throughout
   (`signal`/`computed`/`effect`).
 - **Platform direction (don't misframe this):** the end goal is a **native iOS + Android app**,
   **iOS-first**, shipped via **Capacitor** (ROADMAP Phase 4) — the same Angular codebase becomes
@@ -42,7 +42,7 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
   (username → synthetic email `username@trip-planner.local`).
 - **Firebase project:** `trip-planner-ayyjayy2`. Web config lives in the app env + repeated in
   the scratchpad scripts.
-- **Repo:** `ayyjayy2/getaway-club` (private; formerly `trip-planner`). Default branch `master`.
+- **Repo:** `ayyjayy2/the-itinerists` (private; formerly `getaway-club`, `trip-planner`). Default branch `master`.
 - **Data model:** `trips/{tripId}` + per-trip sub-collections (members, itinerary, finance, stays,
   recs, cars, pins, flights, outfits, dayLabels, packing, packingSuggestions, invites,
   activityLog); `userTrips/{uid}` index; `inviteIndex/{code}` global lookup. Plus top-level

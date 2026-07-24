@@ -1,6 +1,6 @@
 The THIRD travel planning prototype that builds off of the Ireland app. This version begins to morph the app into a re-usable, multi-project, more secure app. This version includes user accounts and swapped hard-coded data to be user-inputted.
 
-# IrelandStpatricks
+# The Itinerists
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.4.
 

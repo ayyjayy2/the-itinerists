@@ -9,8 +9,8 @@
     "rules": "storage.rules"
   },
   "hosting": {
-    "site": "getaway-club",
-    "public": "dist/getaway-club/browser",
+    "site": "the-itinerists",
+    "public": "dist/the-itinerists/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
