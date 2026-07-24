@@ -76,7 +76,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
   private readPins(): string[] {
     try { const v = localStorage.getItem(this.PINS_KEY); if (v) return JSON.parse(v); } catch { /* ignore */ }
-    return ['/itinerary', '/finance', '/packing', '/recs']; // sensible defaults
+    return ['/itinerary', '/finance', '/packing']; // 3 fit a phone-width row
   }
 
   /** Feature teaser shown on the zero-trips welcome state. */
