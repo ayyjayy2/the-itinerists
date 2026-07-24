@@ -49,6 +49,9 @@ async function seed() {
       setDoc(doc(db, 'userTrips', 'alice'), { tripIds: ['T'] }),
       setDoc(doc(db, 'userTrips', 'bob'),   { tripIds: ['T'] }),
       setDoc(doc(db, 'userExpenses', 'bob'), { items: [] }),
+      // A trip carol created but hasn't added her member doc to yet (for the
+      // legit "trip creator self-adds as owner" case).
+      setDoc(doc(db, 'trips', 'TC'), { name: 'Carol Trip', createdBy: 'carol', memberCount: 0 }),
       setDoc(doc(db, 'geocache', 'g1'), { x: 1 }),
       setDoc(doc(db, '_appLogs', 'l1'), { m: 'hi' }),
     ]);
@@ -138,6 +141,19 @@ await t('anon reads geocache', 'deny', () => getDoc(doc(anon, 'geocache', 'g1'))
 await t('signed-in writes geocache', 'allow', () => setDoc(doc(bob, 'geocache', 'g2'), { x: 2 }));
 await t('anon creates _appLogs', 'allow', () => setDoc(doc(anon, '_appLogs', 'l2'), { m: 'y' }));
 await t('anon reads _appLogs', 'deny', () => getDoc(doc(anon, '_appLogs', 'l1')));
+
+console.log('\nPrivilege-escalation locks');
+// users: a user must not be able to grant themselves admin / un-disable themselves
+await t('self cannot set isAdmin=true (update)', 'deny', () => updateDoc(doc(bob, 'users', 'bob'), { isAdmin: true }));
+await t('self cannot create own doc as admin', 'deny', () => setDoc(doc(dave, 'users', 'dave'), { uid: 'dave', username: 'dave', isAdmin: true }));
+await t('self can edit non-privileged profile fields', 'allow', () => updateDoc(doc(bob, 'users', 'bob'), { displayName: 'Bobby' }));
+await t('self cannot change own isDisabled', 'deny', () => updateDoc(doc(bob, 'users', 'bob'), { isDisabled: true }));
+await t('admin can set isAdmin on another user', 'allow', () => updateDoc(doc(admin, 'users', 'bob'), { isAdmin: true }));
+// members: a self-joining member must not be able to make themselves owner
+await t('self-join cannot self-assign owner role', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'owner' }));
+await t('self-join creates as plain member', 'allow', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'member' }));
+await t('trip creator may self-add as owner', 'allow', () => setDoc(doc(carol, 'trips', 'TC', 'members', 'carol'), { uid: 'carol', role: 'owner' }));
+await t('member cannot self-promote to owner', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'bob'), { role: 'owner' }));
 
 console.log('\nOutfit photos (owner-private)');
 await t('owner reads own outfit photo', 'allow', () => getDoc(doc(bob, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));

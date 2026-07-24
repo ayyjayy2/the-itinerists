@@ -58,8 +58,17 @@ service cloud.firestore {
     // live here. You may write only your own doc; admins may also edit (disable).
     match /users/{userId} {
       allow read:   if true;
-      allow create: if isSignedIn() && userId == uid();
-      allow update, delete: if userId == uid() || isAdmin();
+      // You may create only your own doc, and NOT pre-set privileged fields.
+      allow create: if isSignedIn() && userId == uid()
+                 && request.resource.data.get('isAdmin', false) == false
+                 && request.resource.data.get('isDisabled', false) == false;
+      // You may edit your own profile but NOT the privileged fields (isAdmin,
+      // isDisabled) — that would be self-escalation. Admins may edit anything.
+      allow update: if isAdmin()
+                 || (userId == uid()
+                     && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
+                     && request.resource.data.get('isDisabled', false) == resource.data.get('isDisabled', false));
+      allow delete: if userId == uid() || isAdmin();
     }
 
     // ── Per-user trip index ────────────────────────────────────────────────
@@ -102,8 +111,20 @@ service cloud.firestore {
       // (self-join via invite, self-leave).
       match /members/{memberId} {
         allow read:   if isMember(tripId);
-        allow create: if isSignedIn() && (memberId == uid() || isOwner(tripId) || isAdmin());
-        allow update, delete: if memberId == uid() || isOwner(tripId) || isAdmin();
+        // Self-join is allowed only as a plain 'member' — you can't make yourself
+        // an owner. The one exception is the trip's creator seeding themselves as
+        // the initial owner. Existing owners/admins may add anyone in any role.
+        allow create: if isSignedIn() && (
+                         isOwner(tripId) || isAdmin()
+                         || (memberId == uid() && request.resource.data.role == 'member')
+                         || (memberId == uid() && request.resource.data.role == 'owner'
+                             && get(/databases/$(database)/documents/trips/$(tripId)).data.createdBy == uid())
+                       );
+        // Owners/admins manage roles; you may edit your own member doc but NOT
+        // change your own role (no self-promotion to owner).
+        allow update: if isOwner(tripId) || isAdmin()
+                   || (memberId == uid() && request.resource.data.role == resource.data.role);
+        allow delete: if memberId == uid() || isOwner(tripId) || isAdmin();
       }
 
       // Invites: public read (pre-auth join resolves the code); members manage.
