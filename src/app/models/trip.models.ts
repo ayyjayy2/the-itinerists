@@ -17,6 +17,10 @@ export interface FirestoreUser {
   isAdmin: boolean;
   isDisabled?: boolean;
   createdAt: number;   // unix ms
+  /** Email the Auth account signs in with. Absent → synthetic username@the-itinerists.local. */
+  authEmail?: string;
+  /** Pinned Home shortcuts (page paths). Absent → default set. */
+  homePins?: string[];
 }
 
 /**
