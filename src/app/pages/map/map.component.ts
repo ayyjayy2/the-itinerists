@@ -10,6 +10,7 @@ import { DataService } from '../../services/data.service';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { Flight, ItineraryItem, MapPin, TripUser } from '../../models/trip.models';
+import { tripDestinations } from '../../utils/trip-destinations';
 import { IconComponent } from '../../shared/icon/icon.component';
 
 // Bump this to wipe the geocache and re-resolve all locations with new strategy.
@@ -126,6 +127,22 @@ function customPinIcon(color: string): L.DivIcon {
   });
 }
 
+/** Trip-level destination anchor — larger teardrop with the leg number. */
+function destPinIcon(num: number): L.DivIcon {
+  const color = '#2E6F4E'; // deep sage — distinct from category/stay/transport pins
+  return L.divIcon({
+    className: '',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="34" height="44" viewBox="0 0 24 32">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 20 12 20S24 21 24 12C24 5.37 18.63 0 12 0z"
+        fill="${color}" stroke="white" stroke-width="2"/>
+      <circle cx="12" cy="12" r="7" fill="white"/>
+      <text x="12" y="12" text-anchor="middle" dominant-baseline="central"
+            font-family="Nunito,sans-serif" font-size="9" font-weight="800" fill="${color}">${num}</text>
+    </svg>`,
+    iconSize: [34, 44], iconAnchor: [17, 44], popupAnchor: [0, -46],
+  });
+}
+
 function transportPinIcon(color: string): L.DivIcon {
   // Teardrop pin with a small vehicle glyph (body + wheels) in white.
   return L.divIcon({
@@ -229,6 +246,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private markerByKey = new Map<string, L.Marker>();
 
   private map: L.Map | null = null;
+  private destLayer      = L.layerGroup();
+  private destPinsRendered = false;
   private flightLayer    = L.layerGroup();
   private routeLayer     = L.layerGroup();
   private accomLayer     = L.layerGroup();
@@ -321,6 +340,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.itinLayer.addTo(this.map);
     this.customLayer.addTo(this.map);
     this.transportLayer.addTo(this.map);
+    this.destLayer.addTo(this.map);
 
     await this.waitForData();
     if (this.destroyed) return;
@@ -329,6 +349,50 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     await this.geocodeInitial();
     if (this.destroyed) return;
     this.ngZone.run(() => this.mapReady.set(true));
+    // Trip-level destination pins (multi-destination only). Runs after the
+    // marker cycle so its fit-all-destinations wins the initial view.
+    void this.renderDestinationPins();
+  }
+
+  /**
+   * Drop a distinct anchor pin for each destination leg and fit the map to all
+   * of them. Multi-destination trips only — single-destination maps are
+   * unchanged (itinerary markers drive the view as before). Runs once.
+   */
+  private async renderDestinationPins(): Promise<void> {
+    if (this.destPinsRendered || !this.map) return;
+    const trip = this.tripService.activeTrip();
+    if (!trip) return;
+    const legs = tripDestinations(trip);
+    if (legs.length <= 1) return;
+    this.destPinsRendered = true;
+
+    const bounds: [number, number][] = [];
+    for (let i = 0; i < legs.length; i++) {
+      const leg = legs[i];
+      let coords = leg.destinationCoords ?? null;
+      if (!coords) coords = await this.geocodeWithFallback(leg.destination);
+      if (this.destroyed) return;
+      if (!coords) continue;
+
+      const short = leg.destination.split(',')[0].trim();
+      const dates = `${this.formatDate(leg.startDate)} – ${this.formatDate(leg.endDate)}`;
+      const popup = `
+        <div style="min-width:150px;font-family:'Nunito',sans-serif;">
+          <div style="font-weight:800;font-size:13px;color:#1a4a2e;padding-bottom:5px;
+                      border-bottom:2px solid #2E6F4E;">📍 Stop ${i + 1}: ${short}</div>
+          <div style="font-size:11px;color:#888;margin-top:5px;">${dates}</div>
+        </div>`;
+
+      L.marker([coords.lat, coords.lng], { icon: destPinIcon(i + 1) })
+        .bindPopup(popup)
+        .addTo(this.destLayer);
+      bounds.push([coords.lat, coords.lng]);
+    }
+
+    if (this.map && bounds.length > 1) {
+      this.map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50] });
+    }
   }
 
   private waitForData(): Promise<void> {
