@@ -46,6 +46,22 @@ export class UserService {
     );
   }
 
+  /** Persist the home/nav layout choice on the account. */
+  async updateHomeLayout(layout: 'A' | 'B'): Promise<void> {
+    const uid = this._firestoreUser()?.uid;
+    if (!uid) return;
+    await runInInjectionContext(this.injector, () =>
+      updateDoc(doc(this.firestore, 'users', uid), { homeLayout: layout }));
+  }
+
+  /** Stamp the bell's high-water mark — clears the badge on every device. */
+  async markActivitySeen(): Promise<void> {
+    const uid = this._firestoreUser()?.uid;
+    if (!uid) return;
+    await runInInjectionContext(this.injector, () =>
+      updateDoc(doc(this.firestore, 'users', uid), { lastSeenActivityAt: Date.now() }));
+  }
+
   /** Persist Home pins on the account (personalization follows the user across devices). */
   async updateHomePins(pins: string[]): Promise<void> {
     const uid = this._firestoreUser()?.uid;

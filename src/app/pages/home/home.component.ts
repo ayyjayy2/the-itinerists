@@ -15,6 +15,8 @@ import { WeatherService } from '../../services/weather.service';
 import { TripDoc, TripDestination, ActivityLogEntry } from '../../models/trip.models';
 import { tripDestinations, activeLeg } from '../../utils/trip-destinations';
 import { effectivePins } from '../../utils/pins';
+import { activityText as activityLine, timeAgo as agoOf } from '../../utils/activity';
+import { effectiveHomeLayout } from '../../utils/layout';
 
 @Component({
   selector: 'app-home',
@@ -45,6 +47,23 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   /** The user's trips, for the switcher row. */
   readonly trips = signal<TripDoc[]>([]);
+
+  readonly isLayoutA = computed(() => effectiveHomeLayout(this.userService.firestoreUser()) === 'A');
+
+  /** Type B "Quick Access" — every page, old-layout style. */
+  readonly quickAccess = [
+    { path: '/itinerary',      label: 'Itinerary',      icon: 'itinerary', desc: 'Day-by-day plans',            accent: '#F9E4B7' },
+    { path: '/flights',        label: 'Flights',        icon: 'flights',   desc: 'Arrivals & departures',       accent: '#B5D5F5' },
+    { path: '/accommodations', label: 'Stays',          icon: 'stays',     desc: 'Hotels & check-in',           accent: '#D4B5F5' },
+    { path: '/transportation', label: 'Transportation', icon: 'car',       desc: 'Rental car & getting around', accent: '#F5D4B5' },
+    { path: '/finance',        label: 'Finance',        icon: 'finance',   desc: 'Shared expenses',             accent: '#88C9A1' },
+    { path: '/expenses',       label: 'My Expenses',    icon: 'expenses',  desc: 'Your private spending',       accent: '#F4C2C2' },
+    { path: '/recs',           label: 'Recs',           icon: 'recs',      desc: 'Tips & spots',                accent: '#F5B5D4' },
+    { path: '/packing',        label: 'Packing',        icon: 'packing',   desc: 'Your packing list',           accent: '#B5F5D4' },
+    { path: '/outfits',        label: 'Outfits',        icon: 'outfits',   desc: 'Plan your looks',             accent: '#F5B5D4' },
+    { path: '/map',            label: 'Map',            icon: 'map',       desc: 'Trip map',                    accent: '#B5D5F5' },
+    { path: '/profile',        label: 'Profile',        icon: 'profile',   desc: 'Settings & account',          accent: '#F9E4B7' },
+  ];
 
   // ── Pinned quick-shortcuts (stored on the account — follows the user) ──────
   private readonly LEGACY_PINS_KEY = 'tripplanner_home_pins';
@@ -302,22 +321,9 @@ export class HomeComponent implements OnInit, OnDestroy {
       .map(a => ({ entry: a, member: byUid.get(a.performedByUid) }));
   });
 
-  activityText(a: ActivityLogEntry): string {
-    switch (a.action) {
-      case 'member_added':    return `${a.targetName} joined the trip`;
-      case 'member_removed':  return `${a.performedByName} removed ${a.targetName}`;
-      case 'member_left':     return `${a.targetName} left the trip`;
-      case 'member_restored': return `${a.performedByName} added ${a.targetName} back`;
-      default:                return 'updated the trip';
-    }
-  }
+  activityText(a: ActivityLogEntry): string { return activityLine(a); }
 
-  timeAgo(ts: number): string {
-    const s = Math.floor((this.now() - ts) / 1000);
-    if (s < 3600) return `${Math.max(1, Math.floor(s / 60))}m ago`;
-    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-    return `${Math.floor(s / 86400)}d ago`;
-  }
+  timeAgo(ts: number): string { return agoOf(ts, this.now()); }
 
   // ── Switcher ───────────────────────────────────────────────────────────────
   isActive(t: TripDoc): boolean { return t.id === this.activeTrip()?.id; }

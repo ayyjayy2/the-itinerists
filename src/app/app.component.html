@@ -4,7 +4,8 @@
 } @else {
   <div class="app-shell">
 
-    <!-- ── Sidebar (wide screens ≥769px) ── -->
+    <!-- ── Sidebar (wide screens ≥769px, Type A only) ── -->
+    @if (!isLayoutB()) {
     <nav class="sidebar" [class.collapsed]="navCollapsed">
       <div class="sidebar-inner">
         <div class="sidebar-brand">
@@ -45,15 +46,24 @@
         </div>
       </div>
     </nav>
+    }
 
     <!-- ── Main content ── -->
     <div class="main-area">
       <header class="app-header">
+        @if (isLayoutB()) {
+          <button class="menu-btn" type="button" (click)="toggleDrawer()" aria-label="Menu">
+            <app-icon name="menu" [size]="24" />
+          </button>
+        }
         <a class="header-title" routerLink="/home">
           <app-brand [mark]="26" />
         </a>
 
         <div class="header-right">
+          @if (isLayoutB()) {
+            <app-notification-bell />
+          }
           <button class="refresh-btn" (click)="hardRefresh()" title="Hard refresh">↻</button>
           @if (currentUser()) {
             <a class="user-chip" routerLink="/profile">
@@ -69,7 +79,40 @@
       </main>
     </div>
 
-    <!-- ── Bottom tab bar (mobile ≤768px) ── -->
+    <!-- ── Type B: hamburger drawer ── -->
+    @if (isLayoutB() && drawerOpen()) {
+      <div class="drawer-scrim" (click)="closeDrawer()"></div>
+      <aside class="drawer">
+        <div class="drawer-head">
+          <app-brand [mark]="28" />
+          <span class="drawer-trip">{{ (tripService.activeTrip()?.destination || tripService.activeTrip()?.name)?.split(',')?.[0] ?? 'The Itinerists' }}</span>
+        </div>
+        <div class="drawer-nav">
+          @for (item of drawerItems(); track item.path) {
+            <a class="drawer-item" [routerLink]="item.path" routerLinkActive="active" (click)="closeDrawer()">
+              <span class="drawer-icon"><app-icon [name]="item.icon" [size]="22" /></span>
+              <span class="drawer-label">{{ item.label }}</span>
+            </a>
+          }
+        </div>
+        <div class="drawer-foot">
+          <button class="drawer-refresh" (click)="hardRefresh()">↻ Refresh</button>
+          <div class="drawer-version">🌿 Layn's Leaf {{ version }} · {{ buildDate }}</div>
+          @if (currentUser()) {
+            <div class="drawer-user">
+              <div class="avatar" [style.background]="currentUser()!.color">{{ currentUser()!.avatarEmoji }}</div>
+              <div class="user-info">
+                <a class="user-name" routerLink="/profile" (click)="closeDrawer()">{{ currentUser()!.name }}</a>
+                <span class="user-switch" (click)="logout()">Log out</span>
+              </div>
+            </div>
+          }
+        </div>
+      </aside>
+    }
+
+    @if (!isLayoutB()) {
+    <!-- ── Bottom tab bar (mobile ≤768px, Type A only) ── -->
     <nav class="tab-bar">
       @for (item of tabItems(); track item.path) {
         <a class="tab-item" [routerLink]="item.path" routerLinkActive="active">
@@ -100,6 +143,7 @@
           <button class="more-logout" (click)="logout()">Log out</button>
         }
       </div>
+    }
     }
 
   </div>

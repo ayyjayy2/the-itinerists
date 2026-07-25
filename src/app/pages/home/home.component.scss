@@ -319,3 +319,42 @@
     border-radius: 999px;
   }
 }
+
+// ── Type B: Quick Access grid (old layout) ──
+.qa-heading { margin: 1.4rem 0 0.8rem; }
+
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.85rem;
+}
+
+.link-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 1.1rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: all 0.18s;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--card-accent);
+  }
+
+  &:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg, var(--shadow)); }
+
+  .link-icon  { color: var(--primary-dark, #3f7d58); }
+  .link-label { font-weight: 800; color: var(--text); }
+  .link-desc  { font-size: 0.8rem; color: var(--muted, #8a8a8a); }
+}

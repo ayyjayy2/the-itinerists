@@ -20,6 +20,8 @@ import { RecsService } from './services/recs.service';
 import { OutfitsService } from './services/outfits.service';
 import { ThemeService } from './services/theme.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../version';
+import { effectiveHomeLayout } from './utils/layout';
+import { NotificationBellComponent } from './shared/notification-bell/notification-bell.component';
 
 interface NavItem {
   path: string;
@@ -29,7 +31,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent, NotificationBellComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -105,11 +107,19 @@ export class AppComponent implements OnInit {
 
   currentUser = this.userService.currentUser;
 
+  // ── Type B chrome: hamburger drawer replaces sidebar/tab bar ──
+  readonly isLayoutB = computed(() => effectiveHomeLayout(this.userService.firestoreUser()) === 'B');
+  drawerOpen = signal(false);
+  toggleDrawer(): void { this.drawerOpen.update(v => !v); }
+  closeDrawer(): void  { this.drawerOpen.set(false); }
+  /** Drawer list: everything except Profile (footer chip covers it). */
+  readonly drawerItems = computed(() => this.navItems().filter(i => i.path !== '/profile'));
+
   constructor() {
     // Track the active URL (for the More-tab highlight) and close the sheet on navigation.
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe(e => { this.currentUrl.set(e.urlAfterRedirects); this.closeMore(); });
+      .subscribe(e => { this.currentUrl.set(e.urlAfterRedirects); this.closeMore(); this.closeDrawer(); });
 
     // When a user logs in, start all data listeners
     effect(() => {
