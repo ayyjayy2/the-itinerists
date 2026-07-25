@@ -14,6 +14,7 @@ import { PackingService } from '../../services/packing.service';
 import { WeatherService } from '../../services/weather.service';
 import { TripDoc, TripDestination, ActivityLogEntry } from '../../models/trip.models';
 import { tripDestinations, activeLeg } from '../../utils/trip-destinations';
+import { effectivePins } from '../../utils/pins';
 
 @Component({
   selector: 'app-home',
@@ -45,8 +46,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   /** The user's trips, for the switcher row. */
   readonly trips = signal<TripDoc[]>([]);
 
-  // ── Pinned quick-shortcuts (customizable) ──────────────────────────────────
-  private readonly PINS_KEY = 'tripplanner_home_pins';
+  // ── Pinned quick-shortcuts (stored on the account — follows the user) ──────
+  private readonly LEGACY_PINS_KEY = 'tripplanner_home_pins';
   readonly pinnablePages = [
     { path: '/itinerary',      label: 'Itinerary',   icon: 'itinerary' },
     { path: '/flights',        label: 'Flights',     icon: 'flights' },
@@ -60,7 +61,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     { path: '/map',            label: 'Map',         icon: 'map' },
     { path: '/profile',        label: 'Profile',     icon: 'profile' },
   ];
-  readonly pins = signal<string[]>(this.readPins());
+  readonly pins = computed(() => effectivePins(this.userService.firestoreUser()));
   pinEdit = signal(false);
   readonly pinnedTiles = computed(() => {
     const set = new Set(this.pins());
@@ -69,14 +70,22 @@ export class HomeComponent implements OnInit, OnDestroy {
   togglePinEdit(): void { this.pinEdit.update(v => !v); }
   isPinned(path: string): boolean { return this.pins().includes(path); }
   togglePin(path: string): void {
-    const cur = this.pins();
+    const cur  = this.pins();
     const next = cur.includes(path) ? cur.filter(p => p !== path) : [...cur, path];
-    this.pins.set(next);
-    try { localStorage.setItem(this.PINS_KEY, JSON.stringify(next)); } catch { /* storage unavailable */ }
+    void this.userService.updateHomePins(next);
   }
-  private readPins(): string[] {
-    try { const v = localStorage.getItem(this.PINS_KEY); if (v) return JSON.parse(v); } catch { /* ignore */ }
-    return ['/itinerary', '/finance', '/packing']; // 3 fit a phone-width row
+  /** One-time: carry device-local pins (pre-account era) onto the account. */
+  private migrateLegacyPins(): void {
+    try {
+      const raw = localStorage.getItem(this.LEGACY_PINS_KEY);
+      if (!raw) return;
+      const user = this.userService.firestoreUser();
+      if (!user) return; // profile not loaded yet — try again next visit
+      if (user.homePins === undefined) {
+        void this.userService.updateHomePins(JSON.parse(raw));
+      }
+      localStorage.removeItem(this.LEGACY_PINS_KEY);
+    } catch { /* ignore bad local data */ }
   }
 
   /** Feature teaser shown on the zero-trips welcome state. */
@@ -94,6 +103,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     effect(() => {
       const t = this.activeTrip();
       if (t) this.weatherService.loadMany(tripDestinations(t));
+    });
+    // Migrate pre-account localStorage pins once the profile is available.
+    effect(() => {
+      if (this.userService.firestoreUser()) this.migrateLegacyPins();
     });
   }
 
