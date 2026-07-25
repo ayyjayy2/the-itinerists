@@ -50,7 +50,9 @@ const GEOCACHE_KEY = 'tripmap_geocache';
     .map-card-sub { color: var(--text-muted, #8a8a8a); font-size: 0.82rem;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
     .map-card-arrow { color: var(--text-muted, #8a8a8a); font-size: 1.1rem; }
-    .mini-map { height: 170px; pointer-events: none; }
+    /* position+z-index trap Leaflet's internal panes (z-index up to ~700)
+       inside the card's stacking context so menus/drawers stay on top. */
+    .mini-map { height: 170px; pointer-events: none; position: relative; z-index: 0; }
   `],
 })
 export class DayMapCardComponent implements AfterViewInit, OnDestroy {
