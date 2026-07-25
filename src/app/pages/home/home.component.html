@@ -1,16 +1,18 @@
 <div class="page-container home">
 
   @if (hasActiveTrip()) {
-    <!-- Trip switcher -->
-    <div class="switcher">
-      @for (t of trips(); track t.id) {
-        <button class="switch-chip" [class.active]="isActive(t)" (click)="switchTo(t)">
-          {{ (t.destination || t.name).split(',')[0] }}
-          @if (isActive(t)) { <span class="switch-active">· active</span> }
-        </button>
-      }
-      <a class="switch-chip new" routerLink="/trips/new">+ New</a>
-    </div>
+    <!-- Trip switcher (Type A only — Type B switches trips on My Trips) -->
+    @if (isLayoutA()) {
+      <div class="switcher">
+        @for (t of trips(); track t.id) {
+          <button class="switch-chip" [class.active]="isActive(t)" (click)="switchTo(t)">
+            {{ (t.destination || t.name).split(',')[0] }}
+            @if (isActive(t)) { <span class="switch-active">· active</span> }
+          </button>
+        }
+        <a class="switch-chip new" routerLink="/trips/new">+ New</a>
+      </div>
+    }
 
     <!-- Bold countdown hero -->
     <div class="hero">
