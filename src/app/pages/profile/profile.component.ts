@@ -6,6 +6,7 @@ import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { effectiveHomeLayout, HomeLayout } from '../../utils/layout';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 
 const EMOJI_OPTIONS = [
@@ -69,6 +70,13 @@ export class ProfileComponent implements OnInit {
   recoverySaving    = signal(false);
   recoverySuccess   = signal(false);
   recoveryError     = signal('');
+
+  readonly homeLayout = computed(() => effectiveHomeLayout(this.firestoreUser()));
+  readonly canPickLayout = computed(() => this.firestoreUser()?.username === 'alayna');
+
+  setLayout(layout: HomeLayout): void {
+    void this.userService.updateHomeLayout(layout);
+  }
 
   /** Current recovery email, or '' while the account still uses the synthetic address. */
   get currentRecoveryEmail(): string {
