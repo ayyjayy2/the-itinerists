@@ -62,6 +62,14 @@ export class UserService {
       updateDoc(doc(this.firestore, 'users', uid), { lastSeenActivityAt: Date.now() }));
   }
 
+  /** Persist the personal nav/tab order on the account. */
+  async updateNavOrder(paths: string[]): Promise<void> {
+    const uid = this._firestoreUser()?.uid;
+    if (!uid) return;
+    await runInInjectionContext(this.injector, () =>
+      updateDoc(doc(this.firestore, 'users', uid), { navOrder: paths }));
+  }
+
   /** Persist Home pins on the account (personalization follows the user across devices). */
   async updateHomePins(pins: string[]): Promise<void> {
     const uid = this._firestoreUser()?.uid;

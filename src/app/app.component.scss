@@ -367,3 +367,43 @@
     .user-name { font-weight: 700; text-decoration: none; color: var(--text); display: block; }
     .user-switch { font-size: 0.8rem; color: var(--muted, #8a8a8a); cursor: pointer; } }
 }
+
+// ── More-sheet reorder mode ──
+.sheet-tools {
+  display: flex; justify-content: flex-end;
+  padding: 0 1rem 0.25rem;
+}
+.reorder-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.85rem; font-weight: 700;
+  color: var(--primary-dark, #3f7d58);
+  padding: 4px 8px;
+}
+.reorder-hint {
+  margin: 0 1rem 0.5rem; font-size: 0.78rem;
+  color: var(--text-muted, #8a8a8a);
+}
+.reorder-list {
+  padding: 0 0.8rem calc(0.8rem + env(safe-area-inset-bottom));
+  max-height: 55vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.reorder-item {
+  display: flex; align-items: center; gap: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #eee);
+  border-radius: 12px;
+  cursor: grab;
+
+  .reorder-grip  { color: var(--text-muted, #8a8a8a); font-size: 0.95rem; }
+  .reorder-label { font-weight: 600; flex: 1; }
+  .reorder-bar-tag {
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--primary-dark, #3f7d58);
+    background: var(--primary-soft, #eaf3ec);
+    padding: 0.15rem 0.45rem; border-radius: 999px;
+  }
+}
+.cdk-drag-preview.reorder-item { box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+.cdk-drag-placeholder { opacity: 0.3; }

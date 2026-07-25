@@ -13,7 +13,7 @@
         </div>
 
         <div class="sidebar-nav">
-          @for (item of navItems(); track item.path) {
+          @for (item of orderedNavItems(); track item.path) {
             <a class="nav-item" [routerLink]="item.path" routerLinkActive="active" [title]="navCollapsed ? item.label : ''">
               <span class="nav-icon"><app-icon [name]="item.icon" [size]="22" /></span>
               <span class="nav-label">{{ item.label }}</span>
@@ -131,16 +131,36 @@
       <div class="sheet-backdrop" (click)="closeMore()"></div>
       <div class="more-sheet">
         <div class="sheet-handle"></div>
-        <div class="more-grid">
-          @for (item of moreItems(); track item.path) {
-            <a class="more-item" [routerLink]="item.path" routerLinkActive="active" (click)="closeMore()">
-              <span class="more-icon"><app-icon [name]="item.icon" [size]="24" /></span>
-              <span class="more-label">{{ item.label }}</span>
-            </a>
-          }
+        <div class="sheet-tools">
+          <button class="reorder-btn" type="button" (click)="toggleReorder()">
+            {{ reorderMode() ? 'Done' : 'Reorder' }}
+          </button>
         </div>
-        @if (currentUser()) {
-          <button class="more-logout" (click)="logout()">Log out</button>
+
+        @if (reorderMode()) {
+          <p class="reorder-hint">Drag to rearrange — the top 3 join Home in the bottom bar.</p>
+          <div class="reorder-list" cdkDropList (cdkDropListDropped)="dropNavItem($event)">
+            @for (item of reorderableItems(); track item.path) {
+              <div class="reorder-item" cdkDrag>
+                <span class="reorder-grip">⠿</span>
+                <span class="more-icon"><app-icon [name]="item.icon" [size]="20" /></span>
+                <span class="reorder-label">{{ item.label }}</span>
+                @if ($index < 3) { <span class="reorder-bar-tag">bar</span> }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="more-grid">
+            @for (item of moreItems(); track item.path) {
+              <a class="more-item" [routerLink]="item.path" routerLinkActive="active" (click)="closeMore()">
+                <span class="more-icon"><app-icon [name]="item.icon" [size]="24" /></span>
+                <span class="more-label">{{ item.label }}</span>
+              </a>
+            }
+          </div>
+          @if (currentUser()) {
+            <button class="more-logout" (click)="logout()">Log out</button>
+          }
         }
       </div>
     }
