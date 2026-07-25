@@ -20,16 +20,16 @@ import { maskEmail } from '../../utils/email';
           <p class="reset-info">Reset link sent to <strong>{{ sentTo() }}</strong>.
             Follow it to choose a new password, then sign in here.</p>
         } @else if (noRecovery()) {
-          <p class="reset-info">No recovery email is on file for this username —
+          <p class="reset-info">No recovery email is on file for this account —
             ask an admin to reset your password.</p>
         } @else {
-          <p class="reset-hint">Enter your username. If a recovery email is on file,
-            we'll send a reset link there.</p>
+          <p class="reset-hint">Enter your username or recovery email. If a recovery
+            email is on file, we'll send a reset link there.</p>
           <form class="auth-form" (ngSubmit)="submit()">
             <div class="form-group">
-              <label for="username">Username</label>
+              <label for="username">Username or email</label>
               <input id="username" type="text" [(ngModel)]="username" name="username"
-                     placeholder="Enter your username" autocomplete="username"
+                     placeholder="Username or recovery email" autocomplete="username"
                      autocapitalize="none" required />
             </div>
             @if (error()) {
@@ -71,8 +71,10 @@ export class ForgotPasswordComponent {
       const email = await this.authService.sendPasswordReset(this.username);
       if (email === null) this.noRecovery.set(true);
       else this.sentTo.set(maskEmail(email));
-    } catch {
-      this.error.set('Something went wrong. Please try again.');
+    } catch (err: any) {
+      this.error.set(err?.code === 'auth/user-not-found'
+        ? 'No account uses that email.'
+        : 'Something went wrong. Please try again.');
     } finally {
       this.loading.set(false);
     }

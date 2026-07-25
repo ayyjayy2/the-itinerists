@@ -45,4 +45,12 @@ describe('ForgotPasswordComponent', () => {
     await comp.submit();
     expect(comp.error()).toContain('Something went wrong');
   });
+
+  it('names the problem when an entered email matches no account', async () => {
+    auth.sendPasswordReset.and.rejectWith({ code: 'auth/user-not-found' });
+    const { comp } = create();
+    comp.username = 'typo@gmail.com';
+    await comp.submit();
+    expect(comp.error()).toBe('No account uses that email.');
+  });
 });
