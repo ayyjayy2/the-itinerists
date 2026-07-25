@@ -281,8 +281,11 @@
   display: flex;
   gap: 0.5rem;
   overflow-x: auto;
-  padding: 0.25rem 0 0.5rem;
-  margin: 0.75rem 0 0.5rem;
+  // Deliberately ride up onto the hero card so the legs read as part of it.
+  padding: 0.25rem 0.6rem 0.5rem;
+  margin: -1.3rem 0 0.5rem;
+  position: relative;
+  z-index: 1;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
 }
@@ -300,6 +303,7 @@
   border-radius: var(--radius);
   background: var(--card-bg);
   border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
   color: var(--text-muted);
 
   .leg-chip-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
