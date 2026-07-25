@@ -189,7 +189,17 @@
           <app-icon name="packing" [size]="18" />
           <span>{{ packingSummary().packed }}/{{ packingSummary().total }} packed</span>
         </div>
-        <div class="glance-mini-sub">Packing list</div>
+        @if (nextToPack().length) {
+          <div class="glance-mini-sub">
+            @for (label of nextToPack(); track label) {
+              <div class="pack-next">○ {{ label }}</div>
+            }
+          </div>
+        } @else if (packingSummary().total > 0) {
+          <div class="glance-mini-sub">All packed! 🎉</div>
+        } @else {
+          <div class="glance-mini-sub">Packing list</div>
+        }
       </a>
     </div>
 
