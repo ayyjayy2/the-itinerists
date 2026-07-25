@@ -160,6 +160,7 @@ export class AuthService {
     username: string,
     password: string,
     color: string,
+    recoveryEmail?: string,
   ): Promise<void> {
     const uname = username.toLowerCase().trim();
 
@@ -180,8 +181,20 @@ export class AuthService {
       isAdmin:     false,
       isDisabled:  false,
       createdAt:   now,
+      authEmail:   toEmail(uname),
     };
     await setDoc(doc(this.firestore, 'users', uid), userDoc);
+
+    // Optional recovery email — best-effort; a failure must not lose the new account.
+    const recovery = recoveryEmail?.toLowerCase().trim();
+    if (recovery) {
+      try {
+        await updateEmail(cred.user, recovery);
+        await updateDoc(doc(this.firestore, 'users', uid), { authEmail: recovery });
+      } catch (err) {
+        console.error('[Auth] recovery email not attached (add it later in Profile):', err);
+      }
+    }
   }
 
   /**

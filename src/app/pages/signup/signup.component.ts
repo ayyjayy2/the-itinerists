@@ -40,6 +40,7 @@ export class SignupComponent {
   username    = '';
   password    = '';
   confirmPass = '';
+  recoveryEmail = '';
   color       = '#F4C2C2';
 
   showPassword = signal(false);
@@ -70,6 +71,7 @@ export class SignupComponent {
         this.username.trim(),
         this.password,
         this.color,
+        this.recoveryEmail,
       );
       await this.userService.waitForUser();
       this.router.navigate(['/get-started']);
