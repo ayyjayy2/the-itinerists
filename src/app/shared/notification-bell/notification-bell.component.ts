@@ -21,8 +21,8 @@ import { ActivityLogEntry } from '../../models/trip.models';
       @if (open()) {
         <div class="bell-scrim" (click)="open.set(false)"></div>
         <div class="bell-dropdown">
-          <div class="bell-head">{{ unseen() }} {{ unseen() === 1 ? 'update' : 'updates' }}</div>
-          @for (a of recent(); track a.id) {
+          <div class="bell-head">{{ shown().length }} {{ shown().length === 1 ? 'update' : 'updates' }}</div>
+          @for (a of shown(); track a.id) {
             <div class="bell-item"><b>{{ a.performedByName }}</b> — {{ text(a) }} · {{ ago(a.timestamp) }}</div>
           } @empty {
             <div class="bell-item bell-empty">No new updates</div>
@@ -75,7 +75,19 @@ export class NotificationBellComponent {
       .slice(0, 5);
   });
 
+  /** Snapshot of unseen entries taken when the dropdown opens — opening marks
+   *  everything seen (clears the badge), but the list stays readable. */
+  readonly shown = signal<ActivityLogEntry[]>([]);
+
   text = (a: ActivityLogEntry) => activityText(a);
   ago  = (ts: number) => timeAgo(ts, this.now());
-  toggle(): void { this.now.set(Date.now()); this.open.update(v => !v); }
+
+  toggle(): void {
+    this.now.set(Date.now());
+    if (!this.open()) {
+      this.shown.set(this.recent());
+      if (this.unseen() > 0) void this.userService.markActivitySeen();
+    }
+    this.open.update(v => !v);
+  }
 }
