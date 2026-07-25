@@ -312,3 +312,58 @@
 }
 
 @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+
+// ── Type B chrome: hamburger + slide-out drawer ──
+.menu-btn {
+  background: none; border: none; cursor: pointer; padding: 6px;
+  display: grid; place-items: center; color: var(--text);
+  margin-right: 0.35rem;
+}
+
+.drawer-scrim {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.drawer {
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 201;
+  width: min(300px, 84vw);
+  background: var(--surface, #fff);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+  display: flex; flex-direction: column;
+  padding: 1rem 0.8rem calc(0.8rem + env(safe-area-inset-bottom));
+  animation: drawer-in 0.18s ease-out;
+}
+@keyframes drawer-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+.drawer-head {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.4rem 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--border, #eee);
+  .drawer-trip { font-weight: 800; font-size: 1.05rem; }
+}
+
+.drawer-nav {
+  flex: 1; overflow-y: auto; padding: 0.6rem 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+
+.drawer-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.62rem 0.8rem; border-radius: 12px;
+  text-decoration: none; color: var(--text);
+  .drawer-label { font-weight: 600; }
+  &.active { background: var(--primary-soft, #eaf3ec); color: var(--primary-dark, #3f7d58); }
+}
+
+.drawer-foot {
+  border-top: 1px solid var(--border, #eee); padding-top: 0.7rem;
+  display: flex; flex-direction: column; gap: 0.55rem;
+
+  .drawer-refresh { background: none; border: none; cursor: pointer; text-align: left;
+    padding: 0.3rem 0.8rem; font-size: 0.9rem; color: var(--text); }
+  .drawer-version { padding: 0 0.8rem; font-size: 0.72rem; color: var(--muted, #8a8a8a); }
+  .drawer-user { display: flex; align-items: center; gap: 0.6rem; padding: 0.3rem 0.8rem;
+    .user-name { font-weight: 700; text-decoration: none; color: var(--text); display: block; }
+    .user-switch { font-size: 0.8rem; color: var(--muted, #8a8a8a); cursor: pointer; } }
+}
