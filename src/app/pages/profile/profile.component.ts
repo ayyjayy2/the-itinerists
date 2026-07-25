@@ -63,6 +63,19 @@ export class ProfileComponent implements OnInit {
   passwordSuccess = signal(false);
   passwordError   = signal('');
 
+  recoveryEmail     = '';
+  recoveryPass      = '';
+  showRecoveryModal = signal(false);
+  recoverySaving    = signal(false);
+  recoverySuccess   = signal(false);
+  recoveryError     = signal('');
+
+  /** Current recovery email, or '' while the account still uses the synthetic address. */
+  get currentRecoveryEmail(): string {
+    const e = this.firestoreUser()?.authEmail ?? '';
+    return e.endsWith('@the-itinerists.local') ? '' : e;
+  }
+
   ngOnInit(): void {
     const u = this.firestoreUser();
     if (u) {
@@ -98,6 +111,43 @@ export class ProfileComponent implements OnInit {
   }
 
   closePasswordModal(): void { this.showPasswordModal.set(false); }
+
+  openRecoveryModal(): void {
+    this.recoveryEmail = '';
+    this.recoveryPass  = '';
+    this.recoveryError.set('');
+    this.recoverySuccess.set(false);
+    this.showRecoveryModal.set(true);
+  }
+
+  closeRecoveryModal(): void { this.showRecoveryModal.set(false); }
+
+  async saveRecoveryEmail(): Promise<void> {
+    this.recoveryError.set('');
+    this.recoverySuccess.set(false);
+    const email = this.recoveryEmail.trim();
+    if (!email || !this.recoveryPass) return;
+    this.recoverySaving.set(true);
+    try {
+      await this.authService.addRecoveryEmail(this.recoveryPass, email);
+      this.recoveryEmail = '';
+      this.recoveryPass  = '';
+      this.recoverySuccess.set(true);
+      setTimeout(() => { this.recoverySuccess.set(false); this.closeRecoveryModal(); }, 1500);
+    } catch (err: any) {
+      if (err?.code === 'auth/wrong-password' || err?.code === 'auth/invalid-credential') {
+        this.recoveryError.set('Current password is incorrect.');
+      } else if (err?.code === 'auth/email-already-in-use') {
+        this.recoveryError.set('That email is already attached to another account.');
+      } else if (err?.code === 'auth/invalid-email') {
+        this.recoveryError.set('That email address doesn\'t look valid.');
+      } else {
+        this.recoveryError.set('Could not save the recovery email. Please try again.');
+      }
+    } finally {
+      this.recoverySaving.set(false);
+    }
+  }
 
   async saveUsername(): Promise<void> {
     const uid = this.firestoreUser()?.uid;

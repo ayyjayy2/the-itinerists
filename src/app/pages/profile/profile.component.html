@@ -66,6 +66,9 @@
       <div class="account-actions">
         <button class="btn btn-ghost" (click)="openUsernameModal()">Change Username</button>
         <button class="btn btn-ghost" (click)="openPasswordModal()">Change Password</button>
+        <button class="btn btn-ghost" (click)="openRecoveryModal()">
+          {{ currentRecoveryEmail ? 'Change Recovery Email' : 'Add Recovery Email' }}
+        </button>
       </div>
     </div>
 
@@ -162,6 +165,45 @@
         <button class="btn btn-ghost" (click)="closePasswordModal()" [disabled]="passwordSaving()">Cancel</button>
         <button class="btn btn-primary" (click)="changePassword()" [disabled]="passwordSaving()">
           {{ passwordSaving() ? 'Updating…' : 'Update Password' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Recovery email modal -->
+@if (showRecoveryModal()) {
+  <div class="modal-backdrop" (click)="closeRecoveryModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>Recovery Email</h2>
+
+      @if (currentRecoveryEmail) {
+        <p class="modal-hint">Current: <strong>{{ currentRecoveryEmail }}</strong>. Saving a new one replaces it.</p>
+      } @else {
+        <p class="modal-hint">Add a real email so you can reset a forgotten password yourself.</p>
+      }
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="recoveryEmail" autocomplete="email" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Current Password</label>
+        <input type="password" [(ngModel)]="recoveryPass" autocomplete="off" placeholder="Enter current password" />
+      </div>
+
+      @if (recoveryError()) {
+        <div class="alert alert-error">{{ recoveryError() }}</div>
+      }
+      @if (recoverySuccess()) {
+        <div class="alert alert-success">Recovery email saved!</div>
+      }
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="closeRecoveryModal()" [disabled]="recoverySaving()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveRecoveryEmail()"
+                [disabled]="recoverySaving() || !recoveryEmail.trim() || !recoveryPass">
+          {{ recoverySaving() ? 'Saving…' : 'Save' }}
         </button>
       </div>
     </div>

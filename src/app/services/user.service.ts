@@ -1,6 +1,6 @@
 import { Injectable, signal, inject, computed, Injector, runInInjectionContext } from '@angular/core';
 import { Auth, authState } from '@angular/fire/auth';
-import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
+import { Firestore, doc, onSnapshot, updateDoc } from '@angular/fire/firestore';
 import { TripUser, FirestoreUser } from '../models/trip.models';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, firstValueFrom, map, merge } from 'rxjs';
@@ -44,6 +44,14 @@ export class UserService {
         ),
       )
     );
+  }
+
+  /** Persist Home pins on the account (personalization follows the user across devices). */
+  async updateHomePins(pins: string[]): Promise<void> {
+    const uid = this._firestoreUser()?.uid;
+    if (!uid) return;
+    await runInInjectionContext(this.injector, () =>
+      updateDoc(doc(this.firestore, 'users', uid), { homePins: pins }));
   }
 
   constructor() {

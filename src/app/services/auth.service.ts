@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import {
   Auth,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
   createUserWithEmailAndPassword,
   updateEmail,
@@ -50,7 +51,24 @@ export class AuthService {
   private tripContext = inject(TripContextService);
 
   async login(username: string, password: string): Promise<void> {
-    await signInWithEmailAndPassword(this.auth, toEmail(username), password);
+    const email = await this.resolveAuthEmail(username);
+    await signInWithEmailAndPassword(this.auth, email, password);
+  }
+
+  /**
+   * Pre-auth lookup: the email this username's Auth account actually uses.
+   * Falls back to the synthetic mapping when the doc/field is missing or the
+   * lookup fails (e.g. offline) — identical to pre-recovery-email behavior.
+   */
+  async resolveAuthEmail(username: string): Promise<string> {
+    const uname = username.toLowerCase().trim();
+    try {
+      const q    = query(collection(this.firestore, 'users'), where('username', '==', uname));
+      const snap = await getDocs(q);
+      const authEmail = snap.docs[0]?.data()['authEmail'] as string | undefined;
+      if (authEmail) return authEmail;
+    } catch { /* fall through to synthetic */ }
+    return toEmail(uname);
   }
 
   async logout(): Promise<void> {
@@ -142,6 +160,7 @@ export class AuthService {
     username: string,
     password: string,
     color: string,
+    recoveryEmail?: string,
   ): Promise<void> {
     const uname = username.toLowerCase().trim();
 
@@ -162,8 +181,20 @@ export class AuthService {
       isAdmin:     false,
       isDisabled:  false,
       createdAt:   now,
+      authEmail:   toEmail(uname),
     };
     await setDoc(doc(this.firestore, 'users', uid), userDoc);
+
+    // Optional recovery email — best-effort; a failure must not lose the new account.
+    const recovery = recoveryEmail?.toLowerCase().trim();
+    if (recovery) {
+      try {
+        await updateEmail(cred.user, recovery);
+        await updateDoc(doc(this.firestore, 'users', uid), { authEmail: recovery });
+      } catch (err) {
+        console.error('[Auth] recovery email not attached (add it later in Profile):', err);
+      }
+    }
   }
 
   /**
@@ -229,6 +260,38 @@ export class AuthService {
     const cred = EmailAuthProvider.credential(user.email, currentPassword);
     await reauthenticateWithCredential(user, cred);
     await updatePassword(user, newPassword);
+  }
+
+  /**
+   * Self-serve reset. Returns the (real) email the link was sent to, or null
+   * when the account has no recovery email (synthetic address — undeliverable).
+   */
+  async sendPasswordReset(username: string): Promise<string | null> {
+    const email = await this.resolveAuthEmail(username);
+    if (email.endsWith(EMAIL_DOMAIN)) return null;
+    await sendPasswordResetEmail(this.auth, email);
+    return email;
+  }
+
+  /**
+   * Attach a real recovery email: reauth, swap the Auth account email, mirror
+   * it to users/{uid}.authEmail (which username login resolves against).
+   * The Firestore write is retried once — a lasting mismatch would break
+   * username login for this user.
+   */
+  async addRecoveryEmail(currentPassword: string, newEmail: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user?.email) throw new Error('Not signed in.');
+    const email = newEmail.toLowerCase().trim();
+    const cred  = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, cred);
+    await updateEmail(user, email);
+    const ref = doc(this.firestore, 'users', user.uid);
+    try {
+      await updateDoc(ref, { authEmail: email });
+    } catch {
+      await updateDoc(ref, { authEmail: email }); // one retry, then surface
+    }
   }
 
   async disableUser(uid: string): Promise<void> {
