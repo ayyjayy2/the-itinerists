@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { BrandComponent } from '../../shared/brand/brand.component';
+import { DayMapCardComponent } from '../../shared/day-map-card/day-map-card.component';
 import { UserService } from '../../services/user.service';
 import { FlightCountdownService } from '../../services/flight-countdown.service';
 import { FlightsService } from '../../services/flights.service';
@@ -20,7 +21,7 @@ import { effectiveHomeLayout } from '../../utils/layout';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, RouterLink, IconComponent, BrandComponent],
+  imports: [CommonModule, RouterLink, IconComponent, BrandComponent, DayMapCardComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

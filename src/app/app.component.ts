@@ -87,7 +87,7 @@ export class AppComponent implements OnInit {
   });
 
   // ── Bottom tab bar (mobile) — 3 primary tabs + a "More" sheet for the rest ──
-  readonly TAB_PATHS = ['/home', '/itinerary', '/finance'];
+  readonly TAB_PATHS = ['/home', '/itinerary', '/finance', '/packing'];
   readonly tabItems = computed<NavItem[]>(() =>
     this.TAB_PATHS.map(p => this.baseNavItems.find(i => i.path === p)!).filter(Boolean),
   );
