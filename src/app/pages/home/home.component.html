@@ -1,8 +1,8 @@
 <div class="page-container home">
 
   @if (hasActiveTrip()) {
-    <!-- Trip switcher (Types A/C — Type B switches trips on My Trips) -->
-    @if (layout() !== 'B') {
+    <!-- Trip switcher (Type A only — B and C switch trips on My Trips) -->
+    @if (layout() === 'A') {
       <div class="switcher">
         @for (t of trips(); track t.id) {
           <button class="switch-chip" [class.active]="isActive(t)" (click)="switchTo(t)">
