@@ -21,6 +21,10 @@ export interface FirestoreUser {
   authEmail?: string;
   /** Pinned Home shortcuts (page paths). Absent → default set. */
   homePins?: string[];
+  /** Home/nav layout. Absent → 'B' (group default); 'A' is the legacy-current design. */
+  homeLayout?: 'A' | 'B';
+  /** High-water mark for the notification bell (unix ms). Absent → 0. */
+  lastSeenActivityAt?: number;
 }
 
 /**
