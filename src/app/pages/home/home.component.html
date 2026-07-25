@@ -207,8 +207,10 @@
       }
     </div>
     } @else {
-      <!-- Type B: Quick Access to everything (old layout, by popular demand) -->
-      <h2 class="qa-heading">Quick Access</h2>
+      <!-- Type B: quick access to everything (old layout, by popular demand).
+           Heading is screen-reader-only: the grid is the page's only section,
+           so a visible label would just narrate the obvious. -->
+      <h2 class="sr-only">Quick access</h2>
       <div class="links-grid">
         @for (link of quickAccess; track link.path) {
           <a class="link-card" [routerLink]="link.path" [style.--card-accent]="link.accent">
