@@ -52,6 +52,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   /** Type B "Quick Access" — every page, old-layout style. */
   readonly quickAccess = [
+    { path: '/trips',          label: 'My Trips',       icon: 'trips',     desc: 'All trips · switch active',   accent: '#88C9A1' },
     { path: '/itinerary',      label: 'Itinerary',      icon: 'itinerary', desc: 'Day-by-day plans',            accent: '#F9E4B7' },
     { path: '/flights',        label: 'Flights',        icon: 'flights',   desc: 'Arrivals & departures',       accent: '#B5D5F5' },
     { path: '/accommodations', label: 'Stays',          icon: 'stays',     desc: 'Hotels & check-in',           accent: '#D4B5F5' },
