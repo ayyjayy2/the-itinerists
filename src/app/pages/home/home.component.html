@@ -193,7 +193,8 @@
       </a>
     </div>
 
-    <!-- Latest from the group -->
+    <!-- Latest from the group (A only — B and C use the notification bell) -->
+    @if (layout() === 'A') {
     <div class="section-head">
       <h2>Latest from the group</h2>
       <a routerLink="/trip-settings" class="see-link">See all →</a>
@@ -208,6 +209,7 @@
         <div class="feed-empty">No activity yet — invite friends and start planning.</div>
       }
     </div>
+    }
     } @else {
       <!-- Type B: quick access to everything (old layout, by popular demand).
            Heading is screen-reader-only: the grid is the page's only section,

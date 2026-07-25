@@ -61,7 +61,7 @@
         </a>
 
         <div class="header-right">
-          @if (isLayoutB()) {
+          @if (showBell()) {
             <app-notification-bell />
           }
           <button class="refresh-btn" (click)="hardRefresh()" title="Hard refresh">↻</button>

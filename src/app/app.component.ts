@@ -109,6 +109,8 @@ export class AppComponent implements OnInit {
 
   // ── Type B chrome: hamburger drawer replaces sidebar/tab bar ──
   readonly isLayoutB = computed(() => effectiveHomeLayout(this.userService.firestoreUser()) === 'B');
+  /** Bell lives in B and C; Type A keeps its inline home feed instead. */
+  readonly showBell  = computed(() => effectiveHomeLayout(this.userService.firestoreUser()) !== 'A');
   drawerOpen = signal(false);
   toggleDrawer(): void { this.drawerOpen.update(v => !v); }
   closeDrawer(): void  { this.drawerOpen.set(false); }
