@@ -254,6 +254,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     return e.time ? `${d} · ${e.time}` : d;
   });
 
+  /** Up to 3 unpacked items, surfaced on the glance card as the next to grab. */
+  readonly nextToPack = computed(() =>
+    this.packingService.items().filter(i => !i.packed).slice(0, 3).map(i => i.label));
+
   readonly packingSummary = computed(() => {
     const items = this.packingService.items();
     return { total: items.length, packed: items.filter(i => i.packed).length };
