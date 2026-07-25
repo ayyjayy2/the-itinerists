@@ -47,7 +47,7 @@ export class UserService {
   }
 
   /** Persist the home/nav layout choice on the account. */
-  async updateHomeLayout(layout: 'A' | 'B'): Promise<void> {
+  async updateHomeLayout(layout: 'A' | 'B' | 'C'): Promise<void> {
     const uid = this._firestoreUser()?.uid;
     if (!uid) return;
     await runInInjectionContext(this.injector, () =>

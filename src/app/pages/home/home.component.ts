@@ -48,7 +48,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   /** The user's trips, for the switcher row. */
   readonly trips = signal<TripDoc[]>([]);
 
-  readonly isLayoutA = computed(() => effectiveHomeLayout(this.userService.firestoreUser()) === 'A');
+  readonly layout = computed(() => effectiveHomeLayout(this.userService.firestoreUser()));
+  readonly isLayoutA = computed(() => this.layout() === 'A');
 
   /** Type B "Quick Access" — every page, old-layout style. */
   readonly quickAccess = [

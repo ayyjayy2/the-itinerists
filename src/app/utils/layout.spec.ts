@@ -18,5 +18,6 @@ describe('effectiveHomeLayout', () => {
   it('honors an explicit choice', () => {
     expect(effectiveHomeLayout({ ...base, homeLayout: 'A' })).toBe('A');
     expect(effectiveHomeLayout({ ...base, homeLayout: 'B' })).toBe('B');
+    expect(effectiveHomeLayout({ ...base, homeLayout: 'C' })).toBe('C');
   });
 });
