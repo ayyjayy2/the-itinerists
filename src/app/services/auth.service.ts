@@ -263,11 +263,14 @@ export class AuthService {
   }
 
   /**
-   * Self-serve reset. Returns the (real) email the link was sent to, or null
-   * when the account has no recovery email (synthetic address — undeliverable).
+   * Self-serve reset. Accepts a username (resolved via users.authEmail) or a
+   * recovery email entered directly. Returns the (real) email the link was
+   * sent to, or null when the account has no recovery email (synthetic
+   * address — undeliverable).
    */
-  async sendPasswordReset(username: string): Promise<string | null> {
-    const email = await this.resolveAuthEmail(username);
+  async sendPasswordReset(usernameOrEmail: string): Promise<string | null> {
+    const input = usernameOrEmail.toLowerCase().trim();
+    const email = input.includes('@') ? input : await this.resolveAuthEmail(input);
     if (email.endsWith(EMAIL_DOMAIN)) return null;
     await sendPasswordResetEmail(this.auth, email);
     return email;
