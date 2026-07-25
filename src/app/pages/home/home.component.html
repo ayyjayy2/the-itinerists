@@ -1,8 +1,8 @@
 <div class="page-container home">
 
   @if (hasActiveTrip()) {
-    <!-- Trip switcher (Type A only — Type B switches trips on My Trips) -->
-    @if (isLayoutA()) {
+    <!-- Trip switcher (Types A/C — Type B switches trips on My Trips) -->
+    @if (layout() !== 'B') {
       <div class="switcher">
         @for (t of trips(); track t.id) {
           <button class="switch-chip" [class.active]="isActive(t)" (click)="switchTo(t)">
@@ -97,8 +97,8 @@
   }
 
   @if (hasActiveTrip()) {
-    @if (isLayoutA()) {
-    <!-- Pinned quick-shortcuts -->
+    @if (layout() === 'A') {
+    <!-- Pinned quick-shortcuts (A only — C drops this section) -->
     <div class="section-head">
       <h2>Pinned</h2>
       <button class="see-link plain" (click)="togglePinEdit()">{{ pinEdit() ? 'Done' : 'Edit' }}</button>
@@ -127,7 +127,9 @@
     } @else {
       <div class="pin-empty card">No pins yet — tap <b>Edit</b> to add quick shortcuts.</div>
     }
+    }
 
+    @if (layout() !== 'B') {
     <!-- At a glance -->
     <div class="section-head">
       <h2>At a glance</h2>

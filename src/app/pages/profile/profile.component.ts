@@ -72,7 +72,13 @@ export class ProfileComponent implements OnInit {
   recoveryError     = signal('');
 
   readonly homeLayout = computed(() => effectiveHomeLayout(this.firestoreUser()));
-  readonly canPickLayout = computed(() => this.firestoreUser()?.username === 'alayna');
+  /** Layout experiments are Alayna-only. Gate on uid too so a username change
+   *  can never hide the picker. Do not remove without her explicit say-so. */
+  private readonly LAYOUT_PICKER_UID = 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';
+  readonly canPickLayout = computed(() => {
+    const u = this.firestoreUser();
+    return u?.username === 'alayna' || u?.uid === this.LAYOUT_PICKER_UID;
+  });
 
   setLayout(layout: HomeLayout): void {
     void this.userService.updateHomeLayout(layout);
