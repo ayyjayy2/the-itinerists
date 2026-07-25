@@ -21,7 +21,9 @@ import { OutfitsService } from './services/outfits.service';
 import { ThemeService } from './services/theme.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../version';
 import { effectiveHomeLayout } from './utils/layout';
+import { applyNavOrder } from './utils/nav-order';
 import { NotificationBellComponent } from './shared/notification-bell/notification-bell.component';
+import { CdkDrag, CdkDropList, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 interface NavItem {
   path: string;
@@ -31,7 +33,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent, NotificationBellComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent, NotificationBellComponent, CdkDrag, CdkDropList],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -58,20 +60,22 @@ export class AppComponent implements OnInit {
   sidebarOpen  = false;
   navCollapsed = localStorage.getItem('tripplanner_nav_collapsed') === 'true';
 
-  // `icon` is now a name resolved by <app-icon> (custom line-icon set), not an emoji.
+  // `icon` is a name resolved by <app-icon> (custom line-icon set), not an emoji.
+  // Order: the default bottom-bar four first, everyday pages next, and the
+  // settings-flavored pages (My Trips → Trip Settings → Profile) at the end.
   readonly baseNavItems: NavItem[] = [
     { path: '/home',           label: 'Home',            icon: 'home' },
-    { path: '/trips',          label: 'My Trips',        icon: 'trips' },
-    { path: '/flights',        label: 'Flights',         icon: 'flights' },
     { path: '/itinerary',      label: 'Itinerary',       icon: 'itinerary' },
+    { path: '/finance',        label: 'Finance',         icon: 'finance' },
+    { path: '/packing',        label: 'Packing',         icon: 'packing' },
+    { path: '/flights',        label: 'Flights',         icon: 'flights' },
     { path: '/accommodations', label: 'Stays',           icon: 'stays' },
     { path: '/map',            label: 'Map',             icon: 'map' },
     { path: '/transportation', label: 'Transportation',  icon: 'car' },
-    { path: '/finance',        label: 'Finance',         icon: 'finance' },
     { path: '/expenses',       label: 'My Expenses',     icon: 'expenses' },
     { path: '/recs',           label: 'Recs',            icon: 'recs' },
-    { path: '/packing',        label: 'Packing',         icon: 'packing' },
     { path: '/outfits',        label: 'Outfits',         icon: 'outfits' },
+    { path: '/trips',          label: 'My Trips',        icon: 'trips' },
     { path: '/trip-settings',  label: 'Trip Settings',   icon: 'settings' },
     { path: '/profile',        label: 'Profile',         icon: 'profile' },
   ];
@@ -86,24 +90,43 @@ export class AppComponent implements OnInit {
     return items;
   });
 
-  // ── Bottom tab bar (mobile) — 3 primary tabs + a "More" sheet for the rest ──
-  readonly TAB_PATHS = ['/home', '/itinerary', '/finance', '/packing'];
-  readonly tabItems = computed<NavItem[]>(() =>
-    this.TAB_PATHS.map(p => this.baseNavItems.find(i => i.path === p)!).filter(Boolean),
-  );
-  readonly moreItems = computed<NavItem[]>(() =>
-    this.navItems().filter(i => !this.TAB_PATHS.includes(i.path)),
-  );
+  // ── Personal nav order: Home pinned first, Admin pinned last, the rest
+  //    follow users/{uid}.navOrder (account data — set via More → Reorder) ──
+  readonly orderedNavItems = computed<NavItem[]>(() => {
+    const items = this.navItems();
+    const home  = items.filter(i => i.path === '/home');
+    const admin = items.filter(i => i.path === '/admin');
+    const rest  = items.filter(i => i.path !== '/home' && i.path !== '/admin');
+    return [...home, ...applyNavOrder(rest, this.userService.firestoreUser()?.navOrder), ...admin];
+  });
+
+  // ── Bottom tab bar (mobile) — Home + next 3 of the personal order; the rest
+  //    live in the "More" sheet ──
+  readonly tabItems  = computed<NavItem[]>(() => this.orderedNavItems().slice(0, 4));
+  readonly moreItems = computed<NavItem[]>(() => this.orderedNavItems().slice(4));
   moreOpen = signal(false);
   private currentUrl = signal(this.router.url);
   /** True when the active route lives under the "More" menu (highlights the More tab). */
   readonly moreActive = computed(() => {
     const url = this.currentUrl();
-    return !this.TAB_PATHS.some(p => url.startsWith(p));
+    return !this.tabItems().some(i => url.startsWith(i.path));
   });
 
   toggleMore(): void { this.moreOpen.update(v => !v); }
-  closeMore(): void  { this.moreOpen.set(false); }
+  closeMore(): void  { this.moreOpen.set(false); this.reorderMode.set(false); }
+
+  // ── More-sheet reorder mode: drag to rearrange; top 3 join Home in the bar ──
+  reorderMode = signal(false);
+  toggleReorder(): void { this.reorderMode.update(v => !v); }
+  /** Everything the user may reorder (Home and Admin stay pinned). */
+  readonly reorderableItems = computed<NavItem[]>(() =>
+    this.orderedNavItems().filter(i => i.path !== '/home' && i.path !== '/admin'));
+
+  dropNavItem(event: CdkDragDrop<NavItem[]>): void {
+    const list = [...this.reorderableItems()];
+    moveItemInArray(list, event.previousIndex, event.currentIndex);
+    void this.userService.updateNavOrder(list.map(i => i.path));
+  }
 
   currentUser = this.userService.currentUser;
 
@@ -115,7 +138,7 @@ export class AppComponent implements OnInit {
   toggleDrawer(): void { this.drawerOpen.update(v => !v); }
   closeDrawer(): void  { this.drawerOpen.set(false); }
   /** Drawer list: everything except Profile (footer chip covers it). */
-  readonly drawerItems = computed(() => this.navItems().filter(i => i.path !== '/profile'));
+  readonly drawerItems = computed(() => this.orderedNavItems().filter(i => i.path !== '/profile'));
 
   constructor() {
     // Track the active URL (for the More-tab highlight) and close the sheet on navigation.
