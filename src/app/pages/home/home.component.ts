@@ -18,6 +18,7 @@ import { tripDestinations, activeLeg } from '../../utils/trip-destinations';
 import { effectivePins } from '../../utils/pins';
 import { activityText as activityLine, timeAgo as agoOf } from '../../utils/activity';
 import { effectiveHomeLayout } from '../../utils/layout';
+import { weatherLabel } from '../../utils/weather-label';
 
 @Component({
   selector: 'app-home',
@@ -302,6 +303,12 @@ export class HomeComponent implements OnInit, OnDestroy {
       return `${amount.toFixed(2)} ${cur}`;
     }
   }
+
+  /** Condition (emoji + word) for the glance card's forecast day. */
+  readonly weatherCondition = computed(() => {
+    const w = this.weatherGlance();
+    return w ? weatherLabel(w.code) : null;
+  });
 
   readonly weatherGlance = computed(() => {
     const t = this.activeTrip();

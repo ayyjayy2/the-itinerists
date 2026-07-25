@@ -181,7 +181,10 @@
           @else { <span>Weather</span> }
         </div>
         <div class="glance-mini-sub">
-          @if (weatherGlance()) { {{ glanceLegShort() }} · outfits } @else { Forecast nearer the trip }
+          @if (weatherCondition(); as c) {
+            <div class="wx-cond">{{ c.emoji }} {{ c.label }}</div>
+            <div>{{ glanceLegShort() }} · outfits</div>
+          } @else { Forecast nearer the trip }
         </div>
       </a>
       <a class="glance-mini" routerLink="/packing">
