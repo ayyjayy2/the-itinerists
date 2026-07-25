@@ -193,6 +193,11 @@
       </a>
     </div>
 
+    <!-- Mini map: current/next itinerary day (C only) -->
+    @if (layout() === 'C') {
+      <app-day-map-card />
+    }
+
     <!-- Latest from the group (A only — B and C use the notification bell) -->
     @if (layout() === 'A') {
     <div class="section-head">
