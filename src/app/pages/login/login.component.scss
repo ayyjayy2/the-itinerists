@@ -131,3 +131,11 @@
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-8px); }
 }
+
+.forgot {
+  text-align: right;
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+
+  a { color: var(--primary, #4a9c6d); text-decoration: none; }
+}
