@@ -84,7 +84,7 @@
       <div class="drawer-scrim" (click)="closeDrawer()"></div>
       <aside class="drawer">
         <div class="drawer-head">
-          <app-brand [mark]="28" />
+          <app-brand [mark]="30" [showWordmark]="false" />
           <span class="drawer-trip">{{ (tripService.activeTrip()?.destination || tripService.activeTrip()?.name)?.split(',')?.[0] ?? 'The Itinerists' }}</span>
         </div>
         <div class="drawer-nav">
