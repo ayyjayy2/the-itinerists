@@ -95,6 +95,7 @@
   }
 
   @if (hasActiveTrip()) {
+    @if (isLayoutA()) {
     <!-- Pinned quick-shortcuts -->
     <div class="section-head">
       <h2>Pinned</h2>
@@ -203,6 +204,19 @@
         <div class="feed-empty">No activity yet — invite friends and start planning.</div>
       }
     </div>
+    } @else {
+      <!-- Type B: Quick Access to everything (old layout, by popular demand) -->
+      <h2 class="qa-heading">Quick Access</h2>
+      <div class="links-grid">
+        @for (link of quickAccess; track link.path) {
+          <a class="link-card" [routerLink]="link.path" [style.--card-accent]="link.accent">
+            <span class="link-icon"><app-icon [name]="link.icon" [size]="24" /></span>
+            <span class="link-label">{{ link.label }}</span>
+            <span class="link-desc">{{ link.desc }}</span>
+          </a>
+        }
+      </div>
+    }
   }
 
 </div>
