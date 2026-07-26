@@ -7,12 +7,12 @@ const base: FirestoreUser = {
 };
 
 describe('effectiveHomeLayout', () => {
-  it('defaults to B with no user', () => {
-    expect(effectiveHomeLayout(null)).toBe('B');
+  it('defaults to C with no user', () => {
+    expect(effectiveHomeLayout(null)).toBe('C');
   });
 
-  it('defaults to B when the user has no homeLayout', () => {
-    expect(effectiveHomeLayout(base)).toBe('B');
+  it('defaults to C when the user has no homeLayout', () => {
+    expect(effectiveHomeLayout(base)).toBe('C');
   });
 
   it('honors an explicit choice', () => {
