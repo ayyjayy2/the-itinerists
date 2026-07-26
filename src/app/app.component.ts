@@ -137,8 +137,9 @@ export class AppComponent implements OnInit {
   drawerOpen = signal(false);
   toggleDrawer(): void { this.drawerOpen.update(v => !v); }
   closeDrawer(): void  { this.drawerOpen.set(false); }
-  /** Drawer list: everything except Profile (footer chip covers it). */
-  readonly drawerItems = computed(() => this.orderedNavItems().filter(i => i.path !== '/profile'));
+  /** Drawer list: every page, Profile included — the footer chip alone proved
+   *  too subtle a path to account settings (incl. the layout picker). */
+  readonly drawerItems = computed(() => this.orderedNavItems());
 
   constructor() {
     // Track the active URL (for the More-tab highlight) and close the sheet on navigation.
