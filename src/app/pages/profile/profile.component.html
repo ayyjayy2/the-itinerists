@@ -72,18 +72,18 @@
       </div>
     </div>
 
-    <!-- Home layout (Alayna-only experiment toggle) -->
+    <!-- Home layout (picker accounts only — see canPickLayout) -->
     @if (canPickLayout()) {
       <div class="card section-card">
         <h2>Home Layout</h2>
-        <div class="input-hint">Type C is the default for everyone; this override is yours alone.</div>
+        <div class="input-hint">"More" is the default for everyone; this override is yours alone.</div>
         <div class="layout-toggle">
           <button class="btn" [class.btn-primary]="homeLayout() === 'A'"
                   [class.btn-ghost]="homeLayout() !== 'A'" (click)="setLayout('A')">Type A</button>
           <button class="btn" [class.btn-primary]="homeLayout() === 'B'"
-                  [class.btn-ghost]="homeLayout() !== 'B'" (click)="setLayout('B')">Type B</button>
+                  [class.btn-ghost]="homeLayout() !== 'B'" (click)="setLayout('B')">Simple</button>
           <button class="btn" [class.btn-primary]="homeLayout() === 'C'"
-                  [class.btn-ghost]="homeLayout() !== 'C'" (click)="setLayout('C')">Type C</button>
+                  [class.btn-ghost]="homeLayout() !== 'C'" (click)="setLayout('C')">More</button>
         </div>
       </div>
     }

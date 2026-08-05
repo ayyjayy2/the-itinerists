@@ -7,6 +7,7 @@ const base: FirestoreUser = {
 };
 
 const alayna: FirestoreUser = { ...base, uid: 'u2', username: 'alayna' };
+const makaela: FirestoreUser = { ...base, uid: 'u3', username: 'makaela' };
 
 describe('effectiveHomeLayout', () => {
   it('defaults to C with no user', () => {
@@ -23,10 +24,12 @@ describe('effectiveHomeLayout', () => {
     expect(effectiveHomeLayout({ ...base, homeLayout: 'C' })).toBe('C');
   });
 
-  it('honors an explicit choice on the experiment account', () => {
+  it('honors an explicit choice on picker accounts', () => {
     expect(effectiveHomeLayout({ ...alayna, homeLayout: 'A' })).toBe('A');
     expect(effectiveHomeLayout({ ...alayna, homeLayout: 'B' })).toBe('B');
     expect(effectiveHomeLayout({ ...alayna, homeLayout: 'C' })).toBe('C');
+    expect(effectiveHomeLayout({ ...makaela, homeLayout: 'B' })).toBe('B');
+    expect(effectiveHomeLayout(makaela)).toBe('C');
   });
 });
 
@@ -36,8 +39,9 @@ describe('canPickLayout', () => {
     expect(canPickLayout(base)).toBe(false);
   });
 
-  it('is true for the experiment account by username or uid', () => {
+  it('is true for the picker accounts', () => {
     expect(canPickLayout(alayna)).toBe(true);
     expect(canPickLayout({ ...base, uid: 'qdhJLMDxSdVdILg2CTCcIhZyBDz2' })).toBe(true);
+    expect(canPickLayout(makaela)).toBe(true);
   });
 });
