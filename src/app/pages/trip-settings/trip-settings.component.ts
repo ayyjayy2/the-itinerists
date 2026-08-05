@@ -1,13 +1,14 @@
 import { Component, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
 import { ThemeService } from '../../services/theme.service';
 import { TripDoc, TripDestination, TripMember, ActivityLogEntry } from '../../models/trip.models';
 import { tripDestinations, tripSummary, buildEditedDestinations, DestinationEdit } from '../../utils/trip-destinations';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
 
 interface CurrencyOption { code: string; label: string; }
@@ -24,7 +25,7 @@ interface DestRow {
 
 @Component({
   selector: 'app-trip-settings',
-  imports: [IconComponent, CurrencySelectComponent, CommonModule, FormsModule, RouterLink],
+  imports: [IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule],
   templateUrl: './trip-settings.component.html',
   styleUrl: './trip-settings.component.scss',
 })

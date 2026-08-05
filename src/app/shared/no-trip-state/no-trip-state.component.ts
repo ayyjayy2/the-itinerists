@@ -57,6 +57,11 @@ const PAGE_COPY: Record<string, PageCopy> = {
     sub: 'Collect recommendations for food, drinks and things to do on a trip.',
     ghost: 'tiles',
   },
+  settings: {
+    heading: 'Every detail, adjustable',
+    sub: 'Trip name, dates, currency and invites — set up a trip to manage it here.',
+    ghost: 'cards',
+  },
   outfits: {
     heading: 'Plan the looks',
     sub: 'Outfits for every day and occasion, planned before you pack.',
