@@ -7,7 +7,7 @@ const base: FirestoreUser = {
 };
 
 const alayna: FirestoreUser = { ...base, uid: 'u2', username: 'alayna' };
-const makaela: FirestoreUser = { ...base, uid: 'u3', username: 'makaela' };
+const makaela: FirestoreUser = { ...base, uid: 'u3', username: 'makaelajohnston' };
 
 describe('effectiveHomeLayout', () => {
   it('defaults to C with no user', () => {
@@ -43,5 +43,6 @@ describe('canPickLayout', () => {
     expect(canPickLayout(alayna)).toBe(true);
     expect(canPickLayout({ ...base, uid: 'qdhJLMDxSdVdILg2CTCcIhZyBDz2' })).toBe(true);
     expect(canPickLayout(makaela)).toBe(true);
+    expect(canPickLayout({ ...base, uid: 'SIXcW7K34VTOD8yZcHWSTg0yFS02' })).toBe(true);
   });
 });
