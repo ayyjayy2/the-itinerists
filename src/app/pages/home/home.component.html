@@ -82,17 +82,6 @@
         </a>
       </div>
 
-      <div class="welcome-teaser">
-        <div class="teaser-title">Everything for the trip, in one place</div>
-        <div class="teaser-grid">
-          @for (f of teaserFeatures; track f.icon) {
-            <div class="teaser-tile">
-              <span class="teaser-ic"><app-icon [name]="f.icon" [size]="20" /></span>
-              <span class="teaser-label">{{ f.label }}</span>
-            </div>
-          }
-        </div>
-      </div>
     </div>
   }
 
