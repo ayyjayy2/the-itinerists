@@ -14,7 +14,7 @@ import { FinanceService } from '../../services/finance.service';
 import { PackingService } from '../../services/packing.service';
 import { WeatherService } from '../../services/weather.service';
 import { TripDoc, TripDestination, ActivityLogEntry } from '../../models/trip.models';
-import { tripDestinations, activeLeg } from '../../utils/trip-destinations';
+import { tripDestinations, activeLeg, legIsCurrent, localTodayISO } from '../../utils/trip-destinations';
 import { effectivePins } from '../../utils/pins';
 import { activityText as activityLine, timeAgo as agoOf } from '../../utils/activity';
 import { effectiveHomeLayout } from '../../utils/layout';
@@ -148,9 +148,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     return `${fmt(leg.startDate)} – ${fmt(leg.endDate)}`;
   }
 
+  /** "now" chip: only when today actually falls inside the leg's dates —
+   *  before the trip starts, no leg is "now" (currentLeg() would return the
+   *  next upcoming leg, which is for glance cards, not this label). */
   isCurrentLeg(leg: TripDestination): boolean {
-    const c = this.currentLeg();
-    return !!c && c.destination === leg.destination && c.startDate === leg.startDate;
+    return legIsCurrent(leg, localTodayISO(new Date(this.now())));
   }
 
   // ── Hero ───────────────────────────────────────────────────────────────────

@@ -48,6 +48,24 @@ export function activeLeg(destinations: TripDestination[], todayISO: string): Tr
   return destinations.reduce((latest, d) => (d.endDate > latest.endDate ? d : latest), destinations[0]);
 }
 
+/**
+ * True only when `todayISO` falls inside the leg's [startDate, endDate]
+ * (inclusive). Unlike activeLeg(), which also returns an *upcoming* leg for
+ * glance cards, this is the test for labeling a leg "now".
+ */
+export function legIsCurrent(leg: TripDestination, todayISO: string): boolean {
+  return !!leg.startDate && !!leg.endDate &&
+         leg.startDate <= todayISO && todayISO <= leg.endDate;
+}
+
+/** Today's date in the user's local timezone as YYYY-MM-DD (not UTC — an
+ *  evening in the Americas must not count as tomorrow). */
+export function localTodayISO(now: Date = new Date()): string {
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${m}-${d}`;
+}
+
 /** A destination row from the edit form, carrying the leg it was loaded from. */
 export interface DestinationEdit {
   destination: string;

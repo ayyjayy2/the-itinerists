@@ -1,4 +1,4 @@
-import { tripSummary, tripDestinations, activeLeg, buildEditedDestinations } from './trip-destinations';
+import { tripSummary, tripDestinations, activeLeg, buildEditedDestinations, legIsCurrent, localTodayISO } from './trip-destinations';
 import { TripDestination, TripDoc } from '../models/trip.models';
 
 const leg = (over: Partial<TripDestination> = {}): TripDestination => ({
@@ -120,5 +120,32 @@ describe('buildEditedDestinations', () => {
       { destination: 'Lisbon', startDate: '2026-03-10', endDate: '2026-03-15', currency: 'EUR' },
     ]);
     expect(d.destinationCoords).toBeUndefined();
+  });
+});
+
+describe('legIsCurrent', () => {
+  const berlin = leg({ destination: 'Berlin', startDate: '2026-09-24', endDate: '2026-09-29' });
+
+  it('is false before the leg starts (no "now" chip in August)', () => {
+    expect(legIsCurrent(berlin, '2026-08-05')).toBe(false);
+  });
+
+  it('is true only while today overlaps the leg dates, inclusive', () => {
+    expect(legIsCurrent(berlin, '2026-09-24')).toBe(true);
+    expect(legIsCurrent(berlin, '2026-09-26')).toBe(true);
+    expect(legIsCurrent(berlin, '2026-09-29')).toBe(true);
+    expect(legIsCurrent(berlin, '2026-09-30')).toBe(false);
+  });
+
+  it('is false for a leg with missing dates', () => {
+    expect(legIsCurrent(leg({ startDate: '', endDate: '' }), '2026-09-26')).toBe(false);
+  });
+});
+
+describe('localTodayISO', () => {
+  it('formats the local date, not UTC', () => {
+    // 23:30 local on Aug 5 — UTC may already be Aug 6, local date must win.
+    expect(localTodayISO(new Date(2026, 7, 5, 23, 30))).toBe('2026-08-05');
+    expect(localTodayISO(new Date(2026, 0, 1, 0, 5))).toBe('2026-01-01');
   });
 });
