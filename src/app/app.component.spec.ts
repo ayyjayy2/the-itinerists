@@ -120,6 +120,37 @@ describe('AppComponent', () => {
     });
   });
 
+  describe('drawer swipe-left dismiss', () => {
+    const touch = (clientX: number) => ({ touches: [{ clientX }] } as unknown as TouchEvent);
+
+    it('closes the drawer when dragged left past the threshold', () => {
+      const app = TestBed.createComponent(AppComponent).componentInstance;
+      app.drawerOpen.set(true);
+      app.onDrawerTouchStart(touch(200));
+      app.onDrawerTouchMove(touch(100));
+      app.onDrawerTouchEnd();
+      expect(app.drawerOpen()).toBe(false);
+      expect(app.drawerDragX()).toBe(0);
+    });
+
+    it('snaps back on a short drag and ignores rightward drags', () => {
+      const app = TestBed.createComponent(AppComponent).componentInstance;
+      app.drawerOpen.set(true);
+      app.onDrawerTouchStart(touch(200));
+      app.onDrawerTouchMove(touch(160));
+      expect(app.drawerDragX()).toBe(-40);
+      app.onDrawerTouchEnd();
+      expect(app.drawerOpen()).toBe(true);
+      expect(app.drawerDragX()).toBe(0);
+
+      app.onDrawerTouchStart(touch(200));
+      app.onDrawerTouchMove(touch(300));
+      expect(app.drawerDragX()).toBe(0);
+      app.onDrawerTouchEnd();
+      expect(app.drawerOpen()).toBe(true);
+    });
+  });
+
   it('hides pages the member toggled off and excludes Admin for non-admins', () => {
     const tripService = TestBed.inject(TripService) as unknown as { hiddenPages: WritableSignal<string[]> };
     tripService.hiddenPages.set(['outfits']);

@@ -82,7 +82,13 @@
     <!-- ── Type B: hamburger drawer ── -->
     @if (isLayoutB() && drawerOpen()) {
       <div class="drawer-scrim" (click)="closeDrawer()"></div>
-      <aside class="drawer">
+      <aside class="drawer"
+             [style.transform]="drawerDragX() ? 'translateX(' + drawerDragX() + 'px)' : null"
+             [style.transition]="drawerDragX() ? 'none' : null"
+             (touchstart)="onDrawerTouchStart($event)"
+             (touchmove)="onDrawerTouchMove($event)"
+             (touchend)="onDrawerTouchEnd()"
+             (touchcancel)="onDrawerTouchEnd()">
         <div class="drawer-head">
           <app-brand [mark]="30" [showWordmark]="false" />
           <span class="drawer-trip">{{ (tripService.activeTrip()?.destination || tripService.activeTrip()?.name)?.split(',')?.[0] ?? 'The Itinerists' }}</span>

@@ -159,7 +159,29 @@ export class AppComponent implements OnInit {
   readonly showBell  = computed(() => effectiveHomeLayout(this.userService.firestoreUser()) !== 'A');
   drawerOpen = signal(false);
   toggleDrawer(): void { this.drawerOpen.update(v => !v); }
-  closeDrawer(): void  { this.drawerOpen.set(false); }
+  closeDrawer(): void  { this.drawerOpen.set(false); this.drawerDragX.set(0); }
+
+  // ── Swipe-left to dismiss the drawer (mirrors its slide-in from the left).
+  //    Horizontal only — vertical touches keep scrolling the nav list. ──
+  /** How far the finger has dragged the drawer left, in px (≤ 0; 0 = resting). */
+  drawerDragX = signal(0);
+  private drawerTouchStartX: number | null = null;
+  private static readonly DRAWER_DISMISS_PX = 70;
+
+  onDrawerTouchStart(e: TouchEvent): void {
+    this.drawerTouchStartX = e.touches[0].clientX;
+  }
+  onDrawerTouchMove(e: TouchEvent): void {
+    if (this.drawerTouchStartX === null) return;
+    // Only follow leftward movement; rightward drags keep the drawer at rest.
+    this.drawerDragX.set(Math.min(0, e.touches[0].clientX - this.drawerTouchStartX));
+  }
+  onDrawerTouchEnd(): void {
+    if (this.drawerTouchStartX === null) return;
+    this.drawerTouchStartX = null;
+    if (this.drawerDragX() < -AppComponent.DRAWER_DISMISS_PX) this.closeDrawer();
+    else this.drawerDragX.set(0);
+  }
   /** Drawer list: every page, Profile included — the footer chip alone proved
    *  too subtle a path to account settings (incl. the layout picker). */
   readonly drawerItems = computed(() => this.orderedNavItems());

@@ -337,6 +337,10 @@
   display: flex; flex-direction: column;
   padding: 1rem 0.8rem calc(0.8rem + env(safe-area-inset-bottom));
   animation: drawer-in 0.18s ease-out;
+  // Swipe-left dismiss: we take horizontal pans; pan-y keeps the nav list
+  // scrollable. The transition animates the snap-back after a short drag.
+  touch-action: pan-y;
+  transition: transform 0.2s ease;
 }
 @keyframes drawer-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 
