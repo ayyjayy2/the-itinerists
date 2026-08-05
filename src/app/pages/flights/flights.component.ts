@@ -7,6 +7,7 @@ import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { FlightDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
 // ── View models ───────────────────────────────────────────────────────────────
 
@@ -70,7 +71,7 @@ function emptyForm(): FlightForm {
 
 @Component({
   selector: 'app-flights',
-  imports: [IconComponent, CommonModule, NgTemplateOutlet, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule],
   templateUrl: './flights.component.html',
   styleUrl: './flights.component.scss'
 })
@@ -79,6 +80,7 @@ export class FlightsComponent {
   usersService      = inject(UsersService);
   userService       = inject(UserService);
   tripService       = inject(TripService);
+  readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
 
   currentUser   = this.userService.currentUser;
   tripUsers     = this.usersService.tripUsers;

@@ -1,3 +1,4 @@
+@if (hasActiveTrip()) {
 <div class="page-container">
   <!-- Header -->
   <div class="page-header">
@@ -249,3 +250,11 @@
     <button class="btn btn-ghost btn-sm edit-outfit-btn" (click)="startEdit(date)"><app-icon name="edit" [size]="15" /> Edit</button>
   </div>
 </ng-template>
+} @else {
+  <div class="page-container">
+    <div class="page-header">
+      <h2><app-icon name="outfits" [size]="22" /> Outfits</h2>
+    </div>
+    <app-no-trip-state page="outfits" />
+  </div>
+}

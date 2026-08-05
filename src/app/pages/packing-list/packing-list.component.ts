@@ -4,13 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { PackingService } from '../../services/packing.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
+import { TripService } from '../../services/trip.service';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
 type TabType = 'list' | 'suggestions' | 'send';
 
 @Component({
   selector: 'app-packing-list',
-  imports: [IconComponent, CommonModule, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
   templateUrl: './packing-list.component.html',
   styleUrl: './packing-list.component.scss'
 })
@@ -18,6 +20,8 @@ export class PackingListComponent implements OnInit {
   packingService = inject(PackingService);
   userService    = inject(UserService);
   usersService   = inject(UsersService);
+  tripService = inject(TripService);
+  readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
 
   currentUser = this.userService.currentUser;
   tab = signal<TabType>('list');

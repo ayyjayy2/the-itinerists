@@ -4,12 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { StaysService } from '../../services/stays.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
+import { TripService } from '../../services/trip.service';
 import { AccommodationDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
 @Component({
   selector: 'app-accommodations',
-  imports: [IconComponent, CommonModule, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
   templateUrl: './accommodations.component.html',
   styleUrl: './accommodations.component.scss'
 })
@@ -17,6 +19,8 @@ export class AccommodationsComponent {
   staysService = inject(StaysService);
   userService  = inject(UserService);
   usersService = inject(UsersService);
+  tripService = inject(TripService);
+  readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
 
   currentUser = this.userService.currentUser;
   readonly tripUsers = this.usersService.tripUsers;

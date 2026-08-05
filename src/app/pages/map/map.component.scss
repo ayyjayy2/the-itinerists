@@ -349,3 +349,6 @@
   font-size: 0.85rem;
   color: var(--text-muted);
 }
+
+// No-trip empty state: the flex :host + page-container margin:auto otherwise shrink-to-fit.
+.map-no-trip { width: 100%; }

@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RecsService } from '../../services/recs.service';
 import { UserService } from '../../services/user.service';
+import { TripService } from '../../services/trip.service';
 import { Rec, RecDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
 const CATEGORIES = ['Food', 'Drink', 'Places', 'Activities', 'Tips', 'Culture'];
 
@@ -12,13 +14,15 @@ type GroupedRecs = [string, RecDoc[]][];
 
 @Component({
   selector: 'app-recs',
-  imports: [IconComponent, CommonModule, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
   templateUrl: './recs.component.html',
   styleUrl: './recs.component.scss'
 })
 export class RecsComponent {
   recsService = inject(RecsService);
   userService = inject(UserService);
+  tripService = inject(TripService);
+  readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
 
   currentUser = this.userService.currentUser;
   isAdmin     = this.userService.isAdmin;
