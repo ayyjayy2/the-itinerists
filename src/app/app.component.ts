@@ -113,7 +113,30 @@ export class AppComponent implements OnInit {
   });
 
   toggleMore(): void { this.moreOpen.update(v => !v); }
-  closeMore(): void  { this.moreOpen.set(false); this.reorderMode.set(false); }
+  closeMore(): void  { this.moreOpen.set(false); this.reorderMode.set(false); this.sheetDragY.set(0); }
+
+  // ── Swipe-down to dismiss the More sheet (the sheet follows the finger) ────
+  /** How far the finger has dragged the sheet down, in px (0 = resting). */
+  sheetDragY = signal(0);
+  private sheetTouchStartY: number | null = null;
+  private static readonly SHEET_DISMISS_PX = 70;
+
+  onSheetTouchStart(e: TouchEvent): void {
+    // Reorder mode owns touch (cdkDrag) — don't fight it for the gesture.
+    if (this.reorderMode()) return;
+    this.sheetTouchStartY = e.touches[0].clientY;
+  }
+  onSheetTouchMove(e: TouchEvent): void {
+    if (this.sheetTouchStartY === null) return;
+    // Only follow downward movement; upward drags keep the sheet at rest.
+    this.sheetDragY.set(Math.max(0, e.touches[0].clientY - this.sheetTouchStartY));
+  }
+  onSheetTouchEnd(): void {
+    if (this.sheetTouchStartY === null) return;
+    this.sheetTouchStartY = null;
+    if (this.sheetDragY() > AppComponent.SHEET_DISMISS_PX) this.closeMore();
+    else this.sheetDragY.set(0);
+  }
 
   // ── More-sheet reorder mode: drag to rearrange; top 3 join Home in the bar ──
   reorderMode = signal(false);

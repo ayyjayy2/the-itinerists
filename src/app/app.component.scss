@@ -265,6 +265,10 @@
   padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
   box-shadow: 0 -8px 30px rgba(139, 175, 124, 0.25);
   animation: sheetUp 0.22s ease;
+  // Swipe-down dismiss: we handle vertical pans ourselves (no inner scroll),
+  // and animate the snap-back when a short drag is released.
+  touch-action: none;
+  transition: transform 0.2s ease;
 }
 
 .sheet-handle {
