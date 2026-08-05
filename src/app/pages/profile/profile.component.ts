@@ -6,7 +6,7 @@ import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
 import { IconComponent } from '../../shared/icon/icon.component';
-import { effectiveHomeLayout, HomeLayout } from '../../utils/layout';
+import { canPickLayout, effectiveHomeLayout, HomeLayout } from '../../utils/layout';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 
 const EMOJI_OPTIONS = [
@@ -72,13 +72,7 @@ export class ProfileComponent implements OnInit {
   recoveryError     = signal('');
 
   readonly homeLayout = computed(() => effectiveHomeLayout(this.firestoreUser()));
-  /** Layout experiments are Alayna-only. Gate on uid too so a username change
-   *  can never hide the picker. Do not remove without her explicit say-so. */
-  private readonly LAYOUT_PICKER_UID = 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';
-  readonly canPickLayout = computed(() => {
-    const u = this.firestoreUser();
-    return u?.username === 'alayna' || u?.uid === this.LAYOUT_PICKER_UID;
-  });
+  readonly canPickLayout = computed(() => canPickLayout(this.firestoreUser()));
 
   setLayout(layout: HomeLayout): void {
     void this.userService.updateHomeLayout(layout);

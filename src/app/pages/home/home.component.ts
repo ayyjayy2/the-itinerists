@@ -111,16 +111,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     } catch { /* ignore bad local data */ }
   }
 
-  /** Feature teaser shown on the zero-trips welcome state. */
-  readonly teaserFeatures = [
-    { icon: 'itinerary', label: 'Itinerary' },
-    { icon: 'finance',   label: 'Shared budget' },
-    { icon: 'flights',   label: 'Flights' },
-    { icon: 'stays',     label: 'Stays' },
-    { icon: 'packing',   label: 'Packing' },
-    { icon: 'outfits',   label: 'Outfits' },
-  ];
-
   constructor() {
     // Load weather for every destination leg so the glance shows the right city.
     effect(() => {
