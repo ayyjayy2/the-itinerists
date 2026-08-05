@@ -79,6 +79,47 @@ describe('AppComponent', () => {
     expect(paths).toContain('/trip-settings');
   });
 
+  describe('More-sheet swipe-down dismiss', () => {
+    const touch = (clientY: number) => ({ touches: [{ clientY }] } as unknown as TouchEvent);
+
+    it('closes the sheet when dragged down past the threshold', () => {
+      const app = TestBed.createComponent(AppComponent).componentInstance;
+      app.moreOpen.set(true);
+      app.onSheetTouchStart(touch(300));
+      app.onSheetTouchMove(touch(400));
+      app.onSheetTouchEnd();
+      expect(app.moreOpen()).toBe(false);
+      expect(app.sheetDragY()).toBe(0);
+    });
+
+    it('snaps back without closing on a short drag', () => {
+      const app = TestBed.createComponent(AppComponent).componentInstance;
+      app.moreOpen.set(true);
+      app.onSheetTouchStart(touch(300));
+      app.onSheetTouchMove(touch(340));
+      expect(app.sheetDragY()).toBe(40);
+      app.onSheetTouchEnd();
+      expect(app.moreOpen()).toBe(true);
+      expect(app.sheetDragY()).toBe(0);
+    });
+
+    it('ignores upward drags and reorder-mode touches', () => {
+      const app = TestBed.createComponent(AppComponent).componentInstance;
+      app.moreOpen.set(true);
+      app.onSheetTouchStart(touch(300));
+      app.onSheetTouchMove(touch(200));
+      expect(app.sheetDragY()).toBe(0);
+      app.onSheetTouchEnd();
+      expect(app.moreOpen()).toBe(true);
+
+      app.reorderMode.set(true);
+      app.onSheetTouchStart(touch(300));
+      app.onSheetTouchMove(touch(500));
+      expect(app.sheetDragY()).toBe(0);
+      expect(app.moreOpen()).toBe(true);
+    });
+  });
+
   it('hides pages the member toggled off and excludes Admin for non-admins', () => {
     const tripService = TestBed.inject(TripService) as unknown as { hiddenPages: WritableSignal<string[]> };
     tripService.hiddenPages.set(['outfits']);

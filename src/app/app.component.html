@@ -129,7 +129,13 @@
     <!-- ── "More" sheet ── -->
     @if (moreOpen()) {
       <div class="sheet-backdrop" (click)="closeMore()"></div>
-      <div class="more-sheet">
+      <div class="more-sheet"
+           [style.transform]="sheetDragY() ? 'translateY(' + sheetDragY() + 'px)' : null"
+           [style.transition]="sheetDragY() ? 'none' : null"
+           (touchstart)="onSheetTouchStart($event)"
+           (touchmove)="onSheetTouchMove($event)"
+           (touchend)="onSheetTouchEnd()"
+           (touchcancel)="onSheetTouchEnd()">
         <div class="sheet-handle"></div>
         <div class="sheet-tools">
           <button class="reorder-btn" type="button" (click)="toggleReorder()">
