@@ -284,6 +284,10 @@ input, select, textarea {
   }
 }
 
+// Date/time inputs have an intrinsic width that resists flex/grid shrinking
+// (notably on iOS Safari), pushing side-by-side fields out of their card.
+input[type='date'], input[type='time'] { min-width: 0; }
+
 label {
   font-size: 0.85rem;
   font-weight: 700;
