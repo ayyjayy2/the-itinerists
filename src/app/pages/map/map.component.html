@@ -1,3 +1,4 @@
+@if (hasActiveTrip()) {
 <div class="map-page">
 
   <!-- Full-height viewport section: keeps the map the same size as before; the
@@ -148,5 +149,13 @@
         </button>
       </div>
     </div>
+  </div>
+}
+} @else {
+  <div class="page-container map-no-trip">
+    <div class="page-header">
+      <h2><app-icon name="map" [size]="22" /> Trip Map</h2>
+    </div>
+    <app-no-trip-state page="map" />
   </div>
 }

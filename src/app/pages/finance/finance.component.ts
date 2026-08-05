@@ -9,6 +9,7 @@ import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
 import { Rates, perCurrencySubtotals, convertedTotal, convertShare } from '../../utils/currency';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
 
 const LAST_CURRENCY_PREFIX = 'tripplanner_last_currency_';
@@ -29,7 +30,7 @@ interface DirectDebt {
 
 @Component({
   selector: 'app-finance',
-  imports: [IconComponent, CurrencySelectComponent, CommonModule, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule],
   templateUrl: './finance.component.html',
   styleUrl: './finance.component.scss'
 })
@@ -40,6 +41,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   userService    = inject(UserService);
   usersService   = inject(UsersService);
   tripService    = inject(TripService);
+  readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
   private rateService = inject(ExchangeRateService);
 
   /** The trip's primary currency — the "home" currency for converted totals. */

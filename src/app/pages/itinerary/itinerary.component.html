@@ -1,3 +1,4 @@
+@if (hasActiveTrip()) {
 <div class="page-container">
 
   <!-- ── Header: title + List / Calendar ── -->
@@ -275,3 +276,11 @@
   }
 
 </div>
+} @else {
+  <div class="page-container">
+    <div class="page-header">
+      <h2><app-icon name="itinerary" [size]="22" /> Itinerary</h2>
+    </div>
+    <app-no-trip-state page="itinerary" />
+  </div>
+}

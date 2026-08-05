@@ -1,3 +1,4 @@
+@if (hasActiveTrip()) {
 <div class="page-container">
   <div class="page-header">
     <h2><app-icon name="recs" [size]="22" /> Tips & Recs</h2>
@@ -102,3 +103,11 @@
   }
 
 </div>
+} @else {
+  <div class="page-container">
+    <div class="page-header">
+      <h2><app-icon name="recs" [size]="22" /> Tips & Recs</h2>
+    </div>
+    <app-no-trip-state page="recs" />
+  </div>
+}

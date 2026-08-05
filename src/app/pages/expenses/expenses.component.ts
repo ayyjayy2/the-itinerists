@@ -5,8 +5,10 @@ import { ExpensesService } from '../../services/expenses.service';
 import { FinanceService } from '../../services/finance.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
+import { TripService } from '../../services/trip.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
 const CATEGORIES = ['Food', 'Drink', 'Transport', 'Shopping', 'Accommodation', 'Activity', 'Other'];
 
@@ -23,7 +25,7 @@ interface DisplayExpense {
 
 @Component({
   selector: 'app-expenses',
-  imports: [IconComponent, CommonModule, NgClass, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, NgClass, FormsModule],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss'
 })
@@ -32,6 +34,8 @@ export class ExpensesComponent implements OnInit {
   financeService  = inject(FinanceService);
   userService     = inject(UserService);
   usersService    = inject(UsersService);
+  tripService = inject(TripService);
+  readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
 
   currentUser = this.userService.currentUser;
   categories  = CATEGORIES;

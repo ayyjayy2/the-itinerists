@@ -1,3 +1,4 @@
+@if (hasActiveTrip()) {
 <div class="page-container">
 
   <!-- ── Header ── -->
@@ -502,4 +503,12 @@
 <!-- ── Toast ── -->
 @if (toast()) {
   <div class="toast">{{ toast() }}</div>
+}
+} @else {
+  <div class="page-container">
+    <div class="page-header">
+      <h2><app-icon name="finance" [size]="22" /> Finance</h2>
+    </div>
+    <app-no-trip-state page="finance" />
+  </div>
 }

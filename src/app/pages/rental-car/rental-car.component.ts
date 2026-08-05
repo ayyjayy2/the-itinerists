@@ -2,8 +2,10 @@ import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data.service';
+import { TripService } from '../../services/trip.service';
 import { RentalCar, TransportMode } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
 type CarForm = Omit<RentalCar, 'drivers'>;
 
@@ -21,12 +23,14 @@ function blankForm(): CarForm {
 
 @Component({
   selector: 'app-rental-car',
-  imports: [IconComponent, CommonModule, NgTemplateOutlet, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule],
   templateUrl: './rental-car.component.html',
   styleUrl: './rental-car.component.scss'
 })
 export class RentalCarComponent {
   dataService = inject(DataService);
+  tripService = inject(TripService);
+  readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
 
   cars  = computed(() => this.dataService.data()?.rentalCar ?? []);
   users = computed(() => this.dataService.data()?.users ?? []);

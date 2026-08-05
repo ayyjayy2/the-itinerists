@@ -12,6 +12,7 @@ import { TripService } from '../../services/trip.service';
 import { Flight, ItineraryItem, MapPin, TripUser } from '../../models/trip.models';
 import { tripDestinations } from '../../utils/trip-destinations';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
 // Bump this to wipe the geocache and re-resolve all locations with new strategy.
 // v5: destination-aware queries + cache keys (was Ireland-biased before).
@@ -170,7 +171,7 @@ interface LocationEntry {
 
 @Component({
   selector: 'app-map',
-  imports: [IconComponent, CommonModule, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
   templateUrl: './map.component.html',
   styleUrl: './map.component.scss',
 })
@@ -178,6 +179,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private dataService = inject(DataService);
   private userService = inject(UserService);
   private tripService = inject(TripService);
+  readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
   private ngZone      = inject(NgZone);
   private firestore   = inject(Firestore);
 
