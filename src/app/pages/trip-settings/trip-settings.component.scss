@@ -16,7 +16,7 @@
 .muted { color: var(--text-muted, #6b7280); font-size: 0.9rem; }
 
 .form-group { margin-bottom: 0.85rem; }
-.form-row { display: flex; gap: 0.85rem; .form-group { flex: 1; } }
+.form-row { display: flex; gap: 0.85rem; .form-group { flex: 1; min-width: 0; } }
 
 .form-actions {
   display: flex;
