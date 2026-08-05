@@ -11,7 +11,7 @@ import { ActivityLogEntry } from '../../models/trip.models';
   imports: [RouterLink, IconComponent],
   template: `
     <div class="bell-wrap">
-      <button class="bell-btn" type="button" (click)="toggle()" aria-label="Group updates">
+      <button class="bell-btn" type="button" (click)="toggle($event)" aria-label="Group updates">
         <app-icon name="bell" [size]="22" />
         @if (unseen() > 0) {
           <span class="bell-badge">{{ unseen() > 9 ? '9+' : unseen() }}</span>
@@ -20,7 +20,7 @@ import { ActivityLogEntry } from '../../models/trip.models';
 
       @if (open()) {
         <div class="bell-scrim" (click)="open.set(false)"></div>
-        <div class="bell-dropdown">
+        <div class="bell-dropdown" [style.top.px]="dropTop()">
           <div class="bell-head">{{ shown().length }} {{ shown().length === 1 ? 'update' : 'updates' }}</div>
           @for (a of shown(); track a.id) {
             <div class="bell-item"><b>{{ a.performedByName }}</b> — {{ text(a) }} · {{ ago(a.timestamp) }}</div>
@@ -40,7 +40,10 @@ import { ActivityLogEntry } from '../../models/trip.models';
       color: #fff; border-radius: 999px; font-size: 0.62rem; font-weight: 700;
       min-width: 15px; height: 15px; padding: 0 3px; display: grid; place-items: center; }
     .bell-scrim { position: fixed; inset: 0; z-index: 90; }
-    .bell-dropdown { position: absolute; right: 0; top: calc(100% + 6px); z-index: 91;
+    /* Fixed to the viewport, not the bell: on narrow phones the bell can sit
+       mid-header (wide user chip), and a right-anchored 320px panel would hang
+       off the left screen edge. Top is set from the button's rect on open. */
+    .bell-dropdown { position: fixed; right: 10px; z-index: 91;
       width: min(320px, 86vw); background: var(--surface, #fff);
       border: 1px solid var(--border, #eee); border-radius: 14px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.12); padding: 0.4rem 0; }
@@ -82,9 +85,14 @@ export class NotificationBellComponent {
   text = (a: ActivityLogEntry) => activityText(a);
   ago  = (ts: number) => timeAgo(ts, this.now());
 
-  toggle(): void {
+  /** Viewport-fixed top for the dropdown, measured from the bell on open. */
+  readonly dropTop = signal(64);
+
+  toggle(ev?: Event): void {
     this.now.set(Date.now());
     if (!this.open()) {
+      const btn = ev?.currentTarget as HTMLElement | undefined;
+      if (btn) this.dropTop.set(btn.getBoundingClientRect().bottom + 6);
       this.shown.set(this.recent());
       if (this.unseen() > 0) void this.userService.markActivitySeen();
     }
