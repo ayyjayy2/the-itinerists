@@ -4,9 +4,7 @@
   </div>
 
   @if (!trip()) {
-    <div class="card empty">
-      <p>No active trip. <a routerLink="/trips">Pick or create a trip</a> first.</p>
-    </div>
+    <app-no-trip-state page="settings" />
   } @else {
     @if (error()) { <div class="alert-error">{{ error() }}</div> }
 
