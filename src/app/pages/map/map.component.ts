@@ -10,7 +10,7 @@ import { DataService } from '../../services/data.service';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { Flight, ItineraryItem, MapPin, TripUser } from '../../models/trip.models';
-import { tripDestinations } from '../../utils/trip-destinations';
+import { activeLeg, tripDestinations } from '../../utils/trip-destinations';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
@@ -250,6 +250,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private map: L.Map | null = null;
   private destLayer      = L.layerGroup();
   private destPinsRendered = false;
+  /** True once anything has moved the view off the neutral world zoom, so the
+   *  destination fallback never stomps a marker fit that already happened. */
+  private viewFitted = false;
   private flightLayer    = L.layerGroup();
   private routeLayer     = L.layerGroup();
   private accomLayer     = L.layerGroup();
@@ -363,8 +366,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     if (this.destroyed) return;
     this.ngZone.run(() => this.mapReady.set(true));
     // Trip-level destination pins (multi-destination only). Runs after the
-    // marker cycle so its fit-all-destinations wins the initial view.
-    void this.renderDestinationPins();
+    // marker cycle so its fit-all-destinations wins the initial view. Then, if
+    // nothing at all has fitted the view, fall back to the trip destination.
+    await this.renderDestinationPins();
+    void this.centerOnDestinationIfIdle();
   }
 
   /**
@@ -404,6 +409,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
 
     if (this.map && bounds.length > 1) {
+      this.viewFitted = true;
       this.map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50] });
     }
   }
@@ -940,10 +946,29 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   private fitBoundsIfNeeded(bounds: [number, number][]): void {
-    if (!this.map) return;
+    if (!this.map || !bounds.length) return;
+    this.viewFitted = true;
     if (bounds.length > 1)
       this.map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
-    else if (bounds.length === 1)
+    else
       this.map.setView(bounds[0], 13);
+  }
+
+  /**
+   * A trip with no mappable items yet (fresh trip, empty itinerary) would
+   * otherwise sit on the neutral world view — center on the trip's destination
+   * instead so the map opens somewhere useful. Multi-destination trips focus
+   * the current/upcoming leg. Skipped as soon as any marker fit has run.
+   */
+  private async centerOnDestinationIfIdle(): Promise<void> {
+    if (!this.map || this.viewFitted) return;
+    const trip = this.tripService.activeTrip();
+    if (!trip) return;
+    const legs = tripDestinations(trip);
+    const leg  = activeLeg(legs, new Date().toISOString().slice(0, 10));
+    let coords = leg.destinationCoords ?? null;
+    if (!coords && leg.destination.trim()) coords = await this.geocodeWithFallback(leg.destination);
+    if (this.destroyed || !coords || this.viewFitted || !this.map) return;
+    this.map.setView([coords.lat, coords.lng], 11);
   }
 }
