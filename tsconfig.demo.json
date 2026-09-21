@@ -1,0 +1,20 @@
+/* Demo build: the Firebase entry points resolve to in-memory stand-ins under src/demo. */
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/demo",
+    "paths": {
+      "@angular/fire/app":       ["./src/demo/fire-app"],
+      "@angular/fire/firestore": ["./src/demo/fire-firestore"],
+      "@angular/fire/auth":      ["./src/demo/fire-auth"],
+      "@angular/fire/storage":   ["./src/demo/fire-storage"],
+      "@angular/fire/app-check": ["./src/demo/fire-app-check"]
+    }
+  },
+  "files": [
+    "src/main.demo.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
+  ]
+}
