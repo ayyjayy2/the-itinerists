@@ -74,7 +74,7 @@
           @if (currentUser()) {
             <a class="user-chip" routerLink="/profile">
               <div class="avatar-sm" [style.background]="currentUser()!.color">{{ currentUser()!.avatarEmoji }}</div>
-              <span class="chip-name">{{ currentUser()!.name }}</span>
+              <span class="chip-name">{{ isDemo ? 'Me' : currentUser()!.name }}</span>
             </a>
           }
         </div>
