@@ -11,7 +11,10 @@
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
     "test:rules": "firebase emulators:exec --only firestore \"node test/firestore-rules.test.mjs\"",
     "sync-seed": "node scripts/sync-seed.js",
-    "gen-env": "node scripts/gen-env.js"
+    "gen-env": "node scripts/gen-env.js",
+    "start:demo": "ng serve --configuration demo --port 4400",
+    "build:demo": "node scripts/set-version.js && ng build --configuration demo",
+    "deploy:demo": "npm run build:demo && firebase deploy --only hosting:the-itinerists-demo"
   },
   "private": true,
   "dependencies": {

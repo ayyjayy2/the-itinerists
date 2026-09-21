@@ -68,6 +68,38 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "demo": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "700kB",
+                  "maximumError": "2MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "16kB",
+                  "maximumError": "32kB"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": true
+              },
+              "outputPath": "dist/the-itinerists-demo",
+              "browser": "src/main.demo.ts",
+              "tsConfig": "tsconfig.demo.json",
+              "fileReplacements": [
+                {
+                  "replace": "src/app/demo-flag.ts",
+                  "with": "src/app/demo-flag.demo.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -80,6 +112,9 @@
             },
             "development": {
               "buildTarget": "the-itinerists:build:development"
+            },
+            "demo": {
+              "buildTarget": "the-itinerists:build:demo"
             }
           },
           "defaultConfiguration": "development"

@@ -1,3 +1,9 @@
+@if (isDemo) {
+  <div class="demo-banner" role="status">
+    <span class="demo-banner-tag">Demo</span>
+    <span>A sample trip, no sign-in. Anything you change lives only in this tab.</span>
+  </div>
+}
 <!-- Full-screen auth/onboarding: no chrome -->
 @if (isAuthPage()) {
   <router-outlet />

@@ -20,6 +20,7 @@ import { RecsService } from './services/recs.service';
 import { OutfitsService } from './services/outfits.service';
 import { ThemeService } from './services/theme.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../version';
+import { DEMO } from './demo-flag';
 import { effectiveHomeLayout } from './utils/layout';
 import { applyNavOrder } from './utils/nav-order';
 import { NotificationBellComponent } from './shared/notification-bell/notification-bell.component';
@@ -56,6 +57,7 @@ export class AppComponent implements OnInit {
   private swUpdate = inject(SwUpdate);
 
   readonly version   = APP_VERSION;
+  readonly isDemo    = DEMO;
   readonly buildDate = APP_BUILD_DATE;
   sidebarOpen  = false;
   navCollapsed = localStorage.getItem('tripplanner_nav_collapsed') === 'true';
