@@ -286,7 +286,19 @@ input, select, textarea {
 
 // Date/time inputs have an intrinsic width that resists flex/grid shrinking
 // (notably on iOS Safari), pushing side-by-side fields out of their card.
-input[type='date'], input[type='time'] { min-width: 0; }
+// `min-width: 0` alone is not enough there: WebKit only honours `width: 100%`
+// once the native appearance is removed, and it then collapses the height of
+// an empty field unless a min-height is given back.
+input[type='date'], input[type='time'] {
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-height: 3rem;
+  -webkit-min-logical-width: 0;
+}
+input[type='date']::-webkit-date-and-time-value,
+input[type='time']::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
 
 label {
   font-size: 0.85rem;
