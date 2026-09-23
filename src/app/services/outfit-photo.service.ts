@@ -1,5 +1,6 @@
 import { Injectable, inject, signal, NgZone, Injector, runInInjectionContext } from '@angular/core';
-import { Firestore, doc, setDoc, getDoc } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, getDoc, deleteDoc } from '@angular/fire/firestore';
+import { newOutfitPhotoId } from '../utils/outfit-photos';
 
 const MAX_PX  = 1200;
 const QUALITY = 0.85;
@@ -37,6 +38,13 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
+export interface UploadedPhoto { id: string; dataUrl: string }
+
+/**
+ * Owner-private outfit photos, one Firestore doc per photo at
+ * `trips/{tripId}/outfitPhotos/{photoId}` with `ownerUid` so the security
+ * rules gate read/write to the uploader alone. A day can hold several.
+ */
 @Injectable({ providedIn: 'root' })
 export class OutfitPhotoService {
   private firestore = inject(Firestore);
@@ -47,14 +55,8 @@ export class OutfitPhotoService {
 
   uploading = signal(false);
 
-  private docKey(date: string, uid: string) { return `${date}_${uid}`; }
-
-  /**
-   * Upload the current user's outfit photo for a day. Stored owner-private at
-   * `trips/{tripId}/outfitPhotos/{date}_{uid}` with `ownerUid` so the security
-   * rules can gate read/write to the uploader alone.
-   */
-  async upload(tripId: string, date: string, uid: string, file: File): Promise<string> {
+  /** Compress and store one photo for a day; returns its new id and data URL. */
+  async upload(tripId: string, date: string, uid: string, file: File): Promise<UploadedPhoto> {
     this.cancelled = false;
     this.uploading.set(true);
     try {
@@ -63,29 +65,36 @@ export class OutfitPhotoService {
       const dataUrl = await blobToDataUrl(blob);
       if (this.cancelled) throw new Error('cancelled');
 
-      const key = this.docKey(date, uid);
+      const id = newOutfitPhotoId(date, uid);
       await runInInjectionContext(this.injector, () =>
-        setDoc(doc(this.firestore, 'trips', tripId, 'outfitPhotos', key), { dataUrl, ownerUid: uid, date })
+        setDoc(doc(this.firestore, 'trips', tripId, 'outfitPhotos', id), { dataUrl, ownerUid: uid, date })
       );
-      this.cache.set(`${tripId}/${key}`, dataUrl);
-      return dataUrl;
+      this.cache.set(`${tripId}/${id}`, dataUrl);
+      return { id, dataUrl };
     } finally {
       this.ngZone.run(() => this.uploading.set(false));
     }
   }
 
-  /** Read the current user's own outfit photo for a day (owner-private). */
-  async getPhoto(tripId: string, date: string, uid: string): Promise<string | null> {
-    const key      = this.docKey(date, uid);
-    const cacheKey = `${tripId}/${key}`;
+  /** Read one of the current user's own photos by id (owner-private). */
+  async getPhoto(tripId: string, id: string): Promise<string | null> {
+    const cacheKey = `${tripId}/${id}`;
     if (this.cache.has(cacheKey)) return this.cache.get(cacheKey)!;
     const snap = await runInInjectionContext(this.injector, () =>
-      getDoc(doc(this.firestore, 'trips', tripId, 'outfitPhotos', key))
+      getDoc(doc(this.firestore, 'trips', tripId, 'outfitPhotos', id))
     );
     if (!snap.exists()) return null;
     const dataUrl = snap.data()['dataUrl'] as string;
     this.cache.set(cacheKey, dataUrl);
     return dataUrl;
+  }
+
+  /** Remove a photo doc the owner no longer wants. Best-effort. */
+  async deletePhoto(tripId: string, id: string): Promise<void> {
+    this.cache.delete(`${tripId}/${id}`);
+    await runInInjectionContext(this.injector, () =>
+      deleteDoc(doc(this.firestore, 'trips', tripId, 'outfitPhotos', id))
+    ).catch(err => console.error('[OutfitPhotoService] deletePhoto failed:', err));
   }
 
   cancelUpload(): void {
