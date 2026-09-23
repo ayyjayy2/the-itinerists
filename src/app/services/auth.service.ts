@@ -28,11 +28,21 @@ import {
 } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { BACKGROUND_COLORS } from '../utils/avatar-contrast';
+import { PLACEHOLDER_DOMAIN, isPlaceholderEmail } from '../utils/email';
 
-const EMAIL_DOMAIN = '@the-itinerists.local';
+const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
 
 function toEmail(username: string): string {
   return `${username.toLowerCase().trim()}${EMAIL_DOMAIN}`;
+}
+
+/** Firebase Auth error codes → plain words for the sign-up forms. */
+function describeAuthError(err: unknown): Error {
+  const code = (err as { code?: string })?.code ?? '';
+  if (code === 'auth/email-already-in-use') return new Error('That email already has an account. Sign in instead, or use "Forgot password?".');
+  if (code === 'auth/invalid-email')        return new Error('That email address doesn\'t look right.');
+  if (code === 'auth/weak-password')        return new Error('That password is too weak.');
+  return err instanceof Error ? err : new Error('Something went wrong. Please try again.');
 }
 
 function randomCode(length = 8): string {
@@ -86,6 +96,7 @@ export class AuthService {
     password: string,
     color: string,
     letterColor = '',
+    email = '',
   ): Promise<void> {
     // Resolve & validate the invite (code → trip).
     const tripId = await this.validateInviteCode(inviteCode);
@@ -103,8 +114,13 @@ export class AuthService {
     const existing  = await getDocs(usernameQ);
     if (!existing.empty) throw new Error('That username is already taken.');
 
-    // Create Firebase Auth account
-    const cred = await createUserWithEmailAndPassword(this.auth, toEmail(username), password);
+    // Create the Auth account with the person's real email (unique across
+    // accounts, and where password resets go). Legacy accounts used a synthetic
+    // username address instead.
+    const authEmail = email.toLowerCase().trim() || toEmail(username);
+    let cred;
+    try { cred = await createUserWithEmailAndPassword(this.auth, authEmail, password); }
+    catch (err) { throw describeAuthError(err); }
     const uid  = cred.user.uid;
     const now  = Date.now();
 
@@ -119,6 +135,7 @@ export class AuthService {
       isAdmin:      false,
       isDisabled:   false,
       createdAt:    now,
+      authEmail,
     };
     await setDoc(doc(this.firestore, 'users', uid), userDoc);
 
@@ -160,7 +177,7 @@ export class AuthService {
     username: string,
     password: string,
     color: string,
-    recoveryEmail?: string,
+    email: string,
     letterColor = '',
   ): Promise<void> {
     const uname = username.toLowerCase().trim();
@@ -169,7 +186,12 @@ export class AuthService {
     const usernameQ = query(collection(this.firestore, 'users'), where('username', '==', uname));
     if (!(await getDocs(usernameQ)).empty) throw new Error('That username is already taken.');
 
-    const cred = await createUserWithEmailAndPassword(this.auth, toEmail(uname), password);
+    // The Auth account is created with the person's real email: unique across
+    // accounts (two "nick"s can't share one), and where password resets go.
+    const authEmail = email.toLowerCase().trim();
+    let cred;
+    try { cred = await createUserWithEmailAndPassword(this.auth, authEmail, password); }
+    catch (err) { throw describeAuthError(err); }
     const uid  = cred.user.uid;
     const now  = Date.now();
 
@@ -183,20 +205,9 @@ export class AuthService {
       isAdmin:     false,
       isDisabled:  false,
       createdAt:   now,
-      authEmail:   toEmail(uname),
+      authEmail,
     };
     await setDoc(doc(this.firestore, 'users', uid), userDoc);
-
-    // Optional recovery email — best-effort; a failure must not lose the new account.
-    const recovery = recoveryEmail?.toLowerCase().trim();
-    if (recovery) {
-      try {
-        await updateEmail(cred.user, recovery);
-        await updateDoc(doc(this.firestore, 'users', uid), { authEmail: recovery });
-      } catch (err) {
-        console.error('[Auth] recovery email not attached (add it later in Profile):', err);
-      }
-    }
   }
 
   /**
@@ -247,13 +258,18 @@ export class AuthService {
       throw new Error('That username is already taken.');
     }
 
-    // Update Firebase Auth email
     const user = this.auth.currentUser;
     if (!user) throw new Error('No authenticated user.');
-    await updateEmail(user, toEmail(normalized));
 
-    // Update Firestore
-    await updateDoc(doc(this.firestore, 'users', uid), { username: normalized });
+    // Legacy accounts sign in through a synthetic username address, so that
+    // address must follow the username. An account with a real email keeps it.
+    const updates: Partial<FirestoreUser> = { username: normalized };
+    if (isPlaceholderEmail(user.email)) {
+      const synthetic = toEmail(normalized);
+      await updateEmail(user, synthetic);
+      updates.authEmail = synthetic;
+    }
+    await updateDoc(doc(this.firestore, 'users', uid), updates);
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {

@@ -10,6 +10,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
+import { isValidEmail } from '../../utils/email';
 
 @Component({
   selector: 'app-join',
@@ -34,6 +35,7 @@ export class JoinComponent implements OnInit {
   displayName   = '';
   avatarEmoji   = '🌸';
   avatarLetterColor = '';
+  email         = '';
   username      = '';
   password      = '';
   confirmPass   = '';
@@ -94,6 +96,7 @@ export class JoinComponent implements OnInit {
 
     if (!this.displayName.trim()) { this.error.set('Please enter your name.'); return; }
     if (!this.username.trim())    { this.error.set('Please choose a username.'); return; }
+    if (!isValidEmail(this.email)) { this.error.set('Please enter a valid email address.'); return; }
     if (!isPasswordValid(this.password)) { this.error.set(passwordProblems(this.password)); return; }
     if (this.password !== this.confirmPass) { this.error.set('Passwords do not match.'); return; }
 
@@ -107,6 +110,7 @@ export class JoinComponent implements OnInit {
         this.password,
         this.color,
         this.avatarLetterColor,
+        this.email.trim(),
       );
       this.router.navigate(['/home']);
     } catch (err: any) {

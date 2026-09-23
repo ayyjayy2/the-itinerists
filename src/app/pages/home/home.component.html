@@ -1,5 +1,15 @@
 <div class="page-container home">
 
+  <!-- Recovery-email nudge (accounts without a real email can't reset their own password) -->
+  @if (showRecoveryNudge()) {
+    <div class="recovery-nudge" role="status">
+      <span class="rn-ic"><app-icon name="profile" [size]="16" /></span>
+      <span class="rn-text"><strong>Add a recovery email</strong> so you can reset your password yourself if you ever forget it.</span>
+      <a class="btn btn-sm btn-primary" routerLink="/profile" [queryParams]="{ recovery: 1 }">Add email</a>
+      <button class="rn-close" type="button" (click)="dismissRecoveryNudge()" aria-label="Not now">✕</button>
+    </div>
+  }
+
   @if (hasActiveTrip()) {
     <!-- Trip switcher (Type A only — B and C switch trips on My Trips) -->
     @if (layout() === 'A') {

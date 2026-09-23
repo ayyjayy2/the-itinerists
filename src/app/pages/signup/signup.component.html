@@ -22,6 +22,19 @@
       <app-avatar-picker [(emoji)]="avatarEmoji" [(color)]="color" [(letterColor)]="avatarLetterColor" [name]="displayName" />
 
       <div class="form-group">
+        <label>Email</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        />
+        <p class="hint">Where password resets go. Kept separate from your username.</p>
+      </div>
+
+      <div class="form-group">
         <label>Username</label>
         <input
           type="text"
@@ -69,18 +82,6 @@
             required
           />
         </div>
-      </div>
-
-      <div class="form-group">
-        <label>Recovery email <span class="optional">(recommended)</span></label>
-        <input
-          type="email"
-          [(ngModel)]="recoveryEmail"
-          name="recoveryEmail"
-          placeholder="you@example.com"
-          autocomplete="email"
-        />
-        <p class="hint">The only way to reset a forgotten password yourself.</p>
       </div>
 
       @if (error()) {
