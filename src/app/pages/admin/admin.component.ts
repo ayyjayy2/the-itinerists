@@ -1,32 +1,43 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Firestore, collection, onSnapshot } from '@angular/fire/firestore';
+import { RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
-import { TripContextService } from '../../services/trip-context.service';
-import { FirestoreUser } from '../../models/trip.models';
+import { TripService } from '../../services/trip.service';
+import { TripMember } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
+/**
+ * Trip admin — for the person who created (owns) the active trip. Lists that
+ * trip's members, removes people from it, and issues invite links for it.
+ * Scope is the trip, not the app: an account's global admin flag plays no
+ * part here, and members who were invited rather than creating the trip
+ * don't get this page.
+ */
 @Component({
   selector: 'app-admin',
-  imports: [IconComponent, CommonModule, FormsModule, AvatarGlyphComponent],
+  imports: [IconComponent, CommonModule, FormsModule, RouterLink, AvatarGlyphComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
-export class AdminComponent implements OnInit {
-  private firestore   = inject(Firestore);
+export class AdminComponent {
   private userService = inject(UserService);
   private authService = inject(AuthService);
-  private tripContext = inject(TripContextService);
+  private tripService = inject(TripService);
 
   currentUser = this.userService.firestoreUser;
+  readonly trip    = this.tripService.activeTrip;
+  readonly isOwner = this.tripService.isActiveTripOwner;
 
-  // Members
-  members        = signal<FirestoreUser[]>([]);
+  /** Owner first, then by join date. */
+  readonly members = computed((): TripMember[] =>
+    [...this.tripService.activeMembers()].sort((a, b) =>
+      (a.role === 'owner' ? 0 : 1) - (b.role === 'owner' ? 0 : 1) || a.joinedAt - b.joinedAt));
+
   removeError    = signal('');
-  memberToRemove = signal<FirestoreUser | null>(null);
+  memberToRemove = signal<TripMember | null>(null);
 
   // Invite
   inviteLink     = signal('');
@@ -34,32 +45,16 @@ export class AdminComponent implements OnInit {
   inviteError    = signal('');
   inviteCopied   = signal(false);
 
-  ngOnInit(): void {
-    // Load members
-    onSnapshot(collection(this.firestore, 'users'), snap => {
-      this.members.set(
-        snap.docs
-          .map(d => d.data() as FirestoreUser)
-          .sort((a, b) => a.createdAt - b.createdAt)
-      );
-    });
-  }
-
   async generateInvite(): Promise<void> {
     const uid    = this.currentUser()?.uid;
-    const tripId = this.tripContext.activeTripId();
-    if (!uid) return;
-    if (!tripId) {
-      this.inviteError.set('Select a trip first — invites are per-trip.');
-      return;
-    }
+    const tripId = this.trip()?.id;
+    if (!uid || !tripId || !this.isOwner()) return;
     this.inviteLoading.set(true);
     this.inviteError.set('');
     this.inviteLink.set('');
     try {
       const code = await this.authService.generateInviteCode(uid, tripId);
-      const url  = `${window.location.origin}/join?code=${code}`;
-      this.inviteLink.set(url);
+      this.inviteLink.set(`${window.location.origin}/join?code=${code}`);
     } catch {
       this.inviteError.set('Failed to generate invite. Please try again.');
     } finally {
@@ -73,28 +68,32 @@ export class AdminComponent implements OnInit {
     setTimeout(() => this.inviteCopied.set(false), 2000);
   }
 
-  promptRemove(member: FirestoreUser): void {
-    if (member.uid === this.currentUser()?.uid) {
-      this.removeError.set("You can't remove yourself.");
-      return;
-    }
+  canRemove(member: TripMember): boolean {
+    return this.isOwner() && member.role !== 'owner' && member.uid !== this.currentUser()?.uid;
+  }
+
+  promptRemove(member: TripMember): void {
+    if (!this.canRemove(member)) return;
     this.removeError.set('');
     this.memberToRemove.set(member);
   }
 
-  cancelRemove(): void {
-    this.memberToRemove.set(null);
-  }
+  cancelRemove(): void { this.memberToRemove.set(null); }
 
+  /** Takes the person off this trip only; their account and other trips are untouched. */
   async confirmRemove(): Promise<void> {
     const member = this.memberToRemove();
-    if (!member) return;
+    const tripId = this.trip()?.id;
+    if (!member || !tripId) return;
     this.memberToRemove.set(null);
     try {
-      await this.authService.disableUser(member.uid);
-    } catch {
-      this.removeError.set('Failed to remove user. Please try again.');
+      await this.tripService.removeMember(tripId, member.uid);
+    } catch (err) {
+      this.removeError.set((err as Error)?.message || 'Failed to remove member. Please try again.');
     }
   }
 
+  joined(ms: number): string {
+    return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
 }

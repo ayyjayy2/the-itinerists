@@ -88,7 +88,9 @@ export class AppComponent implements OnInit {
     // Hide pages this member toggled off for the active trip (TP-15).
     const hidden = this.tripService.hiddenPages();
     const items = this.baseNavItems.filter(i => !hidden.includes(i.path.slice(1)));
-    if (this.userService.isAdmin()) {
+    // Trip admin is for whoever created the active trip (owner), not the
+    // account-level admin flag — invited members don't get it.
+    if (this.tripService.isActiveTripOwner()) {
       items.push({ path: '/admin', label: 'Admin', icon: 'admin' });
     }
     return items;

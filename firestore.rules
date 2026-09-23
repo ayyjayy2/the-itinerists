@@ -129,8 +129,11 @@ service cloud.firestore {
 
       // Invites: public read (pre-auth join resolves the code); members manage.
       match /invites/{code} {
-        allow read:  if true;
-        allow write: if isMember(tripId);
+        allow read:   if true;
+        // Only the trip's owner (or an app admin) can mint or revoke invites.
+        allow create, delete: if isOwner(tripId) || isAdmin();
+        // A person who just joined stamps themselves onto usedBy.
+        allow update: if isMember(tripId);
       }
 
       // Outfit photos: PRIVATE to the uploader. A trip member can read/write
