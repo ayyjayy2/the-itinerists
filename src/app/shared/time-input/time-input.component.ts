@@ -18,6 +18,8 @@ import { fromInputTime, toInputTime } from '../../utils/time-format';
       [disabled]="disabled"
       [attr.name]="name"
       [attr.aria-label]="label"
+      [attr.data-empty]="value ? null : ''"
+      data-hint="Pick a time"
       (input)="onInput($any($event.target).value)"
       (blur)="onTouched()"
     />

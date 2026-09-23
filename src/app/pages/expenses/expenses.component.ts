@@ -9,6 +9,7 @@ import { TripService } from '../../services/trip.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
+import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
 const CATEGORIES = ['Food', 'Drink', 'Transport', 'Shopping', 'Accommodation', 'Activity', 'Other'];
 
@@ -25,7 +26,7 @@ interface DisplayExpense {
 
 @Component({
   selector: 'app-expenses',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, NgClass, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, NgClass, FormsModule, EmptyDateHintDirective],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss'
 })

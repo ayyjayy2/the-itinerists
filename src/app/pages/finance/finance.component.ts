@@ -11,6 +11,7 @@ import { Rates, perCurrencySubtotals, convertedTotal, convertShare } from '../..
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
+import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
 const LAST_CURRENCY_PREFIX = 'tripplanner_last_currency_';
 
@@ -30,7 +31,7 @@ interface DirectDebt {
 
 @Component({
   selector: 'app-finance',
-  imports: [IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule, EmptyDateHintDirective],
   templateUrl: './finance.component.html',
   styleUrl: './finance.component.scss'
 })
