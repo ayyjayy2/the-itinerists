@@ -64,7 +64,7 @@
           @for (flight of flightEventsForDate(group[0]); track flight.label) {
             <div class="flight-banner">
               <span class="flight-ic"><app-icon name="flights" [size]="16" /></span>
-              <span class="flight-time">{{ flight.time }}</span>
+              <span class="flight-time">{{ flight.time | time12 }}</span>
               <span class="flight-label">{{ flight.label }}</span>
             </div>
           }
@@ -73,8 +73,17 @@
           @for (t of transportEventsForDate(group[0]); track t.label) {
             <div class="transport-banner">
               <span class="tb-ic"><app-icon [name]="t.icon" [size]="16" /></span>
-              <span class="tb-time">{{ t.time }}</span>
+              <span class="tb-time">{{ t.time | time12 }}</span>
               <span class="tb-label">{{ t.label }}</span>
+            </div>
+          }
+
+          <!-- Stay banners (check-in / check-out from the Stays page) -->
+          @for (s of stayEventsForDate(group[0]); track s.label) {
+            <div class="stay-banner">
+              <span class="sb-ic"><app-icon name="stays" [size]="16" /></span>
+              @if (s.time) { <span class="sb-time">{{ s.time | time12 }}</span> }
+              <span class="sb-label">{{ s.label }}</span>
             </div>
           }
 
@@ -91,9 +100,9 @@
                   <div class="drag-handle" cdkDragHandle title="Drag to reorder">⠿</div>
                   <div class="item-left">
                     @if (item.time) {
-                      <span class="item-time">{{ item.time }}</span>
+                      <span class="item-time">{{ item.time | time12 }}</span>
                       @if (item.endTime) {
-                        <span class="item-time item-time-end">– {{ item.endTime }}</span>
+                        <span class="item-time item-time-end">– {{ item.endTime | time12 }}</span>
                       }
                     }
                     <span class="item-dot" [style.background]="categoryColor(item.category)"></span>
@@ -127,11 +136,11 @@
                     <div class="form-row">
                       <div class="form-group">
                         <label>Start time</label>
-                        <input type="time" [(ngModel)]="draft.time" />
+                        <app-time-input [(ngModel)]="draft.time" label="Start time" />
                       </div>
                       <div class="form-group">
                         <label>End time</label>
-                        <input type="time" [(ngModel)]="draft.endTime" />
+                        <app-time-input [(ngModel)]="draft.endTime" label="End time" />
                       </div>
                       <div class="form-group">
                         <label>Category</label>
@@ -191,11 +200,11 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label>Start time</label>
-                    <input type="time" [(ngModel)]="newDraft.time" />
+                    <app-time-input [(ngModel)]="newDraft.time" label="Start time" />
                   </div>
                   <div class="form-group">
                     <label>End time</label>
-                    <input type="time" [(ngModel)]="newDraft.endTime" />
+                    <app-time-input [(ngModel)]="newDraft.endTime" label="End time" />
                   </div>
                   <div class="form-group">
                     <label>Category</label>

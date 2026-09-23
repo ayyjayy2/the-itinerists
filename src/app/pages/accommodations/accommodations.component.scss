@@ -124,6 +124,7 @@
   flex-direction: column;
   .date-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
   .date-value { font-weight: 700; }
+  .date-time  { font-size: 0.78rem; color: var(--text-muted); }
 }
 
 .date-arrow { font-size: 1.1rem; color: var(--text-muted); }
@@ -167,3 +168,9 @@
 .edit-btn app-icon { color: var(--text-muted); display: inline-flex; }
 .empty-icon app-icon { color: var(--text-muted); }
 .link-chip app-icon { vertical-align: -2px; }
+
+.label-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}

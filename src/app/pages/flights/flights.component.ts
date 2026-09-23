@@ -8,6 +8,8 @@ import { TripService } from '../../services/trip.service';
 import { FlightDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
+import { TimeInputComponent } from '../../shared/time-input/time-input.component';
+import { Time12Pipe } from '../../shared/time12.pipe';
 
 // ── View models ───────────────────────────────────────────────────────────────
 
@@ -71,7 +73,7 @@ function emptyForm(): FlightForm {
 
 @Component({
   selector: 'app-flights',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule, TimeInputComponent, Time12Pipe],
   templateUrl: './flights.component.html',
   styleUrl: './flights.component.scss'
 })

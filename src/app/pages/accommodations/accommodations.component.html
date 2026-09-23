@@ -37,6 +37,17 @@
         </div>
       </div>
 
+      <div class="form-row">
+        <div class="form-group">
+          <label>Check-in time <span class="label-hint">(optional)</span></label>
+          <app-time-input [(ngModel)]="newDraft.checkInTime" label="Check-in time" />
+        </div>
+        <div class="form-group">
+          <label>Check-out time <span class="label-hint">(optional)</span></label>
+          <app-time-input [(ngModel)]="newDraft.checkOutTime" label="Check-out time" />
+        </div>
+      </div>
+
       <div class="form-group">
         <label>Booking Ref</label>
         <input type="text" [(ngModel)]="newDraft.bookingRef" placeholder="Confirmation number" />
@@ -106,11 +117,13 @@
               <div class="date-block">
                 <span class="date-label">Check-in</span>
                 <span class="date-value">{{ formatDate(stay.checkIn) }}</span>
+                @if (stay.checkInTime) { <span class="date-time">{{ stay.checkInTime | time12 }}</span> }
               </div>
               <div class="date-arrow">→</div>
               <div class="date-block">
                 <span class="date-label">Check-out</span>
                 <span class="date-value">{{ formatDate(stay.checkOut) }}</span>
+                @if (stay.checkOutTime) { <span class="date-time">{{ stay.checkOutTime | time12 }}</span> }
               </div>
             </div>
 
@@ -154,6 +167,17 @@
               <div class="form-group">
                 <label>Check-out</label>
                 <input type="date" [(ngModel)]="draft.checkOut" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Check-in time <span class="label-hint">(optional)</span></label>
+                <app-time-input [(ngModel)]="draft.checkInTime" label="Check-in time" />
+              </div>
+              <div class="form-group">
+                <label>Check-out time <span class="label-hint">(optional)</span></label>
+                <app-time-input [(ngModel)]="draft.checkOutTime" label="Check-out time" />
               </div>
             </div>
 

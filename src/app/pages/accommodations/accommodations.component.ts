@@ -8,10 +8,12 @@ import { TripService } from '../../services/trip.service';
 import { AccommodationDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
+import { TimeInputComponent } from '../../shared/time-input/time-input.component';
+import { Time12Pipe } from '../../shared/time12.pipe';
 
 @Component({
   selector: 'app-accommodations',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule, TimeInputComponent, Time12Pipe],
   templateUrl: './accommodations.component.html',
   styleUrl: './accommodations.component.scss'
 })
@@ -103,7 +105,7 @@ export class AccommodationsComponent {
   startAdd(): void {
     this.cancelEdit();
     this.adding.set(true);
-    this.newDraft = { name: '', address: '', checkIn: '', checkOut: '', notes: '', bookingRef: '', link: '' };
+    this.newDraft = { name: '', address: '', checkIn: '', checkOut: '', checkInTime: '', checkOutTime: '', notes: '', bookingRef: '', link: '' };
     this.addForWhoMap = this.parseForWhoToMap('All');
   }
 
@@ -116,6 +118,8 @@ export class AccommodationsComponent {
       address:    this.newDraft.address    ?? '',
       checkIn:    this.newDraft.checkIn    ?? '',
       checkOut:   this.newDraft.checkOut   ?? '',
+      checkInTime:  this.newDraft.checkInTime  ?? '',
+      checkOutTime: this.newDraft.checkOutTime ?? '',
       notes:      this.newDraft.notes      ?? '',
       bookingRef: this.newDraft.bookingRef ?? '',
       link:       this.newDraft.link       ?? '',

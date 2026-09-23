@@ -156,6 +156,37 @@
   }
 }
 
+// ── Stay banners (check-in / check-out) ─────────────────────────────────────
+.stay-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.75rem;
+  margin-bottom: 0.4rem;
+  background: var(--primary-tint);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+
+  .sb-ic {
+    display: inline-flex;
+    align-items: center;
+    color: var(--primary-dark);
+  }
+
+  .sb-time {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    min-width: 48px;
+  }
+
+  .sb-label {
+    color: var(--primary-dark);
+    font-weight: 700;
+  }
+}
+
 .items-list {
   display: flex;
   flex-direction: column;
