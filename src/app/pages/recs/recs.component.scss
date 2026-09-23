@@ -42,6 +42,26 @@
   }
 }
 
+// ── Destination sections (multi-destination trips) ──────────────────────────
+.dest-section {
+  margin-bottom: 2.25rem;
+}
+
+.dest-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1.15rem;
+  color: var(--primary-dark);
+  padding-bottom: 0.4rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--border);
+
+  app-icon { color: var(--primary-dark); }
+}
+
+.dest-chips { margin-bottom: 0.5rem; }
+
 .rec-group {
   margin-bottom: 1.75rem;
 }

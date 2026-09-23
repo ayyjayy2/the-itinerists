@@ -7,10 +7,10 @@ import { TripService } from '../../services/trip.service';
 import { Rec, RecDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
+import { tripDestinations, activeLeg, localTodayISO } from '../../utils/trip-destinations';
+import { groupRecsByCategory, groupRecsByDestination, ANYWHERE, DestinationSection } from '../../utils/rec-groups';
 
 const CATEGORIES = ['Food', 'Drink', 'Places', 'Activities', 'Tips', 'Culture'];
-
-type GroupedRecs = [string, RecDoc[]][];
 
 @Component({
   selector: 'app-recs',
@@ -27,38 +27,60 @@ export class RecsComponent {
   currentUser = this.userService.currentUser;
   isAdmin     = this.userService.isAdmin;
 
-  selectedCategory = signal<string>('All');
-  showForm         = signal(false);
+  selectedCategory    = signal<string>('All');
+  selectedDestination = signal<string>('All');
+  showForm            = signal(false);
 
   readonly categories = ['All', ...CATEGORIES];
+  readonly anywhere   = ANYWHERE;
 
-  form: Omit<Rec, never> = { category: 'Tips', title: '', description: '', extra: '' };
+  // ── Destinations (multi-leg trips group recs by place) ─────────────────────
+  readonly legs = computed((): string[] => {
+    const t = this.tripService.activeTrip();
+    return t ? tripDestinations(t).map(d => d.destination) : [];
+  });
+  readonly isMultiDestination = computed(() => this.legs().length > 1);
+
+  /** The leg to preselect for a new rec: the one happening now, else the next up. */
+  private defaultDestination(): string {
+    const t = this.tripService.activeTrip();
+    if (!t || !this.isMultiDestination()) return '';
+    return activeLeg(tripDestinations(t), localTodayISO()).destination;
+  }
+
+  form: Rec = { category: 'Tips', title: '', description: '', extra: '', destination: '' };
   customCategory    = '';
   useCustomCategory = false;
+
+  openForm(): void {
+    this.form.destination = this.defaultDestination();
+    this.showForm.set(true);
+  }
 
   // Recs are entirely user-added, per trip (no hardcoded seed content).
   readonly allRecs = computed((): RecDoc[] => this.recsService.recs());
 
   readonly filtered = computed((): RecDoc[] => {
-    const cat = this.selectedCategory();
-    return cat === 'All' ? this.allRecs() : this.allRecs().filter(r => r.category === cat);
+    const cat  = this.selectedCategory();
+    const dest = this.selectedDestination();
+    return this.allRecs().filter(r =>
+      (cat === 'All' || r.category === cat) &&
+      (dest === 'All' || !this.isMultiDestination() || this.sectionFor(r) === dest));
   });
 
-  readonly groupedByCat = computed((): GroupedRecs => {
-    const order = [...CATEGORIES];
-    const groups: Record<string, RecDoc[]> = {};
-    for (const r of this.filtered()) {
-      if (!groups[r.category]) groups[r.category] = [];
-      groups[r.category].push(r);
-    }
-    return Object.entries(groups).sort(([a], [b]) => {
-      const ai = order.indexOf(a), bi = order.indexOf(b);
-      if (ai === -1 && bi === -1) return a.localeCompare(b);
-      if (ai === -1) return 1;
-      if (bi === -1) return -1;
-      return ai - bi;
-    });
-  });
+  /** Which section a rec belongs to: its leg, or Anywhere when unset / no longer a leg. */
+  private sectionFor(r: RecDoc): string {
+    const k = (r.destination ?? '').trim().toLowerCase();
+    return this.legs().find(l => l.trim().toLowerCase() === k) ?? ANYWHERE;
+  }
+
+  /** Single-destination trips: one flat list of category groups. */
+  readonly groupedByCat = computed(() =>
+    groupRecsByCategory(this.filtered(), CATEGORIES));
+
+  /** Multi-destination trips: a section per leg (leg order), categories inside, Anywhere last. */
+  readonly sections = computed((): DestinationSection<RecDoc>[] =>
+    groupRecsByDestination(this.filtered(), this.legs(), CATEGORIES));
 
   /** Line-icon + Dusk Garden colour per category (falls back for custom ones). */
   categoryMeta(cat: string): { icon: string; color: string } {
@@ -81,15 +103,17 @@ export class RecsComponent {
   async addRec(): Promise<void> {
     const category = this.useCustomCategory ? this.customCategory.trim() : this.form.category;
     if (!this.form.title.trim() || !category) return;
+    const destination = this.isMultiDestination() ? this.form.destination?.trim() : '';
     await this.recsService.addRec({
       category,
       title:       this.form.title.trim(),
       description: this.form.description.trim(),
       extra:       this.form.extra.trim(),
+      ...(destination ? { destination } : {}),
       addedByUid:  this.currentUser()?.uid ?? '',
       createdAt:   Date.now(),
     });
-    this.form = { category: 'Tips', title: '', description: '', extra: '' };
+    this.form = { category: 'Tips', title: '', description: '', extra: '', destination: '' };
     this.customCategory   = '';
     this.useCustomCategory = false;
     this.showForm.set(false);
@@ -106,4 +130,5 @@ export class RecsComponent {
   }
 
   setCategory(cat: string): void { this.selectedCategory.set(cat); }
+  setDestination(dest: string): void { this.selectedDestination.set(dest); }
 }
