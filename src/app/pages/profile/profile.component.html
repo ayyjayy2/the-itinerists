@@ -85,11 +85,11 @@
 @if (showLogoutConfirm()) {
   <div class="modal-backdrop" (click)="showLogoutConfirm.set(false)">
     <div class="modal-box" (click)="$event.stopPropagation()">
-      <h2>Log Out?</h2>
-      <p class="modal-hint">Are you sure you want to log out of your account?</p>
+      <h2>Do you want to log out?</h2>
+      <p class="modal-hint">You'll be taken to the sign-in screen.</p>
       <div class="modal-actions">
-        <button class="btn btn-ghost" (click)="showLogoutConfirm.set(false)">Cancel</button>
-        <button class="btn btn-danger" (click)="confirmLogout()">Log Out</button>
+        <button class="btn btn-ghost" (click)="showLogoutConfirm.set(false)">No</button>
+        <button class="btn btn-danger" (click)="confirmLogout()">Yes</button>
       </div>
     </div>
   </div>

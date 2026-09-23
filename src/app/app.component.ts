@@ -7,7 +7,6 @@ import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
 import { UserService } from './services/user.service';
 import { isStaleChunkError } from './utils/chunk-error';
-import { AuthService } from './services/auth.service';
 import { DataService } from './services/data.service';
 import { TripService } from './services/trip.service';
 import { UsersService } from './services/users.service';
@@ -42,7 +41,6 @@ interface NavItem {
 })
 export class AppComponent implements OnInit {
   userService   = inject(UserService);
-  authService   = inject(AuthService);
   dataService   = inject(DataService);
   tripService   = inject(TripService);   // constructed early so it restores the active trip on login (TP-14)
   usersService  = inject(UsersService);
@@ -245,12 +243,6 @@ export class AppComponent implements OnInit {
     const url = this.router.url;
     // Full-screen, no-nav layout for the auth + onboarding screens (TP-25).
     return ['/login', '/join', '/signup', '/get-started'].some(p => url.startsWith(p));
-  }
-
-  async logout(): Promise<void> {
-    await this.authService.logout();
-    this.sidebarOpen = false;
-    this.router.navigate(['/login']);
   }
 
   hardRefresh(): void {

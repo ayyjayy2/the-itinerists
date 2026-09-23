@@ -44,8 +44,7 @@
             <div class="sidebar-user" [title]="navCollapsed ? currentUser()!.name : ''">
               <div class="avatar" [style.background]="currentUser()!.color"><app-avatar-glyph [emoji]="currentUser()!.avatarEmoji" [letterColor]="currentUser()!.avatarLetterColor" /></div>
               <div class="user-info">
-                <span class="user-name">{{ currentUser()!.name }}</span>
-                <span class="user-switch" (click)="logout()">Log out</span>
+                <a class="user-name" routerLink="/profile">{{ currentUser()!.name }}</a>
               </div>
             </div>
           }
@@ -115,7 +114,6 @@
               <div class="avatar" [style.background]="currentUser()!.color"><app-avatar-glyph [emoji]="currentUser()!.avatarEmoji" [letterColor]="currentUser()!.avatarLetterColor" /></div>
               <div class="user-info">
                 <a class="user-name" routerLink="/profile" (click)="closeDrawer()">{{ currentUser()!.name }}</a>
-                <span class="user-switch" (click)="logout()">Log out</span>
               </div>
             </div>
           }
@@ -176,9 +174,6 @@
               </a>
             }
           </div>
-          @if (currentUser()) {
-            <button class="more-logout" (click)="logout()">Log out</button>
-          }
         }
       </div>
     }
