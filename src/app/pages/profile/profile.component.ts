@@ -193,9 +193,13 @@ export class ProfileComponent implements OnInit {
 
   showLogoutConfirm = signal(false);
 
+  /** Sign out, then load the sign-in screen fresh. A full load (not an in-app
+   *  route change) clears every in-memory listener and can't be stalled by a
+   *  page chunk from an older deploy. */
   async confirmLogout(): Promise<void> {
-    await this.authService.logout();
-    this.router.navigate(['/login']);
+    this.showLogoutConfirm.set(false);
+    try { await this.authService.logout(); }
+    finally { window.location.assign('/login'); }
   }
 
   /** Live password-requirement checklist for the change-password form. */

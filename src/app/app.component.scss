@@ -111,7 +111,6 @@
   .user-info {
     display: flex; flex-direction: column;
     .user-name   { font-weight: 700; font-size: 0.9rem; }
-    .user-switch { font-size: 0.75rem; color: var(--text-muted); cursor: pointer; }
   }
 }
 
@@ -300,21 +299,6 @@
   &.active { background: var(--primary-tint); }
 }
 
-.more-logout {
-  width: 100%;
-  margin-top: 12px;
-  background: var(--surface-2);
-  border: none;
-  border-radius: 999px;
-  padding: 12px;
-  font-family: var(--font);
-  font-weight: 800;
-  font-size: 14px;
-  color: var(--danger);
-  cursor: pointer;
-  &:hover { background: var(--danger-tint); }
-}
-
 @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
 
 // ── Type B chrome: hamburger + slide-out drawer ──
@@ -373,7 +357,7 @@
   .drawer-version { padding: 0 0.8rem; font-size: 0.72rem; color: var(--muted, #8a8a8a); }
   .drawer-user { display: flex; align-items: center; gap: 0.6rem; padding: 0.3rem 0.8rem;
     .user-name { font-weight: 700; text-decoration: none; color: var(--text); display: block; }
-    .user-switch { font-size: 0.8rem; color: var(--muted, #8a8a8a); cursor: pointer; } }
+  }
 }
 
 // ── More-sheet reorder mode ──
