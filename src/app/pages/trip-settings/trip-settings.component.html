@@ -106,7 +106,7 @@
       <ul class="member-list">
         @for (m of members(); track m.uid) {
           <li class="member-row">
-            <span class="member-avatar" [style.background]="m.color">{{ m.avatarEmoji }}</span>
+            <span class="member-avatar" [style.background]="m.color"><app-avatar-glyph [emoji]="m.avatarEmoji" [letterColor]="m.avatarLetterColor" /></span>
             <span class="member-name">
               {{ m.displayName }}
               @if (isMe(m)) { <span class="tag">You</span> }

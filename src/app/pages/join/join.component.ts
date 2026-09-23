@@ -8,16 +8,12 @@ import { UserService } from '../../services/user.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
-
-const EMOJI_OPTIONS = [
-  '🌸','🌿','✨','🦋','🐘','🌼','🍑','🌺','🦊','🐬',
-  '🌙','⭐','🎵','🌈','🦁','🐻','🌻','🍀','🦅','🐙',
-];
 
 @Component({
   selector: 'app-join',
-  imports: [BrandComponent, IconComponent, CommonModule, FormsModule, RouterLink],
+  imports: [BrandComponent, IconComponent, CommonModule, FormsModule, RouterLink, AvatarPickerComponent],
   templateUrl: './join.component.html',
   styleUrl: './join.component.scss'
 })
@@ -31,15 +27,13 @@ export class JoinComponent implements OnInit {
   readonly version   = APP_VERSION;
   readonly buildDate = APP_BUILD_DATE;
 
-  readonly emojiOptions  = EMOJI_OPTIONS;
-  readonly colorOptions  = ['#F4C2C2','#88C9A1','#D4B5F5','#F9E4B7','#F5B5D4','#B5D5F5','#F5D4B5','#B5F5D4'];
-
   inviteCode    = '';
   codeValid     = signal<boolean | null>(null); // null = checking
   codeError     = signal('');
 
   displayName   = '';
   avatarEmoji   = '🌸';
+  avatarLetterColor = '';
   username      = '';
   password      = '';
   confirmPass   = '';
@@ -90,14 +84,6 @@ export class JoinComponent implements OnInit {
     }
   }
 
-  selectEmoji(emoji: string): void {
-    this.avatarEmoji = emoji;
-  }
-
-  selectColor(color: string): void {
-    this.color = color;
-  }
-
   /** Live password-requirement checklist for the template. */
   get passwordChecklist() {
     return passwordRules(this.password);
@@ -120,6 +106,7 @@ export class JoinComponent implements OnInit {
         this.username.trim(),
         this.password,
         this.color,
+        this.avatarLetterColor,
       );
       this.router.navigate(['/home']);
     } catch (err: any) {

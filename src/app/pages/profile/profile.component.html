@@ -7,7 +7,7 @@
 
     <!-- Preview -->
     <div class="card profile-preview">
-      <div class="avatar-preview" [style.background]="color">{{ avatarEmoji }}</div>
+      <div class="avatar-preview" [style.background]="color"><app-avatar-glyph [emoji]="avatarEmoji" [letterColor]="avatarLetterColor" /></div>
       <div>
         <div class="preview-name">{{ displayName || user.displayName }}</div>
         <div class="preview-username">&#64;{{ user.username }}</div>
@@ -24,29 +24,9 @@
         <input type="text" [(ngModel)]="displayName" placeholder="Your display name" />
       </div>
 
-      <div class="form-group">
-        <label>Emoji</label>
-        <div class="emoji-grid">
-          @for (emoji of emojiOptions; track emoji) {
-            <button type="button" class="emoji-btn"
-              [class.selected]="avatarEmoji === emoji"
-              [class.taken]="takenEmojis().has(emoji)"
-              [disabled]="takenEmojis().has(emoji)"
-              (click)="selectEmoji(emoji)">
-              {{ emoji }}
-            </button>
-          }
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Color</label>
-        <div class="color-grid">
-          @for (c of colorOptions; track c) {
-            <button type="button" class="color-btn" [class.selected]="color === c" [style.background]="c" (click)="selectColor(c)"></button>
-          }
-        </div>
-      </div>
+      <app-avatar-picker [(emoji)]="avatarEmoji" [(color)]="color"
+                         [(letterColor)]="avatarLetterColor"
+                         [name]="displayName" [taken]="takenEmojis()" />
 
       @if (profileError()) {
         <div class="alert alert-error">{{ profileError() }}</div>

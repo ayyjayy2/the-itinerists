@@ -21,7 +21,7 @@ export class UserService {
   readonly currentUser = computed<TripUser | null>(() => {
     const u = this._firestoreUser();
     if (!u) return null;
-    return { uid: u.uid, name: u.displayName, color: u.color, avatarEmoji: u.avatarEmoji };
+    return { uid: u.uid, name: u.displayName, color: u.color, avatarEmoji: u.avatarEmoji, avatarLetterColor: u.avatarLetterColor };
   });
 
   readonly isAdmin = computed(() => this._firestoreUser()?.isAdmin ?? false);

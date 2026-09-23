@@ -36,7 +36,7 @@
       @for (member of members(); track member.uid; let i = $index) {
         @if (!member.isDisabled) {
         <div class="member-row">
-          <div class="member-avatar" [style.background]="member.color">{{ member.avatarEmoji }}</div>
+          <div class="member-avatar" [style.background]="member.color"><app-avatar-glyph [emoji]="member.avatarEmoji" [letterColor]="member.avatarLetterColor" /></div>
           <div class="member-info">
             <span class="member-name">{{ member.displayName }}</span>
             <span class="member-meta">&#64;{{ member.username }}

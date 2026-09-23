@@ -10,6 +10,7 @@ import { tripDestinations, tripSummary, buildEditedDestinations, DestinationEdit
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
+import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
 interface CurrencyOption { code: string; label: string; }
 interface HideablePage { key: string; label: string; icon: string; }
@@ -25,7 +26,7 @@ interface DestRow {
 
 @Component({
   selector: 'app-trip-settings',
-  imports: [IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule],
+  imports: [IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule, AvatarGlyphComponent],
   templateUrl: './trip-settings.component.html',
   styleUrl: './trip-settings.component.scss',
 })

@@ -20,7 +20,7 @@ export class UsersService {
    */
   readonly tripUsers = (): TripUser[] =>
     this.tripService.activeMembers()
-      .map(m => ({ uid: m.uid, name: m.displayName, color: m.color, avatarEmoji: m.avatarEmoji }));
+      .map(m => ({ uid: m.uid, name: m.displayName, color: m.color, avatarEmoji: m.avatarEmoji, avatarLetterColor: m.avatarLetterColor }));
 
   init(): void {
     runInInjectionContext(this.injector, () => {

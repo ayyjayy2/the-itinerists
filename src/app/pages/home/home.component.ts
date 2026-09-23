@@ -19,10 +19,11 @@ import { effectivePins } from '../../utils/pins';
 import { activityText as activityLine, timeAgo as agoOf } from '../../utils/activity';
 import { effectiveHomeLayout } from '../../utils/layout';
 import { weatherLabel } from '../../utils/weather-label';
+import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, RouterLink, IconComponent, BrandComponent, DayMapCardComponent],
+  imports: [CommonModule, RouterLink, IconComponent, BrandComponent, DayMapCardComponent, AvatarGlyphComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

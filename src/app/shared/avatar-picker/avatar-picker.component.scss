@@ -1,0 +1,111 @@
+:host { display: block; }
+
+.form-group {
+  margin-bottom: 1rem;
+
+  label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+}
+
+// ── Emoji + letter grid ───────────────────────────────────────────────────────
+.emoji-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.emoji-btn {
+  width: 42px;
+  height: 42px;
+  font-size: 1.4rem;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  font-family: var(--font);
+
+  &:hover:not(:disabled) { border-color: var(--primary); transform: scale(1.1); }
+
+  &.selected {
+    border-color: var(--primary-dark);
+    background: rgba(139, 175, 124, 0.15);
+    box-shadow: 0 0 0 2px rgba(139, 175, 124, 0.3);
+  }
+
+  &.taken, &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    filter: grayscale(0.4);
+  }
+}
+
+.letter-btn {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.35rem;
+  color: var(--text);
+  -webkit-text-stroke: 0.02em currentColor;
+}
+
+.label-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.more-btn {
+  height: 42px;
+  padding: 0 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  background: var(--primary-tint);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { border-color: var(--primary); }
+}
+
+// ── Color grid ────────────────────────────────────────────────────────────────
+.color-grid {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.color-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { transform: scale(1.15); }
+  &.selected {
+    border-color: var(--text);
+    box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 4px var(--text);
+  }
+}
+
+.letter-color-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  line-height: 1;
+  -webkit-text-stroke: 0.02em currentColor;
+}

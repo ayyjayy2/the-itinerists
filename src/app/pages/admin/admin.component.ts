@@ -7,10 +7,11 @@ import { AuthService } from '../../services/auth.service';
 import { TripContextService } from '../../services/trip-context.service';
 import { FirestoreUser } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
 @Component({
   selector: 'app-admin',
-  imports: [IconComponent, CommonModule, FormsModule],
+  imports: [IconComponent, CommonModule, FormsModule, AvatarGlyphComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })

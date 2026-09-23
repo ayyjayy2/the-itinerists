@@ -481,6 +481,7 @@ export class TripService {
       displayName: user.displayName,
       avatarEmoji: user.avatarEmoji,
       color: user.color,
+      avatarLetterColor: user.avatarLetterColor ?? '',
       joinedAt: now,
     };
   }

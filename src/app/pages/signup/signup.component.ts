@@ -7,12 +7,8 @@ import { UserService } from '../../services/user.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
-
-const EMOJI_OPTIONS = [
-  '🌸','🌿','✨','🦋','🐘','🌼','🍑','🌺','🦊','🐬',
-  '🌙','⭐','🎵','🌈','🦁','🐻','🌻','🍀','🦅','🐙',
-];
 
 /**
  * Open self-serve signup (TP-25): creates a brand-new account with no invite,
@@ -20,7 +16,7 @@ const EMOJI_OPTIONS = [
  */
 @Component({
   selector: 'app-signup',
-  imports: [BrandComponent, IconComponent, CommonModule, FormsModule, RouterLink],
+  imports: [BrandComponent, IconComponent, CommonModule, FormsModule, RouterLink, AvatarPickerComponent],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.scss',
 })
@@ -32,11 +28,9 @@ export class SignupComponent {
   readonly version   = APP_VERSION;
   readonly buildDate = APP_BUILD_DATE;
 
-  readonly emojiOptions = EMOJI_OPTIONS;
-  readonly colorOptions = ['#F4C2C2','#88C9A1','#D4B5F5','#F9E4B7','#F5B5D4','#B5D5F5','#F5D4B5','#B5F5D4'];
-
   displayName = '';
   avatarEmoji = '🌸';
+  avatarLetterColor = '';
   username    = '';
   password    = '';
   confirmPass = '';
@@ -46,9 +40,6 @@ export class SignupComponent {
   showPassword = signal(false);
   loading      = signal(false);
   error        = signal('');
-
-  selectEmoji(emoji: string): void { this.avatarEmoji = emoji; }
-  selectColor(color: string): void { this.color = color; }
 
   /** Live password-requirement checklist for the template. */
   get passwordChecklist() {
@@ -72,6 +63,7 @@ export class SignupComponent {
         this.password,
         this.color,
         this.recoveryEmail,
+        this.avatarLetterColor,
       );
       await this.userService.waitForUser();
       this.router.navigate(['/get-started']);

@@ -4,10 +4,11 @@ import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
 import { ActivityLogEntry } from '../../models/trip.models';
 import { activityText, timeAgo } from '../../utils/activity';
+import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
 @Component({
   selector: 'app-updates',
-  imports: [IconComponent],
+  imports: [IconComponent, AvatarGlyphComponent],
   template: `
     <div class="page-container">
       <div class="page-header">
@@ -18,7 +19,7 @@ import { activityText, timeAgo } from '../../utils/activity';
         @for (a of feed(); track a.entry.id) {
           <div class="feed-row">
             <div class="avatar-sm" [style.background]="a.member?.color ?? 'var(--surface-2, #eee)'">
-              {{ a.member?.avatarEmoji ?? '👤' }}
+              <app-avatar-glyph [emoji]="a.member?.avatarEmoji ?? '👤'" [letterColor]="a.member?.avatarLetterColor" />
             </div>
             <span class="feed-text">
               <b>{{ a.entry.performedByName }}</b> — {{ text(a.entry) }} · {{ ago(a.entry.timestamp) }}
