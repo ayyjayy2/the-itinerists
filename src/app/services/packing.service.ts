@@ -3,6 +3,7 @@ import {
   Firestore, collection, doc, onSnapshot, setDoc, updateDoc, Unsubscribe,
 } from '@angular/fire/firestore';
 import { PackingItem, PackingSuggestion } from '../models/trip.models';
+import { guessPackingCategory, newItemsForPacking, PackingSync } from '../utils/packing-match';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
 
@@ -72,6 +73,25 @@ export class PackingService {
   addItem(label: string, category = 'Clothes'): void {
     const item: PackingItem = { id: crypto.randomUUID(), label, packed: false, addedAt: Date.now(), category };
     this.saveItems([...this._items(), item]);
+  }
+
+  /**
+   * Put an outfit's newly added items on this member's packing list, skipping
+   * anything already on it as the exact same text (case and surrounding
+   * whitespace aside). Items that were already in the outfit before this save
+   * are left alone, so a deliberate removal from the packing list is not
+   * undone. Returns what was added and what was skipped.
+   */
+  addFromOutfit(outfitItems: readonly string[], previousOutfitItems: readonly string[] = []): PackingSync {
+    const sync = newItemsForPacking(outfitItems, previousOutfitItems, this._items().map(i => i.label));
+    if (sync.added.length) {
+      const now = Date.now();
+      const items: PackingItem[] = sync.added.map(label => ({
+        id: crypto.randomUUID(), label, packed: false, addedAt: now, category: guessPackingCategory(label),
+      }));
+      this.saveItems([...this._items(), ...items]);
+    }
+    return sync;
   }
 
   toggleItem(id: string): void {

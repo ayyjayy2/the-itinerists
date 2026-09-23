@@ -9,6 +9,8 @@ import { OutfitsService } from '../../services/outfits.service';
 import { ItineraryService } from '../../services/itinerary.service';
 import { FlightsService } from '../../services/flights.service';
 import { TripService } from '../../services/trip.service';
+import { PackingService } from '../../services/packing.service';
+import { PackingSync } from '../../utils/packing-match';
 import { tripDestinations } from '../../utils/trip-destinations';
 import { OutfitEntry } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
@@ -77,6 +79,7 @@ export class OutfitsComponent implements OnInit {
   itineraryService = inject(ItineraryService);
   flightsService   = inject(FlightsService);
   tripService      = inject(TripService);
+  packingService   = inject(PackingService);
   private ngZone = inject(NgZone);
 
   currentUser = this.userService.currentUser;
@@ -96,6 +99,10 @@ export class OutfitsComponent implements OnInit {
 
   photoCache       = signal<Record<string, string>>({});
   editPhotoDataUrl = '';
+
+  /** What the last outfit save put on (or kept off) the packing list; shown briefly. */
+  packingNotice = signal<PackingSync | null>(null);
+  private packingNoticeTimer?: ReturnType<typeof setTimeout>;
 
   editForm: { items: string[]; newItem: string; notes: string; photoUrl: string } =
     { items: [], newItem: '', notes: '', photoUrl: '' };
@@ -279,6 +286,7 @@ export class OutfitsComponent implements OnInit {
       this.editForm.newItem = '';
     }
     this.editingDate.set(null);
+    const previousItems = this.myOutfitsByDate()[date]?.items ?? [];
     await this.outfitsService.upsertOutfit({
       date,
       user:     user.name,
@@ -286,7 +294,19 @@ export class OutfitsComponent implements OnInit {
       notes:    this.editForm.notes.trim() || undefined,
       photoUrl: this.editForm.photoUrl || undefined,
     });
+    // Outfit items are things to pack: add the new ones, skip near-duplicates.
+    const sync = this.packingService.addFromOutfit(this.editForm.items, previousItems);
+    this.showPackingNotice(sync);
   }
+
+  private showPackingNotice(sync: PackingSync): void {
+    clearTimeout(this.packingNoticeTimer);
+    if (!sync.added.length && !sync.skipped.length) { this.packingNotice.set(null); return; }
+    this.packingNotice.set(sync);
+    this.packingNoticeTimer = setTimeout(() => this.packingNotice.set(null), 8000);
+  }
+
+  dismissPackingNotice(): void { clearTimeout(this.packingNoticeTimer); this.packingNotice.set(null); }
 
   formatDate(d: string): string {
     return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });

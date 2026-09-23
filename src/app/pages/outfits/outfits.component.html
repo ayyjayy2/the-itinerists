@@ -24,6 +24,23 @@
     </div>
   }
 
+  <!-- Outfit → packing sync result -->
+  @if (packingNotice(); as sync) {
+    <div class="packing-notice" role="status">
+      <span class="pn-ic"><app-icon name="packing" [size]="16" /></span>
+      <span class="pn-text">
+        @if (sync.added.length) {
+          <strong>Added to your packing list:</strong> {{ sync.added.join(', ') }}.
+        }
+        @if (sync.skipped.length) {
+          <span class="pn-skipped">Already on your list: {{ sync.skipped.join(', ') }}.</span>
+        }
+      </span>
+      <a class="btn btn-sm btn-ghost" routerLink="/packing">View list</a>
+      <button class="pn-close" (click)="dismissPackingNotice()" aria-label="Dismiss">✕</button>
+    </div>
+  }
+
   <!-- ─────────── DAY VIEW ─────────── -->
   @if (view() === 'day' && currentDay()) {
     @let day = currentDay()!;
