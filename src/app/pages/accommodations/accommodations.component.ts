@@ -10,10 +10,11 @@ import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { TimeInputComponent } from '../../shared/time-input/time-input.component';
 import { Time12Pipe } from '../../shared/time12.pipe';
+import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
 @Component({
   selector: 'app-accommodations',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule, TimeInputComponent, Time12Pipe],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
   templateUrl: './accommodations.component.html',
   styleUrl: './accommodations.component.scss'
 })

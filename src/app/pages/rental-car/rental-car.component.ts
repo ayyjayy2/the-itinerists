@@ -8,6 +8,7 @@ import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { TimeInputComponent } from '../../shared/time-input/time-input.component';
 import { Time12Pipe } from '../../shared/time12.pipe';
+import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
 type CarForm = Omit<RentalCar, 'drivers'>;
 
@@ -25,7 +26,7 @@ function blankForm(): CarForm {
 
 @Component({
   selector: 'app-rental-car',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule, TimeInputComponent, Time12Pipe],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
   templateUrl: './rental-car.component.html',
   styleUrl: './rental-car.component.scss'
 })

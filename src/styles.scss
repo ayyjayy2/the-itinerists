@@ -300,6 +300,21 @@ input[type='date'], input[type='time'] {
 input[type='date']::-webkit-date-and-time-value,
 input[type='time']::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
 
+// With the native appearance gone, iOS no longer shows its own mm/dd/yyyy
+// hint. Draw one inside empty fields on touch devices (the directive in
+// shared/empty-date-hint.directive.ts sets `data-empty`); desktop browsers
+// keep their built-in hint.
+@media (hover: none) and (pointer: coarse) {
+  input[type='date'][data-empty], input[type='time'][data-empty] {
+    position: relative;
+    &::before {
+      content: attr(data-hint);
+      position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); pointer-events: none;
+    }
+  }
+}
+
 label {
   font-size: 0.85rem;
   font-weight: 700;

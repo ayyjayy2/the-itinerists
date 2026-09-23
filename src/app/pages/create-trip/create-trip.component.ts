@@ -7,6 +7,7 @@ import { TripDestination } from '../../models/trip.models';
 import { tripSummary } from '../../utils/trip-destinations';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
+import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
 /** One editable destination row in multi-destination mode. */
 interface DestForm {
@@ -18,7 +19,7 @@ interface DestForm {
 
 @Component({
   selector: 'app-create-trip',
-  imports: [IconComponent, CurrencySelectComponent, CommonModule, FormsModule],
+  imports: [IconComponent, CurrencySelectComponent, CommonModule, FormsModule, EmptyDateHintDirective],
   templateUrl: './create-trip.component.html',
   styleUrl: './create-trip.component.scss',
 })
