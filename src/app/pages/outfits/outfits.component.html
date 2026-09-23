@@ -188,52 +188,65 @@
 <!-- ── Shared edit form template ── -->
 <ng-template #editFormTpl let-date="date">
   <div class="outfit-edit-form card">
-    @if (editPhotoDataUrl) {
-      <div class="photo-preview">
-        <img [src]="editPhotoDataUrl" alt="Outfit photo">
-        <button class="btn btn-ghost btn-sm remove-photo" (click)="editPhotoDataUrl = ''; editForm.photoUrl = ''">✕ Remove</button>
+    @if (editForm.photoIds.length) {
+      <div class="photo-grid photo-grid--edit">
+        @for (id of editForm.photoIds; track id) {
+          <div class="photo-tile">
+            @if (photoCache()[id]; as url) {
+              <img [src]="url" alt="Outfit photo">
+            } @else {
+              <div class="photo-tile-loading"></div>
+            }
+            <button type="button" class="remove-photo" (click)="removeEditPhoto(id, date)" aria-label="Remove photo">✕</button>
+          </div>
+        }
       </div>
     }
     <div class="photo-actions">
-      <input type="file" accept="image/*" #photoInput style="display:none" (change)="uploadPhoto($event, date)">
+      <input type="file" accept="image/*" multiple #photoInput style="display:none" (change)="uploadPhotos($event, date)">
       @if (uploading()) {
         <div class="upload-progress">
           <span class="upload-spinner"></span>
           <span>Uploading photo…</span>
           <button class="btn btn-ghost btn-sm" (click)="cancelUpload()">Cancel</button>
         </div>
-      } @else {
+      } @else if (editForm.photoIds.length < maxPhotos) {
         <button class="btn btn-ghost btn-sm" (click)="photoInput.click()">
-          <app-icon name="camera" [size]="16" /> {{ editPhotoDataUrl ? 'Change Photo' : 'Upload Photo' }}
+          <app-icon name="camera" [size]="16" /> {{ editForm.photoIds.length ? 'Add photos' : 'Add photo' }}
+          <span class="photo-count">{{ editForm.photoIds.length }}/{{ maxPhotos }}</span>
         </button>
+      } @else {
+        <span class="photo-limit">Up to {{ maxPhotos }} photos per day.</span>
       }
     </div>
     <div class="items-label">Outfit Items</div>
     <div class="item-input-row">
-      <input type="text" [(ngModel)]="editForm.newItem" placeholder="e.g. Flowy sundress" (keydown.enter)="addItem()">
-      <button class="btn btn-ghost btn-sm" (click)="addItem()">+ Add</button>
+      <input type="text" [(ngModel)]="editForm.newItem" placeholder="e.g. Flowy sundress" (keydown.enter)="addItem(date)">
+      <button class="btn btn-ghost btn-sm" (click)="addItem(date)">+ Add</button>
     </div>
     @if (editForm.items.length > 0) {
       <ul class="items-list">
         @for (item of editForm.items; track item; let i = $index) {
           <li>
             <span>{{ item }}</span>
-            <button class="remove-item" (click)="removeItem(i)">✕</button>
+            <button class="remove-item" (click)="removeItem(i, date)">✕</button>
           </li>
         }
       </ul>
     }
     <div class="form-group" style="margin-top: 0.75rem;">
       <label>Notes</label>
-      <textarea [(ngModel)]="editForm.notes" rows="2" placeholder="e.g. Comfy shoes — lots of walking the squares!"></textarea>
+      <textarea [(ngModel)]="editForm.notes" (ngModelChange)="onNotesChange(date)" rows="2" placeholder="e.g. Comfy shoes — lots of walking the squares!"></textarea>
     </div>
     <div class="form-actions">
       @if (myOutfitsByDate()[date]) {
         <button class="btn btn-danger btn-sm" (click)="deleteOutfit(date)"><app-icon name="trash" [size]="15" /> Delete</button>
       }
       <div class="form-actions-right">
-        <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
-        <button class="btn btn-primary" (click)="saveOutfit(date)">Save</button>
+        <span class="save-state" [class.visible]="saveState() !== 'idle'" aria-live="polite">
+          @if (saveState() === 'saving') { Saving… } @else if (saveState() === 'saved') { <app-icon name="check" [size]="14" /> Saved }
+        </span>
+        <button class="btn btn-primary" (click)="closeEdit(date)">Done</button>
       </div>
     </div>
   </div>
@@ -243,16 +256,16 @@
 <ng-template #outfitDisplayTpl let-date="date">
   @let outfit = myOutfitsByDate()[date]!;
   <div class="outfit-display card">
-    @if (outfit.photoUrl === 'stored') {
-      @if (photoCache()[date + '_' + currentUser()!.name]) {
-        <div class="outfit-photo">
-          <img [src]="photoCache()[date + '_' + currentUser()!.name]" alt="My outfit">
+    @if (photoIdsFor(date); as ids) {
+      @if (ids.length) {
+        <div class="photo-grid" [class.photo-grid--single]="ids.length === 1">
+          @for (id of ids; track id) {
+            @if (photoCache()[id]; as url) {
+              <div class="photo-tile"><img [src]="url" alt="My outfit"></div>
+            }
+          }
         </div>
       }
-    } @else if (outfit.photoUrl) {
-      <div class="outfit-photo">
-        <img [src]="outfit.photoUrl" alt="My outfit">
-      </div>
     }
     @if (outfit.items.length > 0) {
       <ul class="items-list items-list--readonly">

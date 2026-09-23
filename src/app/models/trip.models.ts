@@ -415,6 +415,7 @@ export interface OutfitEntry {
   date: string;
   user: string;
   items: string[];      // list of clothing items
-  photoUrl?: string;    // Firebase Storage URL
+  photoIds?: string[];  // ordered outfitPhotos doc ids (several per day)
+  photoUrl?: string;    // legacy: 'stored' = one photo at outfitPhotos/{date}_{uid}
   notes?: string;
 }

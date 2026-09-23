@@ -52,11 +52,12 @@ export class OutfitsService {
     );
   }
 
-  async patchOutfitPhoto(date: string, user: string, photoUrl: string): Promise<void> {
+  /** Replace the outfit's photo list (ids of outfitPhotos docs), keeping the legacy flag in step. */
+  async patchOutfitPhotos(date: string, user: string, photoIds: string[]): Promise<void> {
     const tid = this.requireTrip();
     const id = this.docId(date, user);
     await runInInjectionContext(this.injector, () =>
-      updateDoc(doc(this.firestore, 'trips', tid, 'outfits', id), { photoUrl })
+      updateDoc(doc(this.firestore, 'trips', tid, 'outfits', id), { photoIds, photoUrl: photoIds.length ? 'stored' : '' })
     );
   }
 

@@ -11,6 +11,7 @@ import { FlightsService } from '../../services/flights.service';
 import { TripService } from '../../services/trip.service';
 import { PackingService } from '../../services/packing.service';
 import { PackingSync } from '../../utils/packing-match';
+import { outfitPhotoIds, MAX_OUTFIT_PHOTOS } from '../../utils/outfit-photos';
 import { tripDestinations } from '../../utils/trip-destinations';
 import { OutfitEntry } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
@@ -97,15 +98,21 @@ export class OutfitsComponent implements OnInit {
   currentDateIndex = signal(0);
   editingDate      = signal<string | null>(null);
 
-  photoCache       = signal<Record<string, string>>({});
-  editPhotoDataUrl = '';
+  /** Resolved data URLs for my own photos, keyed by photo id. */
+  photoCache = signal<Record<string, string>>({});
+  readonly maxPhotos = MAX_OUTFIT_PHOTOS;
 
   /** What the last outfit save put on (or kept off) the packing list; shown briefly. */
   packingNotice = signal<PackingSync | null>(null);
   private packingNoticeTimer?: ReturnType<typeof setTimeout>;
 
-  editForm: { items: string[]; newItem: string; notes: string; photoUrl: string } =
-    { items: [], newItem: '', notes: '', photoUrl: '' };
+  editForm: { items: string[]; newItem: string; notes: string; photoIds: string[] } =
+    { items: [], newItem: '', notes: '', photoIds: [] };
+
+  /** Autosave state: every change writes through; this flashes "Saved" afterwards. */
+  saveState = signal<'idle' | 'saving' | 'saved'>('idle');
+  private savedTimer?: ReturnType<typeof setTimeout>;
+  private notesTimer?: ReturnType<typeof setTimeout>;
 
   weatherEmoji = weatherEmoji;
 
@@ -123,15 +130,11 @@ export class OutfitsComponent implements OnInit {
       const me     = this.currentUser();
       const tripId = this.tripService.activeTrip()?.id;
       if (!me?.uid || !tripId) return;
-      const stored = this.outfitsService.outfits()
-        .filter(o => o.photoUrl === 'stored' && o.user === me.name);
-      for (const o of stored) {
-        const key = `${o.date}_${me.name}`;
-        if (!this.photoCache()[key]) {
-          this.photoService.getPhoto(tripId, o.date, me.uid).then(url => {
-            if (url) this.ngZone.run(() =>
-              this.photoCache.update(c => ({ ...c, [key]: url }))
-            );
+      for (const o of this.outfitsService.outfits().filter(o => o.user === me.name)) {
+        for (const id of outfitPhotoIds(o, o.date, me.uid!)) {
+          if (this.photoCache()[id]) continue;
+          this.photoService.getPhoto(tripId, id).then(url => {
+            if (url) this.ngZone.run(() => this.photoCache.update(c => ({ ...c, [id]: url })));
           });
         }
       }
@@ -225,47 +228,118 @@ export class OutfitsComponent implements OnInit {
   startEdit(date: string): void {
     const myOutfit = this.myOutfitsByDate()[date] ?? null;
     const user     = this.currentUser();
+    const photoIds = myOutfit && user?.uid ? outfitPhotoIds(myOutfit, date, user.uid) : [];
     this.editForm = {
       items:    [...(myOutfit?.items ?? [])],
       newItem:  '',
       notes:    myOutfit?.notes ?? '',
-      photoUrl: myOutfit?.photoUrl ?? '',
+      photoIds: [...photoIds],
     };
-    if (myOutfit?.photoUrl === 'stored' && user) {
-      this.editPhotoDataUrl = this.photoCache()[`${date}_${user.name}`] ?? '';
-    } else {
-      this.editPhotoDataUrl = myOutfit?.photoUrl ?? '';
-    }
+    this.saveState.set('idle');
     this.editingDate.set(date);
   }
 
-  cancelEdit(): void { this.editingDate.set(null); }
-
-  addItem(): void {
-    const v = this.editForm.newItem.trim();
-    if (v) { this.editForm.items.push(v); this.editForm.newItem = ''; }
+  /** Close the editor. Everything is already saved; just flush a half-typed item or pending notes. */
+  closeEdit(date: string): void {
+    if (this.editForm.newItem.trim()) this.addItem(date);
+    if (this.notesTimer) { clearTimeout(this.notesTimer); this.notesTimer = undefined; this.persist(date); }
+    this.editingDate.set(null);
   }
 
-  removeItem(i: number): void { this.editForm.items.splice(i, 1); }
+  /** Add the typed item, save the day, and put the item on the packing list. */
+  addItem(date: string): void {
+    const v = this.editForm.newItem.trim();
+    if (!v) return;
+    this.editForm.items.push(v);
+    this.editForm.newItem = '';
+    this.persist(date);
+    // Outfit items are things to pack: add this one unless it's already listed.
+    this.showPackingNotice(this.packingService.addFromOutfit([v], []));
+  }
 
-  uploadPhoto(event: Event, date: string): void {
+  removeItem(i: number, date: string): void {
+    this.editForm.items.splice(i, 1);
+    this.persist(date);
+  }
+
+  /** Notes save shortly after typing stops. */
+  onNotesChange(date: string): void {
+    clearTimeout(this.notesTimer);
+    this.notesTimer = setTimeout(() => { this.notesTimer = undefined; this.persist(date); }, 600);
+  }
+
+  /** Write the edit form to the day's outfit. Called after every change. */
+  private async persist(date: string): Promise<void> {
+    const user = this.currentUser();
+    if (!user) return;
+    this.saveState.set('saving');
+    const photoIds = [...this.editForm.photoIds];
+    try {
+      await this.outfitsService.upsertOutfit({
+        date,
+        user:     user.name,
+        items:    [...this.editForm.items],
+        notes:    this.editForm.notes.trim() || undefined,
+        photoIds,
+        photoUrl: photoIds.length ? 'stored' : undefined,
+      });
+      this.ngZone.run(() => {
+        this.saveState.set('saved');
+        clearTimeout(this.savedTimer);
+        this.savedTimer = setTimeout(() => this.saveState.set('idle'), 2000);
+      });
+    } catch (err) {
+      console.error('[outfits] autosave failed:', err);
+      this.ngZone.run(() => this.saveState.set('idle'));
+    }
+  }
+
+  /** Photo ids to show for a day's outfit (my own, honoring the legacy single photo). */
+  photoIdsFor(date: string): string[] {
+    const outfit = this.myOutfitsByDate()[date];
+    const uid = this.currentUser()?.uid;
+    return outfit && uid ? outfitPhotoIds(outfit, date, uid) : [];
+  }
+
+  /** Upload one or more photos for a day, up to the cap, appending to the outfit's gallery. */
+  async uploadPhotos(event: Event, date: string): Promise<void> {
     const user   = this.currentUser();
     const tripId = this.tripService.activeTrip()?.id;
-    if (!user?.uid || !tripId) return;
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    this.photoService.upload(tripId, date, user.uid, file).then(url => {
-      this.ngZone.run(() => {
-        const key = `${date}_${user.name}`;
-        this.photoCache.update(c => ({ ...c, [key]: url }));
-        if (this.editingDate() === date) {
-          this.editPhotoDataUrl = url;
-          this.editForm.photoUrl = 'stored';
-        } else {
-          this.outfitsService.patchOutfitPhoto(date, user.name, 'stored');
-        }
-      });
-    }).catch(err => console.error('[uploadPhoto] failed:', err));
+    const input  = event.target as HTMLInputElement;
+    const files  = Array.from(input.files ?? []);
+    input.value  = '';
+    if (!user?.uid || !tripId || !files.length) return;
+
+    const editing = this.editingDate() === date;
+    const current = editing ? this.editForm.photoIds : this.photoIdsFor(date);
+    const room    = Math.max(0, MAX_OUTFIT_PHOTOS - current.length);
+    const added: string[] = [];
+    try {
+      for (const file of files.slice(0, room)) {
+        const { id, dataUrl } = await this.photoService.upload(tripId, date, user.uid, file);
+        added.push(id);
+        this.ngZone.run(() => this.photoCache.update(c => ({ ...c, [id]: dataUrl })));
+      }
+    } catch (err) {
+      if ((err as Error)?.message !== 'cancelled') console.error('[uploadPhotos] failed:', err);
+    }
+    if (!added.length) return;
+    this.ngZone.run(() => {
+      if (editing) {
+        this.editForm.photoIds = [...this.editForm.photoIds, ...added];
+        this.persist(date);
+      } else {
+        this.outfitsService.patchOutfitPhotos(date, user.name, [...current, ...added]);
+      }
+    });
+  }
+
+  /** Drop a photo: the day saves without it and its doc is deleted. */
+  removeEditPhoto(id: string, date: string): void {
+    this.editForm.photoIds = this.editForm.photoIds.filter(p => p !== id);
+    this.persist(date);
+    const tripId = this.tripService.activeTrip()?.id;
+    if (tripId) this.photoService.deletePhoto(tripId, id);
   }
 
   cancelUpload(): void { this.photoService.cancelUpload(); }
@@ -276,27 +350,6 @@ export class OutfitsComponent implements OnInit {
     if (!confirm('Delete your outfit plan for this day?')) return;
     this.editingDate.set(null);
     await this.outfitsService.deleteOutfit(date, user.name);
-  }
-
-  async saveOutfit(date: string): Promise<void> {
-    const user = this.currentUser();
-    if (!user) return;
-    if (this.editForm.newItem.trim()) {
-      this.editForm.items.push(this.editForm.newItem.trim());
-      this.editForm.newItem = '';
-    }
-    this.editingDate.set(null);
-    const previousItems = this.myOutfitsByDate()[date]?.items ?? [];
-    await this.outfitsService.upsertOutfit({
-      date,
-      user:     user.name,
-      items:    [...this.editForm.items],
-      notes:    this.editForm.notes.trim() || undefined,
-      photoUrl: this.editForm.photoUrl || undefined,
-    });
-    // Outfit items are things to pack: add the new ones, skip near-duplicates.
-    const sync = this.packingService.addFromOutfit(this.editForm.items, previousItems);
-    this.showPackingNotice(sync);
   }
 
   private showPackingNotice(sync: PackingSync): void {
