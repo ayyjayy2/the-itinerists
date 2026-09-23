@@ -114,59 +114,6 @@
   &:hover { opacity: 1; }
 }
 
-// ── Emoji picker ──────────────────────────────────────────────────────────────
-.emoji-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.emoji-btn {
-  width: 42px;
-  height: 42px;
-  font-size: 1.4rem;
-  border-radius: var(--radius-sm);
-  border: 2px solid var(--border);
-  background: var(--bg);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-  font-family: var(--font);
-
-  &:hover { border-color: var(--primary); transform: scale(1.1); }
-
-  &.selected {
-    border-color: var(--primary-dark);
-    background: rgba(139, 175, 124, 0.15);
-    box-shadow: 0 0 0 2px rgba(139, 175, 124, 0.3);
-  }
-}
-
-// ── Color picker ──────────────────────────────────────────────────────────────
-.color-grid {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.color-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 3px solid transparent;
-  cursor: pointer;
-  transition: all 0.15s;
-
-  &:hover { transform: scale(1.15); }
-
-  &.selected {
-    border-color: var(--text);
-    box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 4px var(--text);
-  }
-}
-
 .version-tag {
   font-size: 0.7rem;
   color: var(--text-muted);

@@ -22,10 +22,11 @@ import { flightMomentsForUid } from '../../utils/flight-events';
 import { pickFirstUp } from '../../utils/first-up';
 import { normalizeTime } from '../../utils/time-format';
 import { weatherLabel } from '../../utils/weather-label';
+import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, RouterLink, IconComponent, BrandComponent, DayMapCardComponent],
+  imports: [CommonModule, RouterLink, IconComponent, BrandComponent, DayMapCardComponent, AvatarGlyphComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

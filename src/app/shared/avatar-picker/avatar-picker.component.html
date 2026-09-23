@@ -1,0 +1,52 @@
+<div class="form-group">
+  <label>Icon</label>
+  <div class="emoji-grid">
+    @for (e of emojiOptions; track e) {
+      <button type="button" class="emoji-btn"
+        [class.selected]="emojiSig() === e"
+        [class.taken]="isTaken(e)"
+        [disabled]="isTaken(e)"
+        (click)="pick(e)">{{ e }}</button>
+    }
+    @for (l of letters(); track l) {
+      <button type="button" class="emoji-btn letter-btn"
+        [class.selected]="emojiSig() === l"
+        [class.taken]="isTaken(l)"
+        [disabled]="isTaken(l)"
+        [style.color]="isLetter() && emojiSig() === l ? (letterColorSig() || null) : null"
+        (click)="pick(l)">{{ l }}</button>
+    }
+    <button type="button" class="more-btn" (click)="toggleLetters()">
+      {{ showAllLetters() ? 'Less' : 'More' }}
+    </button>
+  </div>
+</div>
+
+<div class="form-group">
+  <label>Color</label>
+  <div class="color-grid">
+    @for (c of colorOptions; track c) {
+      <button type="button" class="color-btn"
+        [class.selected]="colorSig() === c"
+        [style.background]="c"
+        (click)="pickColor(c)"
+        [attr.aria-label]="'Color ' + c"></button>
+    }
+  </div>
+</div>
+
+@if (isLetter()) {
+  <div class="form-group">
+    <label>Letter color</label>
+    <div class="color-grid">
+      @for (c of letterColorOptions; track c) {
+        <button type="button" class="color-btn letter-color-btn"
+          [class.selected]="letterColorSig() === c"
+          [style.background]="colorSig() || 'var(--surface-2)'"
+          [style.color]="c"
+          (click)="pickLetterColor(c)"
+          [attr.aria-label]="'Letter color ' + c">{{ emojiSig() }}</button>
+      }
+    </div>
+  </div>
+}

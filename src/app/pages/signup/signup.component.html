@@ -19,34 +19,7 @@
         />
       </div>
 
-      <div class="form-group">
-        <label>Pick an Emoji</label>
-        <div class="emoji-grid">
-          @for (emoji of emojiOptions; track emoji) {
-            <button
-              type="button"
-              class="emoji-btn"
-              [class.selected]="avatarEmoji === emoji"
-              (click)="selectEmoji(emoji)"
-            >{{ emoji }}</button>
-          }
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Pick a Color</label>
-        <div class="color-grid">
-          @for (c of colorOptions; track c) {
-            <button
-              type="button"
-              class="color-btn"
-              [class.selected]="color === c"
-              [style.background]="c"
-              (click)="selectColor(c)"
-            ></button>
-          }
-        </div>
-      </div>
+      <app-avatar-picker [(emoji)]="avatarEmoji" [(color)]="color" [(letterColor)]="avatarLetterColor" [name]="displayName" />
 
       <div class="form-group">
         <label>Username</label>

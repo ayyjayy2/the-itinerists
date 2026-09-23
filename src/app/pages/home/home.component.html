@@ -29,7 +29,7 @@
       <div class="hero-people">
         <div class="avatars">
           @for (m of heroMembers(); track m.uid) {
-            <div class="avatar" [style.background]="m.color">{{ m.avatarEmoji }}</div>
+            <div class="avatar" [style.background]="m.color"><app-avatar-glyph [emoji]="m.avatarEmoji" [letterColor]="m.avatarLetterColor" /></div>
           }
         </div>
         <span class="hero-people-label">{{ friendsLabel() }}</span>
@@ -209,7 +209,7 @@
     <div class="feed card">
       @for (a of recentActivity(); track a.entry.id) {
         <div class="feed-row">
-          <div class="feed-avatar" [style.background]="a.member?.color || 'var(--surface-2)'">{{ a.member?.avatarEmoji || '🌿' }}</div>
+          <div class="feed-avatar" [style.background]="a.member?.color || 'var(--surface-2)'"><app-avatar-glyph [emoji]="a.member?.avatarEmoji || '🌿'" [letterColor]="a.member?.avatarLetterColor" /></div>
           <span class="feed-text"><b>{{ a.entry.performedByName }}</b> — {{ activityText(a.entry) }} · {{ timeAgo(a.entry.timestamp) }}</span>
         </div>
       } @empty {

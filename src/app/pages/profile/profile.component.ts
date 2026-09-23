@@ -6,17 +6,14 @@ import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
+import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { canPickLayout, effectiveHomeLayout, HomeLayout } from '../../utils/layout';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 
-const EMOJI_OPTIONS = [
-  '🌸','🌿','✨','🦋','🐘','🌼','🍑','🌺','🦊','🐬',
-  '🌙','⭐','🎵','🌈','🦁','🐻','🌻','🍀','🦅','🐙',
-];
-
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [CommonModule, FormsModule, IconComponent, AvatarPickerComponent, AvatarGlyphComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
@@ -25,9 +22,6 @@ export class ProfileComponent implements OnInit {
   private usersService = inject(UsersService);
   private authService  = inject(AuthService);
   private router       = inject(Router);
-
-  readonly emojiOptions = EMOJI_OPTIONS;
-  readonly colorOptions = ['#F4C2C2','#88C9A1','#D4B5F5','#F9E4B7','#F5B5D4','#B5D5F5','#F5D4B5','#B5F5D4'];
 
   firestoreUser = this.userService.firestoreUser;
 
@@ -44,6 +38,7 @@ export class ProfileComponent implements OnInit {
   username    = '';
   avatarEmoji = '';
   color       = '';
+  avatarLetterColor = '';
 
   currentPassword = '';
   newPassword     = '';
@@ -91,14 +86,9 @@ export class ProfileComponent implements OnInit {
       this.username    = u.username;
       this.avatarEmoji = u.avatarEmoji;
       this.color       = u.color;
+      this.avatarLetterColor = u.avatarLetterColor ?? '';
     }
   }
-
-  selectEmoji(emoji: string): void {
-    if (this.takenEmojis().has(emoji)) return;
-    this.avatarEmoji = emoji;
-  }
-  selectColor(color: string): void  { this.color = color; }
 
   openUsernameModal(): void {
     this.username = this.firestoreUser()?.username ?? '';
@@ -187,6 +177,7 @@ export class ProfileComponent implements OnInit {
         displayName: this.displayName.trim(),
         avatarEmoji: this.avatarEmoji,
         color:       this.color,
+        avatarLetterColor: this.avatarLetterColor,
       });
       this.profileSuccess.set(true);
       setTimeout(() => this.profileSuccess.set(false), 3000);

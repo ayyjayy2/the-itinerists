@@ -42,7 +42,7 @@
 
           @if (currentUser()) {
             <div class="sidebar-user" [title]="navCollapsed ? currentUser()!.name : ''">
-              <div class="avatar" [style.background]="currentUser()!.color">{{ currentUser()!.avatarEmoji }}</div>
+              <div class="avatar" [style.background]="currentUser()!.color"><app-avatar-glyph [emoji]="currentUser()!.avatarEmoji" [letterColor]="currentUser()!.avatarLetterColor" /></div>
               <div class="user-info">
                 <span class="user-name">{{ currentUser()!.name }}</span>
                 <span class="user-switch" (click)="logout()">Log out</span>
@@ -73,8 +73,8 @@
           <button class="refresh-btn" (click)="hardRefresh()" title="Hard refresh">↻</button>
           @if (currentUser()) {
             <a class="user-chip" routerLink="/profile">
-              <div class="avatar-sm" [style.background]="currentUser()!.color">{{ currentUser()!.avatarEmoji }}</div>
-              <span class="chip-name">{{ currentUser()!.name }}</span>
+              <div class="avatar-sm" [style.background]="currentUser()!.color"><app-avatar-glyph [emoji]="currentUser()!.avatarEmoji" [letterColor]="currentUser()!.avatarLetterColor" /></div>
+              <span class="chip-name">{{ isDemo ? 'Me' : currentUser()!.name }}</span>
             </a>
           }
         </div>
@@ -112,7 +112,7 @@
           <div class="drawer-version">🌿 Layn's Leaf {{ version }} · {{ buildDate }}</div>
           @if (currentUser()) {
             <div class="drawer-user">
-              <div class="avatar" [style.background]="currentUser()!.color">{{ currentUser()!.avatarEmoji }}</div>
+              <div class="avatar" [style.background]="currentUser()!.color"><app-avatar-glyph [emoji]="currentUser()!.avatarEmoji" [letterColor]="currentUser()!.avatarLetterColor" /></div>
               <div class="user-info">
                 <a class="user-name" routerLink="/profile" (click)="closeDrawer()">{{ currentUser()!.name }}</a>
                 <span class="user-switch" (click)="logout()">Log out</span>

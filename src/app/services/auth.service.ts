@@ -27,6 +27,7 @@ import {
   FirestoreUser, InviteCode, InviteIndexEntry, TripMember,
 } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
+import { BACKGROUND_COLORS } from '../utils/avatar-contrast';
 
 const EMAIL_DOMAIN = '@the-itinerists.local';
 
@@ -39,10 +40,7 @@ function randomCode(length = 8): string {
   return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
-const AVATAR_COLORS = [
-  '#B5D5F5', '#88C9A1', '#F9E4B7', '#F5B5D4',
-  '#D4B5F5', '#F5D4B5', '#B5F5D4', '#F4C2C2',
-];
+const AVATAR_COLORS = BACKGROUND_COLORS;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -87,6 +85,7 @@ export class AuthService {
     username: string,
     password: string,
     color: string,
+    letterColor = '',
   ): Promise<void> {
     // Resolve & validate the invite (code → trip).
     const tripId = await this.validateInviteCode(inviteCode);
@@ -116,6 +115,7 @@ export class AuthService {
       username:     username.toLowerCase().trim(),
       avatarEmoji,
       color,
+      avatarLetterColor: letterColor,
       isAdmin:      false,
       isDisabled:   false,
       createdAt:    now,
@@ -126,7 +126,7 @@ export class AuthService {
     const member: TripMember = {
       uid, role: 'member',
       displayName: userDoc.displayName,
-      avatarEmoji, color, joinedAt: now,
+      avatarEmoji, color, avatarLetterColor: letterColor, joinedAt: now,
     };
     await setDoc(doc(this.firestore, 'trips', tripId, 'members', uid), member);
     await setDoc(
@@ -161,6 +161,7 @@ export class AuthService {
     password: string,
     color: string,
     recoveryEmail?: string,
+    letterColor = '',
   ): Promise<void> {
     const uname = username.toLowerCase().trim();
 
@@ -178,6 +179,7 @@ export class AuthService {
       username:    uname,
       avatarEmoji,
       color,
+      avatarLetterColor: letterColor,
       isAdmin:     false,
       isDisabled:  false,
       createdAt:   now,
@@ -230,7 +232,7 @@ export class AuthService {
     return entry.tripId;
   }
 
-  async updateProfile(uid: string, updates: Partial<Pick<FirestoreUser, 'displayName' | 'avatarEmoji' | 'color'>>): Promise<void> {
+  async updateProfile(uid: string, updates: Partial<Pick<FirestoreUser, 'displayName' | 'avatarEmoji' | 'color' | 'avatarLetterColor'>>): Promise<void> {
     await updateDoc(doc(this.firestore, 'users', uid), { ...updates });
   }
 

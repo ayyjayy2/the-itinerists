@@ -168,7 +168,7 @@ export class DataService {
   private recompose(): void {
     const nameOf = new Map(this.parts.members.map(m => [m.uid, m.displayName]));
     const users: TripUser[] = this.parts.members.map(m => ({
-      uid: m.uid, name: m.displayName, color: m.color, avatarEmoji: m.avatarEmoji,
+      uid: m.uid, name: m.displayName, color: m.color, avatarEmoji: m.avatarEmoji, avatarLetterColor: m.avatarLetterColor,
     }));
     const flights: Flight[] = this.parts.flights.map(f => toFlight(f, nameOf));
 

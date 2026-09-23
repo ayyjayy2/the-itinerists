@@ -3,7 +3,8 @@
 export interface TripUser {
   name: string;
   color: string;       // hex color for avatar background
-  avatarEmoji: string;
+  avatarEmoji: string; // emoji, or a single A–Z letter
+  avatarLetterColor?: string; // letter avatars only: hex color of the letter
   isBirthday?: boolean;
   uid?: string;        // Firebase Auth UID (present when using real auth)
 }
@@ -12,8 +13,9 @@ export interface FirestoreUser {
   uid: string;
   displayName: string;
   username: string;
-  avatarEmoji: string;
+  avatarEmoji: string; // emoji, or a single A–Z letter
   color: string;
+  avatarLetterColor?: string; // letter avatars only: hex color of the letter
   isAdmin: boolean;
   isDisabled?: boolean;
   createdAt: number;   // unix ms
@@ -106,6 +108,7 @@ export interface TripMember {
   displayName: string;          // snapshot at join time
   avatarEmoji: string;
   color: string;
+  avatarLetterColor?: string;   // letter avatars only
   joinedAt: number;             // unix ms
   travelMode?: TravelMode | null;
   arrivalDate?: string;         // YYYY-MM-DD (derived from travel entries or set manually)
