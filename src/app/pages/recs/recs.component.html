@@ -95,18 +95,77 @@
         </h3>
         <div class="rec-cards">
           @for (rec of group.recs; track rec.id) {
-            <div class="rec-card card" [style.border-left-color]="categoryMeta(group.category).color">
-              <div class="rec-card-header">
-                <div class="rec-title">{{ rec.title }}</div>
-                @if (canDelete(rec)) {
-                  <button class="rec-delete-btn" (click)="deleteRec(rec.id!)" title="Delete">✕</button>
+            <div class="rec-card card" [class.editing]="isEditing(rec)" [style.border-left-color]="categoryMeta(group.category).color">
+              @if (isEditing(rec)) {
+                <!-- ── Inline edit ── -->
+                <div class="rec-edit-form">
+                  <div class="form-group">
+                    <label>Category</label>
+                    @if (!editUseCustomCategory) {
+                      <div class="category-row">
+                        <select [(ngModel)]="editForm.category">
+                          @for (cat of editCategoryOptions(); track cat) {
+                            <option [value]="cat">{{ cat }}</option>
+                          }
+                        </select>
+                        <button class="btn btn-ghost btn-sm" type="button" (click)="toggleEditCustomCategory(true)">+ New</button>
+                      </div>
+                    } @else {
+                      <div class="category-row">
+                        <input type="text" [(ngModel)]="editCustomCategory" placeholder="New category name">
+                        <button class="btn btn-ghost btn-sm" type="button" (click)="toggleEditCustomCategory(false)">Cancel</button>
+                      </div>
+                    }
+                  </div>
+
+                  @if (isMultiDestination()) {
+                    <div class="form-group">
+                      <label>Where</label>
+                      <select [(ngModel)]="editForm.destination">
+                        @for (leg of legs(); track leg) {
+                          <option [value]="leg">{{ leg }}</option>
+                        }
+                        <option value="">{{ anywhere }} (whole trip)</option>
+                      </select>
+                    </div>
+                  }
+
+                  <div class="form-group">
+                    <label>Title <span class="required">*</span></label>
+                    <input type="text" [(ngModel)]="editForm.title">
+                  </div>
+
+                  <div class="form-group">
+                    <label>Description</label>
+                    <textarea [(ngModel)]="editForm.description" rows="2"></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Pro tip</label>
+                    <input type="text" [(ngModel)]="editForm.extra">
+                  </div>
+
+                  <div class="form-actions">
+                    <button class="btn btn-ghost btn-sm" (click)="cancelEdit()">Cancel</button>
+                    <button class="btn btn-primary btn-sm" (click)="saveEdit()" [disabled]="!editForm.title.trim()">Save</button>
+                  </div>
+                </div>
+              } @else {
+                <div class="rec-card-header">
+                  <div class="rec-title">{{ rec.title }}</div>
+                  @if (canEdit(rec)) {
+                    <div class="rec-card-actions">
+                      <button class="rec-icon-btn" (click)="startEdit(rec)" title="Edit" aria-label="Edit rec"><app-icon name="edit" [size]="14" /></button>
+                      <button class="rec-icon-btn rec-delete-btn" (click)="deleteRec(rec.id!)" title="Delete" aria-label="Delete rec">✕</button>
+                    </div>
+                  }
+                </div>
+                @if (rec.description) {
+                  <p class="rec-desc">{{ rec.description }}</p>
                 }
-              </div>
-              @if (rec.description) {
-                <p class="rec-desc">{{ rec.description }}</p>
-              }
-              @if (rec.extra) {
-                <p class="rec-extra"><app-icon name="sparkle" [size]="13" /> {{ rec.extra }}</p>
+                @if (rec.extra) {
+                  <p class="rec-extra"><app-icon name="sparkle" [size]="13" /> {{ rec.extra }}</p>
+                }
               }
             </div>
           }

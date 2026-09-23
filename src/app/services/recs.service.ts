@@ -1,5 +1,5 @@
 import { Injectable, signal, inject, Injector, runInInjectionContext, effect } from '@angular/core';
-import { Firestore, collection, doc, onSnapshot, setDoc, deleteDoc, Unsubscribe } from '@angular/fire/firestore';
+import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, Unsubscribe } from '@angular/fire/firestore';
 import { RecDoc } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 
@@ -39,6 +39,12 @@ export class RecsService {
     const tid = this.requireTrip();
     const ref = doc(collection(this.firestore, 'trips', tid, 'recs'));
     await setDoc(ref, { ...rec, id: ref.id });
+  }
+
+  /** Edit a rec's fields; the id, author and creation time stay as they were. */
+  async updateRec(id: string, patch: Partial<Pick<RecDoc, 'category' | 'title' | 'description' | 'extra' | 'destination'>>): Promise<void> {
+    const tid = this.requireTrip();
+    await updateDoc(doc(this.firestore, 'trips', tid, 'recs', id), { ...patch });
   }
 
   async deleteRec(id: string): Promise<void> {

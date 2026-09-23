@@ -119,6 +119,55 @@ export class RecsComponent {
     this.showForm.set(false);
   }
 
+  // ── Inline editing (same people who may delete: the author, or an app admin) ──
+  editingId = signal<string | null>(null);
+  editForm: Rec = { category: 'Tips', title: '', description: '', extra: '', destination: '' };
+  editCustomCategory    = '';
+  editUseCustomCategory = false;
+
+  /** Categories offered when editing: the defaults plus any custom ones already used on this trip. */
+  readonly editCategoryOptions = computed((): string[] => {
+    const used = new Set(this.allRecs().map(r => r.category));
+    return [...CATEGORIES, ...[...used].filter(c => !CATEGORIES.includes(c)).sort()];
+  });
+
+  canEdit(rec: RecDoc): boolean { return this.canDelete(rec); }
+  isEditing(rec: RecDoc): boolean { return this.editingId() === rec.id; }
+
+  startEdit(rec: RecDoc): void {
+    if (!this.canEdit(rec)) return;
+    this.showForm.set(false);
+    this.editForm = {
+      category: rec.category, title: rec.title, description: rec.description,
+      extra: rec.extra, destination: rec.destination ?? '',
+    };
+    this.editCustomCategory    = '';
+    this.editUseCustomCategory = false;
+    this.editingId.set(rec.id);
+  }
+
+  cancelEdit(): void { this.editingId.set(null); }
+
+  toggleEditCustomCategory(val: boolean): void {
+    this.editUseCustomCategory = val;
+    if (!val) this.editCustomCategory = '';
+  }
+
+  async saveEdit(): Promise<void> {
+    const id = this.editingId();
+    const category = this.editUseCustomCategory ? this.editCustomCategory.trim() : this.editForm.category;
+    if (!id || !this.editForm.title.trim() || !category) return;
+    const destination = this.isMultiDestination() ? (this.editForm.destination ?? '').trim() : '';
+    await this.recsService.updateRec(id, {
+      category,
+      title:       this.editForm.title.trim(),
+      description: this.editForm.description.trim(),
+      extra:       this.editForm.extra.trim(),
+      destination,
+    });
+    this.editingId.set(null);
+  }
+
   canDelete(rec: RecDoc): boolean {
     if (!rec.id) return false;
     if (this.isAdmin()) return true;
