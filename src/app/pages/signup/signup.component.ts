@@ -9,6 +9,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
+import { isValidEmail } from '../../utils/email';
 
 /**
  * Open self-serve signup (TP-25): creates a brand-new account with no invite,
@@ -34,7 +35,7 @@ export class SignupComponent {
   username    = '';
   password    = '';
   confirmPass = '';
-  recoveryEmail = '';
+  email = '';
   color       = '#F4C2C2';
 
   showPassword = signal(false);
@@ -51,6 +52,7 @@ export class SignupComponent {
 
     if (!this.displayName.trim()) { this.error.set('Please enter your name.'); return; }
     if (!this.username.trim())    { this.error.set('Please choose a username.'); return; }
+    if (!isValidEmail(this.email)) { this.error.set('Please enter a valid email address.'); return; }
     if (!isPasswordValid(this.password)) { this.error.set(passwordProblems(this.password)); return; }
     if (this.password !== this.confirmPass) { this.error.set('Passwords do not match.'); return; }
 
@@ -62,7 +64,7 @@ export class SignupComponent {
         this.username.trim(),
         this.password,
         this.color,
-        this.recoveryEmail,
+        this.email.trim(),
         this.avatarLetterColor,
       );
       await this.userService.waitForUser();

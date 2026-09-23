@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../services/auth.service';
@@ -22,6 +22,7 @@ export class ProfileComponent implements OnInit {
   private usersService = inject(UsersService);
   private authService  = inject(AuthService);
   private router       = inject(Router);
+  private route        = inject(ActivatedRoute);
 
   firestoreUser = this.userService.firestoreUser;
 
@@ -80,6 +81,8 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Home's recovery nudge deep-links here with ?recovery=1.
+    if (this.route.snapshot.queryParamMap.get('recovery')) this.openRecoveryModal();
     const u = this.firestoreUser();
     if (u) {
       this.displayName = u.displayName;

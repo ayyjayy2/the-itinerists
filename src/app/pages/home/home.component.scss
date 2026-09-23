@@ -1,3 +1,18 @@
+// ── Recovery-email nudge ─────────────────────────────────────────────────────
+.recovery-nudge {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  padding: 0.6rem 0.85rem; margin-bottom: 1rem;
+  background: var(--accent-tint); border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm); font-size: 0.85rem;
+
+  .rn-ic   { display: inline-flex; color: var(--accent-dark); }
+  .rn-text { flex: 1; min-width: 200px; }
+  .rn-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 0.9rem; padding: 0.2rem 0.4rem;
+  }
+}
+
 .home { max-width: 620px; }
 
 // ── Trip switcher ─────────────────────────────────────────────────────────────

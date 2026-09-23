@@ -22,6 +22,7 @@ import { flightMomentsForUid } from '../../utils/flight-events';
 import { pickFirstUp } from '../../utils/first-up';
 import { normalizeTime } from '../../utils/time-format';
 import { weatherLabel } from '../../utils/weather-label';
+import { needsRecoveryEmail } from '../../utils/email';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
 @Component({
@@ -55,6 +56,20 @@ export class HomeComponent implements OnInit, OnDestroy {
   readonly trips = signal<TripDoc[]>([]);
 
   readonly layout = computed(() => effectiveHomeLayout(this.userService.firestoreUser()));
+
+  // ── Recovery-email nudge: accounts still on the synthetic address can't reset
+  //    their own password. Dismissal is per device (a convenience, not data). ──
+  private nudgeDismissed = signal(false);
+  readonly showRecoveryNudge = computed(() => {
+    const u = this.userService.firestoreUser();
+    if (!needsRecoveryEmail(u) || this.nudgeDismissed()) return false;
+    try { return localStorage.getItem(`recoveryNudgeDismissed:${u!.uid}`) !== '1'; } catch { return true; }
+  });
+  dismissRecoveryNudge(): void {
+    const uid = this.userService.firestoreUser()?.uid;
+    try { if (uid) localStorage.setItem(`recoveryNudgeDismissed:${uid}`, '1'); } catch { /* private mode */ }
+    this.nudgeDismissed.set(true);
+  }
   readonly isLayoutA = computed(() => this.layout() === 'A');
 
   /** Type B "Quick Access" — every page, old-layout style. */
