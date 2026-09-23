@@ -1,11 +1,12 @@
 import { Component, OnInit, inject, computed, effect, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd, NavigationError } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from './shared/icon/icon.component';
 import { BrandComponent } from './shared/brand/brand.component';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
 import { UserService } from './services/user.service';
+import { isStaleChunkError } from './utils/chunk-error';
 import { AuthService } from './services/auth.service';
 import { DataService } from './services/data.service';
 import { TripService } from './services/trip.service';
@@ -194,6 +195,21 @@ export class AppComponent implements OnInit {
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(e => { this.currentUrl.set(e.urlAfterRedirects); this.closeMore(); this.closeDrawer(); });
+
+    // No service worker, so an open tab keeps the version it loaded. After a
+    // deploy, the first visit to a not-yet-loaded page fails to fetch its
+    // (renamed) chunk and the navigation is silently cancelled — the tap
+    // "does nothing". Recover with one full reload straight to that page.
+    this.router.events
+      .pipe(filter((e): e is NavigationError => e instanceof NavigationError))
+      .subscribe(e => {
+        if (!isStaleChunkError(e.error)) return;
+        const key = 'staleChunkReloadAt';
+        const last = Number(sessionStorage.getItem(key) ?? 0);
+        if (Date.now() - last < 60_000) return; // never loop if the reload didn't help
+        sessionStorage.setItem(key, String(Date.now()));
+        window.location.assign(e.url);
+      });
 
     // When a user logs in, start all data listeners
     effect(() => {
