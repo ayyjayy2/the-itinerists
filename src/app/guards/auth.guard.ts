@@ -12,13 +12,3 @@ export const authGuard = async () => {
   if (userService.hasUser()) return true;
   return router.createUrlTree(['/login']);
 };
-
-export const adminGuard = async () => {
-  const userService = inject(UserService);
-  const router      = inject(Router);
-
-  await userService.authReadyPromise;
-
-  if (userService.hasUser() && userService.isAdmin()) return true;
-  return router.createUrlTree(['/home']);
-};

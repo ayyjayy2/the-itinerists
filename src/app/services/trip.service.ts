@@ -76,6 +76,13 @@ export class TripService {
     return me?.hiddenPages ?? [];
   });
 
+  /** True when the signed-in user created (owns) the active trip. Trip admin
+   *  and invites are scoped to this, not to the account's global admin flag. */
+  readonly isActiveTripOwner = computed<boolean>(() => {
+    const uid = this.userService.firestoreUser()?.uid;
+    return !!uid && this._activeMembers().some(m => m.uid === uid && m.role === 'owner');
+  });
+
   private activeUnsubs: Unsubscribe[] = [];
   private restoring = false;
 

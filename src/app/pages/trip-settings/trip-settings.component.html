@@ -97,11 +97,13 @@
     <section class="card">
       <div class="section-head">
         <h2>Members ({{ members().length }})</h2>
+        @if (isOwner()) {
         <button class="btn btn-ghost btn-sm" (click)="copyInvite()" [disabled]="inviteState() === 'copying'">
           @if (inviteState() === 'copied') { <app-icon name="check" [size]="15" /> Link copied }
           @else if (inviteState() === 'copying') { Generating… }
           @else { <app-icon name="link" [size]="15" /> Invite }
         </button>
+        }
       </div>
       <ul class="member-list">
         @for (m of members(); track m.uid) {

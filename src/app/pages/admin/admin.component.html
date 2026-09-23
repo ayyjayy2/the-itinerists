@@ -1,58 +1,71 @@
 <div class="page-container">
   <h1><app-icon name="admin" [size]="22" /> Admin</h1>
 
-  <!-- ── Invite Members ─────────────────────────────────────── -->
-  <div class="card section-card">
-    <h2>Invite Members</h2>
-    <p class="section-hint">Generate a link to share with someone you'd like to add to the trip. Links expire after 7 days.</p>
+  @if (!trip()) {
+    <div class="card section-card">
+      <p class="section-hint">Pick a trip first — this page manages one trip at a time.</p>
+      <a class="btn btn-primary btn-sm" routerLink="/trips">My trips</a>
+    </div>
+  } @else if (!isOwner()) {
+    <div class="card section-card">
+      <h2>{{ trip()!.name }}</h2>
+      <p class="section-hint">Only the person who created this trip can manage its members and invite people. You can see who's on the trip in <a routerLink="/trip-settings">Trip Settings</a>.</p>
+    </div>
+  } @else {
+    <p class="page-hint">Managing <strong>{{ trip()!.name }}</strong>. Invites and removals apply to this trip only.</p>
 
-    <button class="btn btn-primary" (click)="generateInvite()" [disabled]="inviteLoading()">
-      {{ inviteLoading() ? 'Generating…' : '+ Generate Invite Link' }}
-    </button>
+    <!-- ── Invite Members ─────────────────────────────────────── -->
+    <div class="card section-card">
+      <h2>Invite Members</h2>
+      <p class="section-hint">Generate a link to share with someone you'd like to add to this trip. Links expire after 7 days.</p>
 
-    @if (inviteError()) {
-      <div class="alert alert-error">{{ inviteError() }}</div>
-    }
+      <button class="btn btn-primary" (click)="generateInvite()" [disabled]="inviteLoading()">
+        {{ inviteLoading() ? 'Generating…' : '+ Generate Invite Link' }}
+      </button>
 
-    @if (inviteLink()) {
-      <div class="invite-box">
-        <span class="invite-url">{{ inviteLink() }}</span>
-        <button class="btn btn-accent btn-sm" (click)="copyInvite()">
-          {{ inviteCopied() ? 'Copied!' : 'Copy' }}
-        </button>
-      </div>
-    }
-  </div>
+      @if (inviteError()) {
+        <div class="alert alert-error">{{ inviteError() }}</div>
+      }
 
-  <!-- ── Manage Members ─────────────────────────────────────── -->
-  <div class="card section-card">
-    <h2>Members</h2>
-
-    @if (removeError()) {
-      <div class="alert alert-error">{{ removeError() }}</div>
-    }
-
-    <div class="members-list">
-      @for (member of members(); track member.uid; let i = $index) {
-        @if (!member.isDisabled) {
-        <div class="member-row">
-          <div class="member-avatar" [style.background]="member.color"><app-avatar-glyph [emoji]="member.avatarEmoji" [letterColor]="member.avatarLetterColor" /></div>
-          <div class="member-info">
-            <span class="member-name">{{ member.displayName }}</span>
-            <span class="member-meta">&#64;{{ member.username }}
-              @if (member.isAdmin) { <span class="badge-admin">admin</span> }
-              @if (member.isDisabled) { <span class="badge-disabled">removed</span> }
-            </span>
-          </div>
-          @if (!member.isAdmin) {
-            <button class="btn btn-danger btn-sm" (click)="promptRemove(member)">Remove</button>
-          }
+      @if (inviteLink()) {
+        <div class="invite-box">
+          <span class="invite-url">{{ inviteLink() }}</span>
+          <button class="btn btn-accent btn-sm" (click)="copyInvite()">
+            {{ inviteCopied() ? 'Copied!' : 'Copy' }}
+          </button>
         </div>
-        }
       }
     </div>
-  </div>
 
+    <!-- ── Manage Members ─────────────────────────────────────── -->
+    <div class="card section-card">
+      <h2>Members <span class="count">({{ members().length }})</span></h2>
+
+      @if (removeError()) {
+        <div class="alert alert-error">{{ removeError() }}</div>
+      }
+
+      <div class="members-list">
+        @for (member of members(); track member.uid) {
+          <div class="member-row">
+            <div class="member-avatar" [style.background]="member.color"><app-avatar-glyph [emoji]="member.avatarEmoji" [letterColor]="member.avatarLetterColor" /></div>
+            <div class="member-info">
+              <span class="member-name">{{ member.displayName }}
+                @if (member.uid === currentUser()?.uid) { <span class="you">(you)</span> }
+              </span>
+              <span class="member-meta">
+                @if (member.role === 'owner') { <span class="badge-admin">owner</span> }
+                joined {{ joined(member.joinedAt) }}
+              </span>
+            </div>
+            @if (canRemove(member)) {
+              <button class="btn btn-danger btn-sm" (click)="promptRemove(member)">Remove</button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
 </div>
 
 <!-- ── Remove confirmation modal ─────────────────────────────────────────── -->
@@ -60,11 +73,9 @@
   <div class="modal-backdrop" (click)="cancelRemove()">
     <div class="modal-card card" (click)="$event.stopPropagation()">
       <div class="modal-icon">⚠️</div>
-      <h3>Remove {{ member.displayName }}?</h3>
+      <h3>Remove {{ member.displayName }} from {{ trip()?.name }}?</h3>
       <p class="modal-body">
-        This will remove <strong>{{ member.displayName }}</strong> from the trip.
-        All of their data will be deleted and they will no longer be able to log in.
-        This action cannot be undone.
+        They'll lose access to this trip's plans. Their account and any other trips they're on aren't affected, and you can invite them again later.
       </p>
       <div class="modal-actions">
         <button class="btn btn-ghost" (click)="cancelRemove()">Cancel</button>
