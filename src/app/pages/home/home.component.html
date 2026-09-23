@@ -86,8 +86,10 @@
   }
 
   @if (hasActiveTrip()) {
-    @if (layout() === 'A') {
-    <!-- Pinned quick-shortcuts (A only — C drops this section) -->
+    @if (layout() !== 'B') {
+    <!-- Pinned quick-shortcuts (A and C; B has the drawer grid instead).
+         Saved pins are account data — the section must render wherever the
+         account's layout is, or a person's customization silently vanishes. -->
     <div class="section-head">
       <h2>Pinned</h2>
       <button class="see-link plain" (click)="togglePinEdit()">{{ pinEdit() ? 'Done' : 'Edit' }}</button>

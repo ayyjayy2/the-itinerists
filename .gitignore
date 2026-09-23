@@ -69,3 +69,6 @@ firebase-debug.log
 # Design Phase 2 — heavy reference assets kept locally (originals in the export zip)
 docs/design-phase-2/_original-export.zip
 docs/design-phase-2/uploads/
+
+# Local-only admin scripts: they read production user data, never publish them
+scripts/stats.js
