@@ -238,6 +238,8 @@ export interface Accommodation {
   address: string;
   checkIn: string;     // YYYY-MM-DD
   checkOut: string;
+  checkInTime?: string;   // e.g. "3:00 PM" — optional, shown on the itinerary
+  checkOutTime?: string;
   notes: string;
   bookingRef: string;
   forWho: string;      // comma-separated names or "All"
@@ -250,6 +252,8 @@ export interface AccommodationDoc {
   address: string;
   checkIn: string;     // YYYY-MM-DD
   checkOut: string;
+  checkInTime?: string;   // e.g. "3:00 PM" — optional, shown on the itinerary
+  checkOutTime?: string;
   notes: string;
   bookingRef: string;
   link?: string;

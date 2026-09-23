@@ -12,6 +12,10 @@ import { DataService } from '../../services/data.service';
 import { ItineraryItemDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
+import { flightMomentsForUid } from '../../utils/flight-events';
+import { stayMomentsFor } from '../../utils/stay-events';
+import { TimeInputComponent } from '../../shared/time-input/time-input.component';
+import { Time12Pipe } from '../../shared/time12.pipe';
 
 type ViewMode = 'list' | 'calendar';
 
@@ -39,7 +43,7 @@ function fallbackWindow(): string[] {
 
 @Component({
   selector: 'app-itinerary',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule, DragDropModule, RouterLink],
+  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule, DragDropModule, RouterLink, TimeInputComponent, Time12Pipe],
   templateUrl: './itinerary.component.html',
   styleUrl: './itinerary.component.scss'
 })
@@ -121,27 +125,26 @@ export class ItineraryComponent implements OnInit {
     )
   );
 
-  /** Auto-generated flight events for the current user — not stored, not editable. */
+  /** Auto-generated flight events for the current user — not stored, not editable.
+   *  Arrivals show the landing moment; departures show the leaving moment. */
   readonly flightEvents = computed(() => {
-    const uid     = this.currentUser()?.uid ?? '';
-    const dest    = this.tripService.activeTrip()?.destination ?? 'your destination';
-    const flights = this.flightsService.flights();
-    const mine    = flights.filter(f => f.uid === uid);
-
-    const events: Array<{ date: string; label: string; time: string }> = [];
-
-    // Last arrival leg per date
-    const arrivalsByDate = mine.filter(f => f.section === 'ARRIVALS');
-    for (const f of arrivalsByDate) {
-      events.push({ date: f.arrivalDate, label: `Arrive at ${f.to} – ${dest}`, time: f.arrivalTime });
-    }
-    // First departure leg per date
-    const departuresByDate = mine.filter(f => f.section === 'DEPARTURES');
-    for (const f of departuresByDate) {
-      events.push({ date: f.departureDate, label: `Depart from ${f.from}`, time: f.departureTime });
-    }
-    return events;
+    const uid  = this.currentUser()?.uid ?? '';
+    const dest = this.tripService.activeTrip()?.destination ?? 'your destination';
+    return flightMomentsForUid(this.flightsService.flights(), uid, dest)
+      .filter(m => m.kind === (m.section === 'ARRIVALS' ? 'arrive' : 'depart'))
+      .map(({ date, label, time }) => ({ date, label, time }));
   });
+
+  /** Auto-generated check-in / check-out events from the Stays page for the current user — not editable here. */
+  readonly stayEvents = computed(() => {
+    const me    = this.currentUser()?.name ?? '';
+    const stays = this.dataService.data()?.accommodations ?? [];
+    return stayMomentsFor(stays, me);
+  });
+
+  stayEventsForDate(date: string) {
+    return this.stayEvents().filter(e => e.date === date);
+  }
 
   /** Auto-generated transportation events (pick-up/drop-off or depart/arrive) — not editable here. */
   readonly transportEvents = computed(() => {
@@ -205,7 +208,8 @@ export class ItineraryComponent implements OnInit {
     const itemDates      = new Set(this.allItems().map(i => i.date));
     const flightDates    = new Set(this.flightEvents().map(e => e.date));
     const transportDates = new Set(this.transportEvents().map(e => e.date));
-    const allDates   = [...new Set([...days, ...itemDates, ...flightDates, ...transportDates])].sort();
+    const stayDates      = new Set(this.stayEvents().map(e => e.date));
+    const allDates   = [...new Set([...days, ...itemDates, ...flightDates, ...transportDates, ...stayDates])].sort();
 
     if (all || !range) return allDates;
     return allDates.filter(d =>
@@ -303,33 +307,13 @@ export class ItineraryComponent implements OnInit {
   }
 
   // ── Time helpers ───────────────────────────────────────────────────────────
-  private formatTime24h(t: string): string {
-    if (!t) return '';
-    const clean = t.replace(/\s+(CT|ET|PT|MT|IST|CDT|EDT|CST|EST)$/i, '').trim();
-    const m = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (!m) return '';
-    let h = parseInt(m[1], 10);
-    const min = parseInt(m[2], 10);
-    if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
-    if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
-    return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-  }
-
-  private formatTime12h(t: string): string {
-    if (!t) return '';
-    const [h, m] = t.split(':').map(Number);
-    const ampm = h < 12 ? 'AM' : 'PM';
-    const h12  = h % 12 || 12;
-    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
-  }
-
   // ── Edit helpers ───────────────────────────────────────────────────────────
   isEditing(item: ItineraryItemDoc): boolean { return this.editingId() === item.id; }
 
   startEdit(item: ItineraryItemDoc): void {
     this.addingToDate.set(null);
     this.editingId.set(item.id);
-    this.draft = { ...item, time: this.formatTime24h(item.time), endTime: this.formatTime24h(item.endTime) };
+    this.draft = { ...item };
     this.editForWhoMap = this.parseForWhoToMap(item.forWho);
   }
 
@@ -339,8 +323,8 @@ export class ItineraryComponent implements OnInit {
     if (!this.draft.activity?.trim()) return;
     await this.itineraryService.updateItem(original.id, {
       ...this.draft,
-      time:    this.formatTime12h(this.draft.time    ?? ''),
-      endTime: this.formatTime12h(this.draft.endTime ?? ''),
+      time:    this.draft.time    ?? '',
+      endTime: this.draft.endTime ?? '',
       forWho:  this.buildForWho(this.editForWhoMap),
     });
     this.cancelEdit();
@@ -368,8 +352,8 @@ export class ItineraryComponent implements OnInit {
     const sortOrder  = dayItems.length;
     await this.itineraryService.addItem({
       date,
-      time:       this.formatTime12h(this.newDraft.time    ?? ''),
-      endTime:    this.formatTime12h(this.newDraft.endTime ?? ''),
+      time:       this.newDraft.time    ?? '',
+      endTime:    this.newDraft.endTime ?? '',
       activity:   this.newDraft.activity  ?? '',
       location:   this.newDraft.location  ?? '',
       category:   this.newDraft.category  ?? 'Activity',

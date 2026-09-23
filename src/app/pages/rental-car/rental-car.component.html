@@ -89,13 +89,13 @@
           <div class="journey">
             <div class="journey-leg">
               <span class="leg-label">{{ legLabels(car.mode).start }}</span>
-              <span class="leg-date">{{ formatDate(car.pickupDate) }} {{ car.pickupTime }}</span>
+              <span class="leg-date">{{ formatDate(car.pickupDate) }} {{ car.pickupTime | time12 }}</span>
               @if (car.pickupLocation) { <span class="leg-loc"><app-icon name="pin" [size]="13" /> {{ car.pickupLocation }}</span> }
             </div>
             <div class="journey-arrow"><app-icon [name]="modeIcon(car.mode)" [size]="20" /></div>
             <div class="journey-leg">
               <span class="leg-label">{{ legLabels(car.mode).end }}</span>
-              <span class="leg-date">{{ formatDate(car.dropoffDate) }} {{ car.dropoffTime }}</span>
+              <span class="leg-date">{{ formatDate(car.dropoffDate) }} {{ car.dropoffTime | time12 }}</span>
               @if (car.dropoffLocation) { <span class="leg-loc"><app-icon name="pin" [size]="13" /> {{ car.dropoffLocation }}</span> }
             </div>
           </div>
@@ -173,7 +173,7 @@
     </div>
     <div class="form-group">
       <label>Time</label>
-      <input type="time" [(ngModel)]="form.pickupTime">
+      <app-time-input [(ngModel)]="form.pickupTime" label="Pick-up time" />
     </div>
   </div>
   <div class="form-group">
@@ -189,7 +189,7 @@
     </div>
     <div class="form-group">
       <label>Time</label>
-      <input type="time" [(ngModel)]="form.dropoffTime">
+      <app-time-input [(ngModel)]="form.dropoffTime" label="Drop-off time" />
     </div>
   </div>
   <div class="form-group">

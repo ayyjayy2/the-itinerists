@@ -74,14 +74,14 @@
             @if (stop.arrivalTime) {
               <div class="time arr">
                 <span class="t-arrow">↓</span>
-                <span class="t-val">{{ stop.arrivalTime }}</span>
+                <span class="t-val">{{ stop.arrivalTime | time12 }}</span>
                 @if (stop.arrivalDate) { <span class="t-date">{{ formatShortDate(stop.arrivalDate) }}</span> }
               </div>
             }
             @if (stop.departureTime) {
               <div class="time dep">
                 <span class="t-arrow">↑</span>
-                <span class="t-val">{{ stop.departureTime }}</span>
+                <span class="t-val">{{ stop.departureTime | time12 }}</span>
                 @if (stop.departureDate) { <span class="t-date">{{ formatShortDate(stop.departureDate) }}</span> }
               </div>
             }
@@ -211,7 +211,7 @@
         </div>
         <div class="form-group">
           <label>Departure Time</label>
-          <input type="text" [(ngModel)]="leg.departureTime" placeholder="e.g. 8:30 AM" [name]="'depTime'+i+isEdit" />
+          <app-time-input [(ngModel)]="leg.departureTime" [name]="'depTime'+i+isEdit" label="Departure time" />
         </div>
       </div>
 
@@ -222,7 +222,7 @@
         </div>
         <div class="form-group">
           <label>Arrival Time</label>
-          <input type="text" [(ngModel)]="leg.arrivalTime" placeholder="e.g. 11:45 AM" [name]="'arrTime'+i+isEdit" />
+          <app-time-input [(ngModel)]="leg.arrivalTime" [name]="'arrTime'+i+isEdit" label="Arrival time" />
         </div>
       </div>
 

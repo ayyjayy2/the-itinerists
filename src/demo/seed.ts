@@ -130,7 +130,7 @@ export function seedDemo(store: MemoryStore): void {
   const stay: AccommodationDoc = {
     id: 'stay-1', name: 'Baan Nimman Guesthouse',
     address: 'Nimmanhaemin Soi 7, Suthep, Chiang Mai 50200',
-    checkIn: '2026-11-13', checkOut: '2026-11-19',
+    checkIn: '2026-11-13', checkOut: '2026-11-19', checkInTime: '2:00 PM', checkOutTime: '11:00 AM',
     notes: 'Two twin rooms. Rooftop breakfast 7–10 AM.', bookingRef: 'BNM-48213',
     forWho: 'All', addedByUid: ALAYNA.uid, createdAt: at(50),
   };
