@@ -313,6 +313,7 @@ export interface Rec {
   title: string;
   description: string;
   extra: string;
+  destination?: string;  // which leg of a multi-destination trip this is for; absent = anywhere
 }
 
 /** Stored in Firestore `recs` collection — one doc per user-added rec. */
