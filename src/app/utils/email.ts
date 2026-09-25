@@ -31,3 +31,23 @@ export function isPlaceholderEmail(email: string | undefined | null): boolean {
 export function needsRecoveryEmail(user: { authEmail?: string } | null | undefined): boolean {
   return !!user && isPlaceholderEmail(user.authEmail);
 }
+
+/**
+ * Keep the account's `authEmail` mirror in step with the real Auth email.
+ * A recovery email is verified by clicking a link, which changes the Auth
+ * email outside the app; the next time the app sees the account it writes the
+ * new address back (and clears `pendingEmail` if that's what was confirmed).
+ * Returns the fields to update, or null when nothing has changed.
+ */
+export function authEmailPatch(
+  authEmail: string | null | undefined,
+  user: { authEmail?: string; pendingEmail?: string } | null | undefined,
+): { authEmail: string; pendingEmail?: string } | null {
+  if (!authEmail || !user) return null;
+  const current = (user.authEmail ?? '').toLowerCase();
+  const actual  = authEmail.toLowerCase();
+  if (current === actual) return null;
+  const patch: { authEmail: string; pendingEmail?: string } = { authEmail: actual };
+  if ((user.pendingEmail ?? '').toLowerCase() === actual) patch.pendingEmail = '';
+  return patch;
+}

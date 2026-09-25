@@ -65,6 +65,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (!needsRecoveryEmail(u) || this.nudgeDismissed()) return false;
     try { return localStorage.getItem(`recoveryNudgeDismissed:${u!.uid}`) !== '1'; } catch { return true; }
   });
+  readonly pendingRecoveryEmail = computed(() => this.userService.firestoreUser()?.pendingEmail ?? '');
   dismissRecoveryNudge(): void {
     const uid = this.userService.firestoreUser()?.uid;
     try { if (uid) localStorage.setItem(`recoveryNudgeDismissed:${uid}`, '1'); } catch { /* private mode */ }

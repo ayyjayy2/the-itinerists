@@ -4,6 +4,7 @@ import { Firestore, doc, onSnapshot, updateDoc } from '@angular/fire/firestore';
 import { TripUser, FirestoreUser } from '../models/trip.models';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, firstValueFrom, map, merge } from 'rxjs';
+import { authEmailPatch } from '../utils/email';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -96,6 +97,11 @@ export class UserService {
             if (snap.exists()) {
               const data = snap.data() as FirestoreUser;
               this._firestoreUser.set(data.isDisabled ? null : data);
+              // A verified recovery email changes the Auth email outside the app;
+              // write it back so username sign-in keeps resolving correctly.
+              const patch = authEmailPatch(firebaseUser.email, data);
+              if (patch) updateDoc(doc(this.firestore, 'users', firebaseUser.uid), patch)
+                .catch(err => console.error('[UserService] authEmail sync failed:', err));
             } else {
               this._firestoreUser.set(null);
             }

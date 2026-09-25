@@ -6,6 +6,7 @@ import {
   signOut,
   createUserWithEmailAndPassword,
   updateEmail,
+  verifyBeforeUpdateEmail,
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
@@ -42,6 +43,7 @@ function describeAuthError(err: unknown): Error {
   if (code === 'auth/email-already-in-use') return new Error('That email already has an account. Sign in instead, or use "Forgot password?".');
   if (code === 'auth/invalid-email')        return new Error('That email address doesn\'t look right.');
   if (code === 'auth/weak-password')        return new Error('That password is too weak.');
+  if (code === 'auth/operation-not-allowed') return new Error('That email needs to be verified first — check the inbox for the link we sent.');
   return err instanceof Error ? err : new Error('Something went wrong. Please try again.');
 }
 
@@ -59,8 +61,31 @@ export class AuthService {
   private tripContext = inject(TripContextService);
 
   async login(username: string, password: string): Promise<void> {
-    const email = await this.resolveAuthEmail(username);
-    await signInWithEmailAndPassword(this.auth, email, password);
+    const { authEmail, pendingEmail } = await this.resolveEmails(username);
+    try {
+      await signInWithEmailAndPassword(this.auth, authEmail, password);
+    } catch (err) {
+      // If a verification link was clicked on another device, the Auth email
+      // has moved on while our mirror hasn't; try the address we were waiting on.
+      if (pendingEmail && pendingEmail !== authEmail) {
+        await signInWithEmailAndPassword(this.auth, pendingEmail, password);
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  /** Both addresses on record for a username: the mirror and any pending recovery email. */
+  private async resolveEmails(username: string): Promise<{ authEmail: string; pendingEmail?: string }> {
+    const uname = username.toLowerCase().trim();
+    try {
+      const q    = query(collection(this.firestore, 'users'), where('username', '==', uname));
+      const snap = await getDocs(q);
+      const data = snap.docs[0]?.data() ?? {};
+      const authEmail = (data['authEmail'] as string | undefined) || toEmail(uname);
+      const pendingEmail = (data['pendingEmail'] as string | undefined) || undefined;
+      return { authEmail, pendingEmail };
+    } catch { return { authEmail: toEmail(uname) }; }
   }
 
   /**
@@ -300,19 +325,21 @@ export class AuthService {
    * The Firestore write is retried once — a lasting mismatch would break
    * username login for this user.
    */
+  /**
+   * Attach a real recovery email the verify-first way: Firebase emails a link
+   * to the new address and only switches the account's email once it's
+   * clicked (required while email-enumeration protection is on). Until then
+   * the address is recorded as `pendingEmail`; UserService mirrors it into
+   * `authEmail` the next time the app sees the confirmed change.
+   */
   async addRecoveryEmail(currentPassword: string, newEmail: string): Promise<void> {
     const user = this.auth.currentUser;
     if (!user?.email) throw new Error('Not signed in.');
     const email = newEmail.toLowerCase().trim();
     const cred  = EmailAuthProvider.credential(user.email, currentPassword);
     await reauthenticateWithCredential(user, cred);
-    await updateEmail(user, email);
-    const ref = doc(this.firestore, 'users', user.uid);
-    try {
-      await updateDoc(ref, { authEmail: email });
-    } catch {
-      await updateDoc(ref, { authEmail: email }); // one retry, then surface
-    }
+    await verifyBeforeUpdateEmail(user, email, { url: `${window.location.origin}/profile`, handleCodeInApp: false });
+    await updateDoc(doc(this.firestore, 'users', user.uid), { pendingEmail: email });
   }
 
   async disableUser(uid: string): Promise<void> {
