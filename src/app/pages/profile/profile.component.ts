@@ -10,6 +10,7 @@ import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.com
 import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { canPickLayout, effectiveHomeLayout, HomeLayout } from '../../utils/layout';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
+import { recoveryEmailErrorMessage } from '../../utils/email';
 
 @Component({
   selector: 'app-profile',
@@ -141,18 +142,8 @@ export class ProfileComponent implements OnInit {
       this.recoveryEmail = '';
       this.recoveryPass  = '';
       this.recoverySuccess.set(true);
-    } catch (err: any) {
-      if (err?.code === 'auth/wrong-password' || err?.code === 'auth/invalid-credential') {
-        this.recoveryError.set('Current password is incorrect.');
-      } else if (err?.code === 'auth/email-already-in-use') {
-        this.recoveryError.set('That email is already attached to another account.');
-      } else if (err?.code === 'auth/invalid-email') {
-        this.recoveryError.set('That email address doesn\'t look valid.');
-      } else if (err?.code === 'auth/requires-recent-login') {
-        this.recoveryError.set('Please sign out and back in, then try again.');
-      } else {
-        this.recoveryError.set('Could not save the recovery email. Please try again.');
-      }
+    } catch (err) {
+      this.recoveryError.set(recoveryEmailErrorMessage(err));
     } finally {
       this.recoverySaving.set(false);
     }
