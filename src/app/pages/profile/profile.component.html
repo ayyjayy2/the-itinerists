@@ -174,7 +174,7 @@
       <h2>Recovery Email</h2>
 
       @if (pendingRecoveryEmail) {
-        <p class="modal-hint">Waiting on <strong>{{ pendingRecoveryEmail }}</strong> — click the link we emailed to confirm it. Entering another address sends a new link.</p>
+        <p class="modal-hint">Waiting on <strong>{{ pendingRecoveryEmail }}</strong> — open the email from The Itinerists (check spam) and tap "Verify email". Entering another address sends a new link.</p>
       } @else if (currentRecoveryEmail) {
         <p class="modal-hint">Current: <strong>{{ currentRecoveryEmail }}</strong>. Saving a new one replaces it.</p>
       } @else {
@@ -194,7 +194,7 @@
         <div class="alert alert-error">{{ recoveryError() }}</div>
       }
       @if (recoverySuccess()) {
-        <div class="alert alert-success">Check your inbox: we sent a link to <strong>{{ recoverySentTo }}</strong>. Your recovery email switches over once you click it.</div>
+        <div class="alert alert-success">We sent a link to <strong>{{ recoverySentTo }}</strong> from The Itinerists. It may land in <strong>spam or promotions</strong>, so check there too. Your recovery email switches over once you tap "Verify email".</div>
       }
 
       <div class="modal-actions">
