@@ -51,3 +51,30 @@ export function authEmailPatch(
   if ((user.pendingEmail ?? '').toLowerCase() === actual) patch.pendingEmail = '';
   return patch;
 }
+
+/**
+ * Plain-words message for a failed recovery-email attempt. Firebase reports a
+ * wrong password under several codes depending on project settings, so all
+ * of them map to the same sentence.
+ */
+export function recoveryEmailErrorMessage(err: unknown): string {
+  const code = (err as { code?: string })?.code ?? '';
+  switch (code) {
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+    case 'auth/invalid-login-credentials':
+      return 'Current password is incorrect.';
+    case 'auth/email-already-in-use':
+      return 'That email is already attached to another account.';
+    case 'auth/invalid-email':
+      return "That email address doesn't look valid.";
+    case 'auth/requires-recent-login':
+      return 'Please sign out and back in, then try again.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Wait a few minutes and try again.';
+    case 'auth/network-request-failed':
+      return 'No connection. Check your internet and try again.';
+    default:
+      return 'Could not send the verification link. Please try again.';
+  }
+}

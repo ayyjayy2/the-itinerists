@@ -1,4 +1,4 @@
-import { maskEmail, isValidEmail, isPlaceholderEmail, needsRecoveryEmail, authEmailPatch } from './email';
+import { maskEmail, isValidEmail, isPlaceholderEmail, needsRecoveryEmail, authEmailPatch, recoveryEmailErrorMessage } from './email';
 
 describe('maskEmail', () => {
   it('keeps the first letter and the domain', () => {
@@ -73,5 +73,28 @@ describe('authEmailPatch', () => {
     expect(authEmailPatch('laura@example.com', { authEmail: 'LAURA@example.com' })).toBeNull();
     expect(authEmailPatch(null, { authEmail: 'x@y.z' })).toBeNull();
     expect(authEmailPatch('laura@example.com', null)).toBeNull();
+  });
+});
+
+describe('recoveryEmailErrorMessage', () => {
+  const msg = (code?: string) => recoveryEmailErrorMessage(code ? { code } : new Error('x'));
+
+  it('names a wrong password under every code Firebase uses for it', () => {
+    for (const code of ['auth/wrong-password', 'auth/invalid-credential', 'auth/invalid-login-credentials']) {
+      expect(msg(code)).toBe('Current password is incorrect.');
+    }
+  });
+
+  it('explains the other known failures', () => {
+    expect(msg('auth/email-already-in-use')).toContain('already attached');
+    expect(msg('auth/invalid-email')).toContain("doesn't look valid");
+    expect(msg('auth/requires-recent-login')).toContain('sign out and back in');
+    expect(msg('auth/too-many-requests')).toContain('Too many attempts');
+    expect(msg('auth/network-request-failed')).toContain('connection');
+  });
+
+  it('falls back to a generic message for anything else', () => {
+    expect(msg('auth/some-new-code')).toBe('Could not send the verification link. Please try again.');
+    expect(msg()).toBe('Could not send the verification link. Please try again.');
   });
 });
