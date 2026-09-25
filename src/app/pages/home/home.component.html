@@ -5,7 +5,7 @@
     <div class="recovery-nudge" role="status">
       <span class="rn-ic"><app-icon name="profile" [size]="16" /></span>
       @if (pendingRecoveryEmail()) {
-        <span class="rn-text"><strong>Confirm your recovery email:</strong> we sent a link to {{ pendingRecoveryEmail() }}. Tap it to finish.</span>
+        <span class="rn-text"><strong>Confirm your recovery email:</strong> we emailed {{ pendingRecoveryEmail() }} (check spam). Tap "Verify email" to finish.</span>
         <a class="btn btn-sm btn-ghost" routerLink="/profile" [queryParams]="{ recovery: 1 }">Resend</a>
       } @else {
         <span class="rn-text"><strong>Add a recovery email</strong> so you can reset your password yourself if you ever forget it.</span>
