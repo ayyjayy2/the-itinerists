@@ -21,6 +21,8 @@ export interface FirestoreUser {
   createdAt: number;   // unix ms
   /** Email the Auth account signs in with. Absent → synthetic username@the-itinerists.local. */
   authEmail?: string;
+  /** A recovery email awaiting its verification link; becomes authEmail once clicked. */
+  pendingEmail?: string;
   /** Pinned Home shortcuts (page paths). Absent → default set. */
   homePins?: string[];
   /** Home/nav layout. Absent → 'C' (group default: A's nav, minimal home,

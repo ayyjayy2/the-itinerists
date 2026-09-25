@@ -47,7 +47,7 @@
         <button class="btn btn-ghost" (click)="openUsernameModal()">Change Username</button>
         <button class="btn btn-ghost" (click)="openPasswordModal()">Change Password</button>
         <button class="btn btn-ghost" (click)="openRecoveryModal()">
-          {{ currentRecoveryEmail ? 'Change Recovery Email' : 'Add Recovery Email' }}
+          {{ pendingRecoveryEmail ? 'Confirm Recovery Email' : (currentRecoveryEmail ? 'Change Recovery Email' : 'Add Recovery Email') }}
         </button>
       </div>
     </div>
@@ -173,10 +173,12 @@
     <div class="modal-box" (click)="$event.stopPropagation()">
       <h2>Recovery Email</h2>
 
-      @if (currentRecoveryEmail) {
+      @if (pendingRecoveryEmail) {
+        <p class="modal-hint">Waiting on <strong>{{ pendingRecoveryEmail }}</strong> — click the link we emailed to confirm it. Entering another address sends a new link.</p>
+      } @else if (currentRecoveryEmail) {
         <p class="modal-hint">Current: <strong>{{ currentRecoveryEmail }}</strong>. Saving a new one replaces it.</p>
       } @else {
-        <p class="modal-hint">Add a real email so you can reset a forgotten password yourself.</p>
+        <p class="modal-hint">Add a real email so you can reset a forgotten password yourself. We'll email a link to confirm it.</p>
       }
 
       <div class="form-group">
@@ -192,7 +194,7 @@
         <div class="alert alert-error">{{ recoveryError() }}</div>
       }
       @if (recoverySuccess()) {
-        <div class="alert alert-success">Recovery email saved!</div>
+        <div class="alert alert-success">Check your inbox: we sent a link to <strong>{{ recoverySentTo }}</strong>. Your recovery email switches over once you click it.</div>
       }
 
       <div class="modal-actions">

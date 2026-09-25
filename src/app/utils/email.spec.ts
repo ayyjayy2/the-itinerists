@@ -1,4 +1,4 @@
-import { maskEmail, isValidEmail, isPlaceholderEmail, needsRecoveryEmail } from './email';
+import { maskEmail, isValidEmail, isPlaceholderEmail, needsRecoveryEmail, authEmailPatch } from './email';
 
 describe('maskEmail', () => {
   it('keeps the first letter and the domain', () => {
@@ -54,5 +54,24 @@ describe('needsRecoveryEmail', () => {
   it('does not flag accounts that have one, or no account at all', () => {
     expect(needsRecoveryEmail({ authEmail: 'laura@example.com' })).toBeFalse();
     expect(needsRecoveryEmail(null)).toBeFalse();
+  });
+});
+
+describe('authEmailPatch', () => {
+  it('mirrors a changed Auth email onto the account and clears a matching pending email', () => {
+    expect(authEmailPatch('laura@example.com', { authEmail: 'laura@the-itinerists.local', pendingEmail: 'laura@example.com' }))
+      .toEqual({ authEmail: 'laura@example.com', pendingEmail: '' });
+  });
+
+  it('keeps an unrelated pending email while mirroring', () => {
+    expect(authEmailPatch('laura@example.com', { authEmail: 'old@example.com', pendingEmail: 'new@example.com' }))
+      .toEqual({ authEmail: 'laura@example.com' });
+  });
+
+  it('returns null when nothing needs to change', () => {
+    expect(authEmailPatch('laura@example.com', { authEmail: 'laura@example.com' })).toBeNull();
+    expect(authEmailPatch('laura@example.com', { authEmail: 'LAURA@example.com' })).toBeNull();
+    expect(authEmailPatch(null, { authEmail: 'x@y.z' })).toBeNull();
+    expect(authEmailPatch('laura@example.com', null)).toBeNull();
   });
 });
