@@ -29,7 +29,7 @@ import {
 } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { BACKGROUND_COLORS } from '../utils/avatar-contrast';
-import { PLACEHOLDER_DOMAIN, isPlaceholderEmail } from '../utils/email';
+import { PLACEHOLDER_DOMAIN, isPlaceholderEmail, isValidEmail } from '../utils/email';
 
 const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
 
@@ -60,8 +60,15 @@ export class AuthService {
   private firestore   = inject(Firestore);
   private tripContext = inject(TripContextService);
 
-  async login(username: string, password: string): Promise<void> {
-    const { authEmail, pendingEmail } = await this.resolveEmails(username);
+  /** Sign in with either the username or the account's (verified) email —
+   *  adding a recovery email never replaces the username. */
+  async login(usernameOrEmail: string, password: string): Promise<void> {
+    const id = usernameOrEmail.trim();
+    if (isValidEmail(id)) {
+      await signInWithEmailAndPassword(this.auth, id.toLowerCase(), password);
+      return;
+    }
+    const { authEmail, pendingEmail } = await this.resolveEmails(id);
     try {
       await signInWithEmailAndPassword(this.auth, authEmail, password);
     } catch (err) {

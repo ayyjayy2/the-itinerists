@@ -41,7 +41,7 @@ export class LoginComponent {
       await this.authService.login(this.username.trim(), this.password);
     } catch (err) {
       if (this.localCache.recoverIfBroken(err)) return;
-      this.error.set(isBrokenLocalCacheError(err) ? userMessage(err, '') : 'Invalid username or password.');
+      this.error.set(isBrokenLocalCacheError(err) ? userMessage(err, '') : 'Invalid username, email, or password.');
       this.loading.set(false);
       return;
     }
