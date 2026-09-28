@@ -76,9 +76,8 @@
           }
           <button class="refresh-btn" (click)="hardRefresh()" title="Hard refresh">↻</button>
           @if (currentUser()) {
-            <a class="user-chip" routerLink="/profile">
+            <a class="user-chip" routerLink="/profile" title="Profile" aria-label="Profile">
               <div class="avatar-sm" [style.background]="currentUser()!.color"><app-avatar-glyph [emoji]="currentUser()!.avatarEmoji" [letterColor]="currentUser()!.avatarLetterColor" /></div>
-              <span class="chip-name">{{ isDemo ? 'Me' : currentUser()!.name }}</span>
             </a>
           }
         </div>
