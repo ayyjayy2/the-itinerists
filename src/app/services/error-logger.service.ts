@@ -60,6 +60,9 @@ export class ErrorLoggerService {
   /** Log an error with automatic type classification. */
   logError(error: unknown, type: LogType = 'js_error'): void {
     const err = error instanceof Error ? error : new Error(String(error));
+    // The log write itself goes through Firestore; when the client is wedged
+    // that write fails and would be logged again, forever.
+    if (/INTERNAL ASSERTION FAILED/i.test(err.message)) return;
     this.writeLog({
       type,
       message: err.message,

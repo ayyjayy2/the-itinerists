@@ -150,6 +150,12 @@ export class TripService {
         onSnapshot(doc(this.firestore, 'trips', tripId), snap => {
           this._tripDocLoaded.set(true);
           this._activeTrip.set(snap.exists() ? (snap.data() as TripDoc) : null);
+        }, err => {
+          // Not (or no longer) a member of the saved trip: forget it rather than
+          // leave every trip listener failing.
+          console.warn(`[TripService] trips/${tripId} listener error:`, err);
+          if ((err as { code?: string })?.code === 'permission-denied') this.tripContext.clearActiveTrip();
+          this._tripDocLoaded.set(true);
         }),
         onSnapshot(collection(this.firestore, 'trips', tripId, 'members'), snap => {
           this._activeMembers.set(

@@ -17,6 +17,8 @@ import { isBrokenLocalCacheError } from '../utils/user-message';
 export class LocalCacheService {
   private firestore = inject(Firestore);
 
+  /** Also covers a Firestore "INTERNAL ASSERTION FAILED": the SDK's client is
+   *  wedged for the rest of the session and every write hangs or throws. */
   /** If `err` is the broken-cache failure, wipe the cache and reload. Returns
    *  true when a reload has been started (the caller can stop what it's doing). */
   recoverIfBroken(err: unknown): boolean {

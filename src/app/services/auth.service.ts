@@ -25,6 +25,7 @@ import {
   arrayUnion,
   increment,
   deleteDoc,
+  writeBatch,
 } from '@angular/fire/firestore';
 import {
   FirestoreUser, InviteCode, InviteIndexEntry, TripMember, PrivateAccount, UsernameEntry,
@@ -123,6 +124,23 @@ export class AuthService {
     }
   }
 
+  /** Write the username claim, the public profile and the private account doc
+   *  in ONE batch: a single round trip, and all-or-nothing — if the name was
+   *  taken meanwhile the whole batch is refused and the Auth account is undone. */
+  private async writeNewAccount(cred: { user: { uid: string } & Parameters<typeof deleteUser>[0] }, userDoc: FirestoreUser, authEmail: string): Promise<void> {
+    const batch = writeBatch(this.firestore);
+    batch.set(this.usernameRef(userDoc.username), { uid: userDoc.uid, authEmail } satisfies UsernameEntry);
+    batch.set(doc(this.firestore, 'users', userDoc.uid), userDoc);
+    batch.set(this.accountRef(userDoc.uid), { authEmail } satisfies PrivateAccount);
+    try {
+      await batch.commit();
+    } catch (err) {
+      await deleteUser(cred.user).catch(() => {/* best effort */});
+      if ((err as { code?: string })?.code === 'permission-denied') throw new Error('That username is already taken.');
+      throw err;
+    }
+  }
+
   /** Create the Firebase Auth account. An address that already has an account
    *  is never reported to the screen (see EmailInUseError). */
   private async createAuthAccount(email: string, password: string) {
@@ -206,12 +224,6 @@ export class AuthService {
     const uid  = cred.user.uid;
     const now  = Date.now();
 
-    // Claim the username first — if someone else got it meanwhile, undo the
-    // Auth account so the person can pick another name.
-    try { await this.claimUsername(uname, { uid, authEmail }); }
-    catch (err) { await deleteUser(cred.user).catch(() => {/* best effort */}); throw err; }
-
-    // Public profile (no email) + private account doc.
     const userDoc: FirestoreUser = {
       uid,
       displayName:  displayName.trim(),
@@ -223,8 +235,7 @@ export class AuthService {
       isDisabled:   false,
       createdAt:    now,
     };
-    await setDoc(doc(this.firestore, 'users', uid), userDoc);
-    await setDoc(this.accountRef(uid), { authEmail } satisfies PrivateAccount);
+    await this.writeNewAccount(cred, userDoc, authEmail);
 
     // Join the invited trip: member doc + trips index + member count + usedBy.
     const member: TripMember = {
@@ -278,9 +289,6 @@ export class AuthService {
     const uid  = cred.user.uid;
     const now  = Date.now();
 
-    try { await this.claimUsername(uname, { uid, authEmail }); }
-    catch (err) { await deleteUser(cred.user).catch(() => {/* best effort */}); throw err; }
-
     const userDoc: FirestoreUser = {
       uid,
       displayName: displayName.trim(),
@@ -292,8 +300,7 @@ export class AuthService {
       isDisabled:  false,
       createdAt:   now,
     };
-    await setDoc(doc(this.firestore, 'users', uid), userDoc);
-    await setDoc(this.accountRef(uid), { authEmail } satisfies PrivateAccount);
+    await this.writeNewAccount(cred, userDoc, authEmail);
   }
 
   /**
