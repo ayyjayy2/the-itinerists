@@ -76,6 +76,8 @@
 
 .btn { margin-top: 0.25rem; }
 
+.btn-ghost-danger { color: var(--danger); border-color: var(--danger); }
+
 .logout-section {
   display: flex;
   justify-content: center;

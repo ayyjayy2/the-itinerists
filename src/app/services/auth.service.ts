@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector } from '@angular/core';
 import {
   Auth,
   signInWithEmailAndPassword,
@@ -10,6 +10,7 @@ import {
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
+  deleteUser,
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -23,11 +24,13 @@ import {
   getDocs,
   arrayUnion,
   increment,
+  deleteDoc,
 } from '@angular/fire/firestore';
 import {
   FirestoreUser, InviteCode, InviteIndexEntry, TripMember,
 } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
+import { TripService } from './trip.service';
 import { BACKGROUND_COLORS } from '../utils/avatar-contrast';
 import { PLACEHOLDER_DOMAIN, isPlaceholderEmail, isValidEmail } from '../utils/email';
 
@@ -59,6 +62,7 @@ export class AuthService {
   private auth        = inject(Auth);
   private firestore   = inject(Firestore);
   private tripContext = inject(TripContextService);
+  private injector    = inject(Injector);   // TripService is resolved lazily: it injects AuthService itself
 
   /** Sign in with either the username or the account's (verified) email —
    *  adding a recovery email never replaces the username. */
@@ -359,6 +363,34 @@ export class AuthService {
     }
     await verifyBeforeUpdateEmail(user, email, { url: `${window.location.origin}/profile`, handleCodeInApp: false });
     await updateDoc(doc(this.firestore, 'users', user.uid), { pendingEmail: email });
+  }
+
+  /**
+   * Delete the signed-in user's own account. Only the person themselves can do
+   * this (admins remove members from trips, never accounts). Order matters:
+   *   1. re-authenticate — Firebase refuses to delete a stale session;
+   *   2. leave every trip via TripService.leaveTrip: an owned trip passes to
+   *      the longest-standing member, a trip they were alone on is deleted,
+   *      and their per-trip data (flights, outfits, packing) goes with them;
+   *   3. remove the per-user docs (expenses, trip index, profile);
+   *   4. delete the Auth user last — after that nothing else is permitted.
+   */
+  async deleteAccount(currentPassword: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user?.email) throw new Error('Not signed in.');
+    await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, currentPassword));
+
+    const tripService = this.injector.get(TripService);
+    const trips = await tripService.getUserTrips(user.uid);
+    for (const trip of trips) await tripService.leaveTrip(trip.id);
+
+    const gone = (path: string) => deleteDoc(doc(this.firestore, path, user.uid)).catch(() => {/* may not exist */});
+    await gone('userExpenses');
+    await gone('userTrips');
+    await deleteDoc(doc(this.firestore, 'users', user.uid));
+
+    await deleteUser(user);
+    this.tripContext.clearActiveTrip();
   }
 
   async disableUser(uid: string): Promise<void> {

@@ -224,6 +224,41 @@ export class ProfileComponent implements OnInit {
 
   showLogoutConfirm = signal(false);
 
+  // ── Delete account (self-service only; admins never delete accounts) ──
+  showDeleteModal = signal(false);
+  deletePass      = '';
+  deleteSaving    = signal(false);
+  deleteError     = signal('');
+
+  openDeleteModal(): void {
+    this.deletePass = '';
+    this.deleteError.set('');
+    this.showDeleteModal.set(true);
+  }
+
+  closeDeleteModal(): void { this.showDeleteModal.set(false); }
+
+  async confirmDeleteAccount(): Promise<void> {
+    if (!this.deletePass) return;
+    this.deleteError.set('');
+    this.deleteSaving.set(true);
+    try {
+      await this.authService.deleteAccount(this.deletePass);
+      this.leaveApp();
+    } catch (err) {
+      const code = (err as { code?: string })?.code ?? '';
+      const wrongPassword = ['auth/wrong-password', 'auth/invalid-credential', 'auth/invalid-login-credentials'].includes(code);
+      this.deleteError.set(wrongPassword
+        ? 'Current password is incorrect.'
+        : userMessage(err, 'Could not delete your account. Please try again.'));
+    } finally {
+      this.deleteSaving.set(false);
+    }
+  }
+
+  /** Full load of the sign-in screen: clears every in-memory listener. */
+  leaveApp(): void { window.location.assign('/login'); }
+
   /** Sign out, then load the sign-in screen fresh. A full load (not an in-app
    *  route change) clears every in-memory listener and can't be stalled by a
    *  page chunk from an older deploy. */

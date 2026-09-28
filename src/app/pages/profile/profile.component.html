@@ -54,6 +54,7 @@
         <button class="btn btn-ghost" (click)="openRecoveryModal()">
           {{ pendingRecoveryEmail ? 'Confirm Recovery Email' : (currentRecoveryEmail ? 'Change Recovery Email' : 'Add Recovery Email') }}
         </button>
+        <button class="btn btn-ghost btn-ghost-danger" (click)="openDeleteModal()">Delete Account</button>
       </div>
     </div>
 
@@ -95,6 +96,32 @@
       <div class="modal-actions">
         <button class="btn btn-ghost" (click)="showLogoutConfirm.set(false)">No</button>
         <button class="btn btn-danger" (click)="confirmLogout()">Yes</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete account modal -->
+@if (showDeleteModal()) {
+  <div class="modal-backdrop" (click)="closeDeleteModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>Delete your account?</h2>
+      <p class="modal-hint">This removes your profile, your expenses and packing lists, and takes you off every trip. Trips you own pass to the longest-standing member; a trip you're the only member of is deleted. <strong>This can't be undone.</strong></p>
+
+      <div class="form-group">
+        <label>Current Password</label>
+        <input type="password" [(ngModel)]="deletePass" autocomplete="current-password" placeholder="Enter current password" />
+      </div>
+
+      @if (deleteError()) {
+        <div class="alert alert-error">{{ deleteError() }}</div>
+      }
+
+      <div class="modal-actions modal-actions--fill">
+        <button class="btn btn-ghost" (click)="closeDeleteModal()" [disabled]="deleteSaving()">Keep my account</button>
+        <button class="btn btn-danger" (click)="confirmDeleteAccount()" [disabled]="deleteSaving() || !deletePass">
+          {{ deleteSaving() ? 'Deleting…' : 'Delete account' }}
+        </button>
       </div>
     </div>
   </div>
