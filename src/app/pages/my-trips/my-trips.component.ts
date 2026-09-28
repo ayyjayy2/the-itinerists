@@ -33,6 +33,8 @@ export class MyTripsComponent implements OnInit {
   copiedId    = signal<string | null>(null);
   /** Trip id → the invite just generated for it (code + link shown under the card). */
   openInvite = signal<{ tripId: string; code: string } | null>(null);
+  inviteClosing = signal(false);
+  inviteNotice  = signal<string | null>(null);   // trip id whose invite was just closed
   inviteError = signal('');
 
   async ngOnInit(): Promise<void> {
@@ -66,6 +68,7 @@ export class MyTripsComponent implements OnInit {
   async invite(trip: TripDoc): Promise<void> {
     this.inviteError.set('');
     this.copiedId.set(null);
+    this.inviteNotice.set(null);
     this.invitingId.set(trip.id);
     try {
       const code = await this.tripService.generateInvite(trip.id);
@@ -78,6 +81,20 @@ export class MyTripsComponent implements OnInit {
       this.inviteError.set(userMessage(e, 'Could not create an invite link.'));
     } finally {
       this.invitingId.set(null);
+    }
+  }
+
+  async closeInvite(trip: TripDoc, code: string): Promise<void> {
+    this.inviteClosing.set(true);
+    this.inviteError.set('');
+    try {
+      await this.tripService.revokeInvite(trip.id, code);
+      this.openInvite.set(null);
+      this.inviteNotice.set(trip.id);
+    } catch (e: unknown) {
+      this.inviteError.set(userMessage(e, 'Could not close the invite. Please try again.'));
+    } finally {
+      this.inviteClosing.set(false);
     }
   }
 

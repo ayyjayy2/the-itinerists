@@ -272,6 +272,12 @@ export class TripService {
     return this.authService.generateInviteCode(user.uid, tripId);
   }
 
+  /** Close an invite so its code/link no longer work (owner only). */
+  async revokeInvite(tripId: string, code: string): Promise<void> {
+    this.requireUser();
+    await this.authService.revokeInviteCode(tripId, code);
+  }
+
   /** Switch the active trip (updates the context immediately, persists lastActiveTrip). */
   async switchTrip(tripId: string): Promise<void> {
     const user = this.requireUser();

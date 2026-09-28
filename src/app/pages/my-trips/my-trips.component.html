@@ -34,7 +34,10 @@
             @else { <app-icon name="link" [size]="14" /> Invite }
           </button>
           @if (openInvite()?.tripId === trip.id) {
-            <app-invite-panel [code]="openInvite()!.code" />
+            <app-invite-panel [code]="openInvite()!.code" [closing]="inviteClosing()" (close)="closeInvite(trip, $event)" />
+          }
+          @if (inviteNotice() === trip.id) {
+            <div class="alert alert-success">Invite closed. That code and link no longer work — generate a new one anytime.</div>
           }
         </div>
       }

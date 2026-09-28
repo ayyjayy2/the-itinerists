@@ -101,6 +101,9 @@ console.log('\nInvites (pre-auth join reads these)');
 await t('anon reads invite by code', 'allow', () => getDoc(doc(anon, 'trips', 'T', 'invites', 'CODE1')));
 await t('member creates an invite', 'allow', () => setDoc(doc(alice, 'trips', 'T', 'invites', 'CODE2'), { tripId: 'T', usedBy: [] }));
 await t('non-member creates an invite', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'invites', 'CODE3'), { tripId: 'T', usedBy: [] }));
+await t('owner closes (deletes) an invite', 'allow', () => deleteDoc(doc(alice, 'trips', 'T', 'invites', 'CODE1')));
+await t('plain member closes an invite', 'deny', () => deleteDoc(doc(bob, 'trips', 'T', 'invites', 'CODE1')));
+await t('owner removes the invite index entry', 'allow', () => deleteDoc(doc(alice, 'inviteIndex', 'CODE1')));
 
 console.log('\ninviteIndex (global, pre-auth)');
 await t('anon reads inviteIndex', 'allow', () => getDoc(doc(anon, 'inviteIndex', 'CODE1')));

@@ -85,6 +85,8 @@ export class TripSettingsComponent {
   inviteState  = signal<'idle' | 'copying' | 'copied'>('idle');
   /** The last invite generated here — shown as code + link under the Members heading. */
   inviteCode = signal('');
+  inviteClosing = signal(false);
+  inviteNotice  = signal('');
   busyMember   = signal<string | null>(null);
   leaving        = signal(false);
   removeConfirmOpen = signal(false);
@@ -182,10 +184,26 @@ export class TripSettingsComponent {
     }
   }
 
+  async closeInvite(code: string): Promise<void> {
+    const t = this.trip();
+    if (!t) return;
+    this.inviteClosing.set(true);
+    try {
+      await this.tripService.revokeInvite(t.id, code);
+      this.inviteCode.set('');
+      this.inviteNotice.set('Invite closed. That code and link no longer work — generate a new one anytime.');
+    } catch (err) {
+      this.error.set(userMessage(err, 'Could not close the invite. Please try again.'));
+    } finally {
+      this.inviteClosing.set(false);
+    }
+  }
+
   async copyInvite(): Promise<void> {
     const t = this.trip();
     if (!t) return;
     this.inviteState.set('copying');
+    this.inviteNotice.set('');
     try {
       const code = await this.tripService.generateInvite(t.id);
       this.inviteCode.set(code);
