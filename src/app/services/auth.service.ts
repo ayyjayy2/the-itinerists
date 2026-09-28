@@ -316,6 +316,11 @@ export class AuthService {
    * scanning every trip. Returns the code.
    */
   async generateInviteCode(createdByUid: string, tripId: string): Promise<string> {
+    // One live invite per trip: a new one retires whatever came before it, so
+    // an old code or link that got passed around can't keep admitting people.
+    const previous = await getDocs(collection(this.firestore, 'trips', tripId, 'invites'));
+    for (const d of previous.docs) await this.revokeInviteCode(tripId, d.id);
+
     const code      = randomCode();
     const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
     const invite: InviteCode = {
