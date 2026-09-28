@@ -211,10 +211,14 @@ export class TripService {
     return runInInjectionContext(this.injector, async () => {
       const idxSnap = await getDoc(doc(this.firestore, 'userTrips', uid));
       const tripIds = idxSnap.exists() ? ((idxSnap.data() as UserTripsDoc).tripIds ?? []) : [];
+      // A trip the person was removed from is no longer readable by them; the
+      // index may still list it (only they or an admin can edit it), so treat
+      // an unreadable trip as gone rather than failing the whole list.
       const snaps = await Promise.all(
-        tripIds.map(id => runInInjectionContext(this.injector, () => getDoc(doc(this.firestore, 'trips', id)))),
+        tripIds.map(id => runInInjectionContext(this.injector, () =>
+          getDoc(doc(this.firestore, 'trips', id)).catch(() => null))),
       );
-      return snaps.filter(s => s.exists()).map(s => s.data() as TripDoc);
+      return snaps.filter((s): s is NonNullable<typeof s> => !!s && s.exists()).map(s => s.data() as TripDoc);
     });
   }
 
@@ -298,6 +302,9 @@ export class TripService {
       if (target?.role === 'owner') {
         throw new Error('The trip owner cannot be removed.');
       }
+      // Keep the member's name/avatar under the trip so the owner can restore
+      // them later — profiles are private, so nothing can be read back from users/.
+      if (target) await setDoc(doc(this.firestore, 'trips', tripId, 'removedMembers', uid), target);
       await deleteDoc(this.memberRef(tripId, uid));
       await updateDoc(doc(this.firestore, 'userTrips', uid), { tripIds: arrayRemove(tripId) })
         .catch(() => {/* tolerate a missing index doc */});
@@ -450,20 +457,31 @@ export class TripService {
     });
   }
 
-  /** Re-add a previously removed member to the trip (owner only); logs member_restored. */
-  async restoreMember(tripId: string, uid: string): Promise<void> {
+  /** Re-add a previously removed member to the trip (owner only); logs member_restored.
+   *  Rebuilds their member record from the snapshot taken on removal (profiles
+   *  are private); `fallbackName` covers members removed before snapshots existed. */
+  async restoreMember(tripId: string, uid: string, fallbackName = 'Member'): Promise<void> {
     const actor = this.requireUser();
     await runInInjectionContext(this.injector, async () => {
       await this.assertOwner(tripId, actor.uid);
       if ((await getDoc(this.memberRef(tripId, uid))).exists()) return; // already a member
-      const userSnap = await getDoc(doc(this.firestore, 'users', uid));
-      if (!userSnap.exists()) throw new Error('That user no longer exists.');
-      const profile = userSnap.data() as FirestoreUser;
+      const snapRef = doc(this.firestore, 'trips', tripId, 'removedMembers', uid);
+      const snap = await getDoc(snapRef);
+      const prior = snap.exists() ? (snap.data() as TripMember) : null;
       const now = Date.now();
-      await setDoc(this.memberRef(tripId, uid), this.memberSnapshot(profile, 'member', now));
-      await setDoc(doc(this.firestore, 'userTrips', uid), { tripIds: arrayUnion(tripId) }, { merge: true });
+      const member: TripMember = {
+        uid, role: 'member', joinedAt: now,
+        displayName: prior?.displayName ?? fallbackName,
+        avatarEmoji: prior?.avatarEmoji ?? '🌸',
+        color: prior?.color ?? '#F4C2C2',
+        avatarLetterColor: prior?.avatarLetterColor ?? '',
+      };
+      await setDoc(this.memberRef(tripId, uid), member);
+      await setDoc(doc(this.firestore, 'userTrips', uid), { tripIds: arrayUnion(tripId) }, { merge: true })
+        .catch(() => {/* only self/admin may write another index; the member's app self-heals via membership */});
       await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(1) });
-      this.logActivity(tripId, 'member_restored', { uid, displayName: profile.displayName }, actor);
+      await deleteDoc(snapRef).catch(() => {/* best effort */});
+      this.logActivity(tripId, 'member_restored', { uid, displayName: member.displayName }, actor);
     });
   }
 
