@@ -71,8 +71,6 @@ export class ProfileComponent implements OnInit {
   /** 'resend' when a link is already waiting on an address (one tap to send
    *  it again); 'form' to enter a new address and password. */
   recoveryMode      = signal<'resend' | 'form'>('form');
-  /** Firebase wanted a fresh sign-in before resending — ask for the password. */
-  needsPassword     = signal(false);
 
   readonly homeLayout = computed(() => effectiveHomeLayout(this.firestoreUser()));
   readonly canPickLayout = computed(() => canPickLayout(this.firestoreUser()));
@@ -131,7 +129,6 @@ export class ProfileComponent implements OnInit {
     this.recoveryPass  = '';
     this.recoveryError.set('');
     this.recoverySuccess.set(false);
-    this.needsPassword.set(false);
     this.recoveryMode.set(this.pendingRecoveryEmail ? 'resend' : 'form');
     this.showRecoveryModal.set(true);
   }
@@ -143,26 +140,21 @@ export class ProfileComponent implements OnInit {
     this.recoveryMode.set('form');
   }
 
-  /** Send the waiting link again. Tries without a password first; if Firebase
-   *  insists on a recent sign-in, reveals the password field and retries with it. */
+  /** Send the waiting link again. Firebase treats this as a sensitive action
+   *  and wants a fresh sign-in, so the password is asked for up front. */
   async resendRecoveryEmail(): Promise<void> {
     const email = this.pendingRecoveryEmail;
-    if (!email) return;
+    if (!email || !this.recoveryPass) return;
     this.recoveryError.set('');
     this.recoverySuccess.set(false);
     this.recoverySaving.set(true);
     try {
-      await this.authService.sendRecoveryEmail(email, this.recoveryPass || undefined);
+      await this.authService.sendRecoveryEmail(email, this.recoveryPass);
       this.recoverySentTo = email;
       this.recoveryPass = '';
-      this.needsPassword.set(false);
       this.recoverySuccess.set(true);
     } catch (err) {
-      if ((err as { code?: string })?.code === 'auth/requires-recent-login' && !this.recoveryPass) {
-        this.needsPassword.set(true);
-      } else {
-        this.recoveryError.set(recoveryEmailErrorMessage(err));
-      }
+      this.recoveryError.set(recoveryEmailErrorMessage(err));
     } finally {
       this.recoverySaving.set(false);
     }

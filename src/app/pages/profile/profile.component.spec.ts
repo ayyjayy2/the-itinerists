@@ -42,44 +42,32 @@ describe('ProfileComponent recovery-email modal', () => {
     const c = create();
     c.openRecoveryModal();
     expect(c.recoveryMode()).toBe('resend');
-    expect(c.needsPassword()).toBeFalse();
   });
 
-  it('resends to the pending address without asking for anything', async () => {
+  it('does nothing without the password', async () => {
     const c = create();
     c.openRecoveryModal();
     await c.resendRecoveryEmail();
-    expect(auth.sendRecoveryEmail).toHaveBeenCalledWith('me@example.com', undefined);
-    expect(c.recoverySuccess()).toBeTrue();
-    expect(c.recoverySentTo).toBe('me@example.com');
+    expect(auth.sendRecoveryEmail).not.toHaveBeenCalled();
   });
 
-  it('asks for the password only when Firebase wants a recent sign-in, then resends with it', async () => {
-    auth.sendRecoveryEmail.and.returnValues(
-      Promise.reject(firebaseError('auth/requires-recent-login')),
-      Promise.resolve(),
-    );
+  it('resends to the pending address with the password, no email to retype', async () => {
     const c = create();
     c.openRecoveryModal();
-
-    await c.resendRecoveryEmail();
-    expect(c.needsPassword()).toBeTrue();
-    expect(c.recoverySuccess()).toBeFalse();
-    expect(c.recoveryError()).toBe('');
-
     c.recoveryPass = 'hunter22';
     await c.resendRecoveryEmail();
     expect(auth.sendRecoveryEmail).toHaveBeenCalledWith('me@example.com', 'hunter22');
     expect(c.recoverySuccess()).toBeTrue();
+    expect(c.recoverySentTo).toBe('me@example.com');
   });
 
   it('shows a plain message for other failures', async () => {
     auth.sendRecoveryEmail.and.rejectWith(firebaseError('auth/network-request-failed'));
     const c = create();
     c.openRecoveryModal();
+    c.recoveryPass = 'hunter22';
     await c.resendRecoveryEmail();
     expect(c.recoveryError()).toContain('connection');
-    expect(c.needsPassword()).toBeFalse();
   });
 
   it('switches to the full form to use a different address', () => {
