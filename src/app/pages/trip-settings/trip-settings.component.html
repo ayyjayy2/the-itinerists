@@ -107,8 +107,8 @@
         </button>
         }
       </div>
-      @if (isOwner() && inviteCode()) {
-        <app-invite-panel [code]="inviteCode()" [closing]="inviteClosing()" (close)="closeInvite($event)" />
+      @if (isOwner() && liveInvite(); as inv) {
+        <app-invite-panel [code]="inv.code" [expiresAt]="inv.expiresAt" [closing]="inviteClosing()" (close)="closeInvite($event)" />
       }
       @if (isOwner() && inviteNotice()) {
         <div class="alert alert-success">{{ inviteNotice() }}</div>

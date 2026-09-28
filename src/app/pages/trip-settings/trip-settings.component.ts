@@ -84,7 +84,8 @@ export class TripSettingsComponent {
   error        = signal('');
   inviteState  = signal<'idle' | 'copying' | 'copied'>('idle');
   /** The last invite generated here — shown as code + link under the Members heading. */
-  inviteCode = signal('');
+  /** The trip's current invite, live from Firestore. */
+  readonly liveInvite = this.tripService.activeInvite;
   inviteClosing = signal(false);
   inviteNotice  = signal('');
   busyMember   = signal<string | null>(null);
@@ -190,7 +191,6 @@ export class TripSettingsComponent {
     this.inviteClosing.set(true);
     try {
       await this.tripService.revokeInvite(t.id, code);
-      this.inviteCode.set('');
       this.inviteNotice.set('Invite closed. That code and link no longer work — generate a new one anytime.');
     } catch (err) {
       this.error.set(userMessage(err, 'Could not close the invite. Please try again.'));
@@ -206,7 +206,6 @@ export class TripSettingsComponent {
     this.inviteNotice.set('');
     try {
       const code = await this.tripService.generateInvite(t.id);
-      this.inviteCode.set(code);
       await navigator.clipboard.writeText(`${window.location.origin}/join?code=${code}`).catch(() => {/* panel still shows it */});
       this.inviteState.set('copied');
       setTimeout(() => this.inviteState.set('idle'), 2500);

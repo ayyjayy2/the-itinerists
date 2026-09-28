@@ -1,4 +1,5 @@
 import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
+import { TitleCasePipe } from '@angular/common';
 import { IconComponent } from '../icon/icon.component';
 
 /**
@@ -11,7 +12,7 @@ import { IconComponent } from '../icon/icon.component';
  */
 @Component({
   selector: 'app-invite-panel',
-  imports: [IconComponent],
+  imports: [IconComponent, TitleCasePipe],
   template: `
     <div class="invite-panel" role="group" aria-label="Invite">
       <section class="invite-block">
@@ -36,7 +37,7 @@ import { IconComponent } from '../icon/icon.component';
         </button>
       }
 
-      <p class="invite-hint">Friends can tap the link, or type the code on the sign-up screen or under "I have an invite code". Good for 7 days. Generating a new invite closes this one.</p>
+      <p class="invite-hint">Friends can tap the link, or type the code on the sign-up screen or under "I have an invite code". {{ expiresIn() ? (expiresIn() | titlecase) : 'Good for 7 days' }}. Generating a new invite closes this one.</p>
 
       <div class="invite-close">
         <button type="button" class="btn btn-ghost btn-ghost-danger invite-action" (click)="close.emit(code())" [disabled]="closing()">
@@ -81,11 +82,21 @@ import { IconComponent } from '../icon/icon.component';
 })
 export class InvitePanelComponent {
   readonly code = input.required<string>();
+  /** Unix ms when the invite stops working; shown as "expires in N days". */
+  readonly expiresAt = input<number | null>(null);
   /** True while the host is revoking the invite. */
   readonly closing = input(false);
   /** Emits the code when the owner taps Close invite; the host revokes it. */
   readonly close = output<string>();
   readonly link = computed(() => `${window.location.origin}/join?code=${this.code()}`);
+  readonly expiresIn = computed(() => {
+    const at = this.expiresAt();
+    if (!at) return '';
+    const days = Math.ceil((at - Date.now()) / 86_400_000);
+    if (days <= 0) return 'expired';
+    if (days === 1) return 'expires in 1 day';
+    return `expires in ${days} days`;
+  });
   readonly copied = signal<'code' | 'link' | null>(null);
   readonly canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   private timer: ReturnType<typeof setTimeout> | null = null;
