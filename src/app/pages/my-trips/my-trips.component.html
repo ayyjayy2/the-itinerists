@@ -33,6 +33,9 @@
             @else if (invitingId() === trip.id) { Generating… }
             @else { <app-icon name="link" [size]="14" /> Invite }
           </button>
+          @if (openInvite()?.tripId === trip.id) {
+            <app-invite-panel [code]="openInvite()!.code" />
+          }
         </div>
       }
     </div>
