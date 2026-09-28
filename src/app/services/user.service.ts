@@ -5,12 +5,14 @@ import { TripUser, FirestoreUser, PrivateAccount } from '../models/trip.models';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, firstValueFrom, map, merge } from 'rxjs';
 import { authEmailPatch } from '../utils/email';
+import { TripContextService } from './trip-context.service';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private auth      = inject(Auth);
   private firestore = inject(Firestore);
   private injector  = inject(Injector);
+  private tripContext = inject(TripContextService);
 
   private _firestoreUser   = signal<FirestoreUser | null>(null);
   private _authInitialized = signal(false);
@@ -87,6 +89,7 @@ export class UserService {
 
     runInInjectionContext(this.injector, () => {
       authState(this.auth).subscribe(firebaseUser => {
+        this.tripContext.bindUser(firebaseUser?.uid ?? null);
         if (!firebaseUser) {
           this.unsubs.forEach(u => u()); this.unsubs = [];
           this._firestoreUser.set(null);

@@ -143,6 +143,7 @@
       }
 
       <button type="submit" class="btn btn-primary auth-btn" [disabled]="loading()">
+        @if (loading()) { <span class="btn-spinner" aria-hidden="true"></span> }
         {{ loading() ? 'Creating account…' : 'Create account' }}
       </button>
     </form>

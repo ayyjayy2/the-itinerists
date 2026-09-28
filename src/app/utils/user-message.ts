@@ -32,6 +32,7 @@ const BROKEN_CACHE_PATTERNS = [
   /IndexedDB transaction .* failed/i,
   /object stores was not found/i,
   /IDBDatabase/i,
+  /INTERNAL ASSERTION FAILED/i,   // the Firestore client itself is wedged; only a reload recovers it
 ];
 
 export function isBrokenLocalCacheError(err: unknown): boolean {

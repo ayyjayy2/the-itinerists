@@ -58,12 +58,19 @@ describe('userMessage', () => {
   });
 
   it('falls back for Firebase codes it does not know, hiding the technical text', () => {
-    expect(userMessage(firebaseError('internal', 'INTERNAL ASSERTION FAILED: Unexpected state'), fallback)).toBe(fallback);
+    expect(userMessage(firebaseError('internal', 'Unexpected server state'), fallback)).toBe(fallback);
   });
 
   it('falls back for empty or non-Error values', () => {
     expect(userMessage(undefined, fallback)).toBe(fallback);
     expect(userMessage(new Error(''), fallback)).toBe(fallback);
     expect(userMessage('boom', fallback)).toBe(fallback);
+  });
+});
+
+describe('isBrokenLocalCacheError — Firestore internal assertion', () => {
+  it('treats a crashed Firestore client (INTERNAL ASSERTION FAILED) as needing a reload', () => {
+    const err = new Error('FIRESTORE (11.10.0) INTERNAL ASSERTION FAILED: Unexpected state (ID: b815) CONTEXT: {"hc":"..."}');
+    expect(isBrokenLocalCacheError(err)).toBeTrue();
   });
 });
