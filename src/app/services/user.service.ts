@@ -1,7 +1,7 @@
 import { Injectable, signal, inject, computed, Injector, runInInjectionContext } from '@angular/core';
 import { Auth, authState } from '@angular/fire/auth';
-import { Firestore, doc, onSnapshot, updateDoc } from '@angular/fire/firestore';
-import { TripUser, FirestoreUser } from '../models/trip.models';
+import { Firestore, doc, onSnapshot, updateDoc, setDoc, Unsubscribe } from '@angular/fire/firestore';
+import { TripUser, FirestoreUser, PrivateAccount } from '../models/trip.models';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, firstValueFrom, map, merge } from 'rxjs';
 import { authEmailPatch } from '../utils/email';
@@ -15,6 +15,7 @@ export class UserService {
   private _firestoreUser   = signal<FirestoreUser | null>(null);
   private _authInitialized = signal(false);
   private _userLoadError   = signal<Error | null>(null);
+  private unsubs: Unsubscribe[] = [];
 
   readonly firestoreUser   = this._firestoreUser.asReadonly();
   readonly authInitialized = this._authInitialized.asReadonly();
@@ -87,24 +88,41 @@ export class UserService {
     runInInjectionContext(this.injector, () => {
       authState(this.auth).subscribe(firebaseUser => {
         if (!firebaseUser) {
+          this.unsubs.forEach(u => u()); this.unsubs = [];
           this._firestoreUser.set(null);
           if (!initialized) { initialized = true; this._authInitialized.set(true); resolveReady(); }
           return;
         }
 
+        // The profile (users/{uid}) is what members can see; the private
+        // account doc (sign-in email, pending recovery email) is readable by
+        // this person only. They're merged into one FirestoreUser for the app.
+        let profile: FirestoreUser | null = null;
+        let account: PrivateAccount = {};
+        const emit = () => {
+          if (!profile || profile.isDisabled) { this._firestoreUser.set(null); return; }
+          this._firestoreUser.set({ ...profile, ...account });
+        };
+        this.unsubs.forEach(u => u()); this.unsubs = [];
         runInInjectionContext(this.injector, () => {
-          onSnapshot(doc(this.firestore, 'users', firebaseUser.uid), snap => {
-            if (snap.exists()) {
-              const data = snap.data() as FirestoreUser;
-              this._firestoreUser.set(data.isDisabled ? null : data);
-              // A verified recovery email changes the Auth email outside the app;
-              // write it back so username sign-in keeps resolving correctly.
-              const patch = authEmailPatch(firebaseUser.email, data);
-              if (patch) updateDoc(doc(this.firestore, 'users', firebaseUser.uid), patch)
+          const uid = firebaseUser.uid;
+          this.unsubs.push(onSnapshot(doc(this.firestore, 'users', uid, 'private', 'account'), snap => {
+            account = snap.exists() ? (snap.data() as PrivateAccount) : {};
+            if (profile) emit();
+            // A verified recovery email changes the Auth email outside the app;
+            // write it back so username sign-in keeps resolving correctly.
+            const patch = authEmailPatch(firebaseUser.email, account);
+            if (patch && profile) {
+              setDoc(doc(this.firestore, 'users', uid, 'private', 'account'), patch, { merge: true })
                 .catch(err => console.error('[UserService] authEmail sync failed:', err));
-            } else {
-              this._firestoreUser.set(null);
+              updateDoc(doc(this.firestore, 'usernames', profile.username), patch)
+                .catch(err => console.error('[UserService] username index sync failed:', err));
             }
+          }, err => console.error(`[UserService] users/${uid}/private listener error:`, err)));
+
+          this.unsubs.push(onSnapshot(doc(this.firestore, 'users', uid), snap => {
+            profile = snap.exists() ? (snap.data() as FirestoreUser) : null;
+            emit();
             this._userLoadError.set(null);
             if (!initialized) { initialized = true; this._authInitialized.set(true); resolveReady(); }
           }, err => {
@@ -114,7 +132,7 @@ export class UserService {
             this._firestoreUser.set(null);
             this._userLoadError.set(err);
             if (!initialized) { initialized = true; this._authInitialized.set(true); resolveReady(); }
-          });
+          }));
         });
       });
     });

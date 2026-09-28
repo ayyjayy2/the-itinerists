@@ -6,6 +6,17 @@
       <p class="auth-sub">Set up your profile to start planning</p>
     </div>
 
+    @if (checkInbox()) {
+      <div class="check-inbox" role="status" aria-live="polite">
+        <h2>Check your inbox</h2>
+        <p>We sent an email to <strong>{{ checkInbox() }}</strong>. Follow the link in it to continue.</p>
+        <p class="check-inbox-sub">It may take a minute, and it may land in spam or promotions.</p>
+        <div class="check-inbox-actions">
+          <a class="btn btn-primary auth-btn" routerLink="/login">Back to sign in</a>
+          <button type="button" class="btn btn-ghost auth-btn" (click)="checkInbox.set('')">Use a different email</button>
+        </div>
+      </div>
+    } @else {
     <form class="auth-form" (ngSubmit)="submit()">
 
       <div class="form-group">
@@ -62,7 +73,7 @@
           [attr.aria-describedby]="fieldError('email') ? 'signup-err-email' : null"
         />
       @if (fieldError('email'); as err) {
-        <p class="field-error" id="signup-err-email">{{ err }} @if (err === EMAIL_EXISTS) { <a routerLink="/login">Log in?</a> }</p>
+        <p class="field-error" id="signup-err-email">{{ err }}</p>
       }
         <p class="hint">Where password resets go. Kept separate from your username.</p>
       </div>
@@ -135,6 +146,7 @@
         {{ loading() ? 'Creating account…' : 'Create account' }}
       </button>
     </form>
+    }
 
     <div class="auth-footer">
       <p class="auth-hint">Have an invite code? You'll use it next.</p>

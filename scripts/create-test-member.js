@@ -34,8 +34,7 @@ function makePassword() {
   const tripRef = db.collection('trips').doc(tripId);
   const trip = await tripRef.get();
   if (!trip.exists) throw new Error('no such trip ' + tripId);
-  const taken = await db.collection('users').where('username', '==', uname).get();
-  if (!taken.empty) throw new Error('username already exists: ' + uname);
+  if ((await db.collection('usernames').doc(uname).get()).exists) throw new Error('username already exists: ' + uname);
 
   const email = `${uname}@the-itinerists.local`;
   const password = makePassword();
@@ -45,8 +44,11 @@ function makePassword() {
 
   await db.collection('users').doc(user.uid).set({
     uid: user.uid, displayName, username: uname, avatarEmoji: emoji, color,
-    isAdmin: false, isDisabled: false, createdAt: now, authEmail: email,
+    isAdmin: false, isDisabled: false, createdAt: now,
   });
+  // Sign-in address lives in the private account doc and the username index, never on the profile.
+  await db.collection('users').doc(user.uid).collection('private').doc('account').set({ authEmail: email });
+  await db.collection('usernames').doc(uname).set({ uid: user.uid, authEmail: email });
   await tripRef.collection('members').doc(user.uid).set({
     uid: user.uid, role: 'member', displayName, avatarEmoji: emoji, color, joinedAt: now,
   });

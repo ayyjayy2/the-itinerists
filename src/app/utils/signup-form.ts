@@ -7,8 +7,10 @@ import { passwordProblems } from './password';
  *
  * Rules (from the product ask):
  *  - every field is required; an empty field is flagged when the user taps away;
- *  - username must be unique and have no spaces; email must be unique and
- *    email-shaped — uniqueness is checked against the server on blur;
+ *  - username must be unique (checked against the server on blur) and follow
+ *    the username policy; email must be email-shaped. Whether an email already
+ *    has an account is deliberately NOT revealed here — Firebase reports it at
+ *    registration and the form then shows a neutral "check your inbox" step;
  *  - the password must meet the policy; the confirmation is checked live as
  *    the user types, not only on blur.
  *
@@ -24,12 +26,9 @@ export interface SignupValues {
 
 export interface SignupLookups {
   usernameExists(username: string): Promise<boolean>;
-  emailExists(email: string): Promise<boolean>;
 }
 
 export const USERNAME_TAKEN = 'That username is taken.';
-/** The template appends a "Log in?" link after this text. */
-export const EMAIL_EXISTS   = 'Email already exists.';
 
 export const normalizeUsername = (u: string) => u.trim().toLowerCase();
 export const normalizeEmail    = (e: string) => e.trim().toLowerCase();
@@ -71,7 +70,6 @@ export function signupFieldError(field: SignupField, v: SignupValues): string {
 export class SignupFormState {
   private readonly touched        = signal<ReadonlySet<SignupField>>(new Set());
   private readonly takenUsernames = signal<ReadonlySet<string>>(new Set());
-  private readonly takenEmails    = signal<ReadonlySet<string>>(new Set());
 
   constructor(private readonly lookups: SignupLookups) {}
 
@@ -84,17 +82,12 @@ export class SignupFormState {
     this.touched.set(new Set<SignupField>(['name', 'username', 'email', 'password', 'confirm']));
   }
 
-  /** Mark the field touched; for username/email also ask the server whether it's taken. */
+  /** Mark the field touched; for the username also ask the server whether it's taken. */
   async blur(field: SignupField, v: SignupValues): Promise<void> {
     this.touch(field);
-    if (signupFieldError(field, v)) return;           // nothing to look up yet
-    if (field === 'username') {
-      const u = normalizeUsername(v.username);
-      if (await this.lookups.usernameExists(u)) this.takenUsernames.update(s => new Set([...s, u]));
-    } else if (field === 'email') {
-      const e = normalizeEmail(v.email);
-      if (await this.lookups.emailExists(e)) this.takenEmails.update(s => new Set([...s, e]));
-    }
+    if (field !== 'username' || signupFieldError(field, v)) return;   // nothing to look up
+    const u = normalizeUsername(v.username);
+    if (await this.lookups.usernameExists(u)) this.takenUsernames.update(s => new Set([...s, u]));
   }
 
   /** Message to show under the field right now, or ''. */
@@ -104,12 +97,10 @@ export class SignupFormState {
     const basic = signupFieldError(field, v);
     if (basic) return basic;
     if (field === 'username' && this.usernameTaken(v)) return USERNAME_TAKEN;
-    if (field === 'email'    && this.emailTaken(v))    return EMAIL_EXISTS;
     return '';
   }
 
   usernameTaken(v: SignupValues): boolean { return this.takenUsernames().has(normalizeUsername(v.username)); }
-  emailTaken(v: SignupValues):    boolean { return this.takenEmails().has(normalizeEmail(v.email)); }
 
   /** Short lines for the red box above the submit button: what still blocks
    *  creating the account, one per field, in form order. */
@@ -119,9 +110,7 @@ export class SignupFormState {
     const u = signupFieldError('username', v);
     if (u) out.push(u === "Username can't be empty." ? 'Choose a username.' : u);
     else if (this.usernameTaken(v)) out.push(USERNAME_TAKEN);
-    const e = signupFieldError('email', v);
-    if (e) out.push('Enter a valid email address.');
-    else if (this.emailTaken(v)) out.push(EMAIL_EXISTS);
+    if (signupFieldError('email', v)) out.push('Enter a valid email address.');
     if (signupFieldError('password', v)) out.push("Password doesn't meet the requirements.");
     const c = signupFieldError('confirm', v);
     if (c) out.push(c === 'Please confirm your password.' ? 'Confirm your password.' : c);
@@ -131,6 +120,6 @@ export class SignupFormState {
   /** Everything passes the basic checks and nothing we've looked up is taken. */
   isValid(v: SignupValues): boolean {
     const fields: SignupField[] = ['name', 'username', 'email', 'password', 'confirm'];
-    return fields.every(f => !signupFieldError(f, v)) && !this.usernameTaken(v) && !this.emailTaken(v);
+    return fields.every(f => !signupFieldError(f, v)) && !this.usernameTaken(v);
   }
 }

@@ -247,7 +247,7 @@ export class FlightsComponent {
 
   allJourneys = computed((): Journey[] => {
     const flights = this.flightsService.flights();
-    const users   = this.usersService.allUsers();
+    const users   = this.tripService.activeMembers();
     const myUid   = this.currentUser()?.uid ?? '';
 
     const sorted = [...flights].sort((a, b) =>

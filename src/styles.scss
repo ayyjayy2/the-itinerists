@@ -292,6 +292,15 @@ input, select, textarea {
 // Field validation (signup / join): red border + message under the field.
 input.invalid, select.invalid, textarea.invalid { border-color: var(--danger); }
 input.invalid:focus { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-tint); }
+.check-inbox {
+  text-align: center;
+  padding: 0.5rem 0 0;
+  h2 { margin: 0 0 0.6rem; font-size: 1.3rem; }
+  p  { margin: 0 0 0.5rem; color: var(--text); overflow-wrap: anywhere; }
+  .check-inbox-sub { font-size: 0.85rem; color: var(--text-muted); }
+  .check-inbox-actions { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.2rem; }
+}
+
 .auth-error-list { margin: 0.35rem 0 0; padding-left: 1.1rem; li { margin: 0.15rem 0; } }
 
 .field-error {
