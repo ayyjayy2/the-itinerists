@@ -32,6 +32,8 @@ export class AdminComponent {
   currentUser = this.userService.firestoreUser;
   readonly trip    = this.tripService.activeTrip;
   readonly isOwner = this.tripService.isActiveTripOwner;
+  /** The trip's current invite, live from Firestore — visible whenever the owner opens this page. */
+  readonly liveInvite = this.tripService.activeInvite;
 
   /** Owner first, then by join date. */
   readonly members = computed((): TripMember[] =>
@@ -42,7 +44,6 @@ export class AdminComponent {
   memberToRemove = signal<TripMember | null>(null);
 
   // Invite
-  inviteCode     = signal('');
   inviteClosing  = signal(false);
   inviteNotice   = signal('');
   inviteLoading  = signal(false);
@@ -54,11 +55,9 @@ export class AdminComponent {
     if (!uid || !tripId || !this.isOwner()) return;
     this.inviteLoading.set(true);
     this.inviteError.set('');
-    this.inviteCode.set('');
     this.inviteNotice.set('');
     try {
-      const code = await this.authService.generateInviteCode(uid, tripId);
-      this.inviteCode.set(code);
+      await this.authService.generateInviteCode(uid, tripId);   // the live-invite listener shows it
     } catch {
       this.inviteError.set('Failed to generate invite. Please try again.');
     } finally {
@@ -73,7 +72,6 @@ export class AdminComponent {
     this.inviteError.set('');
     try {
       await this.tripService.revokeInvite(tripId, code);
-      this.inviteCode.set('');
       this.inviteNotice.set('Invite closed. That code and link no longer work — generate a new one anytime.');
     } catch (err) {
       this.inviteError.set(userMessage(err, 'Could not close the invite. Please try again.'));

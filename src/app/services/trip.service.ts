@@ -7,7 +7,7 @@ import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
 import { AuthService } from './auth.service';
 import {
-  TripDoc, TripDestination, TripMember, UserTripsDoc, FirestoreUser, ActivityLogEntry, ActivityAction,
+  TripDoc, TripDestination, TripMember, UserTripsDoc, FirestoreUser, ActivityLogEntry, ActivityAction, InviteCode,
 } from '../models/trip.models';
 
 /** Fields collected by the Create Trip form (TP-13). */
@@ -68,6 +68,12 @@ export class TripService {
   /** Live activity log for the active trip, newest first (TP-18). */
   private _activeActivity = signal<ActivityLogEntry[]>([]);
   readonly activeActivity = this._activeActivity.asReadonly();
+
+  /** The active trip's live (unexpired) invite, or null. There is at most one:
+   *  generating a new invite retires the previous. Owners see it on Admin and
+   *  Trip Settings whenever they open the page, not only right after minting. */
+  private _activeInvite = signal<InviteCode | null>(null);
+  readonly activeInvite = this._activeInvite.asReadonly();
 
   /** Pages the current user has hidden on the active trip (TP-15 page toggles). */
   readonly hiddenPages = computed<string[]>(() => {
@@ -140,7 +146,7 @@ export class TripService {
     this.activeUnsubs.forEach(u => u());
     this.activeUnsubs = [];
     if (!tripId) {
-      this._activeTrip.set(null); this._activeMembers.set([]); this._activeActivity.set([]);
+      this._activeTrip.set(null); this._activeMembers.set([]); this._activeActivity.set([]); this._activeInvite.set(null);
       this._tripDocLoaded.set(true);
       return;
     }
@@ -167,6 +173,13 @@ export class TripService {
             snap.docs.map(d => d.data() as ActivityLogEntry).sort((a, b) => b.timestamp - a.timestamp),
           );
         }),
+        onSnapshot(collection(this.firestore, 'trips', tripId, 'invites'), snap => {
+          const now = Date.now();
+          const live = snap.docs.map(d => d.data() as InviteCode)
+            .filter(i => i.expiresAt > now)
+            .sort((a, b) => b.createdAt - a.createdAt);
+          this._activeInvite.set(live[0] ?? null);
+        }, () => this._activeInvite.set(null)),
       );
     });
   }

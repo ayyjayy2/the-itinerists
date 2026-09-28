@@ -17,18 +17,18 @@
     <!-- ── Invite Members ─────────────────────────────────────── -->
     <div class="card section-card">
       <h2>Invite Members</h2>
-      <p class="section-hint">Generate a link to share with someone you'd like to add to this trip. Links expire after 7 days.</p>
+      <p class="section-hint">Share a code or a link with someone you'd like to add to this trip. Invites last 7 days; one is live at a time.</p>
 
       <button class="btn btn-primary" (click)="generateInvite()" [disabled]="inviteLoading()">
-        {{ inviteLoading() ? 'Generating…' : '+ Generate Invite Link' }}
+        {{ inviteLoading() ? 'Generating…' : (liveInvite() ? 'Generate a new invite' : '+ Generate invite') }}
       </button>
 
       @if (inviteError()) {
         <div class="alert alert-error">{{ inviteError() }}</div>
       }
 
-      @if (inviteCode()) {
-        <app-invite-panel [code]="inviteCode()" [closing]="inviteClosing()" (close)="closeInvite($event)" />
+      @if (liveInvite(); as inv) {
+        <app-invite-panel [code]="inv.code" [expiresAt]="inv.expiresAt" [closing]="inviteClosing()" (close)="closeInvite($event)" />
       }
       @if (inviteNotice()) {
         <div class="alert alert-success">{{ inviteNotice() }}</div>
