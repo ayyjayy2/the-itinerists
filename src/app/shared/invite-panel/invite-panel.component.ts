@@ -14,28 +14,32 @@ import { IconComponent } from '../icon/icon.component';
   imports: [IconComponent],
   template: `
     <div class="invite-panel" role="group" aria-label="Invite">
-      <div class="invite-row">
-        <span class="invite-label">Code</span>
-        <span class="invite-code">{{ code() }}</span>
-        <button type="button" class="btn btn-accent btn-sm" (click)="copy('code')">
+      <section class="invite-block">
+        <span class="invite-label">Invite code</span>
+        <div class="invite-code">{{ code() }}</div>
+        <button type="button" class="btn btn-accent invite-action" (click)="copy('code')">
           {{ copied() === 'code' ? 'Copied!' : 'Copy code' }}
         </button>
-      </div>
-      <div class="invite-row">
-        <span class="invite-label">Link</span>
-        <span class="invite-url">{{ link() }}</span>
-        <button type="button" class="btn btn-accent btn-sm" (click)="copy('link')">
+      </section>
+
+      <section class="invite-block">
+        <span class="invite-label">Invite link</span>
+        <div class="invite-url">{{ link() }}</div>
+        <button type="button" class="btn btn-accent invite-action" (click)="copy('link')">
           {{ copied() === 'link' ? 'Copied!' : 'Copy link' }}
         </button>
-      </div>
+      </section>
+
       @if (canShare) {
-        <button type="button" class="btn btn-ghost btn-sm invite-share" (click)="share()">
-          <app-icon name="link" [size]="14" /> Share…
+        <button type="button" class="btn btn-ghost invite-action invite-share" (click)="share()">
+          <app-icon name="link" [size]="15" /> Share…
         </button>
       }
+
       <p class="invite-hint">Friends can tap the link, or type the code on the sign-up screen or under "I have an invite code". Good for 7 days. Generating a new invite closes this one.</p>
+
       <div class="invite-close">
-        <button type="button" class="btn btn-ghost btn-sm btn-ghost-danger" (click)="close.emit(code())" [disabled]="closing()">
+        <button type="button" class="btn btn-ghost btn-ghost-danger invite-action" (click)="close.emit(code())" [disabled]="closing()">
           {{ closing() ? 'Closing…' : 'Close invite' }}
         </button>
         <span class="invite-close-hint">Stops this code and link working. Generate a new one anytime.</span>
@@ -43,20 +47,36 @@ import { IconComponent } from '../icon/icon.component';
     </div>
   `,
   styles: `
+    // Phone-first: every piece is its own block with a full-width action, so
+    // nothing crowds anything else. From ~560px the blocks go side by side.
     .invite-panel {
-      display: grid; gap: 0.5rem;
-      background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-      padding: 0.7rem 0.9rem; margin-top: 0.75rem;
+      display: grid; gap: 0.85rem;
+      background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius);
+      padding: 0.9rem; margin-top: 0.85rem;
     }
-    .invite-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; min-width: 0; }
-    .invite-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); width: 2.6rem; }
-    .invite-code { font-family: monospace; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.18em; color: var(--text); flex: 1; }
-    .invite-url  { font-family: monospace; font-size: 0.8rem; color: var(--primary-dark); overflow-wrap: anywhere; flex: 1; min-width: 0; }
-    .invite-share { justify-self: start; }
-    .invite-hint { margin: 0.1rem 0 0; font-size: 0.8rem; color: var(--text-muted); }
-    .invite-close { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.2rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
-    .invite-close-hint { font-size: 0.78rem; color: var(--text-muted); }
+    .invite-block {
+      display: grid; gap: 0.55rem; min-width: 0;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 0.85rem 0.95rem;
+    }
+    .invite-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+    .invite-code  { font-family: monospace; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.22em; color: var(--text); text-align: center; padding: 0.35rem 0; }
+    .invite-url   { font-family: monospace; font-size: 0.8rem; line-height: 1.45; color: var(--primary-dark); overflow-wrap: anywhere; min-width: 0; }
+    .invite-action { width: 100%; }
+    .invite-share  { justify-self: stretch; }
+    .invite-hint   { margin: 0; font-size: 0.82rem; line-height: 1.45; color: var(--text-muted); }
+    .invite-close  { display: grid; gap: 0.5rem; padding-top: 0.85rem; border-top: 1px solid var(--border); }
+    .invite-close-hint { font-size: 0.78rem; line-height: 1.4; color: var(--text-muted); }
     .btn-ghost-danger { color: var(--danger); border-color: var(--danger); }
+
+    @media (min-width: 560px) {
+      .invite-block { grid-template-columns: 1fr auto; align-items: center; column-gap: 1rem; }
+      .invite-label { grid-column: 1 / -1; }
+      .invite-code  { text-align: left; padding: 0; }
+      .invite-action { width: auto; }
+      .invite-share  { justify-self: start; }
+      .invite-close  { grid-template-columns: auto 1fr; align-items: center; column-gap: 0.9rem; }
+    }
   `,
 })
 export class InvitePanelComponent {
