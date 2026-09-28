@@ -85,3 +85,78 @@ describe('ProfileComponent recovery-email modal', () => {
     user.update(u => ({ ...u, pendingEmail: 'me@example.com' }));
   });
 });
+
+describe('ProfileComponent delete-account modal', () => {
+  let auth: { deleteAccount: jasmine.Spy };
+  const user = signal<any>({
+    uid: 'u1', displayName: 'Alayna', username: 'alayna', avatarEmoji: '🌸', color: '#fff',
+  });
+
+  beforeEach(() => {
+    auth = { deleteAccount: jasmine.createSpy('deleteAccount').and.resolveTo() };
+    TestBed.configureTestingModule({
+      imports: [ProfileComponent],
+      providers: [
+        { provide: UserService,  useValue: { firestoreUser: user } },
+        { provide: UsersService, useValue: { allUsers: signal([]) } },
+        { provide: AuthService,  useValue: auth },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
+      ],
+    });
+  });
+
+  function create(): ProfileComponent {
+    const fixture = TestBed.createComponent(ProfileComponent);
+    fixture.detectChanges();
+    const c = fixture.componentInstance;
+    spyOn(c, 'leaveApp');
+    return c;
+  }
+
+  it('opens with an empty password and no error', () => {
+    const c = create();
+    c.deletePass = 'left over';
+    c.openDeleteModal();
+    expect(c.showDeleteModal()).toBeTrue();
+    expect(c.deletePass).toBe('');
+    expect(c.deleteError()).toBe('');
+  });
+
+  it('does nothing without the password', async () => {
+    const c = create();
+    c.openDeleteModal();
+    await c.confirmDeleteAccount();
+    expect(auth.deleteAccount).not.toHaveBeenCalled();
+    expect(c.leaveApp).not.toHaveBeenCalled();
+  });
+
+  it('deletes with the password, then leaves the app', async () => {
+    const c = create();
+    c.openDeleteModal();
+    c.deletePass = 'hunter22';
+    await c.confirmDeleteAccount();
+    expect(auth.deleteAccount).toHaveBeenCalledWith('hunter22');
+    expect(c.leaveApp).toHaveBeenCalled();
+  });
+
+  it('names a wrong password and stays open', async () => {
+    auth.deleteAccount.and.rejectWith(firebaseError('auth/invalid-credential'));
+    const c = create();
+    c.openDeleteModal();
+    c.deletePass = 'nope';
+    await c.confirmDeleteAccount();
+    expect(c.deleteError()).toBe('Current password is incorrect.');
+    expect(c.showDeleteModal()).toBeTrue();
+    expect(c.leaveApp).not.toHaveBeenCalled();
+  });
+
+  it('shows a plain message for other failures', async () => {
+    auth.deleteAccount.and.rejectWith(firebaseError('permission-denied'));
+    const c = create();
+    c.openDeleteModal();
+    c.deletePass = 'hunter22';
+    await c.confirmDeleteAccount();
+    expect(c.deleteError()).toBe("You don't have permission to do that.");
+    expect(c.leaveApp).not.toHaveBeenCalled();
+  });
+});

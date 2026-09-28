@@ -55,6 +55,7 @@ export async function createUserWithEmailAndPassword(auth: Auth, email: string, 
 }
 
 export async function signOut(auth: Auth): Promise<void> { auth.setUser(null); }
+export async function deleteUser(_user: User): Promise<void> { demoAuth.setUser(null); }
 export async function sendPasswordResetEmail(_auth: Auth, _email: string): Promise<void> { /* demo: nothing to send */ }
 export async function updateEmail(user: User, email: string): Promise<void> { user.email = email; }
 export async function verifyBeforeUpdateEmail(_user: User, _email: string, _settings?: unknown): Promise<void> { /* demo: link 'sent' */ }
