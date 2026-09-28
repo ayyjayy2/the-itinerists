@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
+import { dateRangeProblem } from '../../utils/date-range';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StaysService } from '../../services/stays.service';
@@ -20,6 +21,9 @@ import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
   styleUrl: './accommodations.component.scss'
 })
 export class AccommodationsComponent {
+  /** Start/end date pairs: the end may not be before the start (utils/date-range). */
+  readonly dateRangeProblem = dateRangeProblem;
+
   staysService = inject(StaysService);
   userService  = inject(UserService);
   usersService = inject(UsersService);
@@ -93,6 +97,7 @@ export class AccommodationsComponent {
 
   async saveEdit(original: AccommodationDoc): Promise<void> {
     if (!this.draft.name?.trim()) return;
+    if (dateRangeProblem(this.draft.checkIn, this.draft.checkOut)) return;   // the field shows why
     await this.staysService.updateStay(original.id, {
       ...this.draft,
       forWho: this.buildForWho(this.editForWhoMap),
@@ -117,6 +122,7 @@ export class AccommodationsComponent {
 
   async saveAdd(): Promise<void> {
     if (!this.newDraft.name?.trim()) return;
+    if (dateRangeProblem(this.newDraft.checkIn, this.newDraft.checkOut)) return;   // the field shows why
     await this.staysService.addStay({
       name:       this.newDraft.name       ?? '',
       address:    this.newDraft.address    ?? '',

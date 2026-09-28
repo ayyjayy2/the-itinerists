@@ -1,4 +1,5 @@
 import { Component, inject, computed, signal } from '@angular/core';
+import { dateRangeProblem } from '../../utils/date-range';
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data.service';
@@ -31,6 +32,9 @@ function blankForm(): CarForm {
   styleUrl: './rental-car.component.scss'
 })
 export class RentalCarComponent {
+  /** Start/end date pairs: the end may not be before the start (utils/date-range). */
+  readonly dateRangeProblem = dateRangeProblem;
+
   dataService = inject(DataService);
   tripService = inject(TripService);
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
@@ -98,6 +102,7 @@ export class RentalCarComponent {
   }
 
   saveEdit(index: number): void {
+    if (dateRangeProblem(this.editForm.pickupDate, this.editForm.dropoffDate)) return;   // the field shows why
     if (!this.editForm.company.trim()) return;
     this.dataService.patchRentalCar(index, {
       mode:               this.editForm.mode ?? 'Rental Car',
@@ -130,6 +135,7 @@ export class RentalCarComponent {
   }
 
   addCar(): void {
+    if (dateRangeProblem(this.addForm.pickupDate, this.addForm.dropoffDate)) return;   // the field shows why
     if (!this.addForm.company.trim()) return;
     this.dataService.addRentalCar({
       ...this.addForm,

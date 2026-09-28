@@ -22,7 +22,7 @@
       <ng-container *ngTemplateOutlet="carFormFields; context: { form: addForm }"></ng-container>
       <div class="form-actions">
         <button class="btn btn-ghost" (click)="showAddForm.set(false)">Cancel</button>
-        <button class="btn btn-primary" (click)="addCar()" [disabled]="!addForm.company.trim()">Add</button>
+        <button class="btn btn-primary" (click)="addCar()" [disabled]="!addForm.company.trim() || !!dateRangeProblem(addForm.pickupDate, addForm.dropoffDate)">Add</button>
       </div>
     </div>
   }
@@ -44,7 +44,7 @@
             <button class="btn btn-danger btn-sm" (click)="deleteRentalCar(i)"><app-icon name="trash" [size]="15" /> Delete</button>
             <div class="form-actions-right">
               <button class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
-              <button class="btn btn-primary" (click)="saveEdit(i)" [disabled]="!editForm.company.trim()">Save</button>
+              <button class="btn btn-primary" (click)="saveEdit(i)" [disabled]="!editForm.company.trim() || !!dateRangeProblem(editForm.pickupDate, editForm.dropoffDate)">Save</button>
             </div>
           </div>
         </div>
@@ -185,7 +185,8 @@
   <div class="form-row">
     <div class="form-group">
       <label>Date</label>
-      <input type="date" [(ngModel)]="form.dropoffDate">
+      <input type="date" [(ngModel)]="form.dropoffDate" [min]="form.pickupDate || null" [class.invalid]="!!dateRangeProblem(form.pickupDate, form.dropoffDate, 'Drop-off date', 'pick-up date')">
+      @if (dateRangeProblem(form.pickupDate, form.dropoffDate, 'Drop-off date', 'pick-up date'); as err) { <p class="field-error">{{ err }}</p> }
     </div>
     <div class="form-group">
       <label>Time</label>

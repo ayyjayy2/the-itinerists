@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
+import { dateRangeProblem } from '../../utils/date-range';
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FlightsService } from '../../services/flights.service';
@@ -80,6 +81,9 @@ function emptyForm(): FlightForm {
   styleUrl: './flights.component.scss'
 })
 export class FlightsComponent {
+  /** Start/end date pairs: the end may not be before the start (utils/date-range). */
+  readonly dateRangeProblem = dateRangeProblem;
+
   flightsService    = inject(FlightsService);
   usersService      = inject(UsersService);
   userService       = inject(UserService);
@@ -220,6 +224,8 @@ export class FlightsComponent {
         this.setFormError(form, 'Please fill in all required fields for each leg.');
         return false;
       }
+      const dates = dateRangeProblem(leg.departureDate, leg.arrivalDate, 'Arrival date', 'departure date');
+      if (dates) { this.setFormError(form, dates); return false; }
     }
     return true;
   }
