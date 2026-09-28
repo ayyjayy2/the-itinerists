@@ -174,15 +174,12 @@
       <h2>Recovery Email</h2>
 
       @if (recoveryMode() === 'resend') {
-        <p class="modal-hint">Waiting on <strong>{{ pendingRecoveryEmail }}</strong> — open the email from The Itinerists (check spam) and tap "Verify email". Didn't get it? Send it again.</p>
+        <p class="modal-hint">Waiting on <strong>{{ pendingRecoveryEmail }}</strong> — open the email from The Itinerists (check spam) and tap "Verify email". Didn't get it? Enter your password to send it again.</p>
 
-        @if (needsPassword()) {
-          <div class="form-group">
-            <label>Current Password</label>
-            <div class="input-hint">For security, enter your password to send the link again.</div>
-            <input type="password" [(ngModel)]="recoveryPass" autocomplete="current-password" placeholder="Enter current password" />
-          </div>
-        }
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" [(ngModel)]="recoveryPass" autocomplete="current-password" placeholder="Enter current password" />
+        </div>
 
         @if (recoveryError()) {
           <div class="alert alert-error">{{ recoveryError() }}</div>
@@ -194,7 +191,7 @@
         <div class="modal-actions modal-actions--fill">
           <button class="btn btn-ghost" (click)="closeRecoveryModal()" [disabled]="recoverySaving()">Cancel</button>
           <button class="btn btn-primary" (click)="resendRecoveryEmail()"
-                  [disabled]="recoverySaving() || (needsPassword() && !recoveryPass)">
+                  [disabled]="recoverySaving() || !recoveryPass">
             {{ recoverySaving() ? 'Sending…' : 'Resend link' }}
           </button>
         </div>
