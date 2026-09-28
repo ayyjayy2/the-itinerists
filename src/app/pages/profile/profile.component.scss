@@ -42,6 +42,27 @@
   margin-top: 0.15rem;
 }
 
+.preview-text { min-width: 0; }   // let a long email wrap instead of widening the card
+
+.preview-email {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+  overflow-wrap: anywhere;
+}
+
+.preview-tag {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--surface-2, var(--border));
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+
 .alert {
   border-radius: var(--radius-sm);
   padding: 0.6rem 0.9rem;

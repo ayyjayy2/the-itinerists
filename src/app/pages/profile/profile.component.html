@@ -8,9 +8,14 @@
     <!-- Preview -->
     <div class="card profile-preview">
       <div class="avatar-preview" [style.background]="color"><app-avatar-glyph [emoji]="avatarEmoji" [letterColor]="avatarLetterColor" /></div>
-      <div>
+      <div class="preview-text">
         <div class="preview-name">{{ displayName || user.displayName }}</div>
         <div class="preview-username">&#64;{{ user.username }}</div>
+        @if (currentRecoveryEmail) {
+          <div class="preview-email">{{ currentRecoveryEmail }}</div>
+        } @else if (pendingRecoveryEmail) {
+          <div class="preview-email">{{ pendingRecoveryEmail }} <span class="preview-tag">unverified</span></div>
+        }
       </div>
     </div>
 
