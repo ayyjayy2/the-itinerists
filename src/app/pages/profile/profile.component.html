@@ -191,7 +191,7 @@
           <div class="alert alert-success">Sent again to <strong>{{ recoverySentTo }}</strong> from The Itinerists. It may land in <strong>spam or promotions</strong>, so check there too.</div>
         }
 
-        <div class="modal-actions">
+        <div class="modal-actions modal-actions--fill">
           <button class="btn btn-ghost" (click)="closeRecoveryModal()" [disabled]="recoverySaving()">Cancel</button>
           <button class="btn btn-primary" (click)="resendRecoveryEmail()"
                   [disabled]="recoverySaving() || (needsPassword() && !recoveryPass)">
