@@ -303,6 +303,13 @@ export class AuthService {
     await this.writeNewAccount(cred, userDoc, authEmail);
   }
 
+  /** Close an invite: the code and its link stop working immediately. Owner-only by the rules. */
+  async revokeInviteCode(tripId: string, code: string): Promise<void> {
+    const c = code.trim().toUpperCase();
+    await deleteDoc(doc(this.firestore, 'trips', tripId, 'invites', c));
+    await deleteDoc(doc(this.firestore, 'inviteIndex', c)).catch(() => {/* index may already be gone */});
+  }
+
   /**
    * Generate a trip-scoped invite (TP-11). Writes the invite under the trip and
    * a `/inviteIndex/{code}` entry so the join flow can resolve it without

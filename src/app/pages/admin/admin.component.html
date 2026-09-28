@@ -28,7 +28,10 @@
       }
 
       @if (inviteCode()) {
-        <app-invite-panel [code]="inviteCode()" />
+        <app-invite-panel [code]="inviteCode()" [closing]="inviteClosing()" (close)="closeInvite($event)" />
+      }
+      @if (inviteNotice()) {
+        <div class="alert alert-success">{{ inviteNotice() }}</div>
       }
     </div>
 

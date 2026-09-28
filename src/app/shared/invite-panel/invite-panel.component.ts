@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { IconComponent } from '../icon/icon.component';
 
 /**
@@ -6,6 +6,8 @@ import { IconComponent } from '../icon/icon.component';
  * the sign-up form or under "I have an invite code"), the link that carries
  * the same code, copy buttons for each, and the phone's share sheet when the
  * browser offers one. Valid for 7 days, like the invite itself.
+ * "Close invite" revokes it on the spot (the host handles the actual delete via
+ * the `close` output) so a leaked code can be cut off and a fresh one made.
  */
 @Component({
   selector: 'app-invite-panel',
@@ -32,6 +34,12 @@ import { IconComponent } from '../icon/icon.component';
         </button>
       }
       <p class="invite-hint">Friends can tap the link, or type the code on the sign-up screen or under "I have an invite code". Good for 7 days.</p>
+      <div class="invite-close">
+        <button type="button" class="btn btn-ghost btn-sm btn-ghost-danger" (click)="close.emit(code())" [disabled]="closing()">
+          {{ closing() ? 'Closing…' : 'Close invite' }}
+        </button>
+        <span class="invite-close-hint">Stops this code and link working. Generate a new one anytime.</span>
+      </div>
     </div>
   `,
   styles: `
@@ -46,10 +54,17 @@ import { IconComponent } from '../icon/icon.component';
     .invite-url  { font-family: monospace; font-size: 0.8rem; color: var(--primary-dark); overflow-wrap: anywhere; flex: 1; min-width: 0; }
     .invite-share { justify-self: start; }
     .invite-hint { margin: 0.1rem 0 0; font-size: 0.8rem; color: var(--text-muted); }
+    .invite-close { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.2rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
+    .invite-close-hint { font-size: 0.78rem; color: var(--text-muted); }
+    .btn-ghost-danger { color: var(--danger); border-color: var(--danger); }
   `,
 })
 export class InvitePanelComponent {
   readonly code = input.required<string>();
+  /** True while the host is revoking the invite. */
+  readonly closing = input(false);
+  /** Emits the code when the owner taps Close invite; the host revokes it. */
+  readonly close = output<string>();
   readonly link = computed(() => `${window.location.origin}/join?code=${this.code()}`);
   readonly copied = signal<'code' | 'link' | null>(null);
   readonly canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';

@@ -43,6 +43,8 @@ export class AdminComponent {
 
   // Invite
   inviteCode     = signal('');
+  inviteClosing  = signal(false);
+  inviteNotice   = signal('');
   inviteLoading  = signal(false);
   inviteError    = signal('');
 
@@ -53,6 +55,7 @@ export class AdminComponent {
     this.inviteLoading.set(true);
     this.inviteError.set('');
     this.inviteCode.set('');
+    this.inviteNotice.set('');
     try {
       const code = await this.authService.generateInviteCode(uid, tripId);
       this.inviteCode.set(code);
@@ -60,6 +63,22 @@ export class AdminComponent {
       this.inviteError.set('Failed to generate invite. Please try again.');
     } finally {
       this.inviteLoading.set(false);
+    }
+  }
+
+  async closeInvite(code: string): Promise<void> {
+    const tripId = this.trip()?.id;
+    if (!tripId) return;
+    this.inviteClosing.set(true);
+    this.inviteError.set('');
+    try {
+      await this.tripService.revokeInvite(tripId, code);
+      this.inviteCode.set('');
+      this.inviteNotice.set('Invite closed. That code and link no longer work — generate a new one anytime.');
+    } catch (err) {
+      this.inviteError.set(userMessage(err, 'Could not close the invite. Please try again.'));
+    } finally {
+      this.inviteClosing.set(false);
     }
   }
 

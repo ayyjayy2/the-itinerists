@@ -289,6 +289,9 @@ input, select, textarea {
 // `min-width: 0` alone is not enough there: WebKit only honours `width: 100%`
 // once the native appearance is removed, and it then collapses the height of
 // an empty field unless a min-height is given back.
+// Inline notices (shared by pages that don't define their own .alert-*).
+.alert-success { margin-top: 0.75rem; padding: 0.6rem 0.9rem; border-radius: var(--radius-sm); background: var(--primary-tint, #EAF1E3); color: var(--primary-dark, #4a6f3f); font-size: 0.9rem; }
+
 // Field validation (signup / join): red border + message under the field.
 input.invalid, select.invalid, textarea.invalid { border-color: var(--danger); }
 input.invalid:focus { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-tint); }

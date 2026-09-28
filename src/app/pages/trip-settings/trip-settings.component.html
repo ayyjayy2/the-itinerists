@@ -108,7 +108,10 @@
         }
       </div>
       @if (isOwner() && inviteCode()) {
-        <app-invite-panel [code]="inviteCode()" />
+        <app-invite-panel [code]="inviteCode()" [closing]="inviteClosing()" (close)="closeInvite($event)" />
+      }
+      @if (isOwner() && inviteNotice()) {
+        <div class="alert alert-success">{{ inviteNotice() }}</div>
       }
       <ul class="member-list">
         @for (m of members(); track m.uid) {
