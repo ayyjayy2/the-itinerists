@@ -8,6 +8,8 @@ import { TripService } from '../../services/trip.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { userMessage, isBrokenLocalCacheError } from '../../utils/user-message';
+import { LocalCacheService } from '../../services/local-cache.service';
 
 @Component({
   selector: 'app-login',
@@ -20,6 +22,7 @@ export class LoginComponent {
   private userService = inject(UserService);
   private tripService = inject(TripService);
   private router      = inject(Router);
+  private localCache  = inject(LocalCacheService);
 
   readonly version   = APP_VERSION;
   readonly buildDate = APP_BUILD_DATE;
@@ -36,8 +39,9 @@ export class LoginComponent {
     this.error.set('');
     try {
       await this.authService.login(this.username.trim(), this.password);
-    } catch {
-      this.error.set('Invalid username or password.');
+    } catch (err) {
+      if (this.localCache.recoverIfBroken(err)) return;
+      this.error.set(isBrokenLocalCacheError(err) ? userMessage(err, '') : 'Invalid username or password.');
       this.loading.set(false);
       return;
     }
@@ -48,7 +52,8 @@ export class LoginComponent {
       this.router.navigate([trips.length === 0 ? '/get-started' : '/home']);
     } catch (err) {
       console.error('[Login] Profile load error:', err);
-      this.error.set('Signed in but could not load profile. Please refresh.');
+      if (this.localCache.recoverIfBroken(err)) return;
+      this.error.set(userMessage(err, 'Signed in but could not load profile. Please refresh.'));
     } finally {
       this.loading.set(false);
     }

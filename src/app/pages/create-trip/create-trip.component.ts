@@ -8,6 +8,7 @@ import { tripSummary } from '../../utils/trip-destinations';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
+import { userMessage } from '../../utils/user-message';
 
 /** One editable destination row in multi-destination mode. */
 interface DestForm {
@@ -102,7 +103,7 @@ export class CreateTripComponent {
       // createTrip sets the new trip active; land on Home.
       this.router.navigate(['/home']);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Could not create the trip. Please try again.');
+      this.error.set(userMessage(e, 'Could not create the trip. Please try again.'));
       this.saving.set(false);
     }
   }

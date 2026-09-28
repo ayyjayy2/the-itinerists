@@ -7,6 +7,7 @@ import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { TripDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { userMessage } from '../../utils/user-message';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -39,7 +40,7 @@ export class MyTripsComponent implements OnInit {
       trips.sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''));
       this.trips.set(trips);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Could not load your trips.');
+      this.error.set(userMessage(e, 'Could not load your trips.'));
     } finally {
       this.loading.set(false);
     }
@@ -70,7 +71,7 @@ export class MyTripsComponent implements OnInit {
       this.copiedId.set(trip.id);
       setTimeout(() => this.copiedId.set(null), 2500);
     } catch (e: unknown) {
-      this.inviteError.set(e instanceof Error ? e.message : 'Could not create an invite link.');
+      this.inviteError.set(userMessage(e, 'Could not create an invite link.'));
     } finally {
       this.invitingId.set(null);
     }

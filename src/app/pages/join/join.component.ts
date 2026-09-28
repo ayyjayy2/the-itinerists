@@ -11,6 +11,8 @@ import { IconComponent } from '../../shared/icon/icon.component';
 import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 import { isValidEmail } from '../../utils/email';
+import { userMessage } from '../../utils/user-message';
+import { LocalCacheService } from '../../services/local-cache.service';
 
 @Component({
   selector: 'app-join',
@@ -24,6 +26,7 @@ export class JoinComponent implements OnInit {
   private userService = inject(UserService);
   private router      = inject(Router);
   private route       = inject(ActivatedRoute);
+  private localCache  = inject(LocalCacheService);
 
   readonly version   = APP_VERSION;
   readonly buildDate = APP_BUILD_DATE;
@@ -57,8 +60,9 @@ export class JoinComponent implements OnInit {
         this.router.navigate(['/home']);
         return;
       } catch (err: any) {
+        if (this.localCache.recoverIfBroken(err)) return;
         this.step.set('invalid');
-        this.codeError.set(err?.message ?? 'This invite code is invalid or has expired.');
+        this.codeError.set(userMessage(err, 'This invite code is invalid or has expired.'));
         return;
       }
     }
@@ -80,7 +84,8 @@ export class JoinComponent implements OnInit {
         this.step.set('invalid');
         this.codeError.set('This invite code is invalid or has already been used.');
       }
-    } catch {
+    } catch (err) {
+      if (this.localCache.recoverIfBroken(err)) return;
       this.step.set('invalid');
       this.codeError.set('Could not validate the invite code. Please try again.');
     }
@@ -114,7 +119,8 @@ export class JoinComponent implements OnInit {
       );
       this.router.navigate(['/home']);
     } catch (err: any) {
-      this.error.set(err?.message ?? 'Something went wrong. Please try again.');
+      if (this.localCache.recoverIfBroken(err)) return;
+      this.error.set(userMessage(err, 'Something went wrong. Please try again.'));
     } finally {
       this.loading.set(false);
     }
