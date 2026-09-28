@@ -1,147 +1,51 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { AuthService, EmailInUseError } from '../../services/auth.service';
 import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
-import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
-import { BrandComponent } from '../../shared/brand/brand.component';
-import { IconComponent } from '../../shared/icon/icon.component';
-import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
-import { passwordRules } from '../../utils/password';
-import { SignupFormState, SignupField, SignupValues } from '../../utils/signup-form';
-import { userMessage } from '../../utils/user-message';
 import { LocalCacheService } from '../../services/local-cache.service';
+import { BrandComponent } from '../../shared/brand/brand.component';
+import { userMessage } from '../../utils/user-message';
 
+/**
+ * Landing page for an invite link (/join?code=…). It never shows a form of
+ * its own: someone already signed in is added to the trip and sent Home;
+ * someone new is sent to the single sign-up form with the code filled in.
+ * Without a code it just forwards to the right place.
+ */
 @Component({
   selector: 'app-join',
-  imports: [BrandComponent, IconComponent, CommonModule, FormsModule, RouterLink, AvatarPickerComponent],
+  imports: [BrandComponent, CommonModule, RouterLink],
   templateUrl: './join.component.html',
   styleUrl: './join.component.scss'
 })
 export class JoinComponent implements OnInit {
-  private authService = inject(AuthService);
   private tripService = inject(TripService);
   private userService = inject(UserService);
   private router      = inject(Router);
   private route       = inject(ActivatedRoute);
   private localCache  = inject(LocalCacheService);
 
-  readonly version   = APP_VERSION;
-  readonly buildDate = APP_BUILD_DATE;
-
-  inviteCode    = '';
-  codeValid     = signal<boolean | null>(null); // null = checking
-  codeError     = signal('');
-
-  displayName   = '';
-  avatarEmoji   = '🌸';
-  avatarLetterColor = '';
-  email         = '';
-  username      = '';
-  password      = '';
-  confirmPass   = '';
-  color         = '#F4C2C2';
-
-  showPassword  = signal(false);
-
-  /** Per-field validation + server uniqueness checks (see utils/signup-form). */
-  readonly form = new SignupFormState({
-    usernameExists: u => this.authService.usernameExists(u),
-  });
-  /** Set when registration found the email already on an account: the form is
-   *  replaced by a neutral "check your inbox" step (see EmailInUseError). */
-  readonly checkInbox = signal('');
-
-  values(): SignupValues {
-    return { name: this.displayName, username: this.username, email: this.email,
-             password: this.password, confirm: this.confirmPass };
-  }
-  fieldError(field: SignupField): string { return this.form.error(field, this.values()); }
-  onBlur(field: SignupField): void { void this.form.blur(field, this.values()); }
-  get canSubmit(): boolean { return this.form.isValid(this.values()); }
-
-  /** Set once the user has tried to submit; from then on the red box above the
-   *  button lists what still blocks the account, live, until it's all fixed. */
-  readonly submitAttempted = signal(false);
-  get blockers(): string[] { return this.submitAttempted() ? this.form.problems(this.values()) : []; }
-  loading       = signal(false);
-  error         = signal('');
-  step          = signal<'validating' | 'form' | 'invalid'>('validating');
+  codeError = signal('');
+  step      = signal<'validating' | 'invalid'>('validating');
 
   async ngOnInit(): Promise<void> {
-    this.inviteCode = this.route.snapshot.queryParams['code'] ?? '';
+    const code = (this.route.snapshot.queryParams['code'] ?? '').trim().toUpperCase();
+    await this.userService.authReadyPromise;
 
-    // Already signed in? Resolve the code and join the trip directly (TP-11).
-    if (this.inviteCode && this.userService.hasUser()) {
-      this.step.set('validating');
+    if (this.userService.hasUser()) {
+      if (!code) { this.router.navigate(['/get-started'], { queryParams: { mode: 'code' } }); return; }
       try {
-        await this.tripService.joinByCode(this.inviteCode);
+        await this.tripService.joinByCode(code);
         this.router.navigate(['/home']);
-        return;
-      } catch (err: any) {
+      } catch (err) {
         if (this.localCache.recoverIfBroken(err)) return;
         this.step.set('invalid');
         this.codeError.set(userMessage(err, 'This invite code is invalid or has expired.'));
-        return;
       }
+      return;
     }
 
-    if (this.inviteCode) {
-      this.validateCode();
-    } else {
-      this.step.set('form'); // manual code entry
-    }
-  }
-
-  async validateCode(): Promise<void> {
-    this.step.set('validating');
-    try {
-      const tripId = await this.authService.validateInviteCode(this.inviteCode.trim().toUpperCase());
-      if (tripId) {
-        this.step.set('form');
-      } else {
-        this.step.set('invalid');
-        this.codeError.set('This invite code is invalid or has already been used.');
-      }
-    } catch (err) {
-      if (this.localCache.recoverIfBroken(err)) return;
-      this.step.set('invalid');
-      this.codeError.set('Could not validate the invite code. Please try again.');
-    }
-  }
-
-  /** Live password-requirement checklist for the template. */
-  get passwordChecklist() {
-    return passwordRules(this.password);
-  }
-
-  async submit(): Promise<void> {
-    this.error.set('');
-    this.form.touchAll();
-    this.submitAttempted.set(true);
-    if (!this.canSubmit) return;   // the fields and the box above the button show what's wrong
-
-    this.loading.set(true);
-    try {
-      await this.authService.register(
-        this.inviteCode.trim().toUpperCase(),
-        this.displayName.trim(),
-        this.avatarEmoji,
-        this.username.trim(),
-        this.password,
-        this.color,
-        this.avatarLetterColor,
-        this.email.trim(),
-      );
-      this.router.navigate(['/home']);
-    } catch (err: any) {
-      if (err instanceof EmailInUseError) { this.checkInbox.set(err.email); return; }
-      if (this.localCache.recoverIfBroken(err)) return;
-      this.error.set(userMessage(err, 'Something went wrong. Please try again.'));
-    } finally {
-      this.loading.set(false);
-    }
+    this.router.navigate(['/signup'], code ? { queryParams: { code } } : {});
   }
 }
