@@ -108,9 +108,30 @@
 
 .modal-actions {
   display: flex;
+  flex-wrap: wrap;            // never push a button off the modal on narrow screens
   justify-content: flex-end;
   gap: 0.75rem;
   margin-top: 0.5rem;
+}
+
+// Secondary choice under an action row, styled as a text link.
+.modal-alt {
+  margin: 0.9rem 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.link-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  &:disabled { opacity: 0.5; cursor: default; }
 }
 
 .pw-rules {

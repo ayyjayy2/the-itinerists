@@ -193,12 +193,14 @@
 
         <div class="modal-actions">
           <button class="btn btn-ghost" (click)="closeRecoveryModal()" [disabled]="recoverySaving()">Cancel</button>
-          <button class="btn btn-ghost" (click)="useDifferentEmail()" [disabled]="recoverySaving()">Use a different email</button>
           <button class="btn btn-primary" (click)="resendRecoveryEmail()"
                   [disabled]="recoverySaving() || (needsPassword() && !recoveryPass)">
             {{ recoverySaving() ? 'Sending…' : 'Resend link' }}
           </button>
         </div>
+        <p class="modal-alt">
+          Wrong address? <button type="button" class="link-btn" (click)="useDifferentEmail()" [disabled]="recoverySaving()">Use a different email</button>
+        </p>
       } @else {
 
       @if (pendingRecoveryEmail) {
