@@ -107,9 +107,12 @@ await t('anon reads inviteIndex', 'allow', () => getDoc(doc(anon, 'inviteIndex',
 await t('signed-in writes inviteIndex', 'allow', () => setDoc(doc(carol, 'inviteIndex', 'CODE9'), { tripId: 'T', expiresAt: 1 }));
 await t('anon writes inviteIndex', 'deny', () => setDoc(doc(anon, 'inviteIndex', 'CODE9'), { tripId: 'T' }));
 
-console.log('\nUsers (profiles: get for signed-in, list for admins only)');
+console.log('\\nUsers (profiles: self + admin only, never listable)');
 await t('anon reads a user', 'deny', () => getDoc(doc(anon, 'users', 'alice')));
-await t('signed-in reads another user profile', 'allow', () => getDoc(doc(carol, 'users', 'alice')));
+await t('self reads own profile', 'allow', () => getDoc(doc(bob, 'users', 'bob')));
+await t('trip-mate reads another member profile', 'deny', () => getDoc(doc(bob, 'users', 'alice')));
+await t('signed-in reads a stranger profile', 'deny', () => getDoc(doc(carol, 'users', 'alice')));
+await t('admin reads another profile', 'allow', () => getDoc(doc(admin, 'users', 'alice')));
 await t('signed-in lists users', 'deny', () => getDocs(collection(bob, 'users')));
 await t('anon lists users', 'deny', () => getDocs(collection(anon, 'users')));
 await t('admin lists users', 'allow', () => getDocs(collection(admin, 'users')));
@@ -166,6 +169,8 @@ await t('non-member reads itinerary', 'deny', () => getDoc(doc(carol, 'trips', '
 await t('member writes itinerary', 'allow', () => setDoc(doc(bob, 'trips', 'T', 'itinerary', 'i2'), { title: 'Day 2' }));
 await t('non-member writes itinerary', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'itinerary', 'i2'), { title: 'Day 2' }));
 await t('member reads packingSuggestions', 'allow', () => getDoc(doc(bob, 'trips', 'T', 'packingSuggestions', 's1')));
+await t('member writes removedMembers snapshot', 'allow', () => setDoc(doc(alice, 'trips', 'T', 'removedMembers', 'bob'), { uid: 'bob', displayName: 'Bob' }));
+await t('non-member reads removedMembers', 'deny', () => getDoc(doc(carol, 'trips', 'T', 'removedMembers', 'bob')));
 await t('non-member writes packing', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'packing', 'carol'), { items: [] }));
 
 console.log('\nShared/misc collections');

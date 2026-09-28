@@ -56,15 +56,16 @@ service cloud.firestore {
 
     // ── User profiles ──────────────────────────────────────────────────────
     // Profile fields only (name, username, avatar, preferences) — never an
-    // email address; those live in users/{uid}/private. A signed-in user may
-    // fetch one profile by uid (members render each other); nobody but an app
-    // admin can list users. You may write only your own doc; admins may also
-    // edit (disable).
+    // email address; those live in users/{uid}/private. Only the person and
+    // app admins can read a profile; nobody else, and nobody can list users.
+    // What members see of each other (name, avatar) is copied onto the trip's
+    // own member records, so no one ever needs another person's profile.
+    // You may write only your own doc; admins may also edit (disable).
     function hasNoEmailFields(data) {
       return !('authEmail' in data) && !('pendingEmail' in data);
     }
     match /users/{userId} {
-      allow get:  if isSignedIn();
+      allow get:  if isSignedIn() && (userId == uid() || isAdmin());
       allow list: if isAdmin();
       // You may create only your own doc, and NOT pre-set privileged fields.
       allow create: if isSignedIn() && userId == uid()
@@ -186,7 +187,7 @@ service cloud.firestore {
         allow read, write: if isMember(tripId) && sub in [
           'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
           'flights', 'outfits', 'dayLabels', 'packing', 'packingSuggestions',
-          'activityLog'
+          'activityLog', 'removedMembers'
         ];
       }
     }

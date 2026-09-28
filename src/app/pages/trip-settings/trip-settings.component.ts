@@ -270,7 +270,7 @@ export class TripSettingsComponent {
     if (!t) return;
     this.busyMember.set(e.targetUid);
     try {
-      await this.tripService.restoreMember(t.id, e.targetUid);
+      await this.tripService.restoreMember(t.id, e.targetUid, e.targetName);
     } catch (err: unknown) {
       this.error.set(userMessage(err, 'Could not restore member.'));
     } finally {
