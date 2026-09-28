@@ -10,7 +10,11 @@ const config: CapacitorConfig = {
   appName: 'The Itinerists',
   webDir: 'dist/the-itinerists/browser',
   ios: {
-    contentInset: 'automatic',
+    // 'never': the web view fills the whole screen and the app's own CSS
+    // (env(safe-area-inset-*) on the header and tab bar) handles the notch and
+    // home indicator. 'automatic' insets the view as well, so both applied and
+    // left a band at the top and a gap under the tab bar.
+    contentInset: 'never',
     // Keeps the web view's background in step with the app's cream ground
     // while a page is loading, so there is no white flash.
     backgroundColor: '#F8F4EF',
