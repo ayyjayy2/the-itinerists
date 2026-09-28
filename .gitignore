@@ -75,3 +75,12 @@ scripts/stats.js
 
 # Local-only test credentials written by scripts/create-test-member.js
 scripts/*.local.*
+
+# Capacitor iOS shell: generated per sync/build, never committed
+ios/App/App/public
+ios/App/App/capacitor.config.json
+ios/App/build
+ios/App/**/xcuserdata
+ios/App/**/DerivedData
+ios/App/Pods
+ios/App/Podfile.lock

@@ -36,8 +36,16 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
   **iOS-first**, shipped via **Capacitor** (ROADMAP Phase 4) — the same Angular codebase becomes
   the mobile app. It's a PWA today only as a stepping stone. Design & UX work should be
   **mobile-first / responsive across phone sizes**, with desktop as a scale-up. (The earlier
-  React-Native/Expo rewrite was abandoned in favor of this Capacitor path.) Capacitor is NOT
-  installed yet — that's ROADMAP Phase 4. See `docs/design-prompt.md`.
+  React-Native/Expo rewrite was abandoned in favor of this Capacitor path.) Capacitor IS installed
+  (Sep 28, 2026, Capacitor 8, Swift Package Manager, no CocoaPods): `ios/` holds the Xcode
+  project; `npm run ios:run` builds the web app, syncs it in and runs it on a simulator
+  (`npm run ios:open` opens Xcode). Bundle id `com.theitinerists.app` (changeable until the
+  app is registered in App Store Connect). Two native-only adaptations live in
+  `app.config.ts`: Auth is initialised with persistence only (the default set-up hangs in
+  WKWebView waiting on a redirect iframe), and App Check runs on a debug token (reCAPTCHA
+  can't attest a web view) — the token a simulator prints on first launch must be registered
+  under Firebase → App Check → Manage debug tokens. Before release, replace that with App
+  Attest via a Capacitor App Check plugin. See `docs/design-prompt.md`.
 - **Backend:** Firebase — Firestore (modular `@angular/fire`), Firebase Auth
   (username → synthetic email `username@the-itinerists.local`; formerly `@trip-planner.local`).
 - **Firebase project:** `trip-planner-ayyjayy2`. Web config lives in the app env + repeated in

@@ -5,12 +5,16 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { provideFirebaseApp, initializeApp, getApp } from '@angular/fire/app';
 import { provideFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from '@angular/fire/firestore';
 import { provideStorage, getStorage } from '@angular/fire/storage';
-import { provideAuth, getAuth } from '@angular/fire/auth';
+import { provideAuth, getAuth, initializeAuth, indexedDBLocalPersistence } from '@angular/fire/auth';
+import { Capacitor } from '@capacitor/core';
 import { provideAppCheck, initializeAppCheck, ReCaptchaV3Provider } from '@angular/fire/app-check';
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { AppErrorHandler } from './services/error-logger.service';
+
+/** True inside the Capacitor shell (iOS/Android app), false in a browser. */
+const NATIVE = Capacitor.isNativePlatform();
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,14 +29,24 @@ export const appConfig: ApplicationConfig = {
       localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
     })),
     provideStorage(() => getStorage()),
-    provideAuth(() => getAuth()),
+    // In the native shell, getAuth()'s default set-up waits on a redirect-result
+    // iframe that never answers inside WKWebView, so sign-in state never
+    // resolves. Initialising with persistence only skips that (Capacitor's
+    // documented approach). Browsers keep the default.
+    provideAuth(() => NATIVE
+      ? initializeAuth(getApp(), { persistence: indexedDBLocalPersistence })
+      : getAuth()),
 
     // App Check (optional): activates only when RECAPTCHA_SITE_KEY is set in .env.
     // Attests that requests come from the genuine app, blocking key abuse. Until a
     // site key is configured this contributes no providers — a safe no-op.
     ...(environment.recaptchaSiteKey
       ? [provideAppCheck(() => {
-          if (isDevMode()) {
+          if (isDevMode() || NATIVE) {
+            // NATIVE: reCAPTCHA can't attest a WKWebView either. Until the app
+            // uses App Attest through a Capacitor App Check plugin, the shell
+            // runs on a debug token (printed to the console on first launch;
+            // register it in Firebase → App Check → Manage debug tokens).
             // Local dev can't pass reCAPTCHA attestation (localhost isn't an
             // allowed domain), so use a debug token instead. APPCHECK_DEBUG_TOKEN
             // in .env pins a token already registered in Firebase console, valid

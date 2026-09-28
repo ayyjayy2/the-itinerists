@@ -37,6 +37,8 @@ export class Auth {
 const demoAuth = new Auth();
 
 export function getAuth(_app?: unknown): Auth { return demoAuth; }
+export function initializeAuth(_app?: unknown, _opts?: unknown): Auth { return demoAuth; }
+export const indexedDBLocalPersistence = {};
 export function provideAuth(factory: () => Auth): EnvironmentProviders {
   return makeEnvironmentProviders([{ provide: Auth, useFactory: factory }]);
 }

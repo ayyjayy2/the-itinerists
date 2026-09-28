@@ -1,0 +1,25 @@
+import type { CapacitorConfig } from '@capacitor/cli';
+
+/**
+ * Capacitor wraps the production web build in a native shell (ROADMAP Phase 4).
+ * The bundle id can still change until the app is registered in App Store
+ * Connect; after that it is permanent.
+ */
+const config: CapacitorConfig = {
+  appId: 'com.theitinerists.app',
+  appName: 'The Itinerists',
+  webDir: 'dist/the-itinerists/browser',
+  ios: {
+    contentInset: 'automatic',
+    // Keeps the web view's background in step with the app's cream ground
+    // while a page is loading, so there is no white flash.
+    backgroundColor: '#F8F4EF',
+  },
+  server: {
+    // Angular's router handles every path; without this a reload on /profile
+    // would 404 inside the shell.
+    androidScheme: 'https',
+  },
+};
+
+export default config;
