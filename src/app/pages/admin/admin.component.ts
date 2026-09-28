@@ -8,6 +8,7 @@ import { TripService } from '../../services/trip.service';
 import { TripMember } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
+import { userMessage } from '../../utils/user-message';
 
 /**
  * Trip admin — for the person who created (owns) the active trip. Lists that
@@ -89,7 +90,7 @@ export class AdminComponent {
     try {
       await this.tripService.removeMember(tripId, member.uid);
     } catch (err) {
-      this.removeError.set((err as Error)?.message || 'Failed to remove member. Please try again.');
+      this.removeError.set(userMessage(err, 'Failed to remove member. Please try again.'));
     }
   }
 

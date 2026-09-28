@@ -12,6 +12,7 @@ import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.c
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
+import { userMessage } from '../../utils/user-message';
 
 interface CurrencyOption { code: string; label: string; }
 interface HideablePage { key: string; label: string; icon: string; }
@@ -168,7 +169,7 @@ export class TripSettingsComponent {
       this.savedOk.set(true);
       setTimeout(() => this.savedOk.set(false), 2500);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Could not save changes.');
+      this.error.set(userMessage(e, 'Could not save changes.'));
     } finally {
       this.saving.set(false);
     }
@@ -197,7 +198,7 @@ export class TripSettingsComponent {
     try {
       await this.tripService.removeMember(t.id, m.uid);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Could not remove member.');
+      this.error.set(userMessage(e, 'Could not remove member.'));
     } finally {
       this.busyMember.set(null);
     }
@@ -217,7 +218,7 @@ export class TripSettingsComponent {
       this.removeConfirmOpen.set(false);
       this.router.navigate(['/trips']);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Could not remove the trip.');
+      this.error.set(userMessage(e, 'Could not remove the trip.'));
       this.leaving.set(false);
     }
   }
@@ -232,7 +233,7 @@ export class TripSettingsComponent {
     try {
       await this.tripService.setHiddenPages(t.id, next);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Could not update your menu.');
+      this.error.set(userMessage(e, 'Could not update your menu.'));
     }
   }
 
@@ -271,7 +272,7 @@ export class TripSettingsComponent {
     try {
       await this.tripService.restoreMember(t.id, e.targetUid);
     } catch (err: unknown) {
-      this.error.set(err instanceof Error ? err.message : 'Could not restore member.');
+      this.error.set(userMessage(err, 'Could not restore member.'));
     } finally {
       this.busyMember.set(null);
     }
@@ -287,7 +288,7 @@ export class TripSettingsComponent {
       await this.tripService.transferOwnership(t.id, to);
       this.transferTarget = '';
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Could not transfer ownership.');
+      this.error.set(userMessage(e, 'Could not transfer ownership.'));
     }
   }
 
@@ -306,7 +307,7 @@ export class TripSettingsComponent {
     try {
       await this.tripService.archiveTrip(t.id, !t.archived);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Could not update the trip.');
+      this.error.set(userMessage(e, 'Could not update the trip.'));
     }
   }
 }

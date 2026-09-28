@@ -1,5 +1,6 @@
 import { Injectable, ErrorHandler, inject } from '@angular/core';
 import { Firestore, collection, addDoc } from '@angular/fire/firestore';
+import { LocalCacheService } from './local-cache.service';
 
 type LogType = 'js_error' | 'http_error' | 'firebase_error' | 'write_spike';
 
@@ -88,8 +89,11 @@ export class ErrorLoggerService {
 @Injectable()
 export class AppErrorHandler implements ErrorHandler {
   private logger = inject(ErrorLoggerService);
+  private localCache = inject(LocalCacheService);
 
   handleError(error: unknown): void {
+    // A corrupted on-device cache can't be fixed by the page; wipe it and reload.
+    this.localCache.recoverIfBroken(error);
     this.logger.logError(error, this.classify(error));
     // Keep console output so devtools still show the error during development.
     console.error(error);

@@ -10,6 +10,8 @@ import { IconComponent } from '../../shared/icon/icon.component';
 import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 import { isValidEmail } from '../../utils/email';
+import { userMessage } from '../../utils/user-message';
+import { LocalCacheService } from '../../services/local-cache.service';
 
 /**
  * Open self-serve signup (TP-25): creates a brand-new account with no invite,
@@ -25,6 +27,7 @@ export class SignupComponent {
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private router      = inject(Router);
+  private localCache  = inject(LocalCacheService);
 
   readonly version   = APP_VERSION;
   readonly buildDate = APP_BUILD_DATE;
@@ -70,7 +73,8 @@ export class SignupComponent {
       await this.userService.waitForUser();
       this.router.navigate(['/get-started']);
     } catch (err: any) {
-      this.error.set(err?.message ?? 'Something went wrong. Please try again.');
+      if (this.localCache.recoverIfBroken(err)) return;
+      this.error.set(userMessage(err, 'Something went wrong. Please try again.'));
     } finally {
       this.loading.set(false);
     }

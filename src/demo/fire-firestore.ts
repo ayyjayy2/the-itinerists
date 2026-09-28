@@ -186,3 +186,8 @@ export function increment(n: number): any { return FieldTransform.increment(n); 
 export function arrayUnion(...values: unknown[]): any { return FieldTransform.arrayUnion(...values); }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function arrayRemove(...values: unknown[]): any { return FieldTransform.arrayRemove(...values); }
+
+// Local-cache recovery (see LocalCacheService). The demo keeps data in memory,
+// so there is nothing to shut down or wipe.
+export async function terminate(_db: Firestore): Promise<void> {}
+export async function clearIndexedDbPersistence(_db: Firestore): Promise<void> {}

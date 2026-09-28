@@ -11,6 +11,7 @@ import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.
 import { canPickLayout, effectiveHomeLayout, HomeLayout } from '../../utils/layout';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 import { recoveryEmailErrorMessage } from '../../utils/email';
+import { userMessage } from '../../utils/user-message';
 
 @Component({
   selector: 'app-profile',
@@ -162,7 +163,7 @@ export class ProfileComponent implements OnInit {
       this.usernameSuccess.set(true);
       setTimeout(() => { this.usernameSuccess.set(false); this.closeUsernameModal(); }, 1500);
     } catch (err: any) {
-      this.usernameError.set(err?.message ?? 'Failed to update username.');
+      this.usernameError.set(userMessage(err, 'Failed to update username.'));
     } finally {
       this.usernameSaving.set(false);
     }

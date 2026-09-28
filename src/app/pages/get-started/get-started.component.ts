@@ -6,6 +6,8 @@ import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { userMessage } from '../../utils/user-message';
+import { LocalCacheService } from '../../services/local-cache.service';
 
 /**
  * Post-auth onboarding prompt (TP-25). Shown when a signed-in user has no trips
@@ -22,6 +24,7 @@ export class GetStartedComponent {
   private tripService = inject(TripService);
   private userService = inject(UserService);
   private router      = inject(Router);
+  private localCache  = inject(LocalCacheService);
 
   readonly currentUser = this.userService.currentUser;
 
@@ -55,7 +58,8 @@ export class GetStartedComponent {
       await this.tripService.joinByCode(code);
       this.router.navigate(['/home']);
     } catch (err: any) {
-      this.error.set(err?.message ?? 'This invite code is invalid or has expired.');
+      if (this.localCache.recoverIfBroken(err)) return;
+      this.error.set(userMessage(err, 'This invite code is invalid or has expired.'));
     } finally {
       this.joining.set(false);
     }
