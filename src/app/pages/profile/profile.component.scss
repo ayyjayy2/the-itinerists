@@ -76,12 +76,23 @@
 
 .btn { margin-top: 0.25rem; }
 
+// Log Out: a lighter red than Delete Account, so the two read as different weights.
+.btn-ghost-warn {
+  color: color-mix(in srgb, var(--danger) 70%, var(--text-muted));
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+  background: var(--danger-tint);
+}
 .btn-ghost-danger { color: var(--danger); border-color: var(--danger); }
 
-.logout-section {
+// Leaving the account: Log Out, then Delete Account, set apart from the edits above.
+.account-exit {
   display: flex;
-  justify-content: center;
-  padding: 0.5rem 0 1.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
 }
 
 .input-hint {

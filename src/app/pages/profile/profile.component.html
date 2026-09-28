@@ -54,6 +54,9 @@
         <button class="btn btn-ghost" (click)="openRecoveryModal()">
           {{ pendingRecoveryEmail ? 'Confirm Recovery Email' : (currentRecoveryEmail ? 'Change Recovery Email' : 'Add Recovery Email') }}
         </button>
+      </div>
+      <div class="account-exit">
+        <button class="btn btn-ghost btn-ghost-warn" (click)="showLogoutConfirm.set(true)">Log Out</button>
         <button class="btn btn-ghost btn-ghost-danger" (click)="openDeleteModal()">Delete Account</button>
       </div>
     </div>
@@ -73,11 +76,6 @@
         </div>
       </div>
     }
-
-    <!-- Logout -->
-    <div class="logout-section">
-      <button class="btn btn-danger" (click)="showLogoutConfirm.set(true)">Log Out</button>
-    </div>
 
   } @else {
     <div class="loading-overlay">

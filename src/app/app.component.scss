@@ -187,19 +187,14 @@
 .user-chip {
   display: flex; align-items: center; gap: 0.4rem;
   background: var(--bg); border: 1.5px solid var(--border); border-radius: 99px;
-  padding: 0.3rem 0.7rem 0.3rem 0.3rem; cursor: pointer;
+  padding: 0.2rem; cursor: pointer;   // avatar only — a long name would crowd the wordmark
   font-family: var(--font); transition: background 0.15s; flex-shrink: 0;
   text-decoration: none; color: var(--text);
   &:hover { background: var(--border); }
   .avatar-sm {
     width: 28px; height: 28px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center; font-size: 1rem;
-  }
-  .chip-name {
-    font-size: 0.85rem; font-weight: 700; max-width: 90px;
-    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-  }
-}
+  }}
 
 .page-content {
   flex: 1;
