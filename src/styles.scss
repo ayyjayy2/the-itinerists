@@ -289,6 +289,18 @@ input, select, textarea {
 // `min-width: 0` alone is not enough there: WebKit only honours `width: 100%`
 // once the native appearance is removed, and it then collapses the height of
 // an empty field unless a min-height is given back.
+// Field validation (signup / join): red border + message under the field.
+input.invalid, select.invalid, textarea.invalid { border-color: var(--danger); }
+input.invalid:focus { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-tint); }
+.auth-error-list { margin: 0.35rem 0 0; padding-left: 1.1rem; li { margin: 0.15rem 0; } }
+
+.field-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+  a { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+}
+
 input[type='date'], input[type='time'] {
   min-width: 0;
   -webkit-appearance: none;

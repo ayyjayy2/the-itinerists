@@ -33,6 +33,7 @@ import { TripContextService } from './trip-context.service';
 import { TripService } from './trip.service';
 import { BACKGROUND_COLORS } from '../utils/avatar-contrast';
 import { PLACEHOLDER_DOMAIN, isPlaceholderEmail, isValidEmail } from '../utils/email';
+import { usernameProblem } from '../utils/signup-form';
 
 const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
 
@@ -99,6 +100,27 @@ export class AuthService {
     } catch { return { authEmail: toEmail(uname) }; }
   }
 
+  /** Signup check: is this username already on an account? (users are publicly readable) */
+  async usernameExists(username: string): Promise<boolean> {
+    const uname = username.toLowerCase().trim();
+    if (!uname) return false;
+    const snap = await getDocs(query(collection(this.firestore, 'users'), where('username', '==', uname)));
+    return !snap.empty;
+  }
+
+  /** Signup check: does an account already use this email? Checks the mirrored
+   *  Auth address and any recovery email still waiting to be verified. */
+  async emailExists(email: string): Promise<boolean> {
+    const e = email.toLowerCase().trim();
+    if (!e) return false;
+    const users = collection(this.firestore, 'users');
+    const [byAuth, byPending] = await Promise.all([
+      getDocs(query(users, where('authEmail', '==', e))),
+      getDocs(query(users, where('pendingEmail', '==', e))),
+    ]);
+    return !byAuth.empty || !byPending.empty;
+  }
+
   /**
    * Pre-auth lookup: the email this username's Auth account actually uses.
    * Falls back to the synthetic mapping when the doc/field is missing or the
@@ -146,6 +168,7 @@ export class AuthService {
 
     // Check username uniqueness
     const usersRef  = collection(this.firestore, 'users');
+    { const problem = usernameProblem(username); if (problem) throw new Error(problem); }
     const usernameQ = query(usersRef, where('username', '==', username.toLowerCase().trim()));
     const existing  = await getDocs(usernameQ);
     if (!existing.empty) throw new Error('That username is already taken.');
@@ -218,6 +241,7 @@ export class AuthService {
   ): Promise<void> {
     const uname = username.toLowerCase().trim();
 
+    { const problem = usernameProblem(uname); if (problem) throw new Error(problem); }
     // Username uniqueness (runs unauthenticated — users is publicly readable).
     const usernameQ = query(collection(this.firestore, 'users'), where('username', '==', uname));
     if (!(await getDocs(usernameQ)).empty) throw new Error('That username is already taken.');
@@ -285,6 +309,7 @@ export class AuthService {
 
   async updateUsername(uid: string, newUsername: string): Promise<void> {
     const normalized = newUsername.toLowerCase().trim();
+    { const problem = usernameProblem(normalized); if (problem) throw new Error(problem); }
 
     // Check uniqueness
     const usersRef  = collection(this.firestore, 'users');

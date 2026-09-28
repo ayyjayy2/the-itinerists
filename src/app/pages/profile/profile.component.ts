@@ -11,6 +11,7 @@ import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.
 import { canPickLayout, effectiveHomeLayout, HomeLayout } from '../../utils/layout';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 import { recoveryEmailErrorMessage } from '../../utils/email';
+import { usernameProblem } from '../../utils/signup-form';
 import { userMessage } from '../../utils/user-message';
 
 @Component({
@@ -184,8 +185,10 @@ export class ProfileComponent implements OnInit {
   async saveUsername(): Promise<void> {
     const uid = this.firestoreUser()?.uid;
     const normalized = this.username.toLowerCase().trim();
-    if (!uid || !normalized) return;
+    if (!uid) return;
     if (normalized === this.firestoreUser()?.username) { this.closeUsernameModal(); return; }
+    const problem = usernameProblem(normalized);
+    if (problem) { this.usernameError.set(problem); return; }
     this.usernameSaving.set(true);
     this.usernameError.set('');
     this.usernameSuccess.set(false);

@@ -160,3 +160,36 @@ describe('ProfileComponent delete-account modal', () => {
     expect(c.leaveApp).not.toHaveBeenCalled();
   });
 });
+
+describe('ProfileComponent change-username modal', () => {
+  let auth: { updateUsername: jasmine.Spy };
+  const user = signal<any>({ uid: 'u1', displayName: 'Alayna', username: 'alayna', avatarEmoji: '🌸', color: '#fff' });
+
+  beforeEach(() => {
+    auth = { updateUsername: jasmine.createSpy('updateUsername').and.resolveTo() };
+    TestBed.configureTestingModule({
+      imports: [ProfileComponent],
+      providers: [
+        { provide: UserService,  useValue: { firestoreUser: user } },
+        { provide: UsersService, useValue: { allUsers: signal([]) } },
+        { provide: AuthService,  useValue: auth },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
+      ],
+    });
+  });
+
+  it('applies the username policy before asking the service', async () => {
+    const fixture = TestBed.createComponent(ProfileComponent);
+    fixture.detectChanges();
+    const c = fixture.componentInstance;
+    c.openUsernameModal();
+    c.username = 'a!';
+    await c.saveUsername();
+    expect(c.usernameError()).toBe('Username must be 3–20 characters.');
+    expect(auth.updateUsername).not.toHaveBeenCalled();
+
+    c.username = 'New.Name';
+    await c.saveUsername();
+    expect(auth.updateUsername).toHaveBeenCalledWith('u1', 'new.name');
+  });
+});

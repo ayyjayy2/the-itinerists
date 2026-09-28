@@ -130,11 +130,11 @@
   <div class="modal-backdrop" (click)="closeUsernameModal()">
     <div class="modal-box" (click)="$event.stopPropagation()">
       <h2>Change Username</h2>
-      <p class="modal-hint">This is how you log in. Changing it takes effect immediately.</p>
+      <p class="modal-hint">This is how you log in. Changing it takes effect immediately. 3–20 characters: letters, numbers, dots, underscores or hyphens.</p>
 
       <div class="form-group">
         <label for="modal-username">New Username</label>
-        <input id="modal-username" type="text" [(ngModel)]="username" autocapitalize="none" placeholder="e.g. makaela" />
+        <input id="modal-username" type="text" [(ngModel)]="username" autocapitalize="none" placeholder="e.g. makaela" maxlength="20" (keydown.enter)="saveUsername()" />
       </div>
 
       @if (usernameError()) {

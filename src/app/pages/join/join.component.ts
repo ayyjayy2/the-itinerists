@@ -9,8 +9,8 @@ import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
-import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
-import { isValidEmail } from '../../utils/email';
+import { passwordRules } from '../../utils/password';
+import { SignupFormState, SignupField, SignupValues, EMAIL_EXISTS } from '../../utils/signup-form';
 import { userMessage } from '../../utils/user-message';
 import { LocalCacheService } from '../../services/local-cache.service';
 
@@ -45,6 +45,26 @@ export class JoinComponent implements OnInit {
   color         = '#F4C2C2';
 
   showPassword  = signal(false);
+
+  /** Per-field validation + server uniqueness checks (see utils/signup-form). */
+  readonly form = new SignupFormState({
+    usernameExists: u => this.authService.usernameExists(u),
+    emailExists:    e => this.authService.emailExists(e),
+  });
+  readonly EMAIL_EXISTS = EMAIL_EXISTS;
+
+  values(): SignupValues {
+    return { name: this.displayName, username: this.username, email: this.email,
+             password: this.password, confirm: this.confirmPass };
+  }
+  fieldError(field: SignupField): string { return this.form.error(field, this.values()); }
+  onBlur(field: SignupField): void { void this.form.blur(field, this.values()); }
+  get canSubmit(): boolean { return this.form.isValid(this.values()); }
+
+  /** Set once the user has tried to submit; from then on the red box above the
+   *  button lists what still blocks the account, live, until it's all fixed. */
+  readonly submitAttempted = signal(false);
+  get blockers(): string[] { return this.submitAttempted() ? this.form.problems(this.values()) : []; }
   loading       = signal(false);
   error         = signal('');
   step          = signal<'validating' | 'form' | 'invalid'>('validating');
@@ -98,12 +118,9 @@ export class JoinComponent implements OnInit {
 
   async submit(): Promise<void> {
     this.error.set('');
-
-    if (!this.displayName.trim()) { this.error.set('Please enter your name.'); return; }
-    if (!this.username.trim())    { this.error.set('Please choose a username.'); return; }
-    if (!isValidEmail(this.email)) { this.error.set('Please enter a valid email address.'); return; }
-    if (!isPasswordValid(this.password)) { this.error.set(passwordProblems(this.password)); return; }
-    if (this.password !== this.confirmPass) { this.error.set('Passwords do not match.'); return; }
+    this.form.touchAll();
+    this.submitAttempted.set(true);
+    if (!this.canSubmit) return;   // the fields and the box above the button show what's wrong
 
     this.loading.set(true);
     try {
