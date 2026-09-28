@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UserService } from '../../services/user.service';
-import { UsersService } from '../../services/users.service';
+import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
@@ -22,7 +22,7 @@ import { userMessage } from '../../utils/user-message';
 })
 export class ProfileComponent implements OnInit {
   private userService  = inject(UserService);
-  private usersService = inject(UsersService);
+  private tripService  = inject(TripService);
   private authService  = inject(AuthService);
   private router       = inject(Router);
   private route        = inject(ActivatedRoute);
@@ -32,9 +32,9 @@ export class ProfileComponent implements OnInit {
   readonly takenEmojis = computed(() => {
     const myUid = this.firestoreUser()?.uid;
     return new Set(
-      this.usersService.allUsers()
-        .filter(u => u.uid !== myUid)
-        .map(u => u.avatarEmoji)
+      this.tripService.activeMembers()
+        .filter(m => m.uid !== myUid)
+        .map(m => m.avatarEmoji)
     );
   });
 

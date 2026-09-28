@@ -27,13 +27,14 @@ import {
   deleteDoc,
 } from '@angular/fire/firestore';
 import {
-  FirestoreUser, InviteCode, InviteIndexEntry, TripMember,
+  FirestoreUser, InviteCode, InviteIndexEntry, TripMember, PrivateAccount, UsernameEntry,
 } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { TripService } from './trip.service';
 import { BACKGROUND_COLORS } from '../utils/avatar-contrast';
 import { PLACEHOLDER_DOMAIN, isPlaceholderEmail, isValidEmail } from '../utils/email';
-import { usernameProblem } from '../utils/signup-form';
+import { usernameProblem, normalizeUsername } from '../utils/signup-form';
+import { UserService } from './user.service';
 
 const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
 
@@ -44,11 +45,20 @@ function toEmail(username: string): string {
 /** Firebase Auth error codes → plain words for the sign-up forms. */
 function describeAuthError(err: unknown): Error {
   const code = (err as { code?: string })?.code ?? '';
-  if (code === 'auth/email-already-in-use') return new Error('That email already has an account. Sign in instead, or use "Forgot password?".');
   if (code === 'auth/invalid-email')        return new Error('That email address doesn\'t look right.');
   if (code === 'auth/weak-password')        return new Error('That password is too weak.');
   if (code === 'auth/operation-not-allowed') return new Error('That email needs to be verified first — check the inbox for the link we sent.');
   return err instanceof Error ? err : new Error('Something went wrong. Please try again.');
+}
+
+/**
+ * Registration hit an email that already has an account. The UI must not say
+ * so (that would confirm who has an account); instead a password-reset email
+ * has been sent to the address and the form shows a neutral "check your
+ * inbox" step, so the real owner can get back in and anyone else learns nothing.
+ */
+export class EmailInUseError extends Error {
+  constructor(readonly email: string) { super('check-inbox'); }
 }
 
 function randomCode(length = 8): string {
@@ -64,6 +74,7 @@ export class AuthService {
   private firestore   = inject(Firestore);
   private tripContext = inject(TripContextService);
   private injector    = inject(Injector);   // TripService is resolved lazily: it injects AuthService itself
+  private userService = inject(UserService);
 
   /** Sign in with either the username or the account's (verified) email —
    *  adding a recovery email never replaces the username. */
@@ -87,52 +98,69 @@ export class AuthService {
     }
   }
 
-  /** Both addresses on record for a username: the mirror and any pending recovery email. */
-  private async resolveEmails(username: string): Promise<{ authEmail: string; pendingEmail?: string }> {
-    const uname = username.toLowerCase().trim();
+  // ── Username index / private account helpers ─────────────────────────────
+
+  private usernameRef(username: string) { return doc(this.firestore, 'usernames', normalizeUsername(username)); }
+  private accountRef(uid: string)       { return doc(this.firestore, 'users', uid, 'private', 'account'); }
+
+  /** usernames/{username}, or null when nobody has claimed it. */
+  async lookupUsername(username: string): Promise<UsernameEntry | null> {
+    const uname = normalizeUsername(username);
+    if (!uname) return null;
+    const snap = await getDoc(this.usernameRef(uname));
+    return snap.exists() ? (snap.data() as UsernameEntry) : null;
+  }
+
+  /** Claim usernames/{username} for this account. The rules refuse to
+   *  overwrite an entry owned by someone else, so a race between two people
+   *  choosing the same name is settled here, not by the pre-check. */
+  private async claimUsername(username: string, entry: UsernameEntry): Promise<void> {
     try {
-      const q    = query(collection(this.firestore, 'users'), where('username', '==', uname));
-      const snap = await getDocs(q);
-      const data = snap.docs[0]?.data() ?? {};
-      const authEmail = (data['authEmail'] as string | undefined) || toEmail(uname);
-      const pendingEmail = (data['pendingEmail'] as string | undefined) || undefined;
-      return { authEmail, pendingEmail };
+      await setDoc(this.usernameRef(username), entry);
+    } catch (err) {
+      if ((err as { code?: string })?.code === 'permission-denied') throw new Error('That username is already taken.');
+      throw err;
+    }
+  }
+
+  /** Create the Firebase Auth account. An address that already has an account
+   *  is never reported to the screen (see EmailInUseError). */
+  private async createAuthAccount(email: string, password: string) {
+    try {
+      return await createUserWithEmailAndPassword(this.auth, email, password);
+    } catch (err) {
+      if ((err as { code?: string })?.code === 'auth/email-already-in-use') {
+        await sendPasswordResetEmail(this.auth, email).catch(() => {/* best effort */});
+        throw new EmailInUseError(email);
+      }
+      throw describeAuthError(err);
+    }
+  }
+
+  /** Both addresses on record for a username: the sign-in address and any pending recovery email. */
+  private async resolveEmails(username: string): Promise<{ authEmail: string; pendingEmail?: string }> {
+    const uname = normalizeUsername(username);
+    try {
+      const entry = await this.lookupUsername(uname);
+      return { authEmail: entry?.authEmail || toEmail(uname), pendingEmail: entry?.pendingEmail || undefined };
     } catch { return { authEmail: toEmail(uname) }; }
   }
 
-  /** Signup check: is this username already on an account? (users are publicly readable) */
+  /** Signup check: is this username already claimed? (usernames are public handles) */
   async usernameExists(username: string): Promise<boolean> {
-    const uname = username.toLowerCase().trim();
-    if (!uname) return false;
-    const snap = await getDocs(query(collection(this.firestore, 'users'), where('username', '==', uname)));
-    return !snap.empty;
-  }
-
-  /** Signup check: does an account already use this email? Checks the mirrored
-   *  Auth address and any recovery email still waiting to be verified. */
-  async emailExists(email: string): Promise<boolean> {
-    const e = email.toLowerCase().trim();
-    if (!e) return false;
-    const users = collection(this.firestore, 'users');
-    const [byAuth, byPending] = await Promise.all([
-      getDocs(query(users, where('authEmail', '==', e))),
-      getDocs(query(users, where('pendingEmail', '==', e))),
-    ]);
-    return !byAuth.empty || !byPending.empty;
+    return (await this.lookupUsername(username)) !== null;
   }
 
   /**
    * Pre-auth lookup: the email this username's Auth account actually uses.
-   * Falls back to the synthetic mapping when the doc/field is missing or the
+   * Falls back to the synthetic mapping when the entry is missing or the
    * lookup fails (e.g. offline) — identical to pre-recovery-email behavior.
    */
   async resolveAuthEmail(username: string): Promise<string> {
-    const uname = username.toLowerCase().trim();
+    const uname = normalizeUsername(username);
     try {
-      const q    = query(collection(this.firestore, 'users'), where('username', '==', uname));
-      const snap = await getDocs(q);
-      const authEmail = snap.docs[0]?.data()['authEmail'] as string | undefined;
-      if (authEmail) return authEmail;
+      const entry = await this.lookupUsername(uname);
+      if (entry?.authEmail) return entry.authEmail;
     } catch { /* fall through to synthetic */ }
     return toEmail(uname);
   }
@@ -166,37 +194,37 @@ export class AuthService {
     const raw = inviteSnap.data() as Partial<InviteCode>;
     const usedBy = Array.isArray(raw.usedBy) ? raw.usedBy : [];
 
-    // Check username uniqueness
-    const usersRef  = collection(this.firestore, 'users');
-    { const problem = usernameProblem(username); if (problem) throw new Error(problem); }
-    const usernameQ = query(usersRef, where('username', '==', username.toLowerCase().trim()));
-    const existing  = await getDocs(usernameQ);
-    if (!existing.empty) throw new Error('That username is already taken.');
+    const uname = normalizeUsername(username);
+    { const problem = usernameProblem(uname); if (problem) throw new Error(problem); }
+    if (await this.lookupUsername(uname)) throw new Error('That username is already taken.');
 
-    // Create the Auth account with the person's real email (unique across
+    // The Auth account is created with the person's real email (unique across
     // accounts, and where password resets go). Legacy accounts used a synthetic
     // username address instead.
-    const authEmail = email.toLowerCase().trim() || toEmail(username);
-    let cred;
-    try { cred = await createUserWithEmailAndPassword(this.auth, authEmail, password); }
-    catch (err) { throw describeAuthError(err); }
+    const authEmail = email.toLowerCase().trim() || toEmail(uname);
+    const cred = await this.createAuthAccount(authEmail, password);
     const uid  = cred.user.uid;
     const now  = Date.now();
 
-    // Write Firestore user profile
+    // Claim the username first — if someone else got it meanwhile, undo the
+    // Auth account so the person can pick another name.
+    try { await this.claimUsername(uname, { uid, authEmail }); }
+    catch (err) { await deleteUser(cred.user).catch(() => {/* best effort */}); throw err; }
+
+    // Public profile (no email) + private account doc.
     const userDoc: FirestoreUser = {
       uid,
       displayName:  displayName.trim(),
-      username:     username.toLowerCase().trim(),
+      username:     uname,
       avatarEmoji,
       color,
       avatarLetterColor: letterColor,
       isAdmin:      false,
       isDisabled:   false,
       createdAt:    now,
-      authEmail,
     };
     await setDoc(doc(this.firestore, 'users', uid), userDoc);
+    await setDoc(this.accountRef(uid), { authEmail } satisfies PrivateAccount);
 
     // Join the invited trip: member doc + trips index + member count + usedBy.
     const member: TripMember = {
@@ -239,21 +267,19 @@ export class AuthService {
     email: string,
     letterColor = '',
   ): Promise<void> {
-    const uname = username.toLowerCase().trim();
-
+    const uname = normalizeUsername(username);
     { const problem = usernameProblem(uname); if (problem) throw new Error(problem); }
-    // Username uniqueness (runs unauthenticated — users is publicly readable).
-    const usernameQ = query(collection(this.firestore, 'users'), where('username', '==', uname));
-    if (!(await getDocs(usernameQ)).empty) throw new Error('That username is already taken.');
+    if (await this.lookupUsername(uname)) throw new Error('That username is already taken.');
 
     // The Auth account is created with the person's real email: unique across
     // accounts (two "nick"s can't share one), and where password resets go.
     const authEmail = email.toLowerCase().trim();
-    let cred;
-    try { cred = await createUserWithEmailAndPassword(this.auth, authEmail, password); }
-    catch (err) { throw describeAuthError(err); }
+    const cred = await this.createAuthAccount(authEmail, password);
     const uid  = cred.user.uid;
     const now  = Date.now();
+
+    try { await this.claimUsername(uname, { uid, authEmail }); }
+    catch (err) { await deleteUser(cred.user).catch(() => {/* best effort */}); throw err; }
 
     const userDoc: FirestoreUser = {
       uid,
@@ -265,9 +291,9 @@ export class AuthService {
       isAdmin:     false,
       isDisabled:  false,
       createdAt:   now,
-      authEmail,
     };
     await setDoc(doc(this.firestore, 'users', uid), userDoc);
+    await setDoc(this.accountRef(uid), { authEmail } satisfies PrivateAccount);
   }
 
   /**
@@ -308,29 +334,33 @@ export class AuthService {
   }
 
   async updateUsername(uid: string, newUsername: string): Promise<void> {
-    const normalized = newUsername.toLowerCase().trim();
+    const normalized = normalizeUsername(newUsername);
     { const problem = usernameProblem(normalized); if (problem) throw new Error(problem); }
-
-    // Check uniqueness
-    const usersRef  = collection(this.firestore, 'users');
-    const q         = query(usersRef, where('username', '==', normalized));
-    const existing  = await getDocs(q);
-    if (!existing.empty && existing.docs[0].id !== uid) {
-      throw new Error('That username is already taken.');
-    }
 
     const user = this.auth.currentUser;
     if (!user) throw new Error('No authenticated user.');
+    const current = this.userService.firestoreUser();
+    if (!current || current.uid !== uid) throw new Error('No authenticated user.');
+    if (current.username === normalized) return;
+
+    const taken = await this.lookupUsername(normalized);
+    if (taken && taken.uid !== uid) throw new Error('That username is already taken.');
 
     // Legacy accounts sign in through a synthetic username address, so that
     // address must follow the username. An account with a real email keeps it.
-    const updates: Partial<FirestoreUser> = { username: normalized };
+    let authEmail = current.authEmail || user.email || toEmail(current.username);
     if (isPlaceholderEmail(user.email)) {
-      const synthetic = toEmail(normalized);
-      await updateEmail(user, synthetic);
-      updates.authEmail = synthetic;
+      authEmail = toEmail(normalized);
+      await updateEmail(user, authEmail);
+      await setDoc(this.accountRef(uid), { authEmail }, { merge: true });
     }
-    await updateDoc(doc(this.firestore, 'users', uid), updates);
+
+    // Claim the new name, switch the profile over, then release the old name.
+    const entry: UsernameEntry = { uid, authEmail };
+    if (current.pendingEmail) entry.pendingEmail = current.pendingEmail;
+    await this.claimUsername(normalized, entry);
+    await updateDoc(doc(this.firestore, 'users', uid), { username: normalized });
+    await deleteDoc(this.usernameRef(current.username)).catch(() => {/* best effort */});
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
@@ -387,7 +417,9 @@ export class AuthService {
       await reauthenticateWithCredential(user, cred);
     }
     await verifyBeforeUpdateEmail(user, email, { url: `${window.location.origin}/profile`, handleCodeInApp: false });
-    await updateDoc(doc(this.firestore, 'users', user.uid), { pendingEmail: email });
+    await setDoc(this.accountRef(user.uid), { pendingEmail: email }, { merge: true });
+    const username = this.userService.firestoreUser()?.username;
+    if (username) await updateDoc(this.usernameRef(username), { pendingEmail: email }).catch(() => {/* index may lag */});
   }
 
   /**
@@ -412,6 +444,9 @@ export class AuthService {
     const gone = (path: string) => deleteDoc(doc(this.firestore, path, user.uid)).catch(() => {/* may not exist */});
     await gone('userExpenses');
     await gone('userTrips');
+    const username = this.userService.firestoreUser()?.username;
+    if (username) await deleteDoc(this.usernameRef(username)).catch(() => {/* may not exist */});
+    await deleteDoc(this.accountRef(user.uid)).catch(() => {/* may not exist */});
     await deleteDoc(doc(this.firestore, 'users', user.uid));
 
     await deleteUser(user);

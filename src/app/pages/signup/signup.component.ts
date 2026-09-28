@@ -2,14 +2,14 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, EmailInUseError } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { passwordRules } from '../../utils/password';
-import { SignupFormState, SignupField, SignupValues, EMAIL_EXISTS } from '../../utils/signup-form';
+import { SignupFormState, SignupField, SignupValues } from '../../utils/signup-form';
 import { userMessage } from '../../utils/user-message';
 import { LocalCacheService } from '../../services/local-cache.service';
 
@@ -46,9 +46,10 @@ export class SignupComponent {
   /** Per-field validation + server uniqueness checks (see utils/signup-form). */
   readonly form = new SignupFormState({
     usernameExists: u => this.authService.usernameExists(u),
-    emailExists:    e => this.authService.emailExists(e),
   });
-  readonly EMAIL_EXISTS = EMAIL_EXISTS;
+  /** Set when registration found the email already on an account: the form is
+   *  replaced by a neutral "check your inbox" step (see EmailInUseError). */
+  readonly checkInbox = signal('');
 
   values(): SignupValues {
     return { name: this.displayName, username: this.username, email: this.email,
@@ -90,6 +91,7 @@ export class SignupComponent {
       await this.userService.waitForUser();
       this.router.navigate(['/get-started']);
     } catch (err: any) {
+      if (err instanceof EmailInUseError) { this.checkInbox.set(err.email); return; }
       if (this.localCache.recoverIfBroken(err)) return;
       this.error.set(userMessage(err, 'Something went wrong. Please try again.'));
     } finally {

@@ -2,15 +2,17 @@ import { Injectable, signal, inject, Injector, runInInjectionContext } from '@an
 import { Firestore, collection, onSnapshot } from '@angular/fire/firestore';
 import { FirestoreUser, TripUser } from '../models/trip.models';
 import { TripService } from './trip.service';
+import { UserService } from './user.service';
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
   private firestore   = inject(Firestore);
   private injector    = inject(Injector);
   private tripService = inject(TripService);
+  private userService = inject(UserService);
 
   private _allUsers = signal<FirestoreUser[]>([]);
-  /** Every app user (global) — for admin / username-uniqueness lookups. */
+  /** Every app user — app admins only (the rules refuse the list to anyone else). Empty otherwise. */
   readonly allUsers = this._allUsers.asReadonly();
 
   /**
@@ -23,6 +25,7 @@ export class UsersService {
       .map(m => ({ uid: m.uid, name: m.displayName, color: m.color, avatarEmoji: m.avatarEmoji, avatarLetterColor: m.avatarLetterColor }));
 
   init(): void {
+    if (!this.userService.isAdmin()) { this._allUsers.set([]); return; }
     runInInjectionContext(this.injector, () => {
       onSnapshot(collection(this.firestore, 'users'), snap => {
         this._allUsers.set(

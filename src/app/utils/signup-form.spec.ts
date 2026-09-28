@@ -1,15 +1,14 @@
-import { SignupFormState, SignupValues, EMAIL_EXISTS, USERNAME_TAKEN, usernameProblem } from './signup-form';
+import { SignupFormState, SignupValues, USERNAME_TAKEN, usernameProblem } from './signup-form';
 
 const good: SignupValues = {
   name: 'Seneca', username: 'senecasolt', email: 'seneca@example.com',
   password: 'Hunter22x', confirm: 'Hunter22x',
 };
 
-function state(taken: { usernames?: string[]; emails?: string[] } = {}) {
-  const calls = { username: [] as string[], email: [] as string[] };
+function state(taken: { usernames?: string[] } = {}) {
+  const calls = { username: [] as string[] };
   const s = new SignupFormState({
     usernameExists: async (u) => { calls.username.push(u); return (taken.usernames ?? []).includes(u); },
-    emailExists:    async (e) => { calls.email.push(e);    return (taken.emails ?? []).includes(e); },
   });
   return { s, calls };
 }
@@ -60,19 +59,11 @@ describe('SignupFormState', () => {
     expect(s.error('username', { ...good, username: 'senecasolt2' })).toBe('');
   });
 
-  it('reports an email that already has an account', async () => {
-    const { s } = state({ emails: ['seneca@example.com'] });
-    await s.blur('email', good);
-    expect(s.error('email', good)).toBe(EMAIL_EXISTS);
-    expect(s.isValid(good)).toBeFalse();
-  });
-
-  it('does not look up values that fail the basic checks', async () => {
+  it('does not look up a username that fails the basic checks, and never looks up emails', async () => {
     const { s, calls } = state();
     await s.blur('username', { ...good, username: '' });
-    await s.blur('email', { ...good, email: 'not-an-email' });
+    await s.blur('email', good);
     expect(calls.username).toEqual([]);
-    expect(calls.email).toEqual([]);
   });
 
   it('flags a mismatch while the user is still typing the confirmation', () => {
@@ -124,11 +115,9 @@ describe('SignupFormState.problems (summary above the submit button)', () => {
     ]);
   });
 
-  it('names an email that already has an account and an empty confirmation', async () => {
-    const { s } = state({ emails: ['seneca@example.com'] });
-    const v = { ...good, confirm: '' };
-    await s.blur('email', v);
-    expect(s.problems(v)).toEqual(['Email already exists.', 'Confirm your password.']);
+  it('names an empty confirmation plainly', () => {
+    const { s } = state();
+    expect(s.problems({ ...good, confirm: '' })).toEqual(['Confirm your password.']);
   });
 
   it('is empty when the form is valid', () => {

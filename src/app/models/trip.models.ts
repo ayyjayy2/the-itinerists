@@ -9,6 +9,20 @@ export interface TripUser {
   uid?: string;        // Firebase Auth UID (present when using real auth)
 }
 
+/** users/{uid}/private/account — readable by the person and app admins only. */
+export interface PrivateAccount {
+  authEmail?: string;
+  pendingEmail?: string;
+}
+
+/** usernames/{username} — resolves a username to its sign-in address before
+ *  auth. Fetchable one at a time by anyone who knows the username; never listable. */
+export interface UsernameEntry {
+  uid: string;
+  authEmail: string;
+  pendingEmail?: string;
+}
+
 export interface FirestoreUser {
   uid: string;
   displayName: string;
@@ -19,9 +33,11 @@ export interface FirestoreUser {
   isAdmin: boolean;
   isDisabled?: boolean;
   createdAt: number;   // unix ms
-  /** Email the Auth account signs in with. Absent → synthetic username@the-itinerists.local. */
+  /** Email the Auth account signs in with. NOT stored on the profile doc —
+   *  it lives in users/{uid}/private/account and UserService merges it in for
+   *  the signed-in person only. Absent → synthetic username@the-itinerists.local. */
   authEmail?: string;
-  /** A recovery email awaiting its verification link; becomes authEmail once clicked. */
+  /** Recovery email awaiting its verification link (private, merged in like authEmail). */
   pendingEmail?: string;
   /** Pinned Home shortcuts (page paths). Absent → default set. */
   homePins?: string[];

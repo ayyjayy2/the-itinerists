@@ -13,7 +13,7 @@ import {
   initializeTestEnvironment, assertSucceeds, assertFails,
 } from '@firebase/rules-unit-testing';
 import {
-  doc, getDoc, setDoc, updateDoc, deleteDoc,
+  doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs,
 } from 'firebase/firestore';
 
 const testEnv = await initializeTestEnvironment({
@@ -37,6 +37,9 @@ async function seed() {
       setDoc(doc(db, 'users', 'bob'),   { uid: 'bob',   username: 'bob',   isAdmin: false }),
       setDoc(doc(db, 'users', 'carol'), { uid: 'carol', username: 'carol', isAdmin: false }),
       setDoc(doc(db, 'users', 'admin'), { uid: 'admin', username: 'admin', isAdmin: true }),
+      setDoc(doc(db, 'users', 'bob', 'private', 'account'), { authEmail: 'bob@example.com' }),
+      setDoc(doc(db, 'usernames', 'alice'), { uid: 'alice', authEmail: 'alice@example.com' }),
+      setDoc(doc(db, 'usernames', 'bob'),   { uid: 'bob',   authEmail: 'bob@example.com' }),
       setDoc(doc(db, 'trips', 'T'), { name: 'Trip', createdBy: 'alice', memberCount: 2 }),
       setDoc(doc(db, 'trips', 'T', 'members', 'alice'), { uid: 'alice', role: 'owner' }),
       setDoc(doc(db, 'trips', 'T', 'members', 'bob'),   { uid: 'bob',   role: 'member' }),
@@ -104,8 +107,38 @@ await t('anon reads inviteIndex', 'allow', () => getDoc(doc(anon, 'inviteIndex',
 await t('signed-in writes inviteIndex', 'allow', () => setDoc(doc(carol, 'inviteIndex', 'CODE9'), { tripId: 'T', expiresAt: 1 }));
 await t('anon writes inviteIndex', 'deny', () => setDoc(doc(anon, 'inviteIndex', 'CODE9'), { tripId: 'T' }));
 
-console.log('\nUsers');
-await t('anon reads a user (username check)', 'allow', () => getDoc(doc(anon, 'users', 'alice')));
+console.log('\nUsers (profiles: get for signed-in, list for admins only)');
+await t('anon reads a user', 'deny', () => getDoc(doc(anon, 'users', 'alice')));
+await t('signed-in reads another user profile', 'allow', () => getDoc(doc(carol, 'users', 'alice')));
+await t('signed-in lists users', 'deny', () => getDocs(collection(bob, 'users')));
+await t('anon lists users', 'deny', () => getDocs(collection(anon, 'users')));
+await t('admin lists users', 'allow', () => getDocs(collection(admin, 'users')));
+await t('create own user doc with an email field', 'deny', () => setDoc(doc(dave, 'users', 'dave'), { uid: 'dave', username: 'dave', isAdmin: false, authEmail: 'd@x' }));
+await t('update own user doc adding an email field', 'deny', () => updateDoc(doc(bob, 'users', 'bob'), { pendingEmail: 'b@x' }));
+
+console.log('\nusers/{uid}/private (self + admin only)');
+await t('self reads own private account', 'allow', () => getDoc(doc(bob, 'users', 'bob', 'private', 'account')));
+await t('self writes own private account', 'allow', () => setDoc(doc(bob, 'users', 'bob', 'private', 'account'), { authEmail: 'new@example.com' }));
+await t('another user reads private account', 'deny', () => getDoc(doc(alice, 'users', 'bob', 'private', 'account')));
+await t('another user writes private account', 'deny', () => setDoc(doc(alice, 'users', 'bob', 'private', 'account'), { authEmail: 'x' }));
+await t('anon reads private account', 'deny', () => getDoc(doc(anon, 'users', 'bob', 'private', 'account')));
+await t('admin reads private account', 'allow', () => getDoc(doc(admin, 'users', 'bob', 'private', 'account')));
+
+console.log('\nusernames (single GET public, never listable, owner-claimed)');
+await t('anon gets a username entry (sign-in lookup)', 'allow', () => getDoc(doc(anon, 'usernames', 'alice')));
+await t('anon lists usernames', 'deny', () => getDocs(collection(anon, 'usernames')));
+await t('signed-in lists usernames', 'deny', () => getDocs(collection(bob, 'usernames')));
+await t('admin lists usernames', 'deny', () => getDocs(collection(admin, 'usernames')));
+await t('claim a free username for self', 'allow', () => setDoc(doc(dave, 'usernames', 'dave'), { uid: 'dave', authEmail: 'dave@example.com' }));
+await t('claim a username for someone else', 'deny', () => setDoc(doc(dave, 'usernames', 'erin'), { uid: 'erin', authEmail: 'e@x' }));
+await t('anon claims a username', 'deny', () => setDoc(doc(anon, 'usernames', 'zed'), { uid: 'zed', authEmail: 'z@x' }));
+await t('take over an existing username', 'deny', () => setDoc(doc(dave, 'usernames', 'alice'), { uid: 'dave', authEmail: 'dave@example.com' }));
+await t('owner updates own username entry', 'allow', () => updateDoc(doc(bob, 'usernames', 'bob'), { pendingEmail: 'bob2@example.com' }));
+await t('owner reassigns own entry to another uid', 'deny', () => updateDoc(doc(bob, 'usernames', 'bob'), { uid: 'alice' }));
+await t('another user updates username entry', 'deny', () => updateDoc(doc(alice, 'usernames', 'bob'), { authEmail: 'x' }));
+await t('owner releases own username', 'allow', () => deleteDoc(doc(bob, 'usernames', 'bob')));
+await t('another user releases a username', 'deny', () => deleteDoc(doc(alice, 'usernames', 'bob')));
+await t('admin releases a username', 'allow', () => deleteDoc(doc(admin, 'usernames', 'bob')));
 await t('create own user doc', 'allow', () => setDoc(doc(dave, 'users', 'dave'), { uid: 'dave', username: 'dave', isAdmin: false }));
 await t('create a user doc for someone else', 'deny', () => setDoc(doc(dave, 'users', 'erin'), { uid: 'erin', username: 'erin' }));
 await t('update own user doc', 'allow', () => updateDoc(doc(bob, 'users', 'bob'), { displayName: 'B' }));

@@ -3,7 +3,7 @@ import { signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ProfileComponent } from './profile.component';
 import { UserService } from '../../services/user.service';
-import { UsersService } from '../../services/users.service';
+import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
 
 function firebaseError(code: string): Error {
@@ -25,7 +25,7 @@ describe('ProfileComponent recovery-email modal', () => {
       imports: [ProfileComponent],
       providers: [
         { provide: UserService,  useValue: { firestoreUser: user } },
-        { provide: UsersService, useValue: { allUsers: signal([]) } },
+        { provide: TripService, useValue: { activeMembers: signal([]) } },
         { provide: AuthService,  useValue: auth },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
@@ -98,7 +98,7 @@ describe('ProfileComponent delete-account modal', () => {
       imports: [ProfileComponent],
       providers: [
         { provide: UserService,  useValue: { firestoreUser: user } },
-        { provide: UsersService, useValue: { allUsers: signal([]) } },
+        { provide: TripService, useValue: { activeMembers: signal([]) } },
         { provide: AuthService,  useValue: auth },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
@@ -171,7 +171,7 @@ describe('ProfileComponent change-username modal', () => {
       imports: [ProfileComponent],
       providers: [
         { provide: UserService,  useValue: { firestoreUser: user } },
-        { provide: UsersService, useValue: { allUsers: signal([]) } },
+        { provide: TripService, useValue: { activeMembers: signal([]) } },
         { provide: AuthService,  useValue: auth },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],

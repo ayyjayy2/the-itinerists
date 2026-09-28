@@ -13,9 +13,11 @@ rules_version = '2';
 // runs *before* the Firebase Auth account exists (see AuthService.register):
 //   • inviteIndex/{code}            — resolve an invite code → tripId
 //   • trips/{tripId}/invites/{code} — validate the invite before joining
-//   • users                         — username-uniqueness check
-// These expose only low-sensitivity data (codes you must already know, and
-// public profile fields). Credentials live in Firebase Auth, never Firestore.
+//   • usernames/{username}          — username → sign-in email, single-doc GET only
+// These expose only low-sensitivity data (codes you must already know, and the
+// sign-in address behind a username you must already know). Nothing here can
+// be listed while signed out, and user profiles can never be listed except by
+// an app admin. Credentials live in Firebase Auth, never Firestore.
 //
 // Known relaxation (documented follow-up): a signed-in user can self-create
 // their own trips/{tripId}/members/{uid} doc, so membership isn't cryptographically
@@ -53,22 +55,52 @@ service cloud.firestore {
     }
 
     // ── User profiles ──────────────────────────────────────────────────────
-    // Public read: registration checks username uniqueness while unauthenticated,
-    // and members render each other's name/avatar. Only public profile fields
-    // live here. You may write only your own doc; admins may also edit (disable).
+    // Profile fields only (name, username, avatar, preferences) — never an
+    // email address; those live in users/{uid}/private. A signed-in user may
+    // fetch one profile by uid (members render each other); nobody but an app
+    // admin can list users. You may write only your own doc; admins may also
+    // edit (disable).
+    function hasNoEmailFields(data) {
+      return !('authEmail' in data) && !('pendingEmail' in data);
+    }
     match /users/{userId} {
-      allow read:   if true;
+      allow get:  if isSignedIn();
+      allow list: if isAdmin();
       // You may create only your own doc, and NOT pre-set privileged fields.
       allow create: if isSignedIn() && userId == uid()
+                 && hasNoEmailFields(request.resource.data)
                  && request.resource.data.get('isAdmin', false) == false
                  && request.resource.data.get('isDisabled', false) == false;
       // You may edit your own profile but NOT the privileged fields (isAdmin,
       // isDisabled) — that would be self-escalation. Admins may edit anything.
       allow update: if isAdmin()
                  || (userId == uid()
+                     && hasNoEmailFields(request.resource.data)
                      && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
                      && request.resource.data.get('isDisabled', false) == resource.data.get('isDisabled', false));
       allow delete: if userId == uid() || isAdmin();
+
+      // Private account data (sign-in email, pending recovery email): the
+      // person themselves and app admins only.
+      match /private/{docId} {
+        allow read, write: if userId == uid() || isAdmin();
+      }
+    }
+
+    // ── Username index ─────────────────────────────────────────────────────
+    // usernames/{username} → { uid, authEmail, pendingEmail? }. Sign-in and
+    // password reset resolve a username to its address before the user is
+    // authenticated, so a single document may be fetched by anyone who already
+    // knows the username; the collection can never be listed. A document is
+    // claimed on registration (create fails if the name is taken) and only its
+    // owner or an admin may change or release it.
+    match /usernames/{username} {
+      allow get:    if true;
+      allow list:   if false;
+      allow create: if isSignedIn() && request.resource.data.uid == uid();
+      allow update: if isAdmin()
+                 || (isSignedIn() && resource.data.uid == uid() && request.resource.data.uid == uid());
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == uid());
     }
 
     // ── Per-user trip index ────────────────────────────────────────────────
