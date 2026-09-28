@@ -107,6 +107,9 @@
         </button>
         }
       </div>
+      @if (isOwner() && inviteCode()) {
+        <app-invite-panel [code]="inviteCode()" />
+      }
       <ul class="member-list">
         @for (m of members(); track m.uid) {
           <li class="member-row">

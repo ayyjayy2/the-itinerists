@@ -9,6 +9,7 @@ import { ThemeService } from '../../services/theme.service';
 import { TripDoc, TripDestination, TripMember, ActivityLogEntry } from '../../models/trip.models';
 import { tripDestinations, tripSummary, buildEditedDestinations, DestinationEdit } from '../../utils/trip-destinations';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { InvitePanelComponent } from '../../shared/invite-panel/invite-panel.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
@@ -29,7 +30,7 @@ interface DestRow {
 
 @Component({
   selector: 'app-trip-settings',
-  imports: [IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule, AvatarGlyphComponent, EmptyDateHintDirective],
+  imports: [IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule, AvatarGlyphComponent, EmptyDateHintDirective, InvitePanelComponent],
   templateUrl: './trip-settings.component.html',
   styleUrl: './trip-settings.component.scss',
 })
@@ -82,6 +83,8 @@ export class TripSettingsComponent {
   savedOk     = signal(false);
   error        = signal('');
   inviteState  = signal<'idle' | 'copying' | 'copied'>('idle');
+  /** The last invite generated here — shown as code + link under the Members heading. */
+  inviteCode = signal('');
   busyMember   = signal<string | null>(null);
   leaving        = signal(false);
   removeConfirmOpen = signal(false);
@@ -185,7 +188,8 @@ export class TripSettingsComponent {
     this.inviteState.set('copying');
     try {
       const code = await this.tripService.generateInvite(t.id);
-      await navigator.clipboard.writeText(`${window.location.origin}/join?code=${code}`);
+      this.inviteCode.set(code);
+      await navigator.clipboard.writeText(`${window.location.origin}/join?code=${code}`).catch(() => {/* panel still shows it */});
       this.inviteState.set('copied');
       setTimeout(() => this.inviteState.set('idle'), 2500);
     } catch {

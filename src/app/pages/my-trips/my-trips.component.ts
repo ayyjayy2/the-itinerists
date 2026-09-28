@@ -7,13 +7,14 @@ import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { TripDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { InvitePanelComponent } from '../../shared/invite-panel/invite-panel.component';
 import { userMessage } from '../../utils/user-message';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 @Component({
   selector: 'app-my-trips',
-  imports: [IconComponent, CommonModule],
+  imports: [IconComponent, CommonModule, InvitePanelComponent],
   templateUrl: './my-trips.component.html',
   styleUrl: './my-trips.component.scss',
 })
@@ -30,6 +31,8 @@ export class MyTripsComponent implements OnInit {
 
   invitingId  = signal<string | null>(null);
   copiedId    = signal<string | null>(null);
+  /** Trip id → the invite just generated for it (code + link shown under the card). */
+  openInvite = signal<{ tripId: string; code: string } | null>(null);
   inviteError = signal('');
 
   async ngOnInit(): Promise<void> {
@@ -66,8 +69,9 @@ export class MyTripsComponent implements OnInit {
     this.invitingId.set(trip.id);
     try {
       const code = await this.tripService.generateInvite(trip.id);
+      this.openInvite.set({ tripId: trip.id, code });
       const url  = `${window.location.origin}/join?code=${code}`;
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(url).catch(() => {/* panel still shows it */});
       this.copiedId.set(trip.id);
       setTimeout(() => this.copiedId.set(null), 2500);
     } catch (e: unknown) {

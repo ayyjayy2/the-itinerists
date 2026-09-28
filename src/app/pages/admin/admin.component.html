@@ -27,13 +27,8 @@
         <div class="alert alert-error">{{ inviteError() }}</div>
       }
 
-      @if (inviteLink()) {
-        <div class="invite-box">
-          <span class="invite-url">{{ inviteLink() }}</span>
-          <button class="btn btn-accent btn-sm" (click)="copyInvite()">
-            {{ inviteCopied() ? 'Copied!' : 'Copy' }}
-          </button>
-        </div>
+      @if (inviteCode()) {
+        <app-invite-panel [code]="inviteCode()" />
       }
     </div>
 

@@ -8,6 +8,7 @@ import { TripService } from '../../services/trip.service';
 import { TripMember } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
+import { InvitePanelComponent } from '../../shared/invite-panel/invite-panel.component';
 import { userMessage } from '../../utils/user-message';
 
 /**
@@ -19,7 +20,7 @@ import { userMessage } from '../../utils/user-message';
  */
 @Component({
   selector: 'app-admin',
-  imports: [IconComponent, CommonModule, FormsModule, RouterLink, AvatarGlyphComponent],
+  imports: [IconComponent, CommonModule, FormsModule, RouterLink, AvatarGlyphComponent, InvitePanelComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
@@ -41,10 +42,9 @@ export class AdminComponent {
   memberToRemove = signal<TripMember | null>(null);
 
   // Invite
-  inviteLink     = signal('');
+  inviteCode     = signal('');
   inviteLoading  = signal(false);
   inviteError    = signal('');
-  inviteCopied   = signal(false);
 
   async generateInvite(): Promise<void> {
     const uid    = this.currentUser()?.uid;
@@ -52,21 +52,15 @@ export class AdminComponent {
     if (!uid || !tripId || !this.isOwner()) return;
     this.inviteLoading.set(true);
     this.inviteError.set('');
-    this.inviteLink.set('');
+    this.inviteCode.set('');
     try {
       const code = await this.authService.generateInviteCode(uid, tripId);
-      this.inviteLink.set(`${window.location.origin}/join?code=${code}`);
+      this.inviteCode.set(code);
     } catch {
       this.inviteError.set('Failed to generate invite. Please try again.');
     } finally {
       this.inviteLoading.set(false);
     }
-  }
-
-  async copyInvite(): Promise<void> {
-    await navigator.clipboard.writeText(this.inviteLink());
-    this.inviteCopied.set(true);
-    setTimeout(() => this.inviteCopied.set(false), 2000);
   }
 
   canRemove(member: TripMember): boolean {
