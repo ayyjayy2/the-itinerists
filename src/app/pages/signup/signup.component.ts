@@ -1,7 +1,7 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService, EmailInUseError } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
@@ -23,11 +23,12 @@ import { LocalCacheService } from '../../services/local-cache.service';
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.scss',
 })
-export class SignupComponent {
+export class SignupComponent implements OnInit {
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private router      = inject(Router);
   private localCache  = inject(LocalCacheService);
+  private route       = inject(ActivatedRoute);
 
   readonly version   = APP_VERSION;
   readonly buildDate = APP_BUILD_DATE;
@@ -40,6 +41,35 @@ export class SignupComponent {
   confirmPass = '';
   email = '';
   color       = '#F4C2C2';
+
+  /** Optional. Filled → the new account joins that trip straight away;
+   *  empty → Get started (set up a trip, or do it later). A friend's invite
+   *  link lands here with ?code= already filled in. */
+  inviteCode     = '';
+  inviteError    = signal('');
+  inviteChecking = signal(false);
+
+  ngOnInit(): void {
+    const code = (this.route.snapshot.queryParamMap.get('code') ?? '').trim().toUpperCase();
+    if (code) { this.inviteCode = code; void this.checkInviteCode(); }
+  }
+
+  /** Validate the code on blur (and on arrival from a link). */
+  async checkInviteCode(): Promise<void> {
+    const code = this.inviteCode.trim().toUpperCase();
+    this.inviteCode = code;
+    this.inviteError.set('');
+    if (!code) return;
+    this.inviteChecking.set(true);
+    try {
+      const tripId = await this.authService.validateInviteCode(code);
+      if (!tripId) this.inviteError.set('This invite code is invalid or has expired.');
+    } catch {
+      this.inviteError.set("Couldn't check that code. Check your connection and try again.");
+    } finally {
+      this.inviteChecking.set(false);
+    }
+  }
 
   showPassword = signal(false);
 
@@ -57,12 +87,17 @@ export class SignupComponent {
   }
   fieldError(field: SignupField): string { return this.form.error(field, this.values()); }
   onBlur(field: SignupField): void { void this.form.blur(field, this.values()); }
-  get canSubmit(): boolean { return this.form.isValid(this.values()); }
+  get canSubmit(): boolean { return this.form.isValid(this.values()) && !this.inviteError() && !this.inviteChecking(); }
 
   /** Set once the user has tried to submit; from then on the red box above the
    *  button lists what still blocks the account, live, until it's all fixed. */
   readonly submitAttempted = signal(false);
-  get blockers(): string[] { return this.submitAttempted() ? this.form.problems(this.values()) : []; }
+  get blockers(): string[] {
+    if (!this.submitAttempted()) return [];
+    const list = this.form.problems(this.values());
+    if (this.inviteError()) list.push('Fix or clear the invite code.');
+    return list;
+  }
   loading      = signal(false);
   error        = signal('');
 
@@ -79,17 +114,28 @@ export class SignupComponent {
 
     this.loading.set(true);
     try {
-      await this.authService.registerStandalone(
-        this.displayName.trim(),
-        this.avatarEmoji,
-        this.username.trim(),
-        this.password,
-        this.color,
-        this.email.trim(),
-        this.avatarLetterColor,
-      );
-      await this.userService.waitForUser();
-      this.router.navigate(['/get-started']);
+      const code = this.inviteCode.trim().toUpperCase();
+      if (code) {
+        // Joins the invited trip as part of registration → straight to Home.
+        await this.authService.register(
+          code, this.displayName.trim(), this.avatarEmoji, this.username.trim(),
+          this.password, this.color, this.avatarLetterColor, this.email.trim(),
+        );
+        await this.userService.waitForUser();
+        this.router.navigate(['/home']);
+      } else {
+        await this.authService.registerStandalone(
+          this.displayName.trim(),
+          this.avatarEmoji,
+          this.username.trim(),
+          this.password,
+          this.color,
+          this.email.trim(),
+          this.avatarLetterColor,
+        );
+        await this.userService.waitForUser();
+        this.router.navigate(['/get-started']);
+      }
     } catch (err: any) {
       if (err instanceof EmailInUseError) { this.checkInbox.set(err.email); return; }
       if (this.localCache.recoverIfBroken(err)) return;

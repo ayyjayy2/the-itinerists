@@ -89,7 +89,7 @@
           </span>
           <span class="wc-arrow">›</span>
         </a>
-        <a class="welcome-card" routerLink="/join">
+        <a class="welcome-card" routerLink="/get-started" [queryParams]="{ mode: 'code' }">
           <span class="wc-icon lav"><app-icon name="link" [size]="20" /></span>
           <span class="wc-body">
             <span class="wc-title">I have an invite code</span>

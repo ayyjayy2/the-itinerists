@@ -150,7 +150,7 @@ const DEFAULT_COPY: PageCopy = {
         <a class="btn btn-primary cta-main" routerLink="/trips/new">
           Set up a trip <app-icon name="plus" [size]="15" [strokeWidth]="2.6" />
         </a>
-        <div><a class="btn btn-ghost cta-join" routerLink="/join">I have an invite code</a></div>
+        <div><a class="btn btn-ghost cta-join" routerLink="/get-started" [queryParams]="{ mode: 'code' }">I have an invite code</a></div>
       </div>
     </div>
   `,

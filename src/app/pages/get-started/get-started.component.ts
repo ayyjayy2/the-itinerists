@@ -1,7 +1,7 @@
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
 import { BrandComponent } from '../../shared/brand/brand.component';
@@ -25,11 +25,17 @@ export class GetStartedComponent {
   private userService = inject(UserService);
   private router      = inject(Router);
   private localCache  = inject(LocalCacheService);
+  private route       = inject(ActivatedRoute);
 
   readonly currentUser = this.userService.currentUser;
 
   /** Which panel is open: the choice menu, or the invite-code entry. */
   mode = signal<'choose' | 'code'>('choose');
+
+  constructor() {
+    // Home and every no-trip page link here with ?mode=code for "I have an invite code".
+    if (this.route.snapshot.queryParamMap.get('mode') === 'code') this.mode.set('code');
+  }
 
   inviteCode = '';
   joining    = signal(false);

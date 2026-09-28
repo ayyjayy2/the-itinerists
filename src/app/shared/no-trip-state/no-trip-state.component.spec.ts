@@ -24,7 +24,7 @@ describe('NoTripStateComponent', () => {
     const join  = el.querySelector('a.cta-join') as HTMLAnchorElement;
     expect(setUp.getAttribute('href')).toBe('/trips/new');
     expect(setUp.textContent).toContain('Set up a trip');
-    expect(join.getAttribute('href')).toBe('/join');
+    expect(join.getAttribute('href')).toBe('/get-started?mode=code');
   });
 
   it('picks the ghost flavour for the page', () => {

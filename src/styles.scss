@@ -303,6 +303,8 @@ input.invalid:focus { border-color: var(--danger); box-shadow: 0 0 0 3px var(--d
 
 .auth-error-list { margin: 0.35rem 0 0; padding-left: 1.1rem; li { margin: 0.15rem 0; } }
 
+label .optional { font-weight: 500; color: var(--text-muted); }
+
 .field-error {
   margin: 0.35rem 0 0;
   font-size: 0.8rem;
