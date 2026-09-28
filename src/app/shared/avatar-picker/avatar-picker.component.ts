@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AvatarGlyphComponent } from '../avatar-glyph/avatar-glyph.component';
 import { ALL_LETTERS, isLetterAvatar, starterLetters } from '../../utils/avatar-letters';
 import { BACKGROUND_COLORS, LETTER_COLORS, pickLetterColor } from '../../utils/avatar-contrast';
 
@@ -29,7 +30,7 @@ const STARTER_COUNT = 6;
  */
 @Component({
   selector: 'app-avatar-picker',
-  imports: [CommonModule],
+  imports: [CommonModule, AvatarGlyphComponent],
   templateUrl: './avatar-picker.component.html',
   styleUrl: './avatar-picker.component.scss',
 })
@@ -49,6 +50,11 @@ export class AvatarPickerComponent {
   /** Emoji / letters other members already use — shown disabled. */
   @Input() taken: ReadonlySet<string> = new Set();
 
+  /** Show a live "this is how you'll look" card above the grid (signup/join). */
+  @Input() preview = false;
+  /** Username to show under the name in the preview card. */
+  @Input() previewUsername = '';
+
   readonly emojiOptions = EMOJI_OPTIONS;
   readonly colorOptions = COLOR_OPTIONS;
   readonly letterColorOptions = LETTER_COLORS;
@@ -56,7 +62,7 @@ export class AvatarPickerComponent {
   readonly emojiSig       = signal('');
   readonly colorSig       = signal('');
   readonly letterColorSig = signal('');
-  private readonly nameSig = signal('');
+  readonly nameSig = signal('');
   readonly showAllLetters  = signal(false);
 
   readonly letters = computed(() =>

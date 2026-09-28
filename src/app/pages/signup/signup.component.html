@@ -16,10 +16,36 @@
           name="displayName"
           placeholder="e.g. Alayna"
           required
+          (blur)="onBlur('name')"
+          [class.invalid]="!!fieldError('name')"
+          [attr.aria-invalid]="fieldError('name') ? true : null"
+          [attr.aria-describedby]="fieldError('name') ? 'signup-err-name' : null"
         />
+      @if (fieldError('name'); as err) {
+        <p class="field-error" id="signup-err-name">{{ err }}</p>
+      }
       </div>
 
-      <app-avatar-picker [(emoji)]="avatarEmoji" [(color)]="color" [(letterColor)]="avatarLetterColor" [name]="displayName" />
+      <div class="form-group">
+        <label>Username</label>
+        <input
+          type="text"
+          [(ngModel)]="username"
+          name="username"
+          placeholder="3–20 letters, numbers, . _ -"
+          maxlength="20"
+          autocapitalize="none"
+          autocomplete="username"
+          required
+          (blur)="onBlur('username')"
+          [class.invalid]="!!fieldError('username')"
+          [attr.aria-invalid]="fieldError('username') ? true : null"
+          [attr.aria-describedby]="fieldError('username') ? 'signup-err-username' : null"
+        />
+      @if (fieldError('username'); as err) {
+        <p class="field-error" id="signup-err-username">{{ err }}</p>
+      }
+      </div>
 
       <div class="form-group">
         <label>Email</label>
@@ -30,22 +56,18 @@
           placeholder="you@example.com"
           autocomplete="email"
           required
+          (blur)="onBlur('email')"
+          [class.invalid]="!!fieldError('email')"
+          [attr.aria-invalid]="fieldError('email') ? true : null"
+          [attr.aria-describedby]="fieldError('email') ? 'signup-err-email' : null"
         />
+      @if (fieldError('email'); as err) {
+        <p class="field-error" id="signup-err-email">{{ err }} @if (err === EMAIL_EXISTS) { <a routerLink="/login">Log in?</a> }</p>
+      }
         <p class="hint">Where password resets go. Kept separate from your username.</p>
       </div>
 
-      <div class="form-group">
-        <label>Username</label>
-        <input
-          type="text"
-          [(ngModel)]="username"
-          name="username"
-          placeholder="Lowercase, no spaces"
-          autocapitalize="none"
-          autocomplete="username"
-          required
-        />
-      </div>
+      <app-avatar-picker [(emoji)]="avatarEmoji" [(color)]="color" [(letterColor)]="avatarLetterColor" [name]="displayName" [preview]="true" [previewUsername]="username" />
 
       <div class="form-group">
         <label>Password</label>
@@ -57,12 +79,19 @@
             placeholder="At least 8 characters"
             autocomplete="new-password"
             required
+            (blur)="onBlur('password')"
+            [class.invalid]="!!fieldError('password')"
+            [attr.aria-invalid]="fieldError('password') ? true : null"
+            [attr.aria-describedby]="fieldError('password') ? 'signup-err-password' : null"
           />
           <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"
                   [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
             <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
           </button>
         </div>
+        @if (fieldError('password'); as err) {
+          <p class="field-error" id="signup-err-password">{{ err }}</p>
+        }
         <ul class="pw-rules">
           @for (rule of passwordChecklist; track rule.label) {
             <li [class.met]="rule.met">{{ rule.met ? '✓' : '○' }} {{ rule.label }}</li>
@@ -80,11 +109,25 @@
             placeholder="Re-enter password"
             autocomplete="new-password"
             required
+            (blur)="onBlur('confirm')"
+            [class.invalid]="!!fieldError('confirm')"
+            [attr.aria-invalid]="fieldError('confirm') ? true : null"
+            [attr.aria-describedby]="fieldError('confirm') ? 'signup-err-confirm' : null"
           />
         </div>
+        @if (fieldError('confirm'); as err) {
+          <p class="field-error" id="signup-err-confirm">{{ err }}</p>
+        }
       </div>
 
-      @if (error()) {
+      @if (blockers.length) {
+        <div class="auth-error" role="alert">
+          <strong>Please fix the following:</strong>
+          <ul class="auth-error-list">
+            @for (line of blockers; track line) { <li>{{ line }}</li> }
+          </ul>
+        </div>
+      } @else if (error()) {
         <div class="auth-error">{{ error() }}</div>
       }
 

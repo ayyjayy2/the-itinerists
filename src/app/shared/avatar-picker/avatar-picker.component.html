@@ -1,3 +1,14 @@
+@if (preview) {
+  <div class="avatar-preview-card" aria-live="polite">
+    <div class="avatar-preview" [style.background]="colorSig() || '#F4C2C2'">
+      <app-avatar-glyph [emoji]="emojiSig() || '🌸'" [letterColor]="letterColorSig()" />
+    </div>
+    <div class="preview-text">
+      <div class="preview-name">{{ nameSig().trim() || 'Your name' }}</div>
+      <div class="preview-username">&#64;{{ previewUsername.trim().toLowerCase() || 'username' }}</div>
+    </div>
+  </div>
+}
 <div class="form-group">
   <label>Icon</label>
   <div class="emoji-grid">

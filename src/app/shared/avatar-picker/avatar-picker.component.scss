@@ -1,5 +1,26 @@
 :host { display: block; }
 
+// Live preview of the chosen icon + color, shown above the grid on signup/join.
+.avatar-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+}
+.avatar-preview {
+  width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.preview-text { min-width: 0; }
+.preview-name { font-size: 1.05rem; font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+.preview-username { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.1rem; overflow-wrap: anywhere; }
+
 .form-group {
   margin-bottom: 1rem;
 
