@@ -33,7 +33,7 @@ import { IconComponent } from '../icon/icon.component';
           <app-icon name="link" [size]="14" /> Share…
         </button>
       }
-      <p class="invite-hint">Friends can tap the link, or type the code on the sign-up screen or under "I have an invite code". Good for 7 days.</p>
+      <p class="invite-hint">Friends can tap the link, or type the code on the sign-up screen or under "I have an invite code". Good for 7 days. Generating a new invite closes this one.</p>
       <div class="invite-close">
         <button type="button" class="btn btn-ghost btn-sm btn-ghost-danger" (click)="close.emit(code())" [disabled]="closing()">
           {{ closing() ? 'Closing…' : 'Close invite' }}
