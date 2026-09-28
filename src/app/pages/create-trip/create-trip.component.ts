@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { dateRangeProblem } from '../../utils/date-range';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -25,6 +26,9 @@ interface DestForm {
   styleUrl: './create-trip.component.scss',
 })
 export class CreateTripComponent {
+  /** Start/end date pairs: the end may not be before the start (utils/date-range). */
+  readonly dateRangeProblem = dateRangeProblem;
+
   private tripService = inject(TripService);
   private router      = inject(Router);
 
@@ -79,7 +83,7 @@ export class CreateTripComponent {
         const d = this.destinations[i], n = i + 1;
         if (!d.destination.trim())      { this.error.set(`Destination ${n}: please enter a destination.`); return; }
         if (!d.startDate || !d.endDate) { this.error.set(`Destination ${n}: please choose start and end dates.`); return; }
-        if (d.endDate < d.startDate)    { this.error.set(`Destination ${n}: end date can’t be before the start date.`); return; }
+        { const p = dateRangeProblem(d.startDate, d.endDate); if (p) { this.error.set(`Destination ${n}: ${p}`); return; } }
       }
       const destinations: TripDestination[] = this.destinations.map(d => ({
         destination: d.destination.trim(),
@@ -92,7 +96,7 @@ export class CreateTripComponent {
       const destination = this.destination.trim();
       if (!destination)                     { this.error.set('Please enter a destination.'); return; }
       if (!this.startDate || !this.endDate) { this.error.set('Please choose start and end dates.'); return; }
-      if (this.endDate < this.startDate)    { this.error.set('End date can’t be before the start date.'); return; }
+      { const p = dateRangeProblem(this.startDate, this.endDate); if (p) { this.error.set(p); return; } }
       input = { name, destination, startDate: this.startDate, endDate: this.endDate, currency: this.currency };
     }
 

@@ -35,7 +35,8 @@
         </div>
         <div class="form-group">
           <label>Check-out</label>
-          <input type="date" [(ngModel)]="newDraft.checkOut" />
+          <input type="date" [(ngModel)]="newDraft.checkOut" [min]="newDraft.checkIn || null" [class.invalid]="!!dateRangeProblem(newDraft.checkIn, newDraft.checkOut, 'Check-out', 'check-in')" />
+          @if (dateRangeProblem(newDraft.checkIn, newDraft.checkOut, 'Check-out', 'check-in'); as err) { <p class="field-error">{{ err }}</p> }
         </div>
       </div>
 
@@ -79,7 +80,7 @@
 
       <div class="form-actions">
         <button class="btn btn-ghost btn-sm" (click)="cancelAdd()">Cancel</button>
-        <button class="btn btn-primary btn-sm" (click)="saveAdd()">Save Stay</button>
+        <button class="btn btn-primary btn-sm" (click)="saveAdd()" [disabled]="!!dateRangeProblem(newDraft.checkIn, newDraft.checkOut)">Save Stay</button>
       </div>
     </div>
   }
@@ -168,7 +169,8 @@
               </div>
               <div class="form-group">
                 <label>Check-out</label>
-                <input type="date" [(ngModel)]="draft.checkOut" />
+                <input type="date" [(ngModel)]="draft.checkOut" [min]="draft.checkIn || null" [class.invalid]="!!dateRangeProblem(draft.checkIn, draft.checkOut, 'Check-out', 'check-in')" />
+                @if (dateRangeProblem(draft.checkIn, draft.checkOut, 'Check-out', 'check-in'); as err) { <p class="field-error">{{ err }}</p> }
               </div>
             </div>
 
@@ -214,7 +216,7 @@
               <button class="btn btn-danger btn-sm" (click)="deleteStay(stay)">Delete</button>
               <span class="actions-spacer"></span>
               <button class="btn btn-ghost btn-sm"   (click)="cancelEdit()">Cancel</button>
-              <button class="btn btn-primary btn-sm" (click)="saveEdit(stay)">Save</button>
+              <button class="btn btn-primary btn-sm" (click)="saveEdit(stay)" [disabled]="!!dateRangeProblem(draft.checkIn, draft.checkOut)">Save</button>
             </div>
           </div>
         }

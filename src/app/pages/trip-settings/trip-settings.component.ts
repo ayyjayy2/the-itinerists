@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed, effect } from '@angular/core';
+import { dateRangeProblem } from '../../utils/date-range';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -33,6 +34,9 @@ interface DestRow {
   styleUrl: './trip-settings.component.scss',
 })
 export class TripSettingsComponent {
+  /** Start/end date pairs: the end may not be before the start (utils/date-range). */
+  readonly dateRangeProblem = dateRangeProblem;
+
   private tripService = inject(TripService);
   private userService = inject(UserService);
   private themeService = inject(ThemeService);
@@ -157,7 +161,7 @@ export class TripSettingsComponent {
       const where = this.multiDest ? `Destination ${i + 1}: ` : '';
       if (!r.destination.trim())    { this.error.set(`${where}please enter a destination.`); return; }
       if (!r.startDate || !r.endDate) { this.error.set(`${where}please choose start and end dates.`); return; }
-      if (r.endDate < r.startDate)    { this.error.set(`${where}end date can’t be before the start date.`); return; }
+      { const p = dateRangeProblem(r.startDate, r.endDate); if (p) { this.error.set(`${where}${p}`); return; } }
     }
 
     const destinations = buildEditedDestinations(rows);
