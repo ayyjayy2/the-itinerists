@@ -1,8 +1,10 @@
 import { Component, OnInit, inject, computed, effect, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd, NavigationError } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from './shared/icon/icon.component';
 import { BrandComponent } from './shared/brand/brand.component';
+import { LoadingComponent } from './shared/loading/loading.component';
+import { BusyBarComponent } from './shared/loading/busy-bar.component';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
 import { UserService } from './services/user.service';
@@ -35,7 +37,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent, NotificationBellComponent, CdkDrag, CdkDropList, AvatarGlyphComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent, NotificationBellComponent, CdkDrag, CdkDropList, AvatarGlyphComponent, LoadingComponent, BusyBarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -59,6 +61,13 @@ export class AppComponent implements OnInit {
   readonly version   = APP_VERSION;
   readonly isDemo    = DEMO;
   readonly buildDate = APP_BUILD_DATE;
+
+  /** A route change is in flight (its page code may still be downloading). */
+  private navigating = signal(false);
+  /** App-wide wait shown as the top busy bar: navigation, or the active trip
+   *  still being restored right after sign-in. */
+  readonly busy = computed(() =>
+    this.navigating() || (!!this.userService.currentUser() && !this.tripService.ready()));
   sidebarOpen  = false;
   navCollapsed = localStorage.getItem('tripplanner_nav_collapsed') === 'true';
 
@@ -191,6 +200,11 @@ export class AppComponent implements OnInit {
   readonly drawerItems = computed(() => this.orderedNavItems());
 
   constructor() {
+    this.router.events.subscribe(e => {
+      if (e instanceof NavigationStart) this.navigating.set(true);
+      else if (e instanceof NavigationEnd || e instanceof NavigationCancel || e instanceof NavigationError) this.navigating.set(false);
+    });
+
     // Track the active URL (for the More-tab highlight) and close the sheet on navigation.
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))

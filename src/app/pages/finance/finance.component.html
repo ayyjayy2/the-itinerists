@@ -1,4 +1,6 @@
-@if (hasActiveTrip()) {
+@if (loading()) {
+  <app-loading />
+} @else if (hasActiveTrip()) {
 <div class="page-container">
 
   <!-- ── Header ── -->

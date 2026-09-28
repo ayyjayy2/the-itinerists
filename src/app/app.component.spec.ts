@@ -48,6 +48,7 @@ describe('AppComponent', () => {
             activeMembers: signal([]),
             hiddenPages: signal<string[]>([]),
             isActiveTripOwner: signal(false),
+            ready: signal(true),
           },
         },
         { provide: AuthService, useValue: {} },

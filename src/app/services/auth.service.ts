@@ -333,11 +333,23 @@ export class AuthService {
    * `authEmail` the next time the app sees the confirmed change.
    */
   async addRecoveryEmail(currentPassword: string, newEmail: string): Promise<void> {
+    await this.sendRecoveryEmail(newEmail, currentPassword);
+  }
+
+  /**
+   * (Re)send the verification link for a recovery email. Firebase treats this
+   * as a sensitive action: it goes through without a password only when the
+   * user signed in recently, otherwise it throws `auth/requires-recent-login`
+   * and the caller should ask for the password and try again with it.
+   */
+  async sendRecoveryEmail(newEmail: string, currentPassword?: string): Promise<void> {
     const user = this.auth.currentUser;
     if (!user?.email) throw new Error('Not signed in.');
     const email = newEmail.toLowerCase().trim();
-    const cred  = EmailAuthProvider.credential(user.email, currentPassword);
-    await reauthenticateWithCredential(user, cred);
+    if (currentPassword) {
+      const cred = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user, cred);
+    }
     await verifyBeforeUpdateEmail(user, email, { url: `${window.location.origin}/profile`, handleCodeInApp: false });
     await updateDoc(doc(this.firestore, 'users', user.uid), { pendingEmail: email });
   }

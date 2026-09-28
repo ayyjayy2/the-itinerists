@@ -30,6 +30,11 @@ export class PackingService {
   readonly suggestions = this._suggestions.asReadonly();
   readonly categories  = this._categories.asReadonly();
 
+  /** False until the first snapshot for the active trip has arrived (pages
+   *  hold their empty states until then, see LoadingComponent). */
+  private _loaded = signal(false);
+  readonly loaded = this._loaded.asReadonly();
+
   private unsubs: Unsubscribe[] = [];
 
   constructor() {
@@ -48,11 +53,14 @@ export class PackingService {
     this.unsubs = [];
     if (!tripId || !uid) {
       this._items.set([]); this._suggestions.set([]); this._categories.set([...DEFAULT_PACKING_CATEGORIES]);
+      this._loaded.set(true);
       return;
     }
+    this._loaded.set(false);
     runInInjectionContext(this.injector, () => {
       this.unsubs.push(
         onSnapshot(this.packingRef(tripId, uid), snap => {
+          this._loaded.set(true);
           const data = snap.exists() ? snap.data() : {};
           this._items.set((data['items'] as PackingItem[]) ?? []);
           this._categories.set(this.mergeCategories((data['categories'] as string[]) ?? []));

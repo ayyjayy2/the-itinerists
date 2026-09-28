@@ -4,8 +4,13 @@
     <span>A sample trip, no sign-in. Anything you change lives only in this tab.</span>
   </div>
 }
-<!-- Full-screen auth/onboarding: no chrome -->
-@if (isAuthPage()) {
+<app-busy-bar [active]="busy()" />
+<!-- Nothing renders until Firebase says who is signed in (the route guard
+     waits for the same thing); a delayed spinner covers a slow answer. -->
+@if (!userService.authInitialized()) {
+  <app-loading label="" />
+} @else if (isAuthPage()) {
+  <!-- Full-screen auth/onboarding: no chrome -->
   <router-outlet />
 } @else {
   <div class="app-shell">

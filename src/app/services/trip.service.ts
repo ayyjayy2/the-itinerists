@@ -83,12 +83,27 @@ export class TripService {
     return !!uid && this._activeMembers().some(m => m.uid === uid && m.role === 'owner');
   });
 
+
+  /** The active trip id, but only while someone is signed in. Listeners opened
+   *  while signed out are refused by the rules and never recover, so trip
+   *  subscriptions follow the user as well as the trip. */
+  private signedInTripId = computed(() =>
+    this.userService.currentUser() ? this.tripContext.activeTripId() : null);
+
   private activeUnsubs: Unsubscribe[] = [];
   private restoring = false;
 
+  /** True once the trip doc for the active trip has arrived (or there is none). */
+  private _tripDocLoaded = signal(false);
+  /** True once we've checked the user's saved trips for one to restore. */
+  private _restoreChecked = signal(false);
+  /** False while it's still unknown whether the user has an active trip —
+   *  pages show a spinner instead of flashing "set up a trip". */
+  readonly ready = computed(() => this._restoreChecked() && this._tripDocLoaded());
+
   constructor() {
     // Keep `activeTrip` + `activeMembers` in sync with whichever trip is active.
-    effect(() => this.watchActiveTrip(this.tripContext.activeTripId()));
+    effect(() => this.watchActiveTrip(this.signedInTripId()));
 
     // On login, restore the user's last active trip when none is set locally
     // (e.g. a fresh device/browser) — spec §3.2 (TP-14).
@@ -100,7 +115,7 @@ export class TripService {
 
   /** If no trip is active locally, adopt the user's lastActiveTrip (or their first trip). */
   private async maybeRestoreActiveTrip(uid: string): Promise<void> {
-    if (this.tripContext.activeTripId() || this.restoring) return;
+    if (this.tripContext.activeTripId() || this.restoring) { this._restoreChecked.set(true); return; }
     this.restoring = true;
     try {
       const snap = await runInInjectionContext(this.injector, () =>
@@ -117,6 +132,7 @@ export class TripService {
       }
     } finally {
       this.restoring = false;
+      this._restoreChecked.set(true);
     }
   }
 
@@ -125,11 +141,14 @@ export class TripService {
     this.activeUnsubs = [];
     if (!tripId) {
       this._activeTrip.set(null); this._activeMembers.set([]); this._activeActivity.set([]);
+      this._tripDocLoaded.set(true);
       return;
     }
+    this._tripDocLoaded.set(false);
     runInInjectionContext(this.injector, () => {
       this.activeUnsubs.push(
         onSnapshot(doc(this.firestore, 'trips', tripId), snap => {
+          this._tripDocLoaded.set(true);
           this._activeTrip.set(snap.exists() ? (snap.data() as TripDoc) : null);
         }),
         onSnapshot(collection(this.firestore, 'trips', tripId, 'members'), snap => {

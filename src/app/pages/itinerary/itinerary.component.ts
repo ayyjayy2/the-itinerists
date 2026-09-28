@@ -11,6 +11,7 @@ import { TripService } from '../../services/trip.service';
 import { DataService } from '../../services/data.service';
 import { ItineraryItemDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { flightMomentsForUid } from '../../utils/flight-events';
 import { stayMomentsFor } from '../../utils/stay-events';
@@ -43,7 +44,7 @@ function fallbackWindow(): string[] {
 
 @Component({
   selector: 'app-itinerary',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule, DragDropModule, RouterLink, TimeInputComponent, Time12Pipe],
+  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule, DragDropModule, RouterLink, TimeInputComponent, Time12Pipe],
   templateUrl: './itinerary.component.html',
   styleUrl: './itinerary.component.scss'
 })
@@ -63,6 +64,8 @@ export class ItineraryComponent implements OnInit {
 
   /** Active-trip date state (TP-23). */
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
+  /** Spinner (delayed) until we know the trip and its data — no empty-state flash. */
+  readonly loading = computed(() => !this.tripService.ready() || !this.itineraryService.loaded() || !this.flightsService.loaded());
   readonly hasTripDates  = computed(() => {
     const t = this.tripService.activeTrip();
     return !!(t?.startDate && t?.endDate);
