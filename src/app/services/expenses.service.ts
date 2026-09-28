@@ -13,6 +13,11 @@ export class ExpensesService {
   private userService = inject(UserService);
   private firestore   = inject(Firestore);
   private _expenses   = signal<Expense[]>([]);
+  /** False until the first snapshot for the active trip has arrived (pages
+   *  hold their empty states until then, see LoadingComponent). */
+  private _loaded = signal(false);
+  readonly loaded = this._loaded.asReadonly();
+
   private _unsubscribe: (() => void) | null = null;
 
   readonly expenses = this._expenses.asReadonly();
@@ -49,6 +54,7 @@ export class ExpensesService {
     this._unsubscribe = onSnapshot(
       docRef,
       snap => {
+        this._loaded.set(true);
         if (snap.exists()) {
           const items = (snap.data()['items'] ?? []) as Expense[];
           this._expenses.set(items);

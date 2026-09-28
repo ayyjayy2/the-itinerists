@@ -6,6 +6,7 @@ import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { Rec, RecDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { tripDestinations, activeLeg, localTodayISO } from '../../utils/trip-destinations';
 import { groupRecsByCategory, groupRecsByDestination, ANYWHERE, DestinationSection } from '../../utils/rec-groups';
@@ -14,7 +15,7 @@ const CATEGORIES = ['Food', 'Drink', 'Places', 'Activities', 'Tips', 'Culture'];
 
 @Component({
   selector: 'app-recs',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
+  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule],
   templateUrl: './recs.component.html',
   styleUrl: './recs.component.scss'
 })
@@ -23,6 +24,8 @@ export class RecsComponent {
   userService = inject(UserService);
   tripService = inject(TripService);
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
+  /** Spinner (delayed) until we know the trip and its data — no empty-state flash. */
+  readonly loading = computed(() => !this.tripService.ready() || !this.recsService.loaded());
 
   currentUser = this.userService.currentUser;
   isAdmin     = this.userService.isAdmin;

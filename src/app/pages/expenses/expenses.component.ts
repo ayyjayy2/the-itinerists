@@ -8,6 +8,7 @@ import { UsersService } from '../../services/users.service';
 import { TripService } from '../../services/trip.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
@@ -26,7 +27,7 @@ interface DisplayExpense {
 
 @Component({
   selector: 'app-expenses',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, NgClass, FormsModule, EmptyDateHintDirective],
+  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, NgClass, FormsModule, EmptyDateHintDirective],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss'
 })
@@ -37,6 +38,8 @@ export class ExpensesComponent implements OnInit {
   usersService    = inject(UsersService);
   tripService = inject(TripService);
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
+  /** Spinner (delayed) until we know the trip and its data — no empty-state flash. */
+  readonly loading = computed(() => !this.tripService.ready() || !this.expensesService.loaded());
 
   currentUser = this.userService.currentUser;
   categories  = CATEGORIES;

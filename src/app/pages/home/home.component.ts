@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, computed, signal, effect } from '
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { LoadingComponent } from '../../shared/loading/loading.component';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { DayMapCardComponent } from '../../shared/day-map-card/day-map-card.component';
 import { UserService } from '../../services/user.service';
@@ -27,7 +28,7 @@ import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.com
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, RouterLink, IconComponent, BrandComponent, DayMapCardComponent, AvatarGlyphComponent],
+  imports: [LoadingComponent, CommonModule, RouterLink, IconComponent, BrandComponent, DayMapCardComponent, AvatarGlyphComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -47,6 +48,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   readonly activeTrip    = this.tripService.activeTrip;
   readonly hasActiveTrip = computed(() => this.activeTrip() !== null);
+  /** Spinner (delayed) until we know the trip and its data — no empty-state flash. */
+  readonly loading = computed(() => !this.tripService.ready() || !this.itineraryService.loaded() || !this.flightsService.loaded());
   readonly members       = this.tripService.activeMembers;
 
   private now = signal(Date.now());

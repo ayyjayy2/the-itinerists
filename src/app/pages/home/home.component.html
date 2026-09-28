@@ -15,7 +15,9 @@
     </div>
   }
 
-  @if (hasActiveTrip()) {
+  @if (loading()) {
+    <app-loading />
+  } @else if (hasActiveTrip()) {
     <!-- Trip switcher (Type A only — B and C switch trips on My Trips) -->
     @if (layout() === 'A') {
       <div class="switcher">
@@ -100,7 +102,7 @@
     </div>
   }
 
-  @if (hasActiveTrip()) {
+  @if (!loading() && hasActiveTrip()) {
     @if (layout() !== 'B') {
     <!-- Pinned quick-shortcuts (A and C; B has the drawer grid instead).
          Saved pins are account data — the section must render wherever the

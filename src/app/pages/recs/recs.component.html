@@ -1,4 +1,6 @@
-@if (hasActiveTrip()) {
+@if (loading()) {
+  <app-loading />
+} @else if (hasActiveTrip()) {
 <div class="page-container">
   <div class="page-header">
     <h2><app-icon name="recs" [size]="22" /> Tips & Recs</h2>

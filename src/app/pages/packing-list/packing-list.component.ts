@@ -6,13 +6,14 @@ import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { TripService } from '../../services/trip.service';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
 type TabType = 'list' | 'suggestions' | 'send';
 
 @Component({
   selector: 'app-packing-list',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
+  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule],
   templateUrl: './packing-list.component.html',
   styleUrl: './packing-list.component.scss'
 })
@@ -22,6 +23,8 @@ export class PackingListComponent implements OnInit {
   usersService   = inject(UsersService);
   tripService = inject(TripService);
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
+  /** Spinner (delayed) until we know the trip and its data — no empty-state flash. */
+  readonly loading = computed(() => !this.tripService.ready() || !this.packingService.loaded());
 
   currentUser = this.userService.currentUser;
   tab = signal<TabType>('list');

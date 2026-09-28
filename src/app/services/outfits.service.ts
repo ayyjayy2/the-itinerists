@@ -1,13 +1,21 @@
-import { Injectable, signal, inject, Injector, runInInjectionContext, effect } from '@angular/core';
+import { Injectable, signal, inject, Injector, runInInjectionContext, effect, computed } from '@angular/core';
 import { Firestore, collection, doc, onSnapshot, setDoc, deleteDoc, updateDoc, Unsubscribe } from '@angular/fire/firestore';
 import { OutfitEntry } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
+import { UserService } from './user.service';
 
 @Injectable({ providedIn: 'root' })
 export class OutfitsService {
   private firestore   = inject(Firestore);
   private injector    = inject(Injector);
   private tripContext = inject(TripContextService);
+  private userService = inject(UserService);
+
+  /** The active trip id, but only while someone is signed in. Listeners opened
+   *  while signed out are refused by the rules and never recover, so trip
+   *  subscriptions follow the user as well as the trip. */
+  private signedInTripId = computed(() =>
+    this.userService.currentUser() ? this.tripContext.activeTripId() : null);
 
   private _outfits = signal<OutfitEntry[]>([]);
   readonly outfits = this._outfits.asReadonly();
@@ -15,7 +23,7 @@ export class OutfitsService {
   private unsub?: Unsubscribe;
 
   constructor() {
-    effect(() => this.subscribe(this.tripContext.activeTripId()));
+    effect(() => this.subscribe(this.signedInTripId()));
   }
 
   /** Retained for AppComponent compatibility — the constructor effect drives the subscription. */

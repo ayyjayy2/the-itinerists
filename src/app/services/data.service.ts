@@ -1,4 +1,4 @@
-import { Injectable, signal, inject, Injector, runInInjectionContext, effect } from '@angular/core';
+import { Injectable, signal, inject, Injector, runInInjectionContext, effect, computed } from '@angular/core';
 import {
   Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, Unsubscribe,
 } from '@angular/fire/firestore';
@@ -8,6 +8,7 @@ import {
 } from '../models/trip.models';
 import { sanitizeStrings } from '../utils/sanitize';
 import { TripContextService } from './trip-context.service';
+import { UserService } from './user.service';
 
 const EMPTY_SHEET: SheetData = {
   users: [], flights: [], itinerary: [], accommodations: [], finance: [],
@@ -31,6 +32,13 @@ export class DataService {
   private firestore   = inject(Firestore);
   private injector    = inject(Injector);
   private tripContext = inject(TripContextService);
+  private userService = inject(UserService);
+
+  /** The active trip id, but only while someone is signed in. Listeners opened
+   *  while signed out are refused by the rules and never recover, so trip
+   *  subscriptions follow the user as well as the trip. */
+  private signedInTripId = computed(() =>
+    this.userService.currentUser() ? this.tripContext.activeTripId() : null);
 
   private _data    = signal<SheetData | null>(null);
   private _loading = signal(true);
@@ -44,10 +52,11 @@ export class DataService {
   private carIds: string[] = [];        // doc ids parallel to parts.rentalCar (index-based API)
   private unsubs: Unsubscribe[] = [];
   private currentTripId: string | null = null;
+  private pendingFirst = new Set<string>();   // sub-collections still awaiting their first snapshot
 
   constructor() {
     // React to the active trip: (re)subscribe to its sub-collections.
-    effect(() => this.subscribeToTrip(this.tripContext.activeTripId()));
+    effect(() => this.subscribeToTrip(this.signedInTripId()));
   }
 
   /** Retained for AppComponent compatibility — the constructor effect drives loading. */
@@ -123,44 +132,57 @@ export class DataService {
     }
 
     this._loading.set(true);
+    const names = ['members', 'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins', 'flights'];
+    this.pendingFirst = new Set(names);
+    const arrived = (name: string) => {
+      this.pendingFirst.delete(name);
+      if (this.pendingFirst.size === 0) this._loading.set(false);
+    };
     runInInjectionContext(this.injector, () => {
       const col = (name: string) => collection(this.firestore, 'trips', tripId, name);
       this.unsubs.push(
         onSnapshot(col('members'), snap => {
+          arrived('members');
           this.parts.members = snap.docs.map(d => d.data() as TripMember);
           this.recompose();
         }),
         onSnapshot(col('itinerary'), snap => {
+          arrived('itinerary');
           this.parts.itinerary = snap.docs.map(d => toItineraryItem(d.data() as ItineraryItemDoc));
           this.recompose();
         }),
         onSnapshot(col('finance'), snap => {
+          arrived('finance');
           this.parts.finance = snap.docs.map(d => d.data() as FinanceEntryDoc);
           this.recompose();
         }),
         onSnapshot(col('stays'), snap => {
+          arrived('stays');
           this.parts.accommodations = snap.docs.map(d => d.data() as AccommodationDoc);
           this.recompose();
         }),
         onSnapshot(col('recs'), snap => {
+          arrived('recs');
           this.parts.recs = snap.docs.map(d => d.data() as RecDoc);
           this.recompose();
         }),
         onSnapshot(col('cars'), snap => {
+          arrived('cars');
           this.carIds = snap.docs.map(d => d.id);
           this.parts.rentalCar = snap.docs.map(d => d.data() as RentalCar);
           this.recompose();
         }),
         onSnapshot(col('pins'), snap => {
+          arrived('pins');
           this.parts.mapPins = snap.docs.map(d => d.data() as MapPin);
           this.recompose();
         }),
         onSnapshot(col('flights'), snap => {
+          arrived('flights');
           this.parts.flights = snap.docs.map(d => d.data() as FlightDoc);
           this.recompose();
         }),
       );
-      this._loading.set(false);
     });
   }
 

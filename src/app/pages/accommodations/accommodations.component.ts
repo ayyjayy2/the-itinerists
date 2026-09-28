@@ -7,6 +7,7 @@ import { UsersService } from '../../services/users.service';
 import { TripService } from '../../services/trip.service';
 import { AccommodationDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { TimeInputComponent } from '../../shared/time-input/time-input.component';
 import { Time12Pipe } from '../../shared/time12.pipe';
@@ -14,7 +15,7 @@ import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
 @Component({
   selector: 'app-accommodations',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
+  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
   templateUrl: './accommodations.component.html',
   styleUrl: './accommodations.component.scss'
 })
@@ -24,6 +25,8 @@ export class AccommodationsComponent {
   usersService = inject(UsersService);
   tripService = inject(TripService);
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
+  /** Spinner (delayed) until we know the trip and its data — no empty-state flash. */
+  readonly loading = computed(() => !this.tripService.ready() || !this.staysService.loaded());
 
   currentUser = this.userService.currentUser;
   readonly tripUsers = this.usersService.tripUsers;

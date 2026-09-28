@@ -68,6 +68,11 @@ export class ProfileComponent implements OnInit {
   recoverySaving    = signal(false);
   recoverySuccess   = signal(false);
   recoveryError     = signal('');
+  /** 'resend' when a link is already waiting on an address (one tap to send
+   *  it again); 'form' to enter a new address and password. */
+  recoveryMode      = signal<'resend' | 'form'>('form');
+  /** Firebase wanted a fresh sign-in before resending — ask for the password. */
+  needsPassword     = signal(false);
 
   readonly homeLayout = computed(() => effectiveHomeLayout(this.firestoreUser()));
   readonly canPickLayout = computed(() => canPickLayout(this.firestoreUser()));
@@ -126,7 +131,41 @@ export class ProfileComponent implements OnInit {
     this.recoveryPass  = '';
     this.recoveryError.set('');
     this.recoverySuccess.set(false);
+    this.needsPassword.set(false);
+    this.recoveryMode.set(this.pendingRecoveryEmail ? 'resend' : 'form');
     this.showRecoveryModal.set(true);
+  }
+
+  /** From resend mode: show the full form to enter another address. */
+  useDifferentEmail(): void {
+    this.recoveryError.set('');
+    this.recoverySuccess.set(false);
+    this.recoveryMode.set('form');
+  }
+
+  /** Send the waiting link again. Tries without a password first; if Firebase
+   *  insists on a recent sign-in, reveals the password field and retries with it. */
+  async resendRecoveryEmail(): Promise<void> {
+    const email = this.pendingRecoveryEmail;
+    if (!email) return;
+    this.recoveryError.set('');
+    this.recoverySuccess.set(false);
+    this.recoverySaving.set(true);
+    try {
+      await this.authService.sendRecoveryEmail(email, this.recoveryPass || undefined);
+      this.recoverySentTo = email;
+      this.recoveryPass = '';
+      this.needsPassword.set(false);
+      this.recoverySuccess.set(true);
+    } catch (err) {
+      if ((err as { code?: string })?.code === 'auth/requires-recent-login' && !this.recoveryPass) {
+        this.needsPassword.set(true);
+      } else {
+        this.recoveryError.set(recoveryEmailErrorMessage(err));
+      }
+    } finally {
+      this.recoverySaving.set(false);
+    }
   }
 
   closeRecoveryModal(): void { this.showRecoveryModal.set(false); }

@@ -7,6 +7,7 @@ import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { FlightDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { TimeInputComponent } from '../../shared/time-input/time-input.component';
 import { Time12Pipe } from '../../shared/time12.pipe';
@@ -74,7 +75,7 @@ function emptyForm(): FlightForm {
 
 @Component({
   selector: 'app-flights',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
+  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
   templateUrl: './flights.component.html',
   styleUrl: './flights.component.scss'
 })
@@ -84,6 +85,8 @@ export class FlightsComponent {
   userService       = inject(UserService);
   tripService       = inject(TripService);
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
+  /** Spinner (delayed) until we know the trip and its data — no empty-state flash. */
+  readonly loading = computed(() => !this.tripService.ready() || !this.flightsService.loaded());
 
   currentUser   = this.userService.currentUser;
   tripUsers     = this.usersService.tripUsers;
