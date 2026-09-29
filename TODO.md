@@ -35,6 +35,10 @@ Last updated: 2026-09-29.
 - [ ] Billing — note: digital subscriptions sold inside the iOS app must use Apple's
       in-app purchase, not Stripe; the ROADMAP's Stripe plan needs rework before any paid tier.
 - [ ] PDF export; Google Play submission.
+- [ ] Optional: custom avatar images instead of emoji, in the brand palette, so avatars look
+      the same on every device. Not required for the App Store — emoji are drawn by the phone
+      itself (the simulator's "?" boxes are a simulator defect). Story on the Trip Planner
+      board (GitHub project #9).
 
 ## Waiting on Alayna
 
