@@ -55,6 +55,8 @@
   gap: 1rem;
 }
 
+.consent { margin: 0 0 0.75rem; font-size: 0.82rem; color: var(--text-muted); text-align: center; a { color: var(--primary-dark); font-weight: 700; } }
+
 .auth-error {
   background: var(--highlight);
   color: #7a2020;

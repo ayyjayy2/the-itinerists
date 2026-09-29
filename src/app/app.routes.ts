@@ -20,6 +20,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/join/join.component').then(m => m.JoinComponent)
   },
   {
+    path: 'privacy',   // public: the App Store listing links here
+    loadComponent: () => import('./pages/privacy/privacy.component').then(m => m.PrivacyComponent)
+  },
+  {
     path: 'signup',
     loadComponent: () => import('./pages/signup/signup.component').then(m => m.SignupComponent)
   },

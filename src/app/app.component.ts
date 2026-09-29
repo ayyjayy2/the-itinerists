@@ -266,7 +266,7 @@ export class AppComponent implements OnInit {
   isAuthPage(): boolean {
     const url = this.router.url;
     // Full-screen, no-nav layout for the auth + onboarding screens (TP-25).
-    return ['/login', '/join', '/signup', '/get-started'].some(p => url.startsWith(p));
+    return ['/login', '/join', '/signup', '/get-started', '/privacy', '/forgot-password'].some(p => url.startsWith(p));
   }
 
   hardRefresh(): void {
