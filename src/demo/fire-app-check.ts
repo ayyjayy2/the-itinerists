@@ -8,3 +8,4 @@ export function initializeAppCheck(_app: unknown, _options: unknown): AppCheck {
 export function provideAppCheck(_factory: () => AppCheck): EnvironmentProviders {
   return makeEnvironmentProviders([]);
 }
+export async function getToken(_appCheck: AppCheck, _force?: boolean): Promise<{ token: string }> { return { token: 'demo' }; }

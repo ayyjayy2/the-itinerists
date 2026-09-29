@@ -200,6 +200,8 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior-y: contain;   // bounce stays inside the content, never moves the chrome
+  -webkit-overflow-scrolling: touch;
   padding-bottom: 1.5rem;
   // Tab bar is now in-flow, so no extra bottom padding is needed to clear it.
 }

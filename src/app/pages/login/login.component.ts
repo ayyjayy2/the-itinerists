@@ -45,17 +45,10 @@ export class LoginComponent {
       this.loading.set(false);
       return;
     }
-    try {
-      const user = await this.userService.waitForUser();
-      // New here / no trips yet? Guide them through setup first (TP-25).
-      const trips = user.uid ? await this.tripService.getUserTrips(user.uid) : [];
-      this.router.navigate([trips.length === 0 ? '/get-started' : '/home']);
-    } catch (err) {
-      console.error('[Login] Profile load error:', err);
-      if (this.localCache.recoverIfBroken(err)) return;
-      this.error.set(userMessage(err, 'Signed in but could not load profile. Please refresh.'));
-    } finally {
-      this.loading.set(false);
-    }
+    // Don't wait for the profile or the trip list here — Home shows its own
+    // spinner while they stream in, and its no-trip state covers first-timers.
+    // That takes two round trips off the time between "Sign in" and a screen.
+    this.router.navigate(['/home']);
+    this.loading.set(false);
   }
 }
