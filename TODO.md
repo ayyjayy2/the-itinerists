@@ -52,8 +52,10 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
 
 ## Phase 4 — Prep for launch (2–3 weeks)
 
-- [ ] Custom domain (e.g. theitinerists.com) — branded emails out of spam; steps in the
-      `custom-email-domain-paused` memory. *Decision: Alayna.*
+- [x] Custom domain bought: theitinerists.com at Hostinger, 2026-09-29, $23.38 for 2 years — *Alayna*.
+- [ ] Point it at Firebase: (a) Authentication → Templates → Customize domain, add the DNS
+      records in Hostinger, verify → then push the branded email templates; (b) Hosting → Add
+      custom domain → theitinerists.com (+ www) → DNS records → the app answers there.
 - [ ] Invite links open the native app (iOS universal links; needs the domain).
 - [ ] Backups: Firestore point-in-time recovery + weekly export to a bucket.
 - [ ] CI: GitHub Actions runs `ng test` and the rules tests on every pull request.
