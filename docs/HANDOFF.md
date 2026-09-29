@@ -106,6 +106,9 @@ TP-21 packing → Firestore · TP-23 pages read active-trip dates · TP-24 per-a
 
 ## 5. Current state & what's next
 
+> For current status see `TODO.md` (live) and the session checkpoint memory. The rest of
+> this section is the July 2026 view.
+
 **Design Phase 2 is complete + frozen, and Milestone 1 (Map & Transportation) is done.** The app
 is fully restyled, both orphaned pages are revived, and Transportation is integrated
 end-to-end. Nothing is in progress; `master` is clean with no open PRs.
@@ -152,6 +155,9 @@ end-to-end. Nothing is in progress; `master` is clean with no open PRs.
 ---
 
 ## 7. To-do backlog (prioritized)
+
+> Superseded by `TODO.md` at the repo root (the one live list, dated). What follows is the
+> July 2026 view and is kept for context only.
 
 **Savannah/rebrand cleanup — effectively DONE.** Recs made user-driven (TP-28, Phase 1 boundary);
 map geocoding de-Ireland'd + destination-aware (#82); app rebranded to "Getaway Club". Remaining
