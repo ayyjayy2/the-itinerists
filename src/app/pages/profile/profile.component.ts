@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
@@ -18,7 +18,7 @@ import { userMessage } from '../../utils/user-message';
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, FormsModule, IconComponent, AvatarPickerComponent, AvatarGlyphComponent],
+  imports: [CommonModule, FormsModule, IconComponent, AvatarPickerComponent, AvatarGlyphComponent, RouterLink],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
