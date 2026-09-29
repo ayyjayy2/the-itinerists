@@ -63,6 +63,12 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
 - [ ] Terms of service beside the privacy policy; "download my data" on Profile.
 - [ ] Store listing: name, subtitle, description, keywords, screenshots per phone size, age
       rating, privacy questionnaire, support URL.
+- [ ] Email updates list: a mailing service (Brevo or Mailchimp free tier) authenticated on
+      theitinerists.com (its DKIM records + one more SPF include); a "send me updates" checkbox
+      at sign-up and a toggle on Profile stored on the private account doc; a one-field
+      waitlist form on theitinerists.com for people not yet in the app. Marketing mail needs
+      a postal address in the footer and an unsubscribe link (the service handles both);
+      keep it separate from Firebase's transactional mail.
 
 Ends when: the listing is complete in App Store Connect, a backup has been restored once on
 staging, and a PR with a failing test cannot merge.
