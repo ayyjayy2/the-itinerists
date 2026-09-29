@@ -43,7 +43,6 @@
             <span class="sidebar-refresh-label">Refresh</span>
           </button>
 
-          <div class="sidebar-version">🌿 Layn's Leaf {{ version }}<br><span class="sidebar-build-date">{{ buildDate }}</span></div>
 
           @if (currentUser()) {
             <div class="sidebar-user" [title]="navCollapsed ? currentUser()!.name : ''">
@@ -112,7 +111,6 @@
         </div>
         <div class="drawer-foot">
           <button class="drawer-refresh" (click)="hardRefresh()">↻ Refresh</button>
-          <div class="drawer-version">🌿 Layn's Leaf {{ version }} · {{ buildDate }}</div>
           @if (currentUser()) {
             <div class="drawer-user">
               <div class="avatar" [style.background]="currentUser()!.color"><app-avatar-glyph [emoji]="currentUser()!.avatarEmoji" [letterColor]="currentUser()!.avatarLetterColor" /></div>

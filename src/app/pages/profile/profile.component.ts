@@ -12,6 +12,8 @@ import { canPickLayout, effectiveHomeLayout, HomeLayout } from '../../utils/layo
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 import { recoveryEmailErrorMessage } from '../../utils/email';
 import { usernameProblem } from '../../utils/signup-form';
+import { isDevMode } from '@angular/core';
+import { APP_VERSION, APP_BUILD, APP_BUILD_DATE } from '../../../version';
 import { userMessage } from '../../utils/user-message';
 
 @Component({
@@ -28,6 +30,10 @@ export class ProfileComponent implements OnInit {
   private route        = inject(ActivatedRoute);
 
   firestoreUser = this.userService.firestoreUser;
+
+  /** About line at the foot of the page — the one place the version shows.
+   *  The build date is a development aid only (never in a release build). */
+  readonly aboutLine = `Version ${APP_VERSION} (${APP_BUILD})` + (isDevMode() ? ` · built ${APP_BUILD_DATE}` : '');
 
   readonly takenEmojis = computed(() => {
     const myUid = this.firestoreUser()?.uid;
