@@ -6,8 +6,6 @@ Last updated: 2026-09-29.
 
 ## Now — native app (iOS first)
 
-- [ ] App icon and launch screen in the iOS project (still the Capacitor defaults). Source
-      art: the leaf mark from `src/app/shared/brand`.
 - [ ] Real App Check on native: App Attest via a Capacitor App Check plugin
       (e.g. `@capacitor-firebase/app-check`), then remove the debug-token path in
       `src/app/app.config.ts`.
@@ -66,3 +64,4 @@ Last updated: 2026-09-29.
       User Flow v10 with the invite-code decision.
 - [x] Instagram poll: 24 votes, 14 planners, 8 joiners, 2 wing it, 0 don't travel.
 - [x] Removed the unused `seed-data.ts`.
+- [x] iOS app icon + branded launch screen (splash plugin held until sign-in resolves); web icons the manifest referenced — #196.
