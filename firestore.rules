@@ -19,10 +19,9 @@ rules_version = '2';
 // be listed while signed out, and user profiles can never be listed except by
 // an app admin. Credentials live in Firebase Auth, never Firestore.
 //
-// Known relaxation (documented follow-up): a signed-in user can self-create
-// their own trips/{tripId}/members/{uid} doc, so membership isn't cryptographically
-// gated on holding a valid invite — it relies on tripIds being unguessable random
-// ids. True enforcement would move join to a server-side callable. Tracked for later.
+// Self-join is gated on a live invite: the member doc must name an invite code
+// that exists under the trip and has not expired (see joinsWithLiveInvite), so
+// knowing a trip id is not enough to join it.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -46,6 +45,15 @@ service cloud.firestore {
       return isSignedIn()
         && exists(/databases/$(database)/documents/users/$(uid()))
         && get(/databases/$(database)/documents/users/$(uid())).data.isAdmin == true;
+    }
+    // A self-join must carry the invite code it came from, and that invite
+    // must exist under the trip and still be valid. This is what makes
+    // membership depend on holding an invite rather than on guessing a trip id.
+    function joinsWithLiveInvite(tripId, data) {
+      return data.keys().hasAll(['inviteCode'])
+        && data.inviteCode is string
+        && exists(/databases/$(database)/documents/trips/$(tripId)/invites/$(data.inviteCode))
+        && get(/databases/$(database)/documents/trips/$(tripId)/invites/$(data.inviteCode)).data.expiresAt > request.time.toMillis();
     }
 
     // ── App logs: write-only from the client (unchanged) ───────────────────
@@ -149,7 +157,8 @@ service cloud.firestore {
         // the initial owner. Existing owners/admins may add anyone in any role.
         allow create: if isSignedIn() && (
                          isOwner(tripId) || isAdmin()
-                         || (memberId == uid() && request.resource.data.role == 'member')
+                         || (memberId == uid() && request.resource.data.role == 'member'
+                             && joinsWithLiveInvite(tripId, request.resource.data))
                          || (memberId == uid() && request.resource.data.role == 'owner'
                              && get(/databases/$(database)/documents/trips/$(tripId)).data.createdBy == uid())
                        );

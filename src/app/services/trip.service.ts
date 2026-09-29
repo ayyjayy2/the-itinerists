@@ -242,11 +242,13 @@ export class TripService {
   }
 
   /** Add the current user to an existing trip as a member and switch to it. */
-  async joinTrip(tripId: string): Promise<void> {
+  /** Add the current user to a trip as a member. `inviteCode` is the live
+   *  invite they came in on — the rules refuse a self-join without one. */
+  async joinTrip(tripId: string, inviteCode: string): Promise<void> {
     const user = this.requireUser();
     await runInInjectionContext(this.injector, async () => {
       const now = Date.now();
-      await setDoc(this.memberRef(tripId, user.uid), this.memberSnapshot(user, 'member', now));
+      await setDoc(this.memberRef(tripId, user.uid), { ...this.memberSnapshot(user, 'member', now), inviteCode });
       await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(1) });
       await this.indexTrip(user.uid, tripId);
       this.logActivity(tripId, 'member_added', user, user); // self-join
@@ -268,7 +270,7 @@ export class TripService {
     await runInInjectionContext(this.injector, async () => {
       const alreadyMember = (await getDoc(this.memberRef(tripId, user.uid))).exists();
       if (!alreadyMember) {
-        await this.joinTrip(tripId);
+        await this.joinTrip(tripId, trimmed);
       } else {
         this.tripContext.switchTrip(tripId);
       }

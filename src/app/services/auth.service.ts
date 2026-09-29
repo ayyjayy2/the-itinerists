@@ -242,6 +242,7 @@ export class AuthService {
       uid, role: 'member',
       displayName: userDoc.displayName,
       avatarEmoji, color, avatarLetterColor: letterColor, joinedAt: now,
+      inviteCode,
     };
     await setDoc(doc(this.firestore, 'trips', tripId, 'members', uid), member);
     await setDoc(
