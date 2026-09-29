@@ -1,64 +1,85 @@
 # The Itinerists — to-do
 
-The one live list. `ROADMAP.md` is the long-range plan and `docs/HANDOFF.md` the orientation
-doc; neither tracks status. When something ships, move it to **Done** with its PR number.
-Last updated: 2026-09-29.
+The one live list, organised by launch phase. The plan itself (goals, who does what, when
+each phase ends, storage and costs) is the "Itinerists Launch Plan" artifact:
+https://claude.ai/artifact/S2rZKkQ3SgoejHD8Z7f4GP. `ROADMAP.md` is the long-range idea list
+and `docs/HANDOFF.md` the orientation doc; neither tracks status. When something ships, tick
+it here with its PR number. Last updated: 2026-09-29.
 
-## Now — native app (iOS first), in the order they can happen
+Alpha (Ireland, Savannah, Berlin) is done. **We are in Phase 1.**
 
-1. [x] Privacy policy page — https://the-itinerists.web.app/privacy, linked from Profile and sign-up — #201.
-2. [ ] Apple Developer Program enrollment ($99/yr) — *Alayna, cannot be done from the repo.*
-       Unblocks 3 and 4.
-3. [ ] Real App Check on native: App Attest via a Capacitor App Check plugin
-       (e.g. `@capacitor-firebase/app-check`), then remove the debug-token path in
-       `src/app/app.config.ts`. Needs the paid team for the App Attest capability.
-4. [ ] First TestFlight build (`npm run ios:sync`, archive in Xcode, upload).
-5. [ ] Message the 14 "Yes, as the planner" poll voters one at a time with the TestFlight
-       invite (list on the Headcount artifact, Poll page).
+## Phase 1 — Prep for beta (now, ~2 weeks)
 
-## Before opening to the public — in order (from the 2026-09-29 scale review)
+Everything a tester would notice, and everything hard to change once real data exists.
 
-- [ ] Firebase pay-as-you-go (Blaze) plan with a budget alert — the free tier stops at 50k
-      reads/day; also unlocks Cloud Functions and backups. *Alayna.*
-- [ ] Outfit photos to Cloud Storage instead of Firestore documents (cost, 1 MB doc limit).
-- [ ] Staging Firebase project so testing never touches production data.
-- [ ] Firestore backups (point-in-time recovery / scheduled exports; needs Blaze).
-- [ ] Crash and error reporting for the native app (Crashlytics or Sentry) in place of the
-      Firestore error log.
-- [ ] Email verification on sign-up (closes the last enumeration gap; stops throwaway accounts).
-- [ ] CI: run `ng test` and the rules tests on every pull request (GitHub Actions).
+- [x] Security lockdown: private profiles, no user listing, enumeration-safe sign-up,
+      joining needs a live invite — #181, #182, #203.
+- [x] Privacy policy at /privacy, linked from Profile and sign-up — #201.
+- [x] Native iOS shell with icon and launch screen; runs on Alayna's iPhone — #191–#196.
+- [ ] Apple Developer Program enrollment ($99/yr) — *Alayna*. Unblocks App Attest and TestFlight.
+- [ ] Firebase pay-as-you-go (Blaze) plan + budget alerts at $10 and $25 — *Alayna*
+      (console → Usage and billing → Modify plan). Unlocks Cloud Functions and backups.
+- [ ] Outfit photos to Cloud Storage: resize on upload (~1,600 px JPEG + 300 px thumbnail),
+      owner-only rules, one-time move of the existing photos.
+- [ ] Real App Check on iOS: App Attest via a Capacitor App Check plugin; remove the
+      debug-token path in `src/app/app.config.ts`.
+- [ ] Staging Firebase project (free plan), same rules file deployed to both.
+- [ ] Crashlytics in the native app (replaces the Firestore error log on phones).
+- [ ] First TestFlight build: `npm run ios:sync`, archive in Xcode, upload, external group.
+
+Ends when: a TestFlight build is on Alayna's and Makaela's phones, photos upload to Cloud
+Storage, a crash appears in Crashlytics, and a budget alert email has arrived once.
+
+## Phase 2 — Beta (2–4 weeks, Alayna runs it)
+
+- [ ] Invite the 14 "Yes!! As the planner" voters one at a time (Headcount artifact, Poll page).
+- [ ] Ask each to set up one trip and bring at least two joiners.
+- [ ] One place for feedback (group chat or short form); ask for the version line with reports.
+- [ ] Watch Crashlytics, the error log, Firestore usage, and day-2 return.
+- [ ] Ship a fresh TestFlight build each week with fixes.
+
+Ends when: 8+ testers created or joined a trip, 5 came back on a second day, one week
+with no new crash types.
+
+## Phase 3 — Fix from feedback (1–3 weeks)
+
+- [ ] Bug list to zero (blocked a tester or lost data first).
+- [ ] Onboarding polish where testers stalled.
+- [ ] Email verification on sign-up (closes the last enumeration gap).
+- [ ] Decide feature asks: keep those two or more testers wanted; park the rest on the board.
+
+Ends when: a week of no new reports on the newest build, and the parked list is written down.
+
+## Phase 4 — Prep for launch (2–3 weeks)
+
+- [ ] Custom domain (e.g. theitinerists.com) — branded emails out of spam; steps in the
+      `custom-email-domain-paused` memory. *Decision: Alayna.*
+- [ ] Invite links open the native app (iOS universal links; needs the domain).
+- [ ] Backups: Firestore point-in-time recovery + weekly export to a bucket.
+- [ ] CI: GitHub Actions runs `ng test` and the rules tests on every pull request.
 - [ ] Pagination for the activity log and other unbounded lists.
-- [ ] Terms of service page beside the privacy policy; a data-export option.
+- [ ] Terms of service beside the privacy policy; "download my data" on Profile.
+- [ ] Store listing: name, subtitle, description, keywords, screenshots per phone size, age
+      rating, privacy questionnaire, support URL.
 
-## Next — after TestFlight is out, in order
+Ends when: the listing is complete in App Store Connect, a backup has been restored once on
+staging, and a PR with a failing test cannot merge.
 
-6. [ ] Custom domain — *decision: Alayna*. Unlocks branded Firebase emails (subject, body,
-       sender), keeps them out of spam, and is required for invite links that open the app.
-       Steps in the `custom-email-domain-paused` memory / earlier notes.
-7. [ ] Invite links open the native app (iOS universal links; needs 6).
-8. [ ] Server-side signup or verify-email-on-signup, to close the last email-enumeration
-       gap (Firebase itself still reports "email already in use" to a raw API caller).
-9. [ ] App Store submission (listing, screenshots, review) — needs 1–4 and 6.
-10. [ ] Android shell (`npx cap add android`), then Google Play.
-11. [ ] Optional: show the live invite on My Trips cards too (today only Admin and Trip
-        Settings keep it visible).
+## Phase 5 — Launch (1–2 weeks, mostly waiting on Apple)
 
-## Later — from ROADMAP.md, unchanged in scope, rough order
+- [ ] Submit 1.0.0 for review with a reviewer test account on a demo trip.
+- [ ] Manual release after approval.
+- [ ] Tell the 8 "if someone else plans" voters.
+- [ ] Next cycle: Android shell and Google Play.
 
-12. [ ] Push notifications (FCM) and event/flight reminders.
-13. [ ] Shared photo albums; activity voting; real-time flight tracking; AI itinerary builder.
-14. [ ] Billing — note: digital subscriptions sold inside the iOS app must use Apple's
-        in-app purchase, not Stripe; the ROADMAP's Stripe plan needs rework before any paid tier.
-15. [ ] PDF export.
-16. [ ] Optional: custom avatar images instead of emoji, in the brand palette, so avatars look
-        the same on every device. Not required for the App Store — emoji are drawn by the phone
-        itself (the simulator's "?" boxes are a simulator defect). Story: issue #198 on the
-        Trip Planner board (GitHub project #9).
+## Parked (after launch)
 
-## Waiting on Alayna
-
-- Item 2, Apple Developer Program enrollment — blocks 3, 4, 5 and 9.
-- Item 6, custom domain: buy one (e.g. theitinerists.com; Cloudflare makes DNS scriptable) or decide to wait.
+- [ ] Push notifications (FCM) and event/flight reminders.
+- [ ] Shared photo albums; activity voting; real-time flight tracking; AI itinerary builder.
+- [ ] Billing — in-app subscriptions must use Apple's in-app purchase, not Stripe.
+- [ ] PDF export.
+- [ ] Optional: live invite on My Trips cards.
+- [ ] Optional: custom avatar images instead of emoji (issue #198); not required for the store.
 
 ## Done recently (Sep 25–29, 2026)
 
