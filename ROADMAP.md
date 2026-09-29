@@ -1,6 +1,7 @@
 # Troupe — Implementation Roadmap
 > Concrete engineering tasks, sequenced by dependency and impact.
-> Cross-reference VISION.md for rationale. Update status as work progresses.
+> Cross-reference VISION.md for rationale. The checkboxes here are NOT maintained —
+> the live, dated to-do list is `TODO.md` at the repo root.
 
 ---
 
