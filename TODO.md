@@ -4,46 +4,49 @@ The one live list. `ROADMAP.md` is the long-range plan and `docs/HANDOFF.md` the
 doc; neither tracks status. When something ships, move it to **Done** with its PR number.
 Last updated: 2026-09-29.
 
-## Now — native app (iOS first)
+## Now — native app (iOS first), in the order they can happen
 
-- [ ] Real App Check on native: App Attest via a Capacitor App Check plugin
-      (e.g. `@capacitor-firebase/app-check`), then remove the debug-token path in
-      `src/app/app.config.ts`.
-- [ ] Privacy policy page and route (Apple requires a URL on the listing and a link in-app;
-      place the link next to the version line on Profile).
-- [ ] Apple Developer Program enrollment ($99/yr) — *Alayna, cannot be done from the repo*.
-- [ ] First TestFlight build (`npm run ios:sync`, archive in Xcode, upload).
-- [ ] Message the 14 "Yes, as the planner" poll voters one at a time with the TestFlight
-      invite (list on the Headcount artifact, Poll page).
+1. [ ] Privacy policy page and route — can start today. Apple requires a URL on the listing
+       and a link in-app; put the link next to the version line on Profile. Also serves as
+       the public policy URL for the store.
+2. [ ] Apple Developer Program enrollment ($99/yr) — *Alayna, cannot be done from the repo.*
+       Unblocks 3 and 4.
+3. [ ] Real App Check on native: App Attest via a Capacitor App Check plugin
+       (e.g. `@capacitor-firebase/app-check`), then remove the debug-token path in
+       `src/app/app.config.ts`. Needs the paid team for the App Attest capability.
+4. [ ] First TestFlight build (`npm run ios:sync`, archive in Xcode, upload).
+5. [ ] Message the 14 "Yes, as the planner" poll voters one at a time with the TestFlight
+       invite (list on the Headcount artifact, Poll page).
 
-## Next
+## Next — after TestFlight is out, in order
 
-- [ ] Custom domain — *decision: Alayna*. Unlocks branded Firebase emails (subject, body,
-      sender), keeps them out of spam, and is required for invite links that open the app.
-      Steps in the `custom-email-domain-paused` memory / earlier notes.
-- [ ] Invite links open the native app (iOS universal links; needs the domain).
-- [ ] Server-side signup or verify-email-on-signup, to close the last email-enumeration
-      gap (Firebase itself still reports "email already in use" to a raw API caller).
-- [ ] Android shell (`npx cap add android`) once iOS is on TestFlight.
-- [ ] Optional: show the live invite on My Trips cards too (today only Admin and Trip
-      Settings keep it visible).
+6. [ ] Custom domain — *decision: Alayna*. Unlocks branded Firebase emails (subject, body,
+       sender), keeps them out of spam, and is required for invite links that open the app.
+       Steps in the `custom-email-domain-paused` memory / earlier notes.
+7. [ ] Invite links open the native app (iOS universal links; needs 6).
+8. [ ] Server-side signup or verify-email-on-signup, to close the last email-enumeration
+       gap (Firebase itself still reports "email already in use" to a raw API caller).
+9. [ ] App Store submission (listing, screenshots, review) — needs 1–4 and 6.
+10. [ ] Android shell (`npx cap add android`), then Google Play.
+11. [ ] Optional: show the live invite on My Trips cards too (today only Admin and Trip
+        Settings keep it visible).
 
-## Later (from ROADMAP.md, unchanged in scope)
+## Later — from ROADMAP.md, unchanged in scope, rough order
 
-- [ ] Push notifications (FCM) and event/flight reminders.
-- [ ] Shared photo albums; AI itinerary builder; activity voting; real-time flight tracking.
-- [ ] Billing — note: digital subscriptions sold inside the iOS app must use Apple's
-      in-app purchase, not Stripe; the ROADMAP's Stripe plan needs rework before any paid tier.
-- [ ] PDF export; Google Play submission.
-- [ ] Optional: custom avatar images instead of emoji, in the brand palette, so avatars look
-      the same on every device. Not required for the App Store — emoji are drawn by the phone
-      itself (the simulator's "?" boxes are a simulator defect). Story on the Trip Planner
-      board (GitHub project #9).
+12. [ ] Push notifications (FCM) and event/flight reminders.
+13. [ ] Shared photo albums; activity voting; real-time flight tracking; AI itinerary builder.
+14. [ ] Billing — note: digital subscriptions sold inside the iOS app must use Apple's
+        in-app purchase, not Stripe; the ROADMAP's Stripe plan needs rework before any paid tier.
+15. [ ] PDF export.
+16. [ ] Optional: custom avatar images instead of emoji, in the brand palette, so avatars look
+        the same on every device. Not required for the App Store — emoji are drawn by the phone
+        itself (the simulator's "?" boxes are a simulator defect). Story: issue #198 on the
+        Trip Planner board (GitHub project #9).
 
 ## Waiting on Alayna
 
-- Custom domain: buy one (e.g. theitinerists.com; Cloudflare makes DNS scriptable) or decide to wait.
-- Apple Developer Program enrollment.
+- Item 2, Apple Developer Program enrollment — blocks 3, 4, 5 and 9.
+- Item 6, custom domain: buy one (e.g. theitinerists.com; Cloudflare makes DNS scriptable) or decide to wait.
 
 ## Done recently (Sep 25–29, 2026)
 
