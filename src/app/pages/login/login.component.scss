@@ -1,9 +1,11 @@
 .auth-screen {
-  min-height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 2rem 1.5rem;
   background: linear-gradient(160deg, #edf5e8 0%, var(--bg) 45%, #fdf3ee 100%);
   gap: 1.5rem;
@@ -139,3 +141,6 @@
 
   a { color: var(--primary, #4a9c6d); text-decoration: none; }
 }
+
+// Centred when there's room, top-aligned and scrollable when there isn't.
+.auth-card { margin-block: auto; }

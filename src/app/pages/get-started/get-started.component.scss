@@ -1,8 +1,11 @@
 .onboard-screen {
-  min-height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 2rem 1.5rem;
   background: linear-gradient(160deg, #edf5e8 0%, var(--bg) 45%, #fdf3ee 100%);
 }
@@ -147,3 +150,6 @@
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-8px); }
 }
+
+// Centred when there's room, top-aligned and scrollable when there isn't.
+.onboard-card { margin-block: auto; }

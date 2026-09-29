@@ -1,5 +1,5 @@
 import { ApplicationConfig, ErrorHandler, provideZoneChangeDetection, isDevMode } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideFirebaseApp, initializeApp, getApp } from '@angular/fire/app';
@@ -7,7 +7,7 @@ import { provideFirestore, initializeFirestore, persistentLocalCache, persistent
 import { provideStorage, getStorage } from '@angular/fire/storage';
 import { provideAuth, getAuth, initializeAuth, indexedDBLocalPersistence } from '@angular/fire/auth';
 import { Capacitor } from '@capacitor/core';
-import { provideAppCheck, initializeAppCheck, ReCaptchaV3Provider } from '@angular/fire/app-check';
+import { provideAppCheck, initializeAppCheck, ReCaptchaV3Provider, getToken } from '@angular/fire/app-check';
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -19,7 +19,9 @@ const NATIVE = Capacitor.isNativePlatform();
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes),
+    // Every page chunk downloads in the background right after boot, so the
+    // first navigation after sign-in never waits on the network.
+    provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => initializeFirestore(getApp(), {
@@ -56,10 +58,14 @@ export const appConfig: ApplicationConfig = {
             (self as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string }).FIREBASE_APPCHECK_DEBUG_TOKEN =
               environment.appCheckDebugToken || true;
           }
-          return initializeAppCheck(getApp(), {
+          const appCheck = initializeAppCheck(getApp(), {
             provider: new ReCaptchaV3Provider(environment.recaptchaSiteKey),
             isTokenAutoRefreshEnabled: true,
           });
+          // Fetch the token now, while the sign-in screen is up, instead of on
+          // the first Firestore request — one fewer round trip at sign-in.
+          void getToken(appCheck).catch(() => {/* the first request will retry */});
+          return appCheck;
         })]
       : []),
 

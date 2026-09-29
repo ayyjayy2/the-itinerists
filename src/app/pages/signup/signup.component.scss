@@ -1,10 +1,12 @@
 // Shares base auth screen styles with login
 .auth-screen {
-  min-height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 2rem 1.5rem;
   background: linear-gradient(160deg, #edf5e8 0%, var(--bg) 45%, #fdf3ee 100%);
   gap: 1.5rem;
@@ -160,3 +162,6 @@
 
 .optional { font-weight: 400; color: var(--muted, #8a8a8a); font-size: 0.85em; }
 .hint { margin: 0.35rem 0 0; font-size: 0.8rem; color: var(--muted, #8a8a8a); }
+
+// Centred when there's room, top-aligned and scrollable when there isn't.
+.auth-card { margin-block: auto; }
