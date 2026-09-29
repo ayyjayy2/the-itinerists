@@ -20,8 +20,9 @@ import { maskEmail } from '../../utils/email';
           <p class="reset-info">Reset link sent to <strong>{{ sentTo() }}</strong>.
             Follow it to choose a new password, then sign in here.</p>
         } @else if (noRecovery()) {
-          <p class="reset-info">No recovery email is on file for this account —
-            ask an admin to reset your password.</p>
+          <p class="reset-info">No recovery email is on file for this account, so a reset link can't be sent.
+            Email <a href="mailto:support&#64;theitinerists.com">support&#64;theitinerists.com</a> from any address
+            and we'll get you back in.</p>
         } @else {
           <p class="reset-hint">Enter your username or recovery email. If a recovery
             email is on file, we'll send a reset link there.</p>
@@ -51,7 +52,7 @@ import { maskEmail } from '../../utils/email';
   styleUrls: ['../login/login.component.scss'],
   styles: [`
     .reset-hint, .reset-info { font-size: 0.92rem; line-height: 1.5; margin: 0 0 1rem; }
-    .reset-info { text-align: center; }
+    .reset-info { text-align: center; a { color: var(--primary-dark); font-weight: 700; } }
   `],
 })
 export class ForgotPasswordComponent {
