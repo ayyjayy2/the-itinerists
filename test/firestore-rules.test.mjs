@@ -47,7 +47,8 @@ async function seed() {
       setDoc(doc(db, 'trips', 'T', 'packing', 'bob'),  { items: [] }),
       setDoc(doc(db, 'trips', 'T', 'packingSuggestions', 's1'), { from: 'bob', to: 'alice' }),
       setDoc(doc(db, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob'), { dataUrl: 'data:x', ownerUid: 'bob', date: '2026-01-01' }),
-      setDoc(doc(db, 'trips', 'T', 'invites', 'CODE1'), { tripId: 'T', usedBy: [] }),
+      setDoc(doc(db, 'trips', 'T', 'invites', 'CODE1'), { tripId: 'T', usedBy: [], expiresAt: 9999999999999 }),
+      setDoc(doc(db, 'trips', 'T', 'invites', 'OLD1'),  { tripId: 'T', usedBy: [], expiresAt: 1 }),
       setDoc(doc(db, 'inviteIndex', 'CODE1'), { tripId: 'T', expiresAt: 9999999999999 }),
       setDoc(doc(db, 'userTrips', 'alice'), { tripIds: ['T'] }),
       setDoc(doc(db, 'userTrips', 'bob'),   { tripIds: ['T'] }),
@@ -88,7 +89,11 @@ await t('non-member deletes trip', 'deny', () => deleteDoc(doc(carol, 'trips', '
 console.log('\nMembers');
 await t('member reads members', 'allow', () => getDoc(doc(bob, 'trips', 'T', 'members', 'alice')));
 await t('non-member reads members', 'deny', () => getDoc(doc(carol, 'trips', 'T', 'members', 'alice')));
-await t('self-join: create own member doc', 'allow', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'member' }));
+await t('self-join with a live invite code', 'allow', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'member', inviteCode: 'CODE1' }));
+await t('self-join with no invite code', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'member' }));
+await t('self-join with an unknown invite code', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'member', inviteCode: 'NOPE' }));
+await t('self-join with an expired invite code', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'member', inviteCode: 'OLD1' }));
+await t('owner adds a member without a code', 'allow', () => setDoc(doc(alice, 'trips', 'T', 'members', 'dave'), { uid: 'dave', role: 'member' }));
 await t('create a member doc for someone else', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'members', 'dave'), { uid: 'dave', role: 'member' }));
 await t('owner changes another member role', 'allow', () => updateDoc(doc(alice, 'trips', 'T', 'members', 'bob'), { role: 'owner' }));
 await t('non-owner edits another member', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'alice'), { role: 'member' }));
@@ -191,8 +196,8 @@ await t('self can edit non-privileged profile fields', 'allow', () => updateDoc(
 await t('self cannot change own isDisabled', 'deny', () => updateDoc(doc(bob, 'users', 'bob'), { isDisabled: true }));
 await t('admin can set isAdmin on another user', 'allow', () => updateDoc(doc(admin, 'users', 'bob'), { isAdmin: true }));
 // members: a self-joining member must not be able to make themselves owner
-await t('self-join cannot self-assign owner role', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'owner' }));
-await t('self-join creates as plain member', 'allow', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'member' }));
+await t('self-join cannot self-assign owner role', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'owner', inviteCode: 'CODE1' }));
+await t('self-join creates as plain member', 'allow', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'member', inviteCode: 'CODE1' }));
 await t('trip creator may self-add as owner', 'allow', () => setDoc(doc(carol, 'trips', 'TC', 'members', 'carol'), { uid: 'carol', role: 'owner' }));
 await t('member cannot self-promote to owner', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'bob'), { role: 'owner' }));
 

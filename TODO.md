@@ -16,6 +16,20 @@ Last updated: 2026-09-29.
 5. [ ] Message the 14 "Yes, as the planner" poll voters one at a time with the TestFlight
        invite (list on the Headcount artifact, Poll page).
 
+## Before opening to the public — in order (from the 2026-09-29 scale review)
+
+- [ ] Firebase pay-as-you-go (Blaze) plan with a budget alert — the free tier stops at 50k
+      reads/day; also unlocks Cloud Functions and backups. *Alayna.*
+- [ ] Outfit photos to Cloud Storage instead of Firestore documents (cost, 1 MB doc limit).
+- [ ] Staging Firebase project so testing never touches production data.
+- [ ] Firestore backups (point-in-time recovery / scheduled exports; needs Blaze).
+- [ ] Crash and error reporting for the native app (Crashlytics or Sentry) in place of the
+      Firestore error log.
+- [ ] Email verification on sign-up (closes the last enumeration gap; stops throwaway accounts).
+- [ ] CI: run `ng test` and the rules tests on every pull request (GitHub Actions).
+- [ ] Pagination for the activity log and other unbounded lists.
+- [ ] Terms of service page beside the privacy policy; a data-export option.
+
 ## Next — after TestFlight is out, in order
 
 6. [ ] Custom domain — *decision: Alayna*. Unlocks branded Firebase emails (subject, body,
@@ -71,3 +85,4 @@ Last updated: 2026-09-29.
 - [x] Removed the unused `seed-data.ts`.
 - [x] iOS app icon + branded launch screen (splash plugin held until sign-in resolves); web icons the manifest referenced — #196.
 - [x] Privacy policy page at /privacy, linked from Profile and sign-up — #201.
+- [x] Self-join gated on a live invite in the security rules (a trip id alone is no longer enough to join) — #203.

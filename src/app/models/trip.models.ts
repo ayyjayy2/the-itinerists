@@ -128,6 +128,7 @@ export interface TripMember {
   color: string;
   avatarLetterColor?: string;   // letter avatars only
   joinedAt: number;             // unix ms
+  inviteCode?: string;          // the invite this member joined with (self-joins; required by the rules)
   travelMode?: TravelMode | null;
   arrivalDate?: string;         // YYYY-MM-DD (derived from travel entries or set manually)
   arrivalTime?: string;         // e.g. "3:00 PM"
