@@ -86,7 +86,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <p>If what the app collects or shares changes, this page and the effective date change with it.</p>
 
         <h2>Contact</h2>
-        <p>Questions or requests about your data: <a href="mailto:alaynajohnston12&#64;gmail.com">alaynajohnston12&#64;gmail.com</a>.</p>
+        <p>Questions or requests about your data: <a href="mailto:hello&#64;theitinerists.com">hello&#64;theitinerists.com</a>.</p>
 
         <footer class="policy-foot">
           <a routerLink="/login">Back to sign in</a>

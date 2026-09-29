@@ -9,7 +9,7 @@ describe('PrivacyComponent', () => {
     const fixture = TestBed.createComponent(PrivacyComponent);
     fixture.detectChanges();
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    for (const phrase of ['Effective September 29, 2026', 'What the app stores', 'Who can see what', 'Delete your account', 'Open-Meteo', 'alaynajohnston12@gmail.com']) {
+    for (const phrase of ['Effective September 29, 2026', 'What the app stores', 'Who can see what', 'Delete your account', 'Open-Meteo', 'hello@theitinerists.com']) {
       expect(text).withContext(phrase).toContain(phrase);
     }
   });
