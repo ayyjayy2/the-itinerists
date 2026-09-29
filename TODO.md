@@ -6,9 +6,7 @@ Last updated: 2026-09-29.
 
 ## Now — native app (iOS first), in the order they can happen
 
-1. [ ] Privacy policy page and route — can start today. Apple requires a URL on the listing
-       and a link in-app; put the link next to the version line on Profile. Also serves as
-       the public policy URL for the store.
+1. [x] Privacy policy page — https://the-itinerists.web.app/privacy, linked from Profile and sign-up — #201.
 2. [ ] Apple Developer Program enrollment ($99/yr) — *Alayna, cannot be done from the repo.*
        Unblocks 3 and 4.
 3. [ ] Real App Check on native: App Attest via a Capacitor App Check plugin
@@ -72,3 +70,4 @@ Last updated: 2026-09-29.
 - [x] Instagram poll: 24 votes, 14 planners, 8 joiners, 2 wing it, 0 don't travel.
 - [x] Removed the unused `seed-data.ts`.
 - [x] iOS app icon + branded launch screen (splash plugin held until sign-in resolves); web icons the manifest referenced — #196.
+- [x] Privacy policy page at /privacy, linked from Profile and sign-up — #201.
