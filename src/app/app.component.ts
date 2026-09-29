@@ -5,6 +5,8 @@ import { IconComponent } from './shared/icon/icon.component';
 import { BrandComponent } from './shared/brand/brand.component';
 import { LoadingComponent } from './shared/loading/loading.component';
 import { BusyBarComponent } from './shared/loading/busy-bar.component';
+import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
 import { UserService } from './services/user.service';
@@ -200,6 +202,14 @@ export class AppComponent implements OnInit {
   readonly drawerItems = computed(() => this.orderedNavItems());
 
   constructor() {
+    // Native shell: the launch screen is held (launchAutoHide: false) until we
+    // know whether someone is signed in, then fades into the first real screen.
+    if (Capacitor.isNativePlatform()) {
+      effect(() => {
+        if (this.userService.authInitialized()) void SplashScreen.hide({ fadeOutDuration: 250 });
+      });
+    }
+
     this.router.events.subscribe(e => {
       if (e instanceof NavigationStart) this.navigating.set(true);
       else if (e instanceof NavigationEnd || e instanceof NavigationCancel || e instanceof NavigationError) this.navigating.set(false);

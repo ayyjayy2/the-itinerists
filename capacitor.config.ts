@@ -19,6 +19,18 @@ const config: CapacitorConfig = {
     // while a page is loading, so there is no white flash.
     backgroundColor: '#F8F4EF',
   },
+  plugins: {
+    // The branded launch screen (Splash imageset) stays up until the app has
+    // resolved sign-in state and hides it itself (AppComponent), so there is
+    // no cream flash and no spinner before the first real screen.
+    SplashScreen: {
+      launchAutoHide: false,
+      backgroundColor: '#F8F4EF',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+  },
   server: {
     // Angular's router handles every path; without this a reload on /profile
     // would 404 inside the shell.
