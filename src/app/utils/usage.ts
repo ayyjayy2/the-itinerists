@@ -29,3 +29,12 @@ export function localClock(date: Date, tz: string | undefined): { localHour: num
     tzOffsetMin: -date.getTimezoneOffset(),
   };
 }
+
+/**
+ * The session start and the first route change both want to record the page
+ * the app opened on; a reload does the same. One view within two seconds of
+ * the same page is the same view.
+ */
+export function isRepeatPageView(prev: { page: string; at: number } | null, page: string, now: number): boolean {
+  return prev !== null && prev.page === page && now - prev.at < 2000;
+}

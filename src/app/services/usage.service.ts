@@ -5,7 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { filter } from 'rxjs';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
-import { usagePage, usagePlatform, localClock, UsagePlatform } from '../utils/usage';
+import { usagePage, usagePlatform, localClock, isRepeatPageView, UsagePlatform } from '../utils/usage';
 import { DEMO } from '../demo-flag';
 import { APP_VERSION } from '../../version';
 
@@ -55,6 +55,7 @@ export class UsageService {
   private currentPage = usagePage(location.pathname);
   private sessionSent = false;
   private lastEventAt = 0;
+  private lastPageView: { page: string; at: number } | null = null;
   private pingTimer: ReturnType<typeof setInterval> | undefined;
 
   /** Wire up the listeners. Called once from the root component. */
@@ -107,7 +108,12 @@ export class UsageService {
   private record(type: UsageEventType): void {
     const uid = this.userService.currentUser()?.uid;
     if (!uid) return;
-    this.lastEventAt = Date.now();
+    const now = Date.now();
+    if (type === 'page') {
+      if (isRepeatPageView(this.lastPageView, this.currentPage, now)) return;
+      this.lastPageView = { page: this.currentPage, at: now };
+    }
+    this.lastEventAt = now;
     const event: UsageEvent = {
       uid,
       tripId: this.tripContext.activeTripId(),

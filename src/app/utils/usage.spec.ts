@@ -1,4 +1,4 @@
-import { usagePage, usagePlatform, localClock } from './usage';
+import { usagePage, usagePlatform, localClock, isRepeatPageView } from './usage';
 
 describe('usagePage', () => {
   it('keeps the path and drops query strings and fragments', () => {
@@ -40,5 +40,20 @@ describe('localClock', () => {
   it('falls back to UTC when the zone is unknown', () => {
     expect(localClock(new Date(), '').tz).toBe('UTC');
     expect(localClock(new Date(), undefined).tz).toBe('UTC');
+  });
+});
+
+describe('isRepeatPageView', () => {
+  const prev = { page: '/itinerary', at: 10_000 };
+
+  it('treats the same page within two seconds as a repeat', () => {
+    expect(isRepeatPageView(prev, '/itinerary', 10_500)).toBeTrue();
+    expect(isRepeatPageView(prev, '/itinerary', 11_999)).toBeTrue();
+  });
+
+  it('counts a different page, a later return, or the first view', () => {
+    expect(isRepeatPageView(prev, '/finance', 10_500)).toBeFalse();
+    expect(isRepeatPageView(prev, '/itinerary', 12_001)).toBeFalse();
+    expect(isRepeatPageView(null, '/itinerary', 10_500)).toBeFalse();
   });
 });
