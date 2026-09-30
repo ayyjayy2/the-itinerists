@@ -13,7 +13,7 @@ import {
   initializeTestEnvironment, assertSucceeds, assertFails,
 } from '@firebase/rules-unit-testing';
 import {
-  doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs,
+  doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, serverTimestamp,
 } from 'firebase/firestore';
 
 const testEnv = await initializeTestEnvironment({
@@ -58,6 +58,7 @@ async function seed() {
       setDoc(doc(db, 'trips', 'TC'), { name: 'Carol Trip', createdBy: 'carol', memberCount: 0 }),
       setDoc(doc(db, 'geocache', 'g1'), { x: 1 }),
       setDoc(doc(db, '_appLogs', 'l1'), { m: 'hi' }),
+      setDoc(doc(db, '_activity', 'e1'), { uid: 'bob', tripId: 'T', type: 'page', page: '/home', at: new Date(), localHour: 9, tz: 'Europe/Berlin', tzOffsetMin: 120, platform: 'web', sessionId: 's1', appVersion: '0.9.0' }),
     ]);
   });
 }
@@ -213,6 +214,24 @@ await t('owner updates own photo', 'allow', () => updateDoc(doc(bob, 'trips', 'T
 await t('member updates another member photo', 'deny', () => updateDoc(doc(alice, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob'), { dataUrl: 'data:hack' }));
 await t('owner deletes own photo', 'allow', () => deleteDoc(doc(bob, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
 await t('non-member deletes a photo', 'deny', () => deleteDoc(doc(carol, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
+
+console.log('\nUsage events (_activity)');
+const ev = (uid, extra = {}) => ({ uid, tripId: 'T', type: 'page', page: '/itinerary', at: serverTimestamp(), localHour: 10, tz: 'Europe/Berlin', tzOffsetMin: 120, platform: 'web', sessionId: 's2', appVersion: '0.9.0', ...extra });
+await t('member creates own event', 'allow', () => setDoc(doc(bob, '_activity', 'e2'), ev('bob')));
+await t('event with null tripId', 'allow', () => setDoc(doc(bob, '_activity', 'e2'), ev('bob', { tripId: null })));
+await t('event type ping', 'allow', () => setDoc(doc(bob, '_activity', 'e2'), ev('bob', { type: 'ping' })));
+await t('event with spoofed uid', 'deny', () => setDoc(doc(bob, '_activity', 'e2'), ev('alice')));
+await t('event with extra field', 'deny', () => setDoc(doc(bob, '_activity', 'e2'), ev('bob', { email: 'x@y.z' })));
+await t('event with unknown type', 'deny', () => setDoc(doc(bob, '_activity', 'e2'), ev('bob', { type: 'click' })));
+await t('event with client timestamp', 'deny', () => setDoc(doc(bob, '_activity', 'e2'), ev('bob', { at: new Date() })));
+await t('anon creates event', 'deny', () => setDoc(doc(anon, '_activity', 'e2'), ev('bob')));
+await t('admin reads an event', 'allow', () => getDoc(doc(admin, '_activity', 'e1')));
+await t('admin lists events', 'allow', () => getDocs(collection(admin, '_activity')));
+await t('member reads own event', 'deny', () => getDoc(doc(bob, '_activity', 'e1')));
+await t('member lists events', 'deny', () => getDocs(collection(bob, '_activity')));
+await t('admin updates an event', 'deny', () => updateDoc(doc(admin, '_activity', 'e1'), { page: '/x' }));
+await t('admin deletes an event', 'deny', () => deleteDoc(doc(admin, '_activity', 'e1')));
+await t('owner deletes own event', 'deny', () => deleteDoc(doc(bob, '_activity', 'e1')));
 
 await testEnv.cleanup();
 console.log(`\n${fail === 0 ? '✅' : '❌'} rules tests: ${pass} passed, ${fail} failed`);
