@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from
 import { getFirestore, collection, doc, getDoc, setDoc, query, where, orderBy, onSnapshot, Timestamp, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
 import { firebaseConfig, recaptchaSiteKey } from './config.mjs';
 import * as S from './stats.mjs';
+import { ZONES } from './zones.mjs';
 
 const OWNER_UID = 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';
 const HOUR = 3_600_000, DAY = 24 * HOUR, ONLINE = 3 * 60_000; // the app pings every 2 minutes while visible
@@ -212,6 +213,12 @@ function zoneAbbr(tz) {
   const named = ['en-US', 'en-GB', 'en-AU'].map(abbr).find(a => a && !/^(GMT|UTC)/.test(a));
   return named || abbr('en-US') || zoneShort(tz);
 }
+/** "CST (Chicago, Illinois, USA)": the abbreviation as of now, then where the zone is named after. */
+function zoneName(tz) {
+  const z = ZONES[tz];
+  const place = z ? [z.city, z.region, z.country].filter(Boolean).join(', ') : zoneShort(tz);
+  return `${zoneAbbr(tz)} (${place})`;
+}
 function ago(ms) {
   const s = Math.max(0, Math.round((state.now - ms) / 1000));
   if (s < 60) return `${s} s ago`;
@@ -270,10 +277,13 @@ function render() {
   const tripIds = new Set([...realTrips.map(t => t.id), ...all.map(r => r.tripId).filter(Boolean)]);
   const tripOpts = [...tripIds].map(id => ({ id, name: tripName(id) })).sort((a, b) => a.name.localeCompare(b.name));
   syncTripPicker(tripOpts);
-  const seenZones = [...new Set([viewerZone, state.zone, ...all.map(r => r.tz).filter(Boolean)])].sort();
+  const zoneHits = new Map();
+  for (const r of all) if (r.tz) zoneHits.set(r.tz, (zoneHits.get(r.tz) ?? 0) + 1);
+  const seenZones = [...new Set([...[...zoneHits.entries()].sort((a, b) => b[1] - a[1]).map(([z]) => z), viewerZone, state.zone])];
+  const opt = z => ({ value: z, label: zoneName(z) });
   const zoneOpts = [
-    { group: 'Seen in activity', items: seenZones },
-    { group: 'All zones', items: allZones().filter(z => !seenZones.includes(z)) },
+    { group: 'Seen in activity', items: seenZones.map(opt) },
+    { group: 'All zones', items: allZones().filter(z => !seenZones.includes(z)).map(opt) },
   ];
   syncSelect($('zone'), zoneOpts, state.zone);
   // A zone button converts everyone's hours to that zone; it never filters to the people there.
@@ -293,6 +303,7 @@ function render() {
   const rangeLabel = { today: 'today', '24h': 'the last 24 hours', '7d': 'the last 7 days', '30d': 'the last 30 days', '60d': 'the last 60 days', '180d': 'the last 180 days', '1y': 'the last year' }[state.range];
   const selLabel = !state.tripSel ? '' : state.tripSel.size === 1 ? ', ' + tripName([...state.tripSel][0]) + ' only' : `, ${state.tripSel.size} trips only`;
   const hidden = [state.hide.me && 'you', state.hide.testTrips && 'test trips', state.hide.testUsers && 'test accounts'].filter(Boolean);
+  $('hideSummary').textContent = hidden.length ? hidden.map(h => h === 'you' ? 'me' : h).join(', ') : 'nothing';
   $('scope').textContent = `Counts for ${rangeLabel}${selLabel}${hidden.length ? ', without ' + hidden.join(', ') : ''}. Days and hour labels in ${state.zone}.`;
 
   // Trips: real trips by phase (happening now, upcoming, ended), then test trips, dimmed.
@@ -465,7 +476,7 @@ function stackBars(chart, items, series, max, { tick }) {
 
 /** Rebuild a select's options only when they change, keeping the current value. Accepts flat items or groups. */
 function syncSelect(sel, opts, value) {
-  const flat = opts.flatMap(o => o.group ? o.items.map(v => ({ value: v, label: v, group: o.group })) : [o]);
+  const flat = opts.flatMap(o => o.group ? o.items.map(v => typeof v === 'string' ? { value: v, label: v, group: o.group } : { ...v, group: o.group }) : [o]);
   const key = flat.map(o => o.value + '\u0000' + o.label + '\u0000' + (o.group ?? '')).join('\u0001');
   if (sel.dataset.key !== key) {
     let html = '', group = null;

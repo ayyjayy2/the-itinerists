@@ -126,9 +126,8 @@
   .multi summary { cursor: pointer; list-style: none; }
   .multi summary::-webkit-details-marker { display: none; }
   .multi-list { position: absolute; z-index: 5; top: 100%; left: 0; margin-top: 0.3rem; min-width: 14rem; max-height: 16rem; overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); padding: 0.4rem 0.6rem; display: flex; flex-direction: column; gap: 0.25rem; }
-  .multi-list label, .hide label { display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; font-weight: 500; }
-  .hide { display: inline-flex; gap: 0.7rem; align-items: center; }
-  .multi-list label, .hide label { text-transform: none; letter-spacing: 0; font-size: 0.85rem; color: var(--text); }
+  .multi-list label { display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; font-weight: 500; }
+  .multi-list label { text-transform: none; letter-spacing: 0; font-size: 0.85rem; color: var(--text); }
   .bars.days { height: 160px; gap: 6px; justify-content: flex-start; }
   .bars.days .col { flex: 0 1 72px; }
   .bars.days .bar { background: var(--accent); }
@@ -201,11 +200,13 @@
       </div>
       <details class="field multi" id="tripPick"><summary>Trips: <span id="tripSummary">All trips</span></summary><div class="multi-list" id="tripList"></div></details>
       <label class="field">Days and labels in <select id="zone"></select></label>
-      <div class="field hide" id="hide">Hide
-        <label><input type="checkbox" name="me"> me</label>
-        <label><input type="checkbox" name="testTrips" checked> test trips</label>
-        <label><input type="checkbox" name="testUsers" checked> test accounts</label>
-      </div>
+      <details class="field multi" id="hidePick"><summary>Hide: <span id="hideSummary">test trips, test accounts</span></summary>
+        <div class="multi-list" id="hide">
+          <label><input type="checkbox" name="me"> me</label>
+          <label><input type="checkbox" name="testTrips" checked> test trips</label>
+          <label><input type="checkbox" name="testUsers" checked> test accounts</label>
+        </div>
+      </details>
     </div>
 
     <div class="tiles" id="tiles"></div>
