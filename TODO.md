@@ -53,9 +53,15 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
 ## Phase 4 — Prep for launch (2–3 weeks)
 
 - [x] Custom domain bought: theitinerists.com at Hostinger, 2026-09-29, $23.38 for 2 years — *Alayna*.
-- [ ] Point it at Firebase: (a) Authentication → Templates → Customize domain, add the DNS
-      records in Hostinger, verify → then push the branded email templates; (b) Hosting → Add
-      custom domain → theitinerists.com (+ www) → DNS records → the app answers there.
+- [x] Firebase Auth email domain verified 2026-09-29: mail now goes out as
+      noreply@theitinerists.com with SPF (merged with Hostinger's) + DKIM; reply-to hello@.
+- [ ] Email body/subject wording ("Thanks! / The Itinerists Team", sage button): Firebase
+      says "Email template updates are currently unavailable for this project — contact
+      Firebase Support". Do after the Blaze upgrade: open a Firebase Support request asking
+      to enable template customization (project has a verified custom sender domain).
+- [ ] Hosting → Add custom domain → theitinerists.com (+ www) → replace the Hostinger
+      parking ALIAS/CNAME with Firebase's records → the app answers at theitinerists.com;
+      then update links (privacy URL, invite links) to the domain.
 - [ ] Invite links open the native app (iOS universal links; needs the domain).
 - [ ] Backups: Firestore point-in-time recovery + weekly export to a bucket.
 - [ ] CI: GitHub Actions runs `ng test` and the rules tests on every pull request.
