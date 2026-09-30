@@ -133,9 +133,9 @@ export class OutfitsComponent implements OnInit {
       for (const o of this.outfitsService.outfits().filter(o => o.user === me.name)) {
         for (const id of outfitPhotoIds(o, o.date, me.uid!)) {
           if (this.photoCache()[id]) continue;
-          this.photoService.getPhoto(tripId, id).then(url => {
-            if (url) this.ngZone.run(() => this.photoCache.update(c => ({ ...c, [id]: url })));
-          });
+          this.photoService.loadPhoto(tripId, id, url =>
+            this.ngZone.run(() => this.photoCache.update(c => ({ ...c, [id]: url })))
+          );
         }
       }
     });
@@ -316,9 +316,9 @@ export class OutfitsComponent implements OnInit {
     const added: string[] = [];
     try {
       for (const file of files.slice(0, room)) {
-        const { id, dataUrl } = await this.photoService.upload(tripId, date, user.uid, file);
+        const { id, url } = await this.photoService.upload(tripId, date, user.uid, file);
         added.push(id);
-        this.ngZone.run(() => this.photoCache.update(c => ({ ...c, [id]: dataUrl })));
+        this.ngZone.run(() => this.photoCache.update(c => ({ ...c, [id]: url })));
       }
     } catch (err) {
       if ((err as Error)?.message !== 'cancelled') console.error('[uploadPhotos] failed:', err);

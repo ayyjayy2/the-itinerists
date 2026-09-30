@@ -19,8 +19,16 @@ Everything a tester would notice, and everything hard to change once real data e
 - [ ] Apple Developer Program enrollment ($99/yr) — *Alayna*. Unblocks App Attest and TestFlight.
 - [ ] Firebase pay-as-you-go (Blaze) plan + budget alerts at $10 and $25 — *Alayna*
       (console → Usage and billing → Modify plan). Unlocks Cloud Functions and backups.
-- [ ] Outfit photos to Cloud Storage: resize on upload (~1,600 px JPEG + 300 px thumbnail),
-      owner-only rules, one-time move of the existing photos.
+- [x] Outfit photos to Cloud Storage — code done (resize to 1,600 px + 300 px thumbnail,
+      owner-only storage.rules with tests, dual-format reader, migration script). Writes are
+      behind OUTFIT_PHOTO_STORAGE_ENABLED = false because the project has NO Storage bucket:
+      Firebase only creates the default bucket on the Blaze plan.
+- [ ] After Blaze: Firebase console → Storage → Get started (creates the default bucket
+      trip-planner-ayyjayy2.firebasestorage.app) → `node scripts/set-storage-cors.js` →
+      `firebase deploy --only storage` → flip OUTFIT_PHOTO_STORAGE_ENABLED to true → rerun
+      the live check → deploy hosting.
+- [ ] After 2026-10-10 (Berlin trip over) and once the bucket exists:
+      `node scripts/migrate-outfit-photos.js` (dry run), then `--run`.
 - [ ] Real App Check on iOS: App Attest via a Capacitor App Check plugin; remove the
       debug-token path in `src/app/app.config.ts`.
 - [ ] Staging Firebase project (free plan), same rules file deployed to both.
