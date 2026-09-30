@@ -65,9 +65,12 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
       says "Email template updates are currently unavailable for this project — contact
       Firebase Support". Do after the Blaze upgrade: open a Firebase Support request asking
       to enable template customization (project has a verified custom sender domain).
-- [ ] Hosting → Add custom domain → theitinerists.com (+ www) → replace the Hostinger
-      parking ALIAS/CNAME with Firebase's records → the app answers at theitinerists.com;
-      then update links (privacy URL, invite links) to the domain.
+- [x] theitinerists.com live on Firebase Hosting 2026-09-30 (www redirects to it; Auth authorized
+      domains and the reCAPTCHA key include it).
+- [ ] Switch the app's own links (privacy URL, invite links, App Store listing) to
+      https://theitinerists.com. The old address keeps working.
+- [ ] NOT before 2026-10-10 (after the Berlin trip ends): decide with Alayna whether to redirect
+      the-itinerists.web.app → theitinerists.com. A redirect signs the existing group out once.
 - [ ] Invite links open the native app (iOS universal links; needs the domain).
 - [ ] Backups: Firestore point-in-time recovery + weekly export to a bucket.
 - [ ] CI: GitHub Actions runs `ng test` and the rules tests on every pull request.
