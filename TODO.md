@@ -43,6 +43,8 @@ Storage, a crash appears in Crashlytics, and a budget alert email has arrived on
 
 ## Phase 2 — Beta (2–4 weeks, Alayna runs it)
 
+- [x] Alpha feedback survey for the Berlin group built and published 2026-09-30 (Google Form on
+      the laynajay2 account; send ~2026-10-10 after they're home; results feed the beta plan).
 - [ ] Write the full beta plan and design before inviting anyone: goals and success
       metrics; who is invited in which wave; the invite message; onboarding instructions
       (TestFlight install, first trip, bringing joiners); how feedback is collected (one
