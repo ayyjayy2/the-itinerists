@@ -6,6 +6,9 @@ import { PackingItem, PackingSuggestion } from '../models/trip.models';
 import { guessPackingCategory, newItemsForPacking, PackingSync } from '../utils/packing-match';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
+import { TripService } from './trip.service';
+import { TripEventsService } from './trip-events.service';
+import { packingSuggested, packingAnswered } from '../utils/event-text';
 
 export const DEFAULT_PACKING_CATEGORIES = ['Clothes', 'Shoes', 'Accessories', 'Outerwear', 'Toiletries'];
 
@@ -21,6 +24,8 @@ export class PackingService {
   private injector    = inject(Injector);
   private userService = inject(UserService);
   private tripContext = inject(TripContextService);
+  private tripService = inject(TripService);
+  private events      = inject(TripEventsService);
 
   private _items       = signal<PackingItem[]>([]);
   private _suggestions = signal<PackingSuggestion[]>([]);
@@ -147,6 +152,8 @@ export class PackingService {
     };
     setDoc(ref, suggestion)
       .catch(err => console.error('[PackingService] sendSuggestion failed:', err));
+    const toUid = this.uidFor(toUser);
+    if (toUid) this.events.emit({ kind: 'packing', action: 'suggested', itemId: 'suggestions', path: '/packing', ...packingSuggested(item, toUid) });
   }
 
   acceptSuggestion(id: string): void {
@@ -166,6 +173,16 @@ export class PackingService {
     if (!tripId) return;
     updateDoc(doc(this.firestore, 'trips', tripId, 'packingSuggestions', id), { status })
       .catch(err => console.error('[PackingService] updateSuggestionStatus failed:', err));
+    const s = this._suggestions().find(x => x.id === id);
+    const fromUid = s ? this.uidFor(s.from) : null;
+    if (s && fromUid) {
+      this.events.emit({ kind: 'packing', action: status, itemId: 'suggestions', path: '/packing', ...packingAnswered(s.item, fromUid, status === 'accepted') });
+    }
+  }
+
+  private uidFor(displayName: string): string | null {
+    const want = displayName.trim().toLowerCase();
+    return this.tripService.activeMembers().find(m => m.displayName.trim().toLowerCase() === want)?.uid ?? null;
   }
 
   // ── helpers ──────────────────────────────────────────────────────────────────

@@ -3,6 +3,9 @@ import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, U
 import { FlightDoc } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
+import { TripService } from './trip.service';
+import { TripEventsService } from './trip-events.service';
+import { flightAdded, flightChanged, flightRemoved } from '../utils/event-text';
 
 @Injectable({ providedIn: 'root' })
 export class FlightsService {
@@ -10,6 +13,8 @@ export class FlightsService {
   private injector    = inject(Injector);
   private tripContext = inject(TripContextService);
   private userService = inject(UserService);
+  private tripService = inject(TripService);
+  private events      = inject(TripEventsService);
 
   /** The active trip id, but only while someone is signed in. Listeners opened
    *  while signed out are refused by the rules and never recover, so trip
@@ -56,17 +61,34 @@ export class FlightsService {
   async addFlight(data: Omit<FlightDoc, 'id'>): Promise<void> {
     const tid = this.requireTrip();
     const ref = doc(collection(this.firestore, 'trips', tid, 'flights'));
-    await setDoc(ref, { ...data, id: ref.id });
+    const full = { ...data, id: ref.id } as FlightDoc;
+    await setDoc(ref, full);
+    const t = flightAdded(full, this.ownerName(full.uid), this.me());
+    this.events.emit({ kind: 'flight', action: 'added', itemId: ref.id, path: '/flights', ...t });
   }
 
   async updateFlight(id: string, data: Partial<Omit<FlightDoc, 'id'>>): Promise<void> {
     const tid = this.requireTrip();
+    const before = this._flights().find(f => f.id === id);
     await updateDoc(doc(this.firestore, 'trips', tid, 'flights', id), { ...data });
+    if (!before) return;
+    const after = { ...before, ...data } as FlightDoc;
+    const t = flightChanged(before, after, this.ownerName(after.uid), this.me());
+    if (t) this.events.emit({ kind: 'flight', action: 'changed', itemId: id, path: '/flights', ...t });
   }
 
   async deleteFlight(id: string): Promise<void> {
     const tid = this.requireTrip();
+    const before = this._flights().find(f => f.id === id);
     await deleteDoc(doc(this.firestore, 'trips', tid, 'flights', id));
+    if (!before) return;
+    const t = flightRemoved(before, this.ownerName(before.uid), this.me());
+    this.events.emit({ kind: 'flight', action: 'removed', itemId: id, path: '/flights', ...t });
+  }
+
+  private me(): string { return this.userService.currentUser()?.uid ?? ''; }
+  private ownerName(uid: string): string {
+    return this.tripService.activeMembers().find(m => m.uid === uid)?.displayName ?? 'a';
   }
 
   private requireTrip(): string {

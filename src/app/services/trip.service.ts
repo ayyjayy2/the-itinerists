@@ -7,6 +7,8 @@ import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
 import { AuthService } from './auth.service';
 import { AnalyticsService } from './analytics.service';
+import { TripEventsService } from './trip-events.service';
+import { memberEvent, tripChanged } from '../utils/event-text';
 import {
   TripDoc, TripDestination, TripMember, UserTripsDoc, FirestoreUser, ActivityLogEntry, ActivityAction, InviteCode,
 } from '../models/trip.models';
@@ -58,6 +60,7 @@ export class TripService {
   private tripContext = inject(TripContextService);
   private authService = inject(AuthService);
   private analytics   = inject(AnalyticsService);
+  private events = inject(TripEventsService);
 
   /** Live document for the active trip (null when none is selected). */
   private _activeTrip = signal<TripDoc | null>(null);
@@ -319,9 +322,14 @@ export class TripService {
     | 'startDate' | 'endDate' | 'currency' | 'destinations'>>): Promise<void> {
     const data = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
     if (Object.keys(data).length === 0) return;
+    const before = this.activeTrip();
     await runInInjectionContext(this.injector, () =>
       updateDoc(doc(this.firestore, 'trips', tripId), data),
     );
+    if (before && before.id === tripId) {
+      const t = tripChanged(before, data);
+      if (t) this.events.emit({ kind: 'trip', action: 'changed', itemId: '', path: '/trip-settings', ...t }, tripId);
+    }
   }
 
   /** Remove another member from a trip (the owner can't be removed). */
@@ -547,6 +555,11 @@ export class TripService {
       timestamp: Date.now(),
     };
     setDoc(ref, entry).catch(err => console.warn('[TripService] activity log failed:', err));
+    // The same moment also goes on the bell / Updates feed.
+    const map = { member_added: 'joined', member_left: 'left', member_removed: 'kicked', member_restored: 'restored' } as const;
+    const kind = map[action];
+    const t = memberEvent(kind, target.displayName, target.uid === performedBy.uid);
+    this.events.emit({ kind: 'member', action: kind, itemId: '', path: '/trip-settings', ...t }, tripId);
   }
 
   private memberSnapshot(user: FirestoreUser, role: TripMember['role'], now: number): TripMember {

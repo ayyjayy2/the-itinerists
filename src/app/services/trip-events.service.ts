@@ -82,27 +82,28 @@ export class TripEventsService {
   emit(input: TripEventInput, tripId?: string): void {
     const tid = tripId ?? this.tripContext.activeTripId();
     const me  = this.userService.currentUser();
-    if (!tid || !me) return;
+    const uid = me?.uid;
+    if (!tid || !me || !uid) return;
     const now = Date.now();
-    const reuse = input.action === 'removed' ? null : this.collapse.reuse(me.uid, input.kind, input.itemId, now);
+    const reuse = input.action === 'removed' ? null : this.collapse.reuse(uid, input.kind, input.itemId, now);
     runInInjectionContext(this.injector, () => {
       if (reuse) {
         updateDoc(doc(this.firestore, 'trips', tid, 'events', reuse), {
           action: input.action, summary: input.summary, audience: input.audience, timestamp: now,
         }).catch(err => console.warn('[TripEvents] update failed:', err));
-        this.collapse.remember(me.uid, input.kind, input.itemId, reuse, now);
+        this.collapse.remember(uid, input.kind, input.itemId, reuse, now);
         return;
       }
       const ref = doc(collection(this.firestore, 'trips', tid, 'events'));
       const event: TripEvent = {
         id: ref.id, kind: input.kind, action: input.action,
-        actorUid: me.uid, actorName: me.name,
+        actorUid: uid, actorName: me.name,
         itemId: input.itemId, summary: input.summary, path: input.path,
         audience: input.audience, timestamp: now,
       };
       setDoc(ref, event).catch(err => console.warn('[TripEvents] write failed:', err));
-      if (input.action === 'removed') this.collapse.forget(me.uid, input.kind, input.itemId);
-      else this.collapse.remember(me.uid, input.kind, input.itemId, ref.id, now);
+      if (input.action === 'removed') this.collapse.forget(uid, input.kind, input.itemId);
+      else this.collapse.remember(uid, input.kind, input.itemId, ref.id, now);
     });
   }
 }

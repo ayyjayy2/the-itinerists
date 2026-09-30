@@ -3,6 +3,9 @@ import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, U
 import { AccommodationDoc } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
+import { TripService } from './trip.service';
+import { TripEventsService } from './trip-events.service';
+import { stayAdded, stayChanged, stayRemoved } from '../utils/event-text';
 
 @Injectable({ providedIn: 'root' })
 export class StaysService {
@@ -10,6 +13,8 @@ export class StaysService {
   private injector    = inject(Injector);
   private tripContext = inject(TripContextService);
   private userService = inject(UserService);
+  private tripService = inject(TripService);
+  private events      = inject(TripEventsService);
 
   /** The active trip id, but only while someone is signed in. Listeners opened
    *  while signed out are refused by the rules and never recover, so trip
@@ -53,17 +58,28 @@ export class StaysService {
   async addStay(stay: Omit<AccommodationDoc, 'id'>): Promise<void> {
     const tid = this.requireTrip();
     const ref = doc(collection(this.firestore, 'trips', tid, 'stays'));
-    await setDoc(ref, { ...stay, id: ref.id });
+    const full = { ...stay, id: ref.id } as AccommodationDoc;
+    await setDoc(ref, full);
+    const t = stayAdded(full, this.tripService.activeMembers());
+    this.events.emit({ kind: 'stay', action: 'added', itemId: ref.id, path: '/accommodations', ...t });
   }
 
   async updateStay(id: string, updates: Partial<AccommodationDoc>): Promise<void> {
     const tid = this.requireTrip();
+    const before = this._stays().find(s => s.id === id);
     await updateDoc(doc(this.firestore, 'trips', tid, 'stays', id), { ...updates });
+    if (!before) return;
+    const t = stayChanged(before, { ...before, ...updates }, this.tripService.activeMembers());
+    if (t) this.events.emit({ kind: 'stay', action: 'changed', itemId: id, path: '/accommodations', ...t });
   }
 
   async deleteStay(id: string): Promise<void> {
     const tid = this.requireTrip();
+    const before = this._stays().find(s => s.id === id);
     await deleteDoc(doc(this.firestore, 'trips', tid, 'stays', id));
+    if (!before) return;
+    const t = stayRemoved(before, this.tripService.activeMembers());
+    this.events.emit({ kind: 'stay', action: 'removed', itemId: id, path: '/accommodations', ...t });
   }
 
   private requireTrip(): string {
