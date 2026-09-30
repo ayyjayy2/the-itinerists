@@ -163,12 +163,15 @@ staging, and a PR with a failing test cannot merge.
 ## Parked (after launch)
 
 - [ ] Push notifications (FCM) and event/flight reminders.
-- [ ] Shared photo albums; activity voting; real-time flight tracking; AI itinerary builder.
-- [ ] Billing — see the "Making money" page of the launch plan artifact: launch free; then
-      "Keep this trip" ($1.99 once) when the first deletion warnings go out; then Trip Pass;
-      Plus only with 3+ features. Apple in-app purchase on iOS (15% small-business rate), Stripe
-      on web, RevenueCat for both; entitlements on the account doc and the trip doc.
-- [ ] PDF export.
+- [ ] Shared photo albums; activity voting; real-time flight tracking (Plus/Pass feature).
+- [ ] Billing — see the "Making money" page of the launch plan artifact. Launch free with no
+      caps; 2–3 months in: Trip Pass ($4.99 per trip: multi-destination, unlimited outfit photos,
+      calendar + PDF export, cover photo, kept forever; Pass trips don't count toward the free
+      limit of 2 active trips), the caps (new trips only), and Keep this trip ($1.99, the
+      fallback on the deletion notice); Plus ($19.99/yr) later for repeat planners. Apple IAP on
+      iOS (15% small-business rate), Stripe on web, RevenueCat for both; entitlements written by
+      a Cloud Function to the trip and account docs; caps enforced in rules. No AI features.
+- [ ] PDF export (Pass/Plus feature); calendar .ics export (small job, Pass/Plus or free hook).
 - [ ] Optional: live invite on My Trips cards.
 - [ ] Optional: custom avatar images instead of emoji (issue #198); not required for the store.
 
