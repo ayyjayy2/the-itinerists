@@ -32,7 +32,9 @@ Everything a tester would notice, and everything hard to change once real data e
 - [ ] Real App Check on iOS: App Attest via a Capacitor App Check plugin; remove the
       debug-token path in `src/app/app.config.ts`.
 - [ ] Staging Firebase project (free plan), same rules file deployed to both.
-- [ ] Crashlytics in the native app (replaces the Firestore error log on phones).
+- [x] Crashlytics in the native app — code done (#223): non-fatals mirrored from the error
+      logger, uid tagging, dSYM upload phase, `scripts/fetch-ios-config.js` for the plist.
+      Still to do: enable Crashlytics in the Firebase console and see one test error land.
 - [ ] First TestFlight build: `npm run ios:sync`, archive in Xcode, upload, external group.
 - [~] Usage analytics (design: `docs/superpowers/specs/2026-09-30-usage-analytics-design.md`):
       - [x] Own event log: `_activity` (session / page / 5-min ping, with the person's hour and

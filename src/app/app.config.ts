@@ -7,6 +7,8 @@ import { provideFirestore, initializeFirestore, persistentLocalCache, persistent
 import { provideStorage, getStorage } from '@angular/fire/storage';
 import { provideAuth, getAuth, initializeAuth, indexedDBLocalPersistence } from '@angular/fire/auth';
 import { Capacitor } from '@capacitor/core';
+import { FirebaseCrashlytics } from '@capacitor-firebase/crashlytics';
+import { CRASH_REPORTER_PLUGIN, CRASH_REPORTER_NATIVE } from './services/crash-reporter.service';
 import { provideAppCheck, initializeAppCheck, ReCaptchaV3Provider, getToken } from '@angular/fire/app-check';
 import { provideAnalytics, getAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
 import { DEMO } from './demo-flag';
@@ -33,6 +35,9 @@ export const appConfig: ApplicationConfig = {
       localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
     })),
     provideStorage(() => getStorage()),
+    // Crashlytics: live in the native shell, inert on the web (see CrashReporterService).
+    { provide: CRASH_REPORTER_PLUGIN, useValue: FirebaseCrashlytics },
+    { provide: CRASH_REPORTER_NATIVE, useValue: NATIVE },
     // In the native shell, getAuth()'s default set-up waits on a redirect-result
     // iframe that never answers inside WKWebView, so sign-in state never
     // resolves. Initialising with persistence only skips that (Capacitor's

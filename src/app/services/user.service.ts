@@ -6,9 +6,11 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, firstValueFrom, map, merge } from 'rxjs';
 import { authEmailPatch } from '../utils/email';
 import { TripContextService } from './trip-context.service';
+import { CrashReporterService } from './crash-reporter.service';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
+  private crash = inject(CrashReporterService);
   private auth      = inject(Auth);
   private firestore = inject(Firestore);
   private injector  = inject(Injector);
@@ -89,6 +91,7 @@ export class UserService {
 
     runInInjectionContext(this.injector, () => {
       authState(this.auth).subscribe(firebaseUser => {
+        void this.crash.setUser(firebaseUser?.uid ?? null);
         this.tripContext.bindUser(firebaseUser?.uid ?? null);
         if (!firebaseUser) {
           this.unsubs.forEach(u => u()); this.unsubs = [];
