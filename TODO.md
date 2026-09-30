@@ -130,15 +130,16 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
 - [ ] NOT before 2026-10-10 (after the Berlin trip ends): decide with Alayna whether to redirect
       the-itinerists.web.app → theitinerists.com. A redirect signs the existing group out once.
 - [ ] Backups: Firestore point-in-time recovery + weekly export to a bucket.
-- [ ] Old trips delete themselves after a year: 12 months after the trip's end date, a daily
-      Cloud Function runs the same teardown as the owner's delete button. Trip Settings shows
-      "deletes on {date}"; the My Trips card gets a 30-day badge; both carry the "Keep this trip"
-      purchase ($1.99 once; see the Making money page — no free extension, the free year is the
-      extension). Privacy policy "How long we keep data" updated to match. Caps storage growth.
+- [ ] Trips delete themselves 30 days after they end: a daily Cloud Function runs the same
+      teardown as the owner's delete button. From the end date, Trip Settings and the My Trips
+      card show "deletes on {date}" with the "Keep this trip" purchase ($1.99 once) beside it;
+      Plus and Pass trips are exempt; emails to the planner at 7 days and 1 day (with the
+      settlement sheet). Privacy policy "How long we keep data" updated. The clock starts the day
+      purchases ship, never before. See the Making money page.
 - [ ] CI: GitHub Actions runs `ng test` and the rules tests on every pull request.
 - [ ] Pagination for the activity log and other unbounded lists.
 - [ ] Terms of service beside the privacy policy; "download my data" on Profile; the policy
-      states the one-year trip retention and the keep option.
+      states the 30-day trip retention and the paid keep option.
 - [ ] Email updates list: move the phase 2 waitlist onto a mailing service (Brevo or Mailchimp free tier) authenticated on
       theitinerists.com (its DKIM records + one more SPF include); a "send me updates" checkbox
       at sign-up and a toggle on Profile stored on the private account doc; a one-field
@@ -167,8 +168,9 @@ staging, and a PR with a failing test cannot merge.
 - [ ] Billing — see the "Making money" page of the launch plan artifact. Launch free with no
       caps; 2–3 months in: Trip Pass ($4.99 per trip: multi-destination, unlimited outfit photos,
       calendar + PDF export, cover photo, kept forever; Pass trips don't count toward the free
-      limit of 2 active trips), the caps (new trips only), and Keep this trip ($1.99, the
-      fallback on the deletion notice); Plus ($19.99/yr) later for repeat planners. Apple IAP on
+      limit of 2 active trips), the caps (new trips only), and Keep this trip ($1.99 once,
+      offered in the 30 days after a trip ends); Plus ($2.99/mo or $19.99/yr) holds every trip
+      the subscriber plans while subscribed, then each gets a fresh 30 days. Apple IAP on
       iOS (15% small-business rate), Stripe on web, RevenueCat for both; entitlements written by
       a Cloud Function to the trip and account docs; caps enforced in rules. No AI features.
 - [ ] PDF export (Pass/Plus feature); calendar .ics export (small job, Pass/Plus or free hook).
