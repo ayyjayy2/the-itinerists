@@ -4,11 +4,25 @@ The one live list, organised by launch phase. The plan itself (goals, who does w
 each phase ends, storage and costs) is the "Itinerists Launch Plan" artifact:
 https://claude.ai/artifact/S2rZKkQ3SgoejHD8Z7f4GP. `ROADMAP.md` is the long-range idea list
 and `docs/HANDOFF.md` the orientation doc; neither tracks status. When something ships, tick
-it here with its PR number. Last updated: 2026-09-30.
+it here with its PR number. Last updated: 2026-09-30 (evening).
 
-Alpha (Ireland, Savannah, Berlin) is done. **We are in Phase 1.**
+**The alpha is still wrapping up** (Berlin home Oct 9, survey after). Phase 1 runs alongside it.
+A marketing phase now sits between prep and beta, so the app has an audience before it has
+testers. Phases renumbered: 1 Prep · 2 Marketing · 3 Beta · 4 Fix · 5 Prep for launch · 6 Launch.
 
-## Phase 1 — Prep for beta (now, ~2 weeks)
+## Alpha — real trips, real people (Feb 25 – mid Oct 2026, now)
+
+- [x] Ireland and Savannah planned and travelled on the live app.
+- [x] Instagram poll: 24 votes, 14 planners, 8 joiners, 2 wing it — the 14 are the beta list.
+- [x] Alpha survey built and published 2026-09-30 (Google Form on the laynajay2 account).
+- [ ] Berlin comes home Oct 9; nothing moves off the-itinerists.web.app before then.
+- [ ] Send the survey to the Berlin group ~2026-10-10, one personal message each — *Alayna*.
+- [ ] Read the answers into phase 1 (top three fixes) and phase 2 (the words people use).
+
+Ends when: most of the Berlin group has answered, the three things they'd fix are written down,
+and the sentence they use to describe the app to a friend is written down too.
+
+## Phase 1 — Prep for beta (alongside the alpha wrap-up, ~2 weeks)
 
 Everything a tester would notice, and everything hard to change once real data exists.
 
@@ -53,10 +67,33 @@ Everything a tester would notice, and everything hard to change once real data e
 Ends when: a TestFlight build is on Alayna's and Makaela's phones, photos upload to Cloud
 Storage, a crash appears in Crashlytics, and a budget alert email has arrived once.
 
-## Phase 2 — Beta (2–4 weeks, Alayna runs it)
+## Phase 2 — Marketing (2–3 weeks, can overlap phase 1)
 
-- [x] Alpha feedback survey for the Berlin group built and published 2026-09-30 (Google Form on
-      the laynajay2 account; send ~2026-10-10 after they're home; results feed the beta plan).
+Find out whether people who don't know us want this, before anyone is invited to test it.
+
+- [ ] The one-line story: who it's for and what it replaces, in the words from the poll
+      comments and the Berlin survey — *Alayna*.
+- [ ] Three trial reels (15–30 s screen recordings of the real app on the phone + voice-over:
+      countdown and who's coming; who owes who; packing list ticking down). Shoot on Berlin
+      data while it's fresh — *Alayna*.
+- [ ] Post where the poll ran (Instagram first, TikTok if the clip fits): one reel a week, the
+      same hook three ways; watch saves, shares and "when?" DMs — *Alayna*.
+- [ ] Landing page + waitlist on theitinerists.com: one line, three screenshots, one email
+      field, "we'll tell you when it's on the App Store". Reels link here. (Moved up from the
+      old phase 4 email-list item.) — *Claude*.
+- [ ] Count weekly: views, saves, shares, waitlist sign-ups, DMs — one sheet, one row a week.
+- [ ] Keep the 14 planners for beta; the reels are for strangers.
+
+Ends when: three reels are up, the waitlist has 20 sign-ups from people we don't know, and one
+hook has clearly beaten the other two (it becomes the store listing's first line).
+
+## Phase 3 — Beta (2–4 weeks, Alayna runs it)
+
+Could be shorter: the alpha proved the web app with friends; what it never tested is the
+native build on phones we don't own. Smallest honest version = two weeks on TestFlight with
+the 14 planners, phases 3 and 4 folded together. Skipping TestFlight entirely means the first
+crash on an unfamiliar iPhone is reported by a stranger in a store review.
+
 - [ ] Write the full beta plan and design before inviting anyone: goals and success
       metrics; who is invited in which wave; the invite message; onboarding instructions
       (TestFlight install, first trip, bringing joiners); how feedback is collected (one
@@ -72,7 +109,7 @@ Storage, a crash appears in Crashlytics, and a budget alert email has arrived on
 Ends when: 8+ testers created or joined a trip, 5 came back on a second day, one week
 with no new crash types.
 
-## Phase 3 — Fix from feedback (1–3 weeks)
+## Phase 4 — Fix from feedback (1–3 weeks)
 
 - [ ] Bug list to zero (blocked a tester or lost data first).
 - [ ] Onboarding polish where testers stalled.
@@ -81,7 +118,7 @@ with no new crash types.
 
 Ends when: a week of no new reports on the newest build, and the parked list is written down.
 
-## Phase 4 — Prep for launch (2–3 weeks)
+## Phase 5 — Prep for launch (2–3 weeks)
 
 - [x] Custom domain bought: theitinerists.com at Hostinger, 2026-09-29, $23.38 for 2 years — *Alayna*.
 - [x] Firebase Auth email domain verified 2026-09-29: mail now goes out as
@@ -103,7 +140,7 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
 - [ ] Terms of service beside the privacy policy; "download my data" on Profile.
 - [ ] Store listing: name, subtitle, description, keywords, screenshots per phone size, age
       rating, privacy questionnaire, support URL.
-- [ ] Email updates list: a mailing service (Brevo or Mailchimp free tier) authenticated on
+- [ ] Email updates list: move the phase 2 waitlist onto a mailing service (Brevo or Mailchimp free tier) authenticated on
       theitinerists.com (its DKIM records + one more SPF include); a "send me updates" checkbox
       at sign-up and a toggle on Profile stored on the private account doc; a one-field
       waitlist form on theitinerists.com for people not yet in the app. Marketing mail needs
@@ -113,11 +150,12 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
 Ends when: the listing is complete in App Store Connect, a backup has been restored once on
 staging, and a PR with a failing test cannot merge.
 
-## Phase 5 — Launch (1–2 weeks, mostly waiting on Apple)
+## Phase 6 — Launch (1–2 weeks, mostly waiting on Apple)
 
 - [ ] Submit 1.0.0 for review with a reviewer test account on a demo trip.
 - [ ] Manual release after approval.
-- [ ] Tell the 8 "if someone else plans" voters.
+- [ ] Tell the waitlist first, then the 8 "if someone else plans" voters.
+- [ ] Post the launch reel (the winning hook, now with an App Store link).
 - [ ] Next cycle: Android shell and Google Play.
 
 ## Parked (after launch)
