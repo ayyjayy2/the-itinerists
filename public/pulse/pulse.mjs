@@ -25,7 +25,8 @@ const state = {
   range: '24h', anchor: Date.now(), trip: 'all', zone: viewerZone, hourMode: 'local',
   rows: [], trips: new Map(), users: new Map(), members: new Map(), now: Date.now(),
   testTrips: new Set(),
-  testUsers: new Set(),   // throwaway accounts (probes, test sign-ups): not people, out of every number
+  showTests: false,       // test trips stay out of the table unless the owner asks to see them
+  testUsers: new Set(),   // throwaway accounts (_pulse/prefs.testUsers, set by hand): never shown, out of every number
 };
 let unsubRows = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null;
 const memberSubs = new Map(); // tripId → unsubscribe
@@ -144,14 +145,10 @@ $('zone').addEventListener('change', ev => {
   savePrefs({ zone: state.zone });
 });
 $('trips').addEventListener('click', ev => {
+  if (ev.target.closest('button[data-toggle-tests]')) { state.showTests = !state.showTests; render(); return; }
   const b = ev.target.closest('button[data-test], button[data-real]'); if (!b) return;
   const id = b.dataset.test ?? b.dataset.real;
   savePrefs({ testTrips: b.dataset.test !== undefined ? arrayUnion(id) : arrayRemove(id) });
-});
-$('people').addEventListener('click', ev => {
-  const b = ev.target.closest('button[data-test], button[data-real]'); if (!b) return;
-  const id = b.dataset.test ?? b.dataset.real;
-  savePrefs({ testUsers: b.dataset.test !== undefined ? arrayUnion(id) : arrayRemove(id) });
 });
 $('hourMode').addEventListener('click', ev => {
   const b = ev.target.closest('button[data-mode]'); if (!b) return;
@@ -190,6 +187,17 @@ function memberName(uid) {
 }
 const tripName = id => id ? (state.trips.get(id)?.name ?? `Trip …${id.slice(-4)}`) : 'No trip';
 const zoneShort = tz => (tz || '').split('/').pop().replace(/_/g, ' ') || tz;
+/** Zone abbreviation as of now (CDT, CEST); falls back to GMT+2 where a locale has no name for it. */
+function zoneAbbr(tz) {
+  if (!tz) return '';
+  const at = new Date(state.now);
+  const abbr = locale => {
+    try { return new Intl.DateTimeFormat(locale, { timeZone: tz, timeZoneName: 'short' }).formatToParts(at).find(p => p.type === 'timeZoneName')?.value ?? ''; }
+    catch { return ''; }
+  };
+  const named = ['en-US', 'en-GB', 'en-AU'].map(abbr).find(a => a && !/^(GMT|UTC)/.test(a));
+  return named || abbr('en-US') || zoneShort(tz);
+}
 function ago(ms) {
   const s = Math.max(0, Math.round((state.now - ms) / 1000));
   if (s < 60) return `${s} s ago`;
@@ -235,7 +243,7 @@ function allZones() {
 // ── render ─────────────────────────────────────────────────────────────────
 function render() {
   const now = state.now;
-  // Test people are out of every number, test trips too; events with no trip (sign-in screen) stay.
+  // Throwaway accounts and test trips are out of every number; events with no trip (sign-in screen) stay.
   const realRows = state.rows.filter(r => !state.testUsers.has(r.uid));
   const all = realRows.filter(r => !r.tripId || !state.testTrips.has(r.tripId));
   const rows = state.trip === 'all' ? all : all.filter(r => r.tripId === state.trip);
@@ -253,7 +261,7 @@ function render() {
   ];
   syncSelect($('zone'), zoneOpts, state.zone);
   // A zone button converts everyone's hours to that zone; it never filters to the people there.
-  const modes = [{ mode: 'local', label: "Each person's clock" }, ...seenZones.map(z => ({ mode: z, label: `${zoneShort(z)} time` }))];
+  const modes = [{ mode: 'local', label: "Each person's clock" }, ...seenZones.map(z => ({ mode: z, label: zoneAbbr(z) }))];
   $('hourMode').innerHTML = modes.map(m => `<button type="button" data-mode="${esc(m.mode)}" aria-pressed="${state.hourMode === m.mode}">${esc(m.label)}</button>`).join('');
 
   // Totals
@@ -279,7 +287,7 @@ function render() {
   const byPhase = (a, b) => PHASE_ORDER[a.phase[0]] - PHASE_ORDER[b.phase[0]] || (b.s?.lastSeen ?? 0) - (a.s?.lastSeen ?? 0) || (a.t.name || '').localeCompare(b.t.name || '');
   const real = realTrips.map(tripRow).sort(byPhase);
   const tests = testTrips.map(tripRow).sort(byPhase);
-  $('tripsSub').textContent = `${real.length} ${real.length === 1 ? 'trip' : 'trips'}${tests.length ? `, ${tests.length} test` : ''} · activity for ${rangeLabel}`;
+  $('tripsSub').textContent = `${real.length} ${real.length === 1 ? 'trip' : 'trips'} · activity for ${rangeLabel}`;
   const tripTr = ({ t, s, phase, on, members, active }, isTest) => {
     const memberCount = members.length || t.memberCount || 0;
     const quiet = members.filter(m => !active.has(m.uid));
@@ -300,9 +308,12 @@ function render() {
       </tr>`;
   };
   const head = '<tr><th>Trip</th><th></th><th class="n">Members</th><th class="n">Online</th><th class="n">Active</th><th class="n">Opens</th><th class="n">Views</th><th class="n">Last activity</th><th></th></tr>';
-  $('trips').innerHTML = (real.length + tests.length === 0) ? '<tr><td class="muted">No trips yet.</td></tr>' :
-    head + real.map(r => tripTr(r, false)).join('') +
-    (tests.length ? `<tr><td colspan="9" class="muted small tests-head">Test trips: kept here for reference, left out of every number on this page.</td></tr>` + tests.map(r => tripTr(r, true)).join('') : '');
+  const testNote = tests.length
+    ? `<tr><td colspan="9" class="muted small tests-head">${tests.length} test ${tests.length === 1 ? 'trip' : 'trips'} not shown and left out of every number. <button type="button" class="linkish" data-toggle-tests>${state.showTests ? 'Hide' : 'Show'}</button></td></tr>`
+    : '';
+  $('trips').innerHTML = (real.length === 0 && !(state.showTests && tests.length)) ? '<tr><td class="muted">No trips yet.</td></tr>' + testNote :
+    head + real.map(r => tripTr(r, false)).join('') + testNote +
+    (state.showTests ? tests.map(r => tripTr(r, true)).join('') : '');
 
   // Online now
   $('online').innerHTML = online.length === 0 ? '<li class="empty">Nobody in the last 3 minutes.</li>' : online.map(o => `
@@ -336,8 +347,8 @@ function render() {
   const byHour = S.hourOfDayDetail(rows, state.hourMode);
   // On each person's clock a bar can mix zones, so the tip names the zones those hours were in.
   const zoneLabel = h => state.hourMode === 'local'
-    ? h.zones.map(z => `${zoneShort(z)} time`).join(', ')
-    : `everyone in ${zoneShort(state.hourMode)} time`;
+    ? [...new Set(h.zones.map(zoneAbbr))].join(', ')
+    : `everyone in ${zoneAbbr(state.hourMode)}`;
   bars('byHour', byHour.map((h, i) => ({
     value: h.count,
     tip: `<strong>${String(i).padStart(2, '0')}:00</strong>${zoneLabel(h) ? ' ' + esc(zoneLabel(h)) : ''} · ${h.count} ${h.count === 1 ? 'person-hour' : 'person-hours'}<br>${names(h.uids)}`,
@@ -351,15 +362,10 @@ function render() {
 
   // People
   const people = S.peopleStats(rows, state.zone);
-  const testPeople = S.peopleStats(state.rows.filter(r => state.testUsers.has(r.uid) && (state.trip === 'all' || r.tripId === state.trip)), state.zone);
-  const personLi = (p, isTest) => `
-    <li${isTest ? ' class="dim"' : ''}>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}${isTest ? ' <span class="chip test">Test</span>' : ''}</span>
+  $('people').innerHTML = people.length === 0 ? '<li class="empty">Nobody yet.</li>' : people.map(p => `
+    <li>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}</span>
       <span class="sub">${esc(tripName(p.tripId))} · ${esc(p.platform)} · ${esc(zoneShort(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
-      <span class="when">${ago(p.lastSeen)}</span>
-      <button type="button" class="btn small" data-${isTest ? 'real' : 'test'}="${esc(p.uid)}">${isTest ? 'A person' : 'Not a person'}</button></li>`;
-  $('people').innerHTML = (people.length + testPeople.length === 0) ? '<li class="empty">Nobody yet.</li>' :
-    people.map(p => personLi(p, false)).join('') +
-    (testPeople.length ? `<li class="muted small tests-head">Test accounts: left out of every number on this page.</li>` + testPeople.map(p => personLi(p, true)).join('') : '');
+      <span class="when">${ago(p.lastSeen)}</span></li>`).join('');
 
   // Keep an open hover detail in place across the one-second re-render.
   if (tip.chart) showTip(tip.chart, tip.index);
