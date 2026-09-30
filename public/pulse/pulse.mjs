@@ -106,7 +106,7 @@ function stop() {
 }
 function queryStart() {
   const a = state.anchor;
-  return { today: S.startOfDay(a, state.zone), '24h': a - DAY, '7d': a - 7 * DAY, '30d': a - 30 * DAY }[state.range];
+  return { today: S.startOfDay(a, state.zone), '24h': a - DAY, '7d': a - 7 * DAY, '30d': a - 30 * DAY, '60d': a - 60 * DAY, '180d': a - 180 * DAY, '1y': a - 365 * DAY }[state.range];
 }
 function subscribeRows() {
   unsubRows?.();
@@ -275,7 +275,7 @@ function render() {
   $('tiles').innerHTML = [
     [users, 'people'], [sessions, 'app opens'], [views, 'page views'], [online.length, 'online now'], [liveTrips, 'trips happening now'],
   ].map(([v, l]) => `<div class="tile"><div class="v num">${v}</div><div class="l">${l}</div></div>`).join('');
-  const rangeLabel = { today: 'today', '24h': 'the last 24 hours', '7d': 'the last 7 days', '30d': 'the last 30 days' }[state.range];
+  const rangeLabel = { today: 'today', '24h': 'the last 24 hours', '7d': 'the last 7 days', '30d': 'the last 30 days', '60d': 'the last 60 days', '180d': 'the last 180 days', '1y': 'the last year' }[state.range];
   $('scope').textContent = `Counts for ${rangeLabel}${state.trip === 'all' ? '' : ', ' + tripName(state.trip) + ' only'}. Days and hour labels in ${state.zone}.`;
 
   // Trips: real trips by phase (happening now, upcoming, ended), then test trips, dimmed.
@@ -301,7 +301,7 @@ function render() {
         <td><span class="chip ${phase[0]}">${phase[1]}</span></td>
         <td class="n num">${memberCount}</td>
         <td class="n num">${on}</td>
-        <td class="n num" title="${esc(quiet.length ? 'Not active: ' + quiet.map(m => m.displayName).join(', ') : 'Everyone has been active')}">${active.size}<span class="muted"> of ${memberCount}</span></td>
+        <td class="n num" title="${esc(quiet.length ? 'Not active: ' + quiet.map(m => m.displayName).join(', ') : 'Everyone has been active')}">${active.size}</td>
         <td class="n num">${s?.sessions ?? 0}</td>
         <td class="n num">${s?.views ?? 0}</td>
         <td class="n">${s ? ago(s.lastSeen) : '<span class="muted">none</span>'}</td>
@@ -319,7 +319,7 @@ function render() {
   // Online now
   $('online').innerHTML = online.length === 0 ? '<li class="empty">Nobody in the last 3 minutes.</li>' : online.map(o => `
     <li>${avatar(o.uid)}<span class="main"><span class="name">${esc(userName(o.uid))}</span>
-      <span class="sub">${esc(o.page)} · ${esc(tripName(o.tripId))} · ${esc(o.platform)} · ${esc(zoneShort(o.tz))}</span></span>
+      <span class="sub">${esc(o.page)} · ${esc(tripName(o.tripId))} · ${esc(o.platform)} · ${esc(zoneAbbr(o.tz))}</span></span>
       <span class="when">${ago(o.lastSeen)}</span></li>`).join('');
 
   // People per hour (last 24 h)
@@ -332,7 +332,7 @@ function render() {
   })), Math.max(1, ...perHour.map(b => b.users)), { tick: (it, i) => i % 4 === 0 ? it.label.slice(0, 2) : '' });
 
   // People per day
-  const showDays = state.range === '7d' || state.range === '30d';
+  const showDays = !['today', '24h'].includes(state.range);
   $('perDayCard').hidden = !showDays;
   if (showDays) {
     const perDay = S.usersPerDay(rows, state.zone);
@@ -341,7 +341,11 @@ function render() {
     bars('perDay', perDay.map(d => ({
       value: d.users, label: dayLabel(d.day),
       tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.users} ${d.users === 1 ? 'person' : 'people'}<br>${names([...whoByDay.get(d.day) ?? []].sort())}`,
-    })), Math.max(1, ...perDay.map(d => d.users)), { valueLabel: true, tick: it => it.label });
+    })), Math.max(1, ...perDay.map(d => d.users)), {
+      // Past a month the columns are too narrow for a number each, so label every nth day.
+      valueLabel: perDay.length <= 31,
+      tick: (it, i) => perDay.length <= 31 ? it.label : (i % Math.ceil(perDay.length / 12) === 0 ? it.label : ''),
+    });
   }
 
   // Hour of day
@@ -365,7 +369,7 @@ function render() {
   const people = S.peopleStats(rows, state.zone);
   $('people').innerHTML = people.length === 0 ? '<li class="empty">Nobody yet.</li>' : people.map(p => `
     <li>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}</span>
-      <span class="sub">${esc(tripName(p.tripId))} · ${esc(p.platform)} · ${esc(zoneShort(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
+      <span class="sub">${esc(tripName(p.tripId))} · ${esc(p.platform)} · ${esc(zoneAbbr(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
       <span class="when">${ago(p.lastSeen)}</span></li>`).join('');
 
   // Keep an open hover detail in place across the one-second re-render.

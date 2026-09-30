@@ -57,6 +57,7 @@ export class UsageService {
   private sessionSent = false;
   private lastEventAt = 0;
   private lastPageView: { page: string; at: number } | null = null;
+  private lastTripRecorded: string | null = null;
   private pingTimer: ReturnType<typeof setInterval> | undefined;
 
   /** Wire up the listeners. Called once from the root component. */
@@ -82,6 +83,14 @@ export class UsageService {
         this.sessionSent = false;
         this.stopPinging();
       }
+    });
+
+    // The first events of a visit often fire before the active trip is known
+    // (it loads with the trip list), so they carry no trip. As soon as the
+    // trip settles or changes, one ping records where this person is.
+    effect(() => {
+      const trip = this.tripContext.activeTripId();
+      if (this.sessionSent && trip && trip !== this.lastTripRecorded) this.record('ping');
     });
 
     document.addEventListener('visibilitychange', () => {
@@ -115,9 +124,10 @@ export class UsageService {
       this.lastPageView = { page: this.currentPage, at: now };
     }
     this.lastEventAt = now;
+    this.lastTripRecorded = this.tripContext.activeTripId();
     const event: UsageEvent = {
       uid,
-      tripId: this.tripContext.activeTripId(),
+      tripId: this.lastTripRecorded,
       type,
       page: this.currentPage,
       at: serverTimestamp(),
