@@ -76,7 +76,24 @@ member reads (deny), update and delete by admin (deny).
 About 100 events per active user per day. Free tier: 20k writes/day, 50k reads/day, 1 GiB.
 Kept indefinitely for now; add a Firestore TTL policy on `at` if it ever matters.
 
-## PR 2 — `/activity` page (`feat/activity-page`)
+## PR 2 — `/activity` page (`feat/activity-page`) — superseded the same day
+
+_Shipped as #215, then replaced by the Pulse dashboard below at Alayna's request: the view
+must be hers alone (not every admin), live outside the app, and cover every trip._
+
+### Pulse dashboard (`feat/pulse-dashboard`)
+
+- `public/pulse/` — a standalone page on the same Firebase Hosting site (served at
+  `/pulse/`, no link from the app, `noindex`). Firebase JS SDK from gstatic; App Check via the
+  same reCAPTCHA key; its own Firebase app name so its sign-in is separate from the app's.
+- Rules: `_activity` read and `trips/{id}` read/list allowed for the owner's uid only
+  (`isAppOwner()`), no sub-collections, no writes. Admins no longer read events.
+- Sections: totals, trips (every trip doc: phase chip, members, online, people, opens,
+  views, last activity), online now, people per hour and per day, hour of day, pages, people.
+- Aggregations in `public/pulse/stats.mjs`, tested by `test/pulse-stats.test.mjs`.
+- Demo build excludes `public/pulse/`.
+
+The original in-app design, kept for the record:
 
 Route `activity`, guarded by a new `adminGuard` (`src/app/guards/admin.guard.ts`) that waits
 for `UserService.waitForUser()` and then checks `UserService.isAdmin()`; non-admins are sent

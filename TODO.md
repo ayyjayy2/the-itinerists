@@ -29,8 +29,9 @@ Everything a tester would notice, and everything hard to change once real data e
 - [~] Usage analytics (design: `docs/superpowers/specs/2026-09-30-usage-analytics-design.md`):
       - [x] Own event log: `_activity` (session / page / 5-min ping, with the person's hour and
             zone), rules deployed 2026-09-30.
-      - [x] Admin-only `/activity` page: online now, people per hour and per day, hour of day on
-            each person's clock or one zone, pages, people; linked from Profile.
+      - [x] Pulse dashboard at theitinerists.com/pulse/ (owner's account only, outside the app,
+            live): trips happening now, online now, people per hour and per day, hour of day on
+            each person's clock or one zone, pages, people.
       - [ ] Google Analytics 4: enable Analytics on the Firebase project (console → Project
             settings → Integrations) — *Alayna*; then `provideAnalytics`, screen + user tracking,
             user properties (platform, timezone, trip), CSP, privacy paragraph.
