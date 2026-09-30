@@ -156,6 +156,29 @@ export interface ActivityLogEntry {
   timestamp: number;            // unix ms
 }
 
+// ── Trip events (the bell / Updates feed; push fan-out reads the same docs) ──
+export type TripEventKind =
+  | 'itinerary' | 'flight' | 'stay' | 'transport' | 'finance' | 'rec' | 'pin'
+  | 'packing' | 'member' | 'trip';
+export type TripEventAction =
+  | 'added' | 'changed' | 'removed'
+  | 'joined' | 'left' | 'kicked' | 'restored'
+  | 'suggested' | 'accepted' | 'declined';
+
+/** Stored at `/trips/{tripId}/events/{id}`. Display line = `${actorName} ${summary}`. */
+export interface TripEvent {
+  id: string;
+  kind: TripEventKind;
+  action: TripEventAction;
+  actorUid: string;
+  actorName: string;          // snapshot
+  itemId: string;             // target doc id; '' for trip-level
+  summary: string;            // "added Dinner to Day 3, Fri Oct 3 at 7:00 PM"
+  path: string;               // deep-link page, e.g. '/itinerary'
+  audience: 'all' | string[]; // member uids
+  timestamp: number;          // unix ms
+}
+
 // ── Currency ──────────────────────────────────────────────────────────────────
 
 export interface ExchangeRates {

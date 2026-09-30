@@ -229,7 +229,7 @@ service cloud.firestore {
         allow read, write: if isMember(tripId) && sub in [
           'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
           'flights', 'outfits', 'dayLabels', 'packing', 'packingSuggestions',
-          'activityLog', 'removedMembers'
+          'activityLog', 'removedMembers', 'events'
         ];
       }
     }
