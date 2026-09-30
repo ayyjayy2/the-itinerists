@@ -81,8 +81,8 @@
 </head>
 <body>
 
-<h2>Triplan — App Flow Diagram</h2>
-<p class="subtitle">Every screen, every decision point, every navigation path</p>
+<h2>The Itinerists — App Flow Diagram</h2>
+<p class="subtitle">Every screen, every decision point, every navigation path · sign-in &amp; onboarding sections updated 2026-09-30</p>
 
 <div class="legend">
   <div class="legend-item"><div class="legend-dot" style="border-color:#6a6aff;background:#2a2a55"></div> Entry point</div>
@@ -96,7 +96,7 @@
 
   <!-- ── LAUNCH ──────────────────────────── -->
   <div class="section">
-    <div class="section-label">App Launch</div>
+    <div class="section-label">App Launch &amp; Sign-in</div>
     <div class="row">
       <div class="node entry">
         <h4>🚀 App Opens</h4>
@@ -104,7 +104,7 @@
       </div>
       <div class="arrow-right">→</div>
       <div class="node gate">
-        <h4>Logged in?</h4>
+        <h4>Signed in?</h4>
       </div>
     </div>
 
@@ -114,20 +114,26 @@
           <span>NO ↓</span>
         </div>
         <div class="node screen">
-          <h4>🔐 Login Screen</h4>
-          Email + password<br>
-          "Create account" link<br>
-          "Join via invite" link
+          <h4>🔐 Sign In</h4>
+          Username <em>or</em> email + password<br>
+          "Forgot password?" link<br>
+          "Sign up" link<br>
+          → Signs in → Home
         </div>
         <div class="arrow-right">→</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <div class="node screen" style="font-size:12px">
-            <h4>📝 Register Screen</h4>
-            Display name, username,<br>password, avatar emoji, color
+            <h4>📝 Sign Up (one form)</h4>
+            Name, username, email, avatar, password<br>
+            <strong style="color:#ffa84a">Invite code — optional</strong><br>
+            Code is checked on blur; an invite link<br>
+            lands here with the code pre-filled
           </div>
           <div class="node screen" style="font-size:12px">
-            <h4>🔗 Join Screen</h4>
-            From invite link →<br>register + auto-join trip
+            <h4>🔑 Forgot Password</h4>
+            Username or email → reset link<br>
+            sent to the recovery email<br>
+            → Back to sign in
           </div>
         </div>
       </div>
@@ -138,20 +144,57 @@
         <div class="branch-line">
           <span>YES ↓</span>
         </div>
-        <div class="node gate">
-          <h4>Has lastActiveTrip?</h4>
+        <div class="node screen">
+          <h4>🏠 Home</h4>
+          Restores lastActiveTrip (or first trip)<br>
+          → trip dashboard<br>
+          No trips yet → welcome state:<br>
+          "Set up a trip" / "I have an invite code"
         </div>
-        <div class="arrow-right">→</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div class="node screen" style="font-size:12px">
-            <h4>YES → Trip Dashboard</h4>
-            Jump straight into last trip
-          </div>
-          <div class="node screen" style="font-size:12px">
-            <h4>NO → My Trips</h4>
-            Show trip list or<br>"Create your first trip"
-          </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SIGN-UP OUTCOMES ────────────────── -->
+  <div class="section">
+    <div class="section-label">After "Create account"</div>
+    <div class="row">
+      <div class="node gate">
+        <h4>Invite code entered?</h4>
+      </div>
+      <div class="arrow-right">→</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="node screen" style="font-size:12px">
+          <h4>YES → Join that trip</h4>
+          Account created + added to the trip<br>
+          → Home with the trip loaded
         </div>
+        <div class="node screen" style="font-size:12px">
+          <h4>NO → Get Started</h4>
+          "Hey, {name}! Let's get your first trip going."<br>
+          <strong style="color:#80d8a0">Set up a trip</strong> → Create Trip screen<br>
+          <strong style="color:#a0a0b8">Do this later</strong> → Home (welcome state)
+        </div>
+        <div class="node screen" style="font-size:12px; border-color:#ffa84a">
+          <h4>Email already on an account → Check your inbox</h4>
+          Form is replaced by a neutral "we sent an email" step<br>
+          (never confirms the email exists)<br>
+          → "Back to sign in" or "Use a different email"
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 4px;">
+      <div class="node screen">
+        <h4>✨ Create Trip</h4>
+        Trip name, destination(s), dates, currency<br>
+        → Trip created, set active, you become owner<br>
+        <strong style="color:#80d8a0">→ Home with the new trip's details</strong>
+      </div>
+      <div class="arrow-right">→</div>
+      <div class="node tab">
+        <h4>🏠 Home</h4>
+        Countdown, members, quick links
       </div>
     </div>
   </div>
@@ -173,8 +216,8 @@
           <h4>✨ Create Trip</h4>
           Trip name, destination<br>
           Start/end dates, currency<br>
-          Cover photo (optional)<br>
-          → Creates trip, you become owner
+          → Creates trip, sets it active, you become owner<br>
+          → Lands on Home
         </div>
         <div class="connector">— or tap a trip card —</div>
         <div class="node entry">
@@ -351,23 +394,30 @@
     <div class="row">
       <div class="node entry">
         <h4>🔗 Invite Link Tapped</h4>
-        triplan.app/join/ABC123
+        theitinerists.com/join?code=ABC123<br>
+        <span style="font-size:11px;color:#a0a0b8">or a code typed in by hand</span>
       </div>
       <div class="arrow-right">→</div>
       <div class="node gate">
-        <h4>Has account?</h4>
+        <h4>Signed in?</h4>
       </div>
       <div class="arrow-right">→</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <div class="node screen" style="font-size:12px">
           <h4>YES → Auto-join trip</h4>
-          Validate code → add to members<br>
-          → Open trip dashboard
+          Validate code → add to members → Home<br>
+          Invalid/expired → error + "Back to Home"<br>
+          Link without a code → Get Started (code entry)
         </div>
         <div class="node screen" style="font-size:12px">
-          <h4>NO → Register + join</h4>
-          Create account first<br>
-          → Auto-join trip on completion
+          <h4>NO → Sign Up with the code pre-filled</h4>
+          Same one-form sign-up as above<br>
+          → Account created + joins the trip → Home
+        </div>
+        <div class="node screen" style="font-size:12px">
+          <h4>Already in the app, code in hand</h4>
+          Home welcome / any no-trip page → "I have an invite code"<br>
+          → Get Started (code entry) → Join trip → Home
         </div>
       </div>
     </div>

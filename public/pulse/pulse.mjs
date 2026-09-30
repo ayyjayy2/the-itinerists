@@ -244,7 +244,8 @@ function render() {
     { group: 'All zones', items: allZones().filter(z => !seenZones.includes(z)) },
   ];
   syncSelect($('zone'), zoneOpts, state.zone);
-  const modes = [{ mode: 'local', label: "Each person's clock" }, ...seenZones.map(z => ({ mode: z, label: zoneShort(z) }))];
+  // A zone button converts everyone's hours to that zone; it never filters to the people there.
+  const modes = [{ mode: 'local', label: "Each person's clock" }, ...seenZones.map(z => ({ mode: z, label: `${zoneShort(z)} time` }))];
   $('hourMode').innerHTML = modes.map(m => `<button type="button" data-mode="${esc(m.mode)}" aria-pressed="${state.hourMode === m.mode}">${esc(m.label)}</button>`).join('');
 
   // Totals
@@ -325,10 +326,13 @@ function render() {
 
   // Hour of day
   const byHour = S.hourOfDayDetail(rows, state.hourMode);
-  const modeLabel = state.hourMode === 'local' ? "on their own clock" : `in ${state.hourMode}`;
+  // On each person's clock a bar can mix zones, so the tip names the zones those hours were in.
+  const zoneLabel = h => state.hourMode === 'local'
+    ? h.zones.map(z => `${zoneShort(z)} time`).join(', ')
+    : `everyone in ${zoneShort(state.hourMode)} time`;
   bars('byHour', byHour.map((h, i) => ({
     value: h.count,
-    tip: `<strong>${String(i).padStart(2, '0')}:00</strong> ${esc(modeLabel)} · ${h.count} ${h.count === 1 ? 'person-hour' : 'person-hours'}<br>${names(h.uids)}`,
+    tip: `<strong>${String(i).padStart(2, '0')}:00</strong>${zoneLabel(h) ? ' ' + esc(zoneLabel(h)) : ''} · ${h.count} ${h.count === 1 ? 'person-hour' : 'person-hours'}<br>${names(h.uids)}`,
   })), Math.max(1, ...byHour.map(h => h.count)), { tick: (it, i) => i % 6 === 0 ? String(i).padStart(2, '0') : '' });
 
   // Pages
