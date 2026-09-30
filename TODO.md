@@ -32,6 +32,12 @@ Storage, a crash appears in Crashlytics, and a budget alert email has arrived on
 
 ## Phase 2 — Beta (2–4 weeks, Alayna runs it)
 
+- [ ] Write the full beta plan and design before inviting anyone: goals and success
+      metrics; who is invited in which wave; the invite message; onboarding instructions
+      (TestFlight install, first trip, bringing joiners); how feedback is collected (one
+      channel + short surveys: after first trip set-up, after week 1, exit survey); survey
+      questions; a bug-report template that asks for the version line; the weekly build
+      cadence; how testers hear about fixes; the thank-you at the end.
 - [ ] Invite the 14 "Yes!! As the planner" voters one at a time (Headcount artifact, Poll page).
 - [ ] Ask each to set up one trip and bring at least two joiners.
 - [ ] One place for feedback (group chat or short form); ask for the version line with reports.
