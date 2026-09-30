@@ -130,9 +130,14 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
 - [ ] NOT before 2026-10-10 (after the Berlin trip ends): decide with Alayna whether to redirect
       the-itinerists.web.app → theitinerists.com. A redirect signs the existing group out once.
 - [ ] Backups: Firestore point-in-time recovery + weekly export to a bucket.
+- [ ] Old trips delete themselves after a year: 12 months after the trip's end date, a daily
+      Cloud Function runs the same teardown as the owner's delete button. Trip Settings shows
+      "deletes on {date}"; the My Trips card gets a 30-day badge; one-tap "Keep for another
+      year". Privacy policy "How long we keep data" updated to match. Caps storage growth.
 - [ ] CI: GitHub Actions runs `ng test` and the rules tests on every pull request.
 - [ ] Pagination for the activity log and other unbounded lists.
-- [ ] Terms of service beside the privacy policy; "download my data" on Profile.
+- [ ] Terms of service beside the privacy policy; "download my data" on Profile; the policy
+      states the one-year trip retention and the keep option.
 - [ ] Email updates list: move the phase 2 waitlist onto a mailing service (Brevo or Mailchimp free tier) authenticated on
       theitinerists.com (its DKIM records + one more SPF include); a "send me updates" checkbox
       at sign-up and a toggle on Profile stored on the private account doc; a one-field
