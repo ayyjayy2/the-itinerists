@@ -87,6 +87,10 @@
   .chip.live { background: var(--primary-tint); color: var(--primary-dark); }
   .chip.soon { background: var(--accent-tint); color: var(--accent-dark); }
   .chip.past { background: var(--lavender-tint); color: var(--lavender-dark); }
+  .chip.archived { background: var(--surface-2); color: var(--text-muted); }
+  #trips tr.dim td { color: var(--text-muted); }
+  #trips tr.dim strong { font-weight: 600; }
+  #trips .hidden-row { padding-top: 0.8rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; font-size: 0.82rem; }
 
   /* bars */
   .bars { display: flex; align-items: flex-end; gap: 3px; height: 130px; }
@@ -115,7 +119,7 @@
   .tbl td.n, .tbl th.n { text-align: right; white-space: nowrap; }
   .tbl .page { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; }
   .scroll { overflow-x: auto; }
-  #trips { min-width: 640px; }
+  #trips { min-width: 720px; }
   #trips td:first-child { white-space: nowrap; }
 
   /* sign-in */
