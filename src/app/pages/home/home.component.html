@@ -114,7 +114,7 @@
     @if (pinEdit()) {
       <div class="pin-editor card">
         <div class="pin-opts">
-          @for (p of pinnablePages; track p.path) {
+          @for (p of pinOptions(); track p.path) {
             <button class="pin-opt" [class.on]="isPinned(p.path)" (click)="togglePin(p.path)">
               <app-icon [name]="p.icon" [size]="16" /> {{ p.label }}
               @if (isPinned(p.path)) { <span class="pin-check">✓</span> }
@@ -144,78 +144,149 @@
       <a routerLink="/trips" class="see-link">My trips →</a>
     </div>
 
-    <!-- First up (itinerary) -->
-    <a class="glance-row" routerLink="/itinerary">
-      <span class="glance-ic sage"><app-icon name="itinerary" [size]="22" /></span>
-      <span class="glance-body">
-        @if (firstUp(); as e) {
-          <span class="glance-title">First up: {{ e.activity }}</span>
-          <span class="glance-sub">{{ firstUpWhen() }}@if (e.location) { · {{ e.location }} }</span>
-        } @else {
-          <span class="glance-title">Plan your itinerary</span>
-          <span class="glance-sub">Add your first event, day by day</span>
-        }
-      </span>
-      <span class="glance-arrow">›</span>
-    </a>
+    <div class="glance-grid">
+      @for (key of widgetKeys(); track key) {
+        @switch (key) {
 
-    <!-- Finance -->
-    <a class="glance-row" routerLink="/finance">
-      <span class="glance-ic gold"><app-icon name="finance" [size]="22" /></span>
-      <span class="glance-body">
-        @if (financeNet() !== null && expenseCount() > 0) {
-          @if (financeNet()! > 0.01) {
-            <span class="glance-title owed">You're owed {{ money(financeNet()!) }}</span>
-          } @else if (financeNet()! < -0.01) {
-            <span class="glance-title owe">You owe {{ money(-financeNet()!) }}</span>
-          } @else {
-            <span class="glance-title">You're all settled up 🎉</span>
+          @case ('itinerary') {
+            <a class="glance-row wide" routerLink="/itinerary" data-widget="itinerary">
+              <span class="glance-ic sage"><app-icon name="itinerary" [size]="22" /></span>
+              <span class="glance-body">
+                @if (firstUp(); as e) {
+                  <span class="glance-title">First up: {{ e.activity }}</span>
+                  <span class="glance-sub">{{ firstUpWhen() }}@if (e.location) { · {{ e.location }} }</span>
+                } @else {
+                  <span class="glance-title">Plan your itinerary</span>
+                  <span class="glance-sub">Add your first event, day by day</span>
+                }
+              </span>
+              <span class="glance-arrow">›</span>
+            </a>
           }
-          <span class="glance-sub">{{ money(trackedTotal()) }} tracked so far · tap to settle up</span>
-        } @else {
-          <span class="glance-title">Shared expenses</span>
-          <span class="glance-sub">Track who paid &amp; who owes who</span>
-        }
-      </span>
-      <span class="glance-arrow">›</span>
-    </a>
 
-    <!-- Weather + packing -->
-    <div class="glance-2col">
-      <a class="glance-mini" routerLink="/outfits">
-        <div class="glance-mini-top gold">
-          <app-icon name="recs" [size]="18" />
-          @if (weatherGlance(); as w) { <span>{{ w.minF }}–{{ w.maxF }}°F</span> }
-          @else { <span>Weather</span> }
-        </div>
-        <div class="glance-mini-sub">
-          @if (weatherCondition(); as c) {
-            <div class="wx-cond">{{ c.emoji }} {{ c.label }}</div>
-            <div>{{ glanceLegShort() }} · outfits</div>
-          } @else { Forecast nearer the trip }
-        </div>
-      </a>
-      <a class="glance-mini" routerLink="/packing">
-        <div class="glance-mini-top pink">
-          <app-icon name="packing" [size]="18" />
-          <span>{{ packingSummary().packed }}/{{ packingSummary().total }} packed</span>
-        </div>
-        @if (nextToPack().length) {
-          <div class="glance-mini-sub">
-            @for (label of nextToPack(); track label) {
-              <div class="pack-next">○ {{ label }}</div>
-            }
-          </div>
-        } @else if (packingSummary().total > 0) {
-          <div class="glance-mini-sub">All packed! 🎉</div>
-        } @else {
-          <div class="glance-mini-sub">Packing list</div>
+          @case ('finance') {
+            <a class="glance-mini" routerLink="/finance" data-widget="finance">
+              <div class="glance-mini-top gold">
+                <app-icon name="finance" [size]="18" />
+                @if (financeNet() !== null && expenseCount() > 0) {
+                  @if (financeNet()! > 0.01)       { <span class="owed">Owed {{ money(financeNet()!) }}</span> }
+                  @else if (financeNet()! < -0.01) { <span class="owe">You owe {{ money(-financeNet()!) }}</span> }
+                  @else                             { <span>All settled 🎉</span> }
+                } @else { <span>Finance</span> }
+              </div>
+              <div class="glance-mini-sub">
+                @if (expenseCount() > 0) { {{ money(trackedTotal()) }} tracked } @else { Who paid &amp; who owes }
+              </div>
+            </a>
+          }
+
+          @case ('packing') {
+            <a class="glance-mini" routerLink="/packing" data-widget="packing">
+              <div class="glance-mini-top pink">
+                <app-icon name="packing" [size]="18" />
+                <span>{{ packingSummary().packed }}/{{ packingSummary().total }} packed</span>
+              </div>
+              @if (nextToPack().length) {
+                <div class="glance-mini-sub">
+                  @for (label of nextToPack(); track label) { <div class="pack-next">○ {{ label }}</div> }
+                </div>
+              } @else if (packingSummary().total > 0) {
+                <div class="glance-mini-sub">All packed! 🎉</div>
+              } @else {
+                <div class="glance-mini-sub">Packing list</div>
+              }
+            </a>
+          }
+
+          @case ('outfits') {
+            <a class="glance-mini" routerLink="/outfits" data-widget="outfits">
+              <div class="glance-mini-top gold">
+                <app-icon name="recs" [size]="18" />
+                @if (weatherGlance(); as w) { <span>{{ w.minF }}–{{ w.maxF }}°F</span> } @else { <span>Weather</span> }
+              </div>
+              <div class="glance-mini-sub">
+                @if (weatherCondition(); as c) {
+                  <div class="wx-cond">{{ c.emoji }} {{ c.label }}</div>
+                  <div>{{ glanceLegShort() }} · outfits</div>
+                } @else { Forecast nearer the trip }
+              </div>
+            </a>
+          }
+
+          @case ('flights') {
+            <a class="glance-mini" routerLink="/flights" data-widget="flights">
+              <div class="glance-mini-top sky">
+                <app-icon name="flights" [size]="18" />
+                <span>{{ flightGlance() ? flightGlanceTitle() : 'Flights' }}</span>
+              </div>
+              <div class="glance-mini-sub">
+                @if (flightGlance(); as g) {
+                  {{ g.moment.label }}@if (g.moment.time) { · {{ showTime(g.moment.time) }} }
+                } @else { Add your flights }
+              </div>
+            </a>
+          }
+
+          @case ('accommodations') {
+            <a class="glance-mini" routerLink="/accommodations" data-widget="accommodations">
+              <div class="glance-mini-top lav">
+                <app-icon name="stays" [size]="18" />
+                @if (stayGlance(); as s) {
+                  <span>{{ s.kind === 'tonight' ? 'Tonight: ' + s.stay.name : 'Check in ' + shortDate(s.stay.checkIn) }}</span>
+                } @else { <span>Stays</span> }
+              </div>
+              <div class="glance-mini-sub">
+                @if (stayGlance(); as s) {
+                  {{ s.kind === 'tonight' ? 'Check out ' + shortDate(s.stay.checkOut) : s.stay.name }}
+                } @else { Add where you're staying }
+              </div>
+            </a>
+          }
+
+          @case ('transportation') {
+            <a class="glance-mini" routerLink="/transportation" data-widget="transportation">
+              <div class="glance-mini-top peach">
+                <app-icon name="car" [size]="18" />
+                @if (transportGlance(); as t) {
+                  <span>{{ t.kind === 'pickup' ? 'Pick-up' : 'Drop-off' }} {{ shortDate(t.date) }}@if (t.time) { · {{ showTime(t.time) }} }</span>
+                } @else { <span>Transportation</span> }
+              </div>
+              <div class="glance-mini-sub">
+                @if (transportGlance(); as t) { {{ t.company }} · {{ t.mode }} } @else { Add a rental car }
+              </div>
+            </a>
+          }
+
+          @case ('expenses') {
+            <a class="glance-mini" routerLink="/expenses" data-widget="expenses">
+              <div class="glance-mini-top pink">
+                <app-icon name="expenses" [size]="18" />
+                <span>{{ myExpensesCount() > 0 ? money(myExpensesTotal()) + ' spent' : 'My Expenses' }}</span>
+              </div>
+              <div class="glance-mini-sub">
+                @if (myExpensesCount() > 0) { Your private spending } @else { Track your own spending }
+              </div>
+            </a>
+          }
+
+          @case ('recs') {
+            <a class="glance-mini" routerLink="/recs" data-widget="recs">
+              <div class="glance-mini-top sage">
+                <app-icon name="recs" [size]="18" />
+                <span>{{ recGlance().count > 0 ? recGlance().count + ' rec' + (recGlance().count === 1 ? '' : 's') : 'Recs' }}</span>
+              </div>
+              <div class="glance-mini-sub">
+                @if (recGlance().count > 0) { Latest: {{ recGlance().latest }} } @else { Save a rec }
+              </div>
+            </a>
+          }
+
         }
-      </a>
+      }
     </div>
 
     <!-- Mini map: current/next itinerary day (C only) -->
-    @if (layout() === 'C') {
+    @if (layout() === 'C' && !hiddenPage('/map')) {
       <app-day-map-card />
     }
 
@@ -242,7 +313,7 @@
            so a visible label would just narrate the obvious. -->
       <h2 class="sr-only">Quick access</h2>
       <div class="links-grid">
-        @for (link of quickAccess; track link.path) {
+        @for (link of quickAccessVisible(); track link.path) {
           <a class="link-card" [routerLink]="link.path" [style.--card-accent]="link.accent">
             <span class="link-icon"><app-icon [name]="link.icon" [size]="24" /></span>
             <span class="link-label">{{ link.label }}</span>

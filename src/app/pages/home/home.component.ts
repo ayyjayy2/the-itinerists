@@ -14,6 +14,14 @@ import { ItineraryService } from '../../services/itinerary.service';
 import { FinanceService } from '../../services/finance.service';
 import { PackingService } from '../../services/packing.service';
 import { WeatherService } from '../../services/weather.service';
+import { StaysService } from '../../services/stays.service';
+import { RecsService } from '../../services/recs.service';
+import { ExpensesService } from '../../services/expenses.service';
+import { DataService } from '../../services/data.service';
+import {
+  WidgetKey, isPageHidden, visibleWidgetKeys,
+  nextStay, nextTransport, nextFlight, expensesTotalBetween, recsGlance,
+} from '../../utils/home-widgets';
 import { TripDoc, TripDestination, ActivityLogEntry } from '../../models/trip.models';
 import { tripDestinations, activeLeg, legIsCurrent, localTodayISO } from '../../utils/trip-destinations';
 import { effectivePins } from '../../utils/pins';
@@ -42,6 +50,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   financeService   = inject(FinanceService);
   packingService   = inject(PackingService);
   weatherService   = inject(WeatherService);
+  staysService     = inject(StaysService);
+  recsService      = inject(RecsService);
+  expensesService  = inject(ExpensesService);
+  dataService      = inject(DataService);
 
   currentUser = this.userService.currentUser;
   isAdmin     = this.userService.isAdmin;
@@ -58,7 +70,35 @@ export class HomeComponent implements OnInit, OnDestroy {
   /** The user's trips, for the switcher row. */
   readonly trips = signal<TripDoc[]>([]);
 
+  /** Type B "Quick Access" — every page, old-layout style. */
+  readonly quickAccess = [
+    { path: '/trips',          label: 'My Trips',       icon: 'trips',     desc: 'All trips · switch active',   accent: '#88C9A1' },
+    { path: '/itinerary',      label: 'Itinerary',      icon: 'itinerary', desc: 'Day-by-day plans',            accent: '#F9E4B7' },
+    { path: '/flights',        label: 'Flights',        icon: 'flights',   desc: 'Arrivals & departures',       accent: '#B5D5F5' },
+    { path: '/accommodations', label: 'Stays',          icon: 'stays',     desc: 'Hotels & check-in',           accent: '#D4B5F5' },
+    { path: '/transportation', label: 'Transportation', icon: 'car',       desc: 'Rental car & getting around', accent: '#F5D4B5' },
+    { path: '/finance',        label: 'Finance',        icon: 'finance',   desc: 'Shared expenses',             accent: '#88C9A1' },
+    { path: '/expenses',       label: 'My Expenses',    icon: 'expenses',  desc: 'Your private spending',       accent: '#F4C2C2' },
+    { path: '/recs',           label: 'Recs',           icon: 'recs',      desc: 'Tips & spots',                accent: '#F5B5D4' },
+    { path: '/packing',        label: 'Packing',        icon: 'packing',   desc: 'Your packing list',           accent: '#B5F5D4' },
+    { path: '/outfits',        label: 'Outfits',        icon: 'outfits',   desc: 'Plan your looks',             accent: '#F5B5D4' },
+    { path: '/map',            label: 'Map',            icon: 'map',       desc: 'Trip map',                    accent: '#B5D5F5' },
+    { path: '/profile',        label: 'Profile',        icon: 'profile',   desc: 'Settings & account',          accent: '#F9E4B7' },
+  ];
+
   readonly layout = computed(() => effectiveHomeLayout(this.userService.firestoreUser()));
+
+  // ── Hidden pages (per member, per trip — Customize Menu in Trip Settings) ──
+  readonly hidden = this.tripService.hiddenPages;
+  hiddenPage(path: string): boolean { return isPageHidden(path, this.hidden()); }
+
+  /** Which glance widgets to show, in the user's nav order, minus hidden pages. */
+  readonly widgetKeys = computed<WidgetKey[]>(() =>
+    visibleWidgetKeys(this.userService.firestoreUser()?.navOrder, this.hidden()));
+
+  /** Type B quick-access cards, minus hidden pages. */
+  readonly quickAccessVisible = computed(() =>
+    this.quickAccess.filter(l => !isPageHidden(l.path, this.hidden())));
 
   // ── Recovery-email nudge: accounts still on the synthetic address can't reset
   //    their own password. Dismissal is per device (a convenience, not data). ──
@@ -76,21 +116,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
   readonly isLayoutA = computed(() => this.layout() === 'A');
 
-  /** Type B "Quick Access" — every page, old-layout style. */
-  readonly quickAccess = [
-    { path: '/trips',          label: 'My Trips',       icon: 'trips',     desc: 'All trips · switch active',   accent: '#88C9A1' },
-    { path: '/itinerary',      label: 'Itinerary',      icon: 'itinerary', desc: 'Day-by-day plans',            accent: '#F9E4B7' },
-    { path: '/flights',        label: 'Flights',        icon: 'flights',   desc: 'Arrivals & departures',       accent: '#B5D5F5' },
-    { path: '/accommodations', label: 'Stays',          icon: 'stays',     desc: 'Hotels & check-in',           accent: '#D4B5F5' },
-    { path: '/transportation', label: 'Transportation', icon: 'car',       desc: 'Rental car & getting around', accent: '#F5D4B5' },
-    { path: '/finance',        label: 'Finance',        icon: 'finance',   desc: 'Shared expenses',             accent: '#88C9A1' },
-    { path: '/expenses',       label: 'My Expenses',    icon: 'expenses',  desc: 'Your private spending',       accent: '#F4C2C2' },
-    { path: '/recs',           label: 'Recs',           icon: 'recs',      desc: 'Tips & spots',                accent: '#F5B5D4' },
-    { path: '/packing',        label: 'Packing',        icon: 'packing',   desc: 'Your packing list',           accent: '#B5F5D4' },
-    { path: '/outfits',        label: 'Outfits',        icon: 'outfits',   desc: 'Plan your looks',             accent: '#F5B5D4' },
-    { path: '/map',            label: 'Map',            icon: 'map',       desc: 'Trip map',                    accent: '#B5D5F5' },
-    { path: '/profile',        label: 'Profile',        icon: 'profile',   desc: 'Settings & account',          accent: '#F9E4B7' },
-  ];
 
   // ── Pinned quick-shortcuts (stored on the account — follows the user) ──────
   private readonly LEGACY_PINS_KEY = 'tripplanner_home_pins';
@@ -109,9 +134,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   ];
   readonly pins = computed(() => effectivePins(this.userService.firestoreUser()));
   pinEdit = signal(false);
+  /** Pin options offered in the editor: hidden pages are left out. */
+  readonly pinOptions = computed(() =>
+    this.pinnablePages.filter(p => !isPageHidden(p.path, this.hidden())));
+  /** Saved pins that are visible on this trip. The saved list itself is not
+   *  touched: pins are account data and the page may be shown on other trips. */
   readonly pinnedTiles = computed(() => {
     const set = new Set(this.pins());
-    return this.pinnablePages.filter(p => set.has(p.path));
+    return this.pinOptions().filter(p => set.has(p.path));
   });
   togglePinEdit(): void { this.pinEdit.update(v => !v); }
   isPinned(path: string): boolean { return this.pins().includes(path); }
@@ -314,6 +344,50 @@ export class HomeComponent implements OnInit, OnDestroy {
     const leg = this.currentLeg();
     return leg ? this.legShort(leg) : this.destinationShort();
   });
+
+  /** Local calendar date for "today" comparisons (YYYY-MM-DD). */
+  private readonly todayISO = computed(() => localTodayISO(new Date(this.now())));
+
+  // ── New widgets ────────────────────────────────────────────────────────────
+  readonly stayGlance = computed(() => nextStay(this.staysService.stays(), this.todayISO()));
+
+  readonly transportGlance = computed(() =>
+    nextTransport(this.dataService.data()?.rentalCar ?? [], this.todayISO()));
+
+  readonly flightGlance = computed(() => {
+    const uid  = this.currentUser()?.uid ?? '';
+    const dest = this.activeTrip()?.destination ?? 'your destination';
+    return nextFlight(flightMomentsForUid(this.flightsService.flights(), uid, dest), this.todayISO());
+  });
+
+  /** "Departs in 3 days" / "Lands today". */
+  readonly flightGlanceTitle = computed(() => {
+    const g = this.flightGlance();
+    if (!g) return '';
+    const verb = g.moment.kind === 'depart' ? 'Departs' : 'Lands';
+    if (g.inDays <= 0) return `${verb} today`;
+    if (g.inDays === 1) return `${verb} tomorrow`;
+    return `${verb} in ${g.inDays} days`;
+  });
+
+  readonly myExpensesTotal = computed(() => {
+    const t = this.activeTrip();
+    return expensesTotalBetween(this.expensesService.expenses(), t?.startDate ?? '', t?.endDate ?? '');
+  });
+  readonly myExpensesCount = computed(() => {
+    const t = this.activeTrip();
+    const s = t?.startDate ?? '', e = t?.endDate ?? '';
+    return this.expensesService.expenses().filter(x => !s || !e || (x.date >= s && x.date <= e)).length;
+  });
+
+  readonly recGlance = computed(() => recsGlance(this.recsService.recs()));
+
+  /** "Fri, Oct 3" for widget sub-lines. */
+  shortDate(iso: string): string {
+    return new Date(iso + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+  /** Raw user time → the app's 12h display form; empty stays empty. */
+  showTime(t: string): string { return t ? normalizeTime(t) : ''; }
 
   // ── Activity feed ──────────────────────────────────────────────────────────
   readonly recentActivity = computed(() => {

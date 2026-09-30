@@ -62,14 +62,19 @@ export class TripSettingsComponent {
     { code: 'MXN', label: 'MXN — Mexican Peso' },
   ];
 
-  /** Pages a member may hide from their own navigation (core pages stay). */
+  /** Pages a member may hide from their own menu and Home widgets on this
+   *  trip. Home, Itinerary, My Trips, Trip Settings and Profile stay. Keys are
+   *  route paths without the slash (see app.component.ts nav filter). */
   readonly hideablePages: HideablePage[] = [
-    { key: 'flights',        label: 'Flights',     icon: 'flights' },
-    { key: 'accommodations', label: 'Stays',       icon: 'stays' },
-    { key: 'expenses',       label: 'My Expenses', icon: 'expenses' },
-    { key: 'recs',           label: 'Recs',        icon: 'recs' },
-    { key: 'packing',        label: 'Packing',     icon: 'packing' },
-    { key: 'outfits',        label: 'Outfits',     icon: 'outfits' },
+    { key: 'flights',        label: 'Flights',        icon: 'flights' },
+    { key: 'accommodations', label: 'Stays',          icon: 'stays' },
+    { key: 'transportation', label: 'Transportation', icon: 'car' },
+    { key: 'finance',        label: 'Finance',        icon: 'finance' },
+    { key: 'expenses',       label: 'My Expenses',    icon: 'expenses' },
+    { key: 'recs',           label: 'Recs',           icon: 'recs' },
+    { key: 'packing',        label: 'Packing',        icon: 'packing' },
+    { key: 'outfits',        label: 'Outfits',        icon: 'outfits' },
+    { key: 'map',            label: 'Map',            icon: 'map' },
   ];
 
   // Editable form fields, seeded from the active trip.
