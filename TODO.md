@@ -30,6 +30,8 @@ Everything a tester would notice, and everything hard to change once real data e
       joining needs a live invite — #181, #182, #203.
 - [x] Privacy policy at /privacy, linked from Profile and sign-up — #201.
 - [x] Native iOS shell with icon and launch screen; runs on Alayna's iPhone — #191–#196.
+- [ ] Fixes from the alpha survey: the Berlin group's answers sorted — anything that blocked or
+      confused them first, then asks two or more people made (same order beta fixes will use).
 - [ ] Apple Developer Program enrollment ($99/yr) — *Alayna*. Unblocks App Attest and TestFlight.
 - [ ] Firebase pay-as-you-go (Blaze) plan + budget alerts at $10 and $25 — *Alayna*
       (console → Usage and billing → Modify plan). Unlocks Cloud Functions and backups.
@@ -65,7 +67,8 @@ Everything a tester would notice, and everything hard to change once real data e
             label "Product Interaction" (+ "Crash Data" once Crashlytics lands).
 
 Ends when: a TestFlight build is on Alayna's and Makaela's phones, photos upload to Cloud
-Storage, a crash appears in Crashlytics, and a budget alert email has arrived once.
+Storage, a crash appears in Crashlytics, a budget alert email has arrived once, and the alpha
+survey's top fixes are shipped.
 
 ## Phase 2 — Marketing (2–3 weeks, can overlap phase 1)
 
