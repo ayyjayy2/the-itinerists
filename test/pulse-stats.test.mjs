@@ -80,8 +80,12 @@ test('hourOfDay counts a person once per hour per day, on their clock or in one 
   assert.equal(berlin[7], 0);
   // Who: distinct people per hour, and how many user-hours they add up to.
   const detail = hourOfDayDetail(rows, 'Europe/Berlin');
-  assert.deepEqual(detail[14], { count: 3, uids: ['a', 'b'] });
-  assert.deepEqual(detail[7], { count: 0, uids: [] });
+  assert.deepEqual(detail[14], { count: 3, uids: ['a', 'b'], zones: ['America/Chicago', 'Europe/Berlin'] });
+  assert.deepEqual(detail[7], { count: 0, uids: [], zones: [] });
+  // On each person's own clock the bar also says which zones those hours were in.
+  const own = hourOfDayDetail(rows, 'local');
+  assert.deepEqual(own[14], { count: 2, uids: ['a'], zones: ['Europe/Berlin'] });
+  assert.deepEqual(own[7], { count: 1, uids: ['b'], zones: ['America/Chicago'] });
 });
 
 test('pageStats counts views and distinct people per page, busiest first', () => {

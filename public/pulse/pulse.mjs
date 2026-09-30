@@ -325,10 +325,11 @@ function render() {
 
   // Hour of day
   const byHour = S.hourOfDayDetail(rows, state.hourMode);
-  const modeLabel = state.hourMode === 'local' ? "on their own clock" : `in ${state.hourMode}`;
+  // On each person's clock a bar can mix zones, so the tip names the zones those hours were in.
+  const zoneLabel = h => state.hourMode === 'local' ? (h.zones.length ? h.zones.map(zoneShort).join(', ') : '') : state.hourMode;
   bars('byHour', byHour.map((h, i) => ({
     value: h.count,
-    tip: `<strong>${String(i).padStart(2, '0')}:00</strong> ${esc(modeLabel)} · ${h.count} ${h.count === 1 ? 'person-hour' : 'person-hours'}<br>${names(h.uids)}`,
+    tip: `<strong>${String(i).padStart(2, '0')}:00</strong>${zoneLabel(h) ? ' in ' + esc(zoneLabel(h)) : ''} · ${h.count} ${h.count === 1 ? 'person-hour' : 'person-hours'}<br>${names(h.uids)}`,
   })), Math.max(1, ...byHour.map(h => h.count)), { tick: (it, i) => i % 6 === 0 ? String(i).padStart(2, '0') : '' });
 
   // Pages

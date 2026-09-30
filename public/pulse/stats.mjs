@@ -95,11 +95,12 @@ export function hourOfDay(rows, mode) {
   return hourOfDayDetail(rows, mode).map(h => h.count);
 }
 
-/** Same as hourOfDay, with who: `{ count, uids }` per hour (uids distinct, sorted). */
+/** Same as hourOfDay, with who and where: `{ count, uids, zones }` per hour (both distinct, sorted). */
 export function hourOfDayDetail(rows, mode) {
   const seen = new Set();
   const counts = new Array(24).fill(0);
   const people = Array.from({ length: 24 }, () => new Set());
+  const zones = Array.from({ length: 24 }, () => new Set());
   for (const r of rows) {
     let hour, day;
     if (mode === 'local') {
@@ -113,8 +114,9 @@ export function hourOfDayDetail(rows, mode) {
     seen.add(key);
     counts[hour]++;
     people[hour].add(r.uid);
+    if (r.tz) zones[hour].add(r.tz);
   }
-  return counts.map((count, h) => ({ count, uids: [...people[h]].sort() }));
+  return counts.map((count, h) => ({ count, uids: [...people[h]].sort(), zones: [...zones[h]].sort() }));
 }
 
 /** Page views (`page` events) and distinct people per page, busiest first. */
