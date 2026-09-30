@@ -47,10 +47,11 @@ route + nav entry).
 ### Home
 - "At a glance" **finance card** now shows the running **"tracked so far"** total (#84), matching
   the prototype (net owed/owe title + total subtitle).
-- Home: one "At a glance" **widget per page** (Flights, Stays, Transportation, My Expenses, Recs
-  added; Map has none). **Customize Menu** can now hide Finance, Transportation and Map. Hidden
-  pages drop out of Home widgets, pin tiles, pin options and Quick Access; the two-column grid
-  reflows. Logic in `utils/home-widgets.ts`; spec in
+- Home: "At a glance" keeps its **four slots** (Itinerary, Finance, Packing, Outfits). Hiding one
+  of those backfills the slot with the next visible page in nav order (**backup widgets**: Flights,
+  Stays, Transportation, My Expenses, Recs; Map has none). **Customize Menu** can now hide Finance,
+  Transportation and Map. Hidden pages drop out of Home widgets, pin tiles, pin options and Quick
+  Access. Logic in `utils/home-widgets.ts`; spec in
   `docs/superpowers/specs/2026-09-30-home-widgets-hidden-pages-design.md`.
 
 ---
