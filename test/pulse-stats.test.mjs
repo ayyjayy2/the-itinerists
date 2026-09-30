@@ -46,6 +46,7 @@ test('usersPerHour counts distinct users per clock hour and aligns to the hour',
   const b = usersPerHour(rows, NOON, NOON + 3 * H, 'Europe/Berlin');
   assert.deepEqual(b.map(x => x.users), [2, 1, 0]);
   assert.deepEqual(b.map(x => x.uids), [['a', 'b'], ['b'], []]);
+  assert.deepEqual(b.map(x => x.pages), [['/home'], ['/home'], []]);
   assert.equal(b[0].start, NOON);
   assert.equal(b[0].label, '14:00');
   const aligned = usersPerHour([], NOON + 25 * 60_000, NOON + 2 * H, 'UTC');
@@ -80,12 +81,12 @@ test('hourOfDay counts a person once per hour per day, on their clock or in one 
   assert.equal(berlin[7], 0);
   // Who: distinct people per hour, and how many user-hours they add up to.
   const detail = hourOfDayDetail(rows, 'Europe/Berlin');
-  assert.deepEqual(detail[14], { count: 3, uids: ['a', 'b'], zones: ['America/Chicago', 'Europe/Berlin'] });
-  assert.deepEqual(detail[7], { count: 0, uids: [], zones: [] });
+  assert.deepEqual(detail[14], { count: 3, uids: ['a', 'b'], zones: ['America/Chicago', 'Europe/Berlin'], pages: ['/home'] });
+  assert.deepEqual(detail[7], { count: 0, uids: [], zones: [], pages: [] });
   // On each person's own clock the bar also says which zones those hours were in.
   const own = hourOfDayDetail(rows, 'local');
-  assert.deepEqual(own[14], { count: 2, uids: ['a'], zones: ['Europe/Berlin'] });
-  assert.deepEqual(own[7], { count: 1, uids: ['b'], zones: ['America/Chicago'] });
+  assert.deepEqual(own[14], { count: 2, uids: ['a'], zones: ['Europe/Berlin'], pages: ['/home'] });
+  assert.deepEqual(own[7], { count: 1, uids: ['b'], zones: ['America/Chicago'], pages: ['/home'] });
 });
 
 test('pageStats counts views and distinct people per page, busiest first', () => {
@@ -110,13 +111,17 @@ test('peopleStats summarises each person, most recently seen first', () => {
     row({ uid: 'a', at: NOON, platform: 'web' }),
     row({ uid: 'a', at: NOON + 24 * H, platform: 'pwa' }),
     row({ uid: 'a', at: NOON + 24 * H + 1, type: 'ping', platform: 'pwa' }),
+    // Their newest event has no trip (the trip list); the trip shown is still the one they were last in.
+    row({ uid: 'a', at: NOON + 24 * H + 2, page: '/trips', platform: 'pwa', tripId: null }),
     row({ uid: 'b', at: NOON + H, platform: 'ios', tz: 'America/Chicago', tripId: 'U' }),
+    row({ uid: 'c', at: NOON, page: '/login', tripId: null }),
   ];
   const p = peopleStats(rows, 'Europe/Berlin');
-  assert.deepEqual(p.map(x => x.uid), ['a', 'b']);
-  assert.deepEqual(p[0], { uid: 'a', platform: 'pwa', tz: 'Europe/Berlin', tripId: 'T', lastSeen: NOON + 24 * H + 1, views: 2, daysActive: 2, sessions: 0 });
+  assert.deepEqual(p.map(x => x.uid), ['a', 'b', 'c']);
+  assert.deepEqual(p[0], { uid: 'a', platform: 'pwa', tz: 'Europe/Berlin', tripId: 'T', lastSeen: NOON + 24 * H + 2, views: 3, daysActive: 2, sessions: 0 });
   assert.equal(p[1].daysActive, 1);
   assert.equal(p[1].tripId, 'U');
+  assert.equal(p[2].tripId, null);
 });
 
 test('tripStats summarises each trip, most recently active first', () => {

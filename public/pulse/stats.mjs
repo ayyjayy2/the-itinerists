@@ -62,17 +62,26 @@ export function onlineNow(rows, now, windowMs) {
 export function usersPerHour(rows, from, to, zone) {
   const first = Math.floor(from / HOUR) * HOUR;
   const seen = new Map();
+  const hits = new Map();
   for (const r of rows) {
     if (r.at < first || r.at >= to) continue;
     const k = Math.floor(r.at / HOUR) * HOUR;
     (seen.get(k) ?? seen.set(k, new Set()).get(k)).add(r.uid);
+    (hits.get(k) ?? hits.set(k, []).get(k)).push(r);
   }
   const out = [];
   for (let s = first; s < to; s += HOUR) {
     const uids = [...(seen.get(s) ?? [])].sort();
-    out.push({ start: s, label: hourLabel(s, zone), users: uids.length, uids });
+    out.push({ start: s, label: hourLabel(s, zone), users: uids.length, uids, pages: pagesOf(hits.get(s) ?? []) });
   }
   return out;
+}
+
+/** Distinct pages in these rows, busiest first (every event type counts: a ping says where someone stayed). */
+export function pagesOf(rows) {
+  const n = new Map();
+  for (const r of rows) if (r.page) n.set(r.page, (n.get(r.page) ?? 0) + 1);
+  return [...n.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([page]) => page);
 }
 
 /** Distinct users per calendar day in the display zone, oldest first. Days with no events are omitted. */
@@ -95,12 +104,13 @@ export function hourOfDay(rows, mode) {
   return hourOfDayDetail(rows, mode).map(h => h.count);
 }
 
-/** Same as hourOfDay, with who and where: `{ count, uids, zones }` per hour (both distinct, sorted). */
+/** Same as hourOfDay, with who, where and what: `{ count, uids, zones, pages }` per hour (uids and zones distinct, sorted; pages busiest first). */
 export function hourOfDayDetail(rows, mode) {
   const seen = new Set();
   const counts = new Array(24).fill(0);
   const people = Array.from({ length: 24 }, () => new Set());
   const zones = Array.from({ length: 24 }, () => new Set());
+  const hits = Array.from({ length: 24 }, () => []);
   for (const r of rows) {
     let hour, day;
     if (mode === 'local') {
@@ -109,6 +119,7 @@ export function hourOfDayDetail(rows, mode) {
     } else {
       ({ hour, day } = parts(r.at, mode));
     }
+    hits[hour].push(r);
     const key = `${r.uid}|${day}|${hour}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -116,7 +127,7 @@ export function hourOfDayDetail(rows, mode) {
     people[hour].add(r.uid);
     if (r.tz) zones[hour].add(r.tz);
   }
-  return counts.map((count, h) => ({ count, uids: [...people[h]].sort(), zones: [...zones[h]].sort() }));
+  return counts.map((count, h) => ({ count, uids: [...people[h]].sort(), zones: [...zones[h]].sort(), pages: pagesOf(hits[h]) }));
 }
 
 /** Page views (`page` events) and distinct people per page, busiest first. */
@@ -136,15 +147,18 @@ export function pageStats(rows) {
 export function peopleStats(rows, zone) {
   const acc = new Map();
   for (const r of rows) {
-    const a = acc.get(r.uid) ?? acc.set(r.uid, { last: r, views: 0, days: new Set(), sessions: 0 }).get(r.uid);
+    const a = acc.get(r.uid) ?? acc.set(r.uid, { last: r, lastTrip: null, views: 0, days: new Set(), sessions: 0 }).get(r.uid);
     if (r.at > a.last.at) a.last = r;
+    // The trip they were last in, not the trip of their last event: the sign-in
+    // screen and the trip list carry no trip, and they are often the last thing seen.
+    if (r.tripId && (!a.lastTrip || r.at > a.lastTrip.at)) a.lastTrip = r;
     if (r.type === 'page') a.views++;
     if (r.type === 'session') a.sessions++;
     a.days.add(dayKey(r.at, zone));
   }
   return [...acc.entries()]
     .map(([uid, a]) => ({
-      uid, platform: a.last.platform, tz: a.last.tz, tripId: a.last.tripId, lastSeen: a.last.at,
+      uid, platform: a.last.platform, tz: a.last.tz, tripId: a.lastTrip?.tripId ?? null, lastSeen: a.last.at,
       views: a.views, daysActive: a.days.size, sessions: a.sessions,
     }))
     .sort((a, b) => b.lastSeen - a.lastSeen);
