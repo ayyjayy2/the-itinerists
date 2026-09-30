@@ -9,6 +9,7 @@
  */
 
 const HOUR = 3_600_000;
+const DAY = 24 * HOUR;
 const formatters = new Map();
 
 function fmt(zone) {
@@ -178,4 +179,109 @@ export function tripStats(rows) {
   return [...acc.entries()]
     .map(([tripId, a]) => ({ tripId: tripId || null, users: a.users.size, views: a.views, sessions: a.sessions, lastSeen: a.last }))
     .sort((a, b) => b.lastSeen - a.lastSeen);
+}
+
+// ── Return rate, visits, around the trip, platform & version ────────────────
+
+const dayIndex = key => { const [y, m, d] = key.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, d) / DAY); };
+const keyOfIndex = i => new Date(i * DAY).toISOString().slice(0, 10);
+const sortedUids = set => [...set].sort();
+
+/**
+ * People grouped by the week (Monday-start, in `zone`) they were first seen
+ * in these rows, and who among them was active again the next day, within 7
+ * days and within 14 days of that first day. Rows only reach back as far as
+ * the loaded range, so "first seen" means first seen in the range.
+ */
+export function returnCohorts(rows, zone) {
+  const days = new Map();
+  for (const r of rows) (days.get(r.uid) ?? days.set(r.uid, new Set()).get(r.uid)).add(dayIndex(dayKey(r.at, zone)));
+  const weeks = new Map();
+  for (const [uid, set] of days) {
+    const first = Math.min(...set);
+    const dow = (first + 3) % 7;              // epoch day 0 was a Thursday; 0 = Monday
+    const week = keyOfIndex(first - dow);
+    const w = weeks.get(week) ?? weeks.set(week, { week, uids: [], nextDay: [], within7: [], within14: [] }).get(week);
+    w.uids.push(uid);
+    const within = n => [...set].some(d => d > first && d <= first + n);
+    if (set.has(first + 1)) w.nextDay.push(uid);
+    if (within(7)) w.within7.push(uid);
+    if (within(14)) w.within14.push(uid);
+  }
+  return [...weeks.values()].sort((a, b) => a.week.localeCompare(b.week)).map(w => ({
+    ...w, uids: w.uids.sort(), nextDay: w.nextDay.sort(), within7: w.within7.sort(), within14: w.within14.sort(),
+  }));
+}
+
+const DURATION_BUCKETS = [['< 1 min', 0, 1], ['1–5 min', 1, 5], ['5–15 min', 5, 15], ['15–30 min', 15, 30], ['30+ min', 30, Infinity]];
+const PAGE_BUCKETS = [['1 page', 1, 1], ['2 pages', 2, 2], ['3–5 pages', 3, 5], ['6+ pages', 6, Infinity]];
+
+/** Visits (one per session id): minutes from first to last event, and distinct pages seen. */
+export function sessionStats(rows) {
+  const s = new Map();
+  for (const r of rows) {
+    const v = s.get(r.sessionId) ?? s.set(r.sessionId, { uid: r.uid, first: r.at, last: r.at, pages: new Set() }).get(r.sessionId);
+    v.first = Math.min(v.first, r.at); v.last = Math.max(v.last, r.at);
+    if (r.page) v.pages.add(r.page);
+  }
+  const bucket = (defs, pick) => defs.map(([label, lo, hi]) => {
+    const uids = new Set(); let count = 0;
+    for (const v of s.values()) { const x = pick(v); if (x >= lo && (hi === Infinity ? true : x < hi || (lo === hi && x === hi))) { count++; uids.add(v.uid); } }
+    return { label, count, uids: sortedUids(uids) };
+  });
+  return {
+    sessions: s.size,
+    duration: bucket(DURATION_BUCKETS, v => (v.last - v.first) / 60_000),
+    pages: bucket(PAGE_BUCKETS, v => Math.max(1, v.pages.size)),
+  };
+}
+
+/**
+ * Distinct people per day around each dated trip, aligned so day 0 is the
+ * trip's first day, from two weeks before to a week after the longest trip.
+ * Counts are per trip-day and summed across trips; `before` / `during` /
+ * `after` say which phase of its trip each count fell in.
+ */
+export function aroundTrips(rows, trips, zone) {
+  const dated = new Map(trips.filter(t => t.startDate && t.endDate).map(t => [t.id, { start: dayIndex(t.startDate), len: dayIndex(t.endDate) - dayIndex(t.startDate) + 1 }]));
+  const maxLen = Math.max(1, ...[...dated.values()].map(t => t.len));
+  const seen = new Set();
+  const cells = new Map();
+  for (const r of rows) {
+    const t = dated.get(r.tripId); if (!t) continue;
+    const offset = dayIndex(dayKey(r.at, zone)) - t.start;
+    const key = `${r.uid}|${r.tripId}|${offset}`; if (seen.has(key)) continue; seen.add(key);
+    const phase = offset < 0 ? 'before' : offset < t.len ? 'during' : 'after';
+    const c = cells.get(offset) ?? cells.set(offset, { offset, before: 0, during: 0, after: 0, uids: new Set() }).get(offset);
+    c[phase]++; c.uids.add(r.uid);
+  }
+  const out = [];
+  for (let o = -14; o < maxLen + 7; o++) {
+    const c = cells.get(o);
+    out.push(c ? { ...c, uids: sortedUids(c.uids) } : { offset: o, before: 0, during: 0, after: 0, uids: [] });
+  }
+  return out;
+}
+
+/** Distinct people per day per platform (web, pwa, ios), days ascending. */
+export function platformPerDay(rows, zone) {
+  const days = new Map();
+  for (const r of rows) {
+    const k = dayKey(r.at, zone);
+    const d = days.get(k) ?? days.set(k, { day: k, web: new Set(), pwa: new Set(), ios: new Set() }).get(k);
+    (d[r.platform] ?? d.web).add(r.uid);
+  }
+  return [...days.values()].sort((a, b) => a.day.localeCompare(b.day)).map(d => ({ day: d.day, web: sortedUids(d.web), pwa: sortedUids(d.pwa), ios: sortedUids(d.ios) }));
+}
+
+/** People per app version and when that version was last seen, newest version first. */
+export function versionStats(rows) {
+  const v = new Map();
+  for (const r of rows) {
+    const x = v.get(r.appVersion) ?? v.set(r.appVersion, { version: r.appVersion, uids: new Set(), lastSeen: 0 }).get(r.appVersion);
+    x.uids.add(r.uid); x.lastSeen = Math.max(x.lastSeen, r.at);
+  }
+  const num = s => String(s).split('.').map(n => parseInt(n, 10) || 0);
+  const cmp = (a, b) => { const x = num(a), y = num(b); for (let i = 0; i < 3; i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (y[i] ?? 0) - (x[i] ?? 0); return 0; };
+  return [...v.values()].sort((a, b) => cmp(a.version, b.version)).map(x => ({ ...x, uids: sortedUids(x.uids) }));
 }

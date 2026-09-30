@@ -45,6 +45,8 @@ Everything a tester would notice, and everything hard to change once real data e
       - [x] Google Analytics 4 (property G-EZQ46BTZY7, enabled 2026-09-30): screen + user
             tracking, user properties platform / timezone / trip_id, events trip_created,
             trip_joined, invite_shared; CSP; privacy policy updated. Web only.
+      - [x] Pulse filters (hide me / test trips / test accounts, multi-select trips) and four more
+            cards: return rate, visits, around the trip, platform + versions — #234.
       - [ ] Later: Capacitor Firebase Analytics plugin for the iOS shell; App Store privacy
             label "Product Interaction" (+ "Crash Data" once Crashlytics lands).
 

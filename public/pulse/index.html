@@ -66,7 +66,7 @@
   .seg button { border: 0; background: transparent; color: var(--text-muted); font: inherit; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.9rem; cursor: pointer; }
   .seg button[aria-pressed="true"] { background: var(--primary-dark); color: var(--bg); }
   .seg button:focus-visible, select:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-  label.field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.02em; text-transform: uppercase; }
+  .field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.02em; text-transform: uppercase; }
   select, input { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.45rem 0.6rem; max-width: 100%; }
   .btn { font: inherit; font-weight: 700; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; padding: 0.45rem 1rem; cursor: pointer; }
   .btn.primary { background: var(--primary-dark); border-color: transparent; color: var(--bg); }
@@ -110,6 +110,25 @@
   .bars .bar.zero { background: var(--surface-2); }
   .bars .tick { font-size: 0.62rem; color: var(--text-muted); height: 1rem; margin-top: 0.25rem; white-space: nowrap; overflow: hidden; }
   .bars .val { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+  .bars .stack { width: 100%; display: flex; flex-direction: column-reverse; min-height: 2px; }
+  .bars .stack .bar { border-radius: 0; min-height: 0; }
+  .bars .stack .bar:last-child { border-radius: 3px 3px 0 0; }
+  .bar.before, .sw.before { background: var(--surface-2); }
+  .bar.during, .sw.during { background: var(--primary); }
+  .bar.after, .sw.after { background: var(--accent); }
+  .bar.web, .sw.web { background: var(--primary); }
+  .bar.pwa, .sw.pwa { background: var(--accent); }
+  .bar.ios, .sw.ios { background: var(--primary-dark); }
+  .legend { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.6rem; }
+  .legend .sw { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 2px; vertical-align: -0.05em; margin: 0 0.2em 0 0.6em; border: 1px solid var(--border); }
+  .card h3 { font-size: 0.85rem; color: var(--text-muted); margin: 0 0 0.5rem; font-weight: 600; }
+  .multi { position: relative; }
+  .multi summary { cursor: pointer; list-style: none; }
+  .multi summary::-webkit-details-marker { display: none; }
+  .multi-list { position: absolute; z-index: 5; top: 100%; left: 0; margin-top: 0.3rem; min-width: 14rem; max-height: 16rem; overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); padding: 0.4rem 0.6rem; display: flex; flex-direction: column; gap: 0.25rem; }
+  .multi-list label, .hide label { display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; font-weight: 500; }
+  .hide { display: inline-flex; gap: 0.7rem; align-items: center; }
+  .multi-list label, .hide label { text-transform: none; letter-spacing: 0; font-size: 0.85rem; color: var(--text); }
   .bars.days { height: 160px; gap: 6px; justify-content: flex-start; }
   .bars.days .col { flex: 0 1 72px; }
   .bars.days .bar { background: var(--accent); }
@@ -180,8 +199,13 @@
         <button type="button" data-range="180d">180 days</button>
         <button type="button" data-range="1y">Year</button>
       </div>
-      <label class="field">Trip <select id="trip"><option value="all">All trips</option></select></label>
+      <details class="field multi" id="tripPick"><summary>Trips: <span id="tripSummary">All trips</span></summary><div class="multi-list" id="tripList"></div></details>
       <label class="field">Days and labels in <select id="zone"></select></label>
+      <div class="field hide" id="hide">Hide
+        <label><input type="checkbox" name="me"> me</label>
+        <label><input type="checkbox" name="testTrips" checked> test trips</label>
+        <label><input type="checkbox" name="testUsers" checked> test accounts</label>
+      </div>
     </div>
 
     <div class="tiles" id="tiles"></div>
@@ -223,6 +247,39 @@
       <div class="card">
         <h2>People</h2>
         <ul class="rows" id="people"></ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Return rate <small>by the week each person was first seen</small></h2>
+      <div class="scroll"><table class="tbl" id="cohorts"></table></div>
+      <p class="hint">First seen within the selected range. Hover a number for the names.</p>
+    </div>
+
+    <div class="card">
+      <h2>Visits <small id="visitsSub"></small></h2>
+      <div class="grid2">
+        <div><h3>Minutes per visit</h3><div class="bars" id="visitMinutes"></div></div>
+        <div><h3>Pages per visit</h3><div class="bars" id="visitPages"></div></div>
+      </div>
+      <p class="hint">A visit is one app open: from its first event to its last.</p>
+    </div>
+
+    <div class="card" id="aroundCard" hidden>
+      <h2>Around the trip <small>people per day, day 0 = first day of the trip</small></h2>
+      <div class="bars" id="around"></div>
+      <p class="legend"><span class="sw before"></span> before <span class="sw during"></span> during <span class="sw after"></span> after · two weeks before to a week after, all selected trips summed</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Platform per day</h2>
+        <div class="bars days" id="platform"></div>
+        <p class="legend"><span class="sw web"></span> web <span class="sw pwa"></span> installed <span class="sw ios"></span> iOS</p>
+      </div>
+      <div class="card">
+        <h2>App versions</h2>
+        <table class="tbl" id="versions"></table>
       </div>
     </div>
   </section>
