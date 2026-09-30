@@ -19,7 +19,7 @@ import { RecsService } from '../../services/recs.service';
 import { ExpensesService } from '../../services/expenses.service';
 import { DataService } from '../../services/data.service';
 import {
-  WidgetKey, isPageHidden, visibleWidgetKeys,
+  WidgetKey, WIDGET_PATHS, isPageHidden, visibleWidgetKeys,
   nextStay, nextTransport, nextFlight, expensesTotalBetween, recsGlance,
 } from '../../utils/home-widgets';
 import { TripDoc, TripDestination, ActivityLogEntry } from '../../models/trip.models';
@@ -33,6 +33,12 @@ import { normalizeTime } from '../../utils/time-format';
 import { weatherLabel } from '../../utils/weather-label';
 import { needsRecoveryEmail } from '../../utils/email';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
+
+/** One "At a glance" card. Slots 0–1 render wide, 2–3 as half-width minis. */
+export interface GlanceCard {
+  key: WidgetKey; path: string; icon: string; tone: string;
+  title: string; titleClass: string; lines: string[];
+}
 
 @Component({
   selector: 'app-home',
@@ -381,6 +387,82 @@ export class HomeComponent implements OnInit, OnDestroy {
   });
 
   readonly recGlance = computed(() => recsGlance(this.recsService.recs()));
+
+  // ── Glance cards: one view model per visible widget, rendered by one template ──
+  readonly glanceCards = computed<GlanceCard[]>(() => this.widgetKeys().map(k => this.cardFor(k)));
+
+  private cardFor(key: WidgetKey): GlanceCard {
+    const path = WIDGET_PATHS[key];
+    switch (key) {
+      case 'itinerary': {
+        const e = this.firstUp();
+        return e
+          ? { key, path, icon: 'itinerary', tone: 'sage', title: `First up: ${e.activity}`, titleClass: '',
+              lines: [this.firstUpWhen() + (e.location ? ` · ${e.location}` : '')] }
+          : { key, path, icon: 'itinerary', tone: 'sage', title: 'Plan your itinerary', titleClass: '',
+              lines: ['Add your first event, day by day'] };
+      }
+      case 'finance': {
+        const net = this.financeNet();
+        if (net !== null && this.expenseCount() > 0) {
+          const [title, titleClass] =
+            net >  0.01 ? [`You're owed ${this.money(net)}`, 'owed'] :
+            net < -0.01 ? [`You owe ${this.money(-net)}`, 'owe'] :
+                          ["You're all settled up 🎉", ''];
+          return { key, path, icon: 'finance', tone: 'gold', title, titleClass,
+                   lines: [`${this.money(this.trackedTotal())} tracked so far · tap to settle up`] };
+        }
+        return { key, path, icon: 'finance', tone: 'gold', title: 'Shared expenses', titleClass: '',
+                 lines: ['Track who paid & who owes who'] };
+      }
+      case 'packing': {
+        const { packed, total } = this.packingSummary();
+        const next = this.nextToPack();
+        return { key, path, icon: 'packing', tone: 'pink', title: `${packed}/${total} packed`, titleClass: '',
+                 lines: next.length ? next.map(l => `○ ${l}`) : total > 0 ? ['All packed! 🎉'] : ['Packing list'] };
+      }
+      case 'outfits': {
+        const w = this.weatherGlance(); const c = this.weatherCondition();
+        return { key, path, icon: 'recs', tone: 'gold', title: w ? `${w.minF}–${w.maxF}°F` : 'Weather', titleClass: '',
+                 lines: c ? [`${c.emoji} ${c.label}`, `${this.glanceLegShort()} · outfits`] : ['Forecast nearer the trip'] };
+      }
+      case 'flights': {
+        const g = this.flightGlance();
+        return g
+          ? { key, path, icon: 'flights', tone: 'sky', title: this.flightGlanceTitle(), titleClass: '',
+              lines: [g.moment.label + (g.moment.time ? ` · ${this.showTime(g.moment.time)}` : '')] }
+          : { key, path, icon: 'flights', tone: 'sky', title: 'Flights', titleClass: '', lines: ['Add your flights'] };
+      }
+      case 'accommodations': {
+        const s = this.stayGlance();
+        return s
+          ? { key, path, icon: 'stays', tone: 'lav', titleClass: '',
+              title: s.kind === 'tonight' ? `Tonight: ${s.stay.name}` : `Check in ${this.shortDate(s.stay.checkIn)}`,
+              lines: [s.kind === 'tonight' ? `Check out ${this.shortDate(s.stay.checkOut)}` : s.stay.name] }
+          : { key, path, icon: 'stays', tone: 'lav', title: 'Stays', titleClass: '', lines: ["Add where you're staying"] };
+      }
+      case 'transportation': {
+        const t = this.transportGlance();
+        return t
+          ? { key, path, icon: 'car', tone: 'peach', titleClass: '',
+              title: `${t.kind === 'pickup' ? 'Pick-up' : 'Drop-off'} ${this.shortDate(t.date)}` + (t.time ? ` · ${this.showTime(t.time)}` : ''),
+              lines: [`${t.company} · ${t.mode}`] }
+          : { key, path, icon: 'car', tone: 'peach', title: 'Transportation', titleClass: '', lines: ['Add a rental car'] };
+      }
+      case 'expenses': {
+        const n = this.myExpensesCount();
+        return { key, path, icon: 'expenses', tone: 'pink', titleClass: '',
+                 title: n > 0 ? `${this.money(this.myExpensesTotal())} spent` : 'My Expenses',
+                 lines: [n > 0 ? 'Your private spending' : 'Track your own spending'] };
+      }
+      case 'recs': {
+        const r = this.recGlance();
+        return { key, path, icon: 'recs', tone: 'sage', titleClass: '',
+                 title: r.count > 0 ? `${r.count} rec${r.count === 1 ? '' : 's'}` : 'Recs',
+                 lines: [r.count > 0 ? `Latest: ${r.latest}` : 'Save a rec'] };
+      }
+    }
+  }
 
   /** "Fri, Oct 3" for widget sub-lines. */
   shortDate(iso: string): string {

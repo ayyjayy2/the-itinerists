@@ -30,18 +30,26 @@ export function isPageHidden(path: string, hidden: readonly string[]): boolean {
   return hidden.includes(path.replace(/^\//, ''));
 }
 
+/** The four cards Home shows out of the box (the original "At a glance"). */
+export const DEFAULT_WIDGETS: readonly WidgetKey[] = ['itinerary', 'finance', 'packing', 'outfits'];
+export const GLANCE_SLOTS = DEFAULT_WIDGETS.length;
+
 /**
- * Widgets to render, in the user's personal nav order, minus hidden pages.
- * Itinerary always leads because it is the one page that can't be hidden.
+ * Widgets to render: the defaults in their fixed order, minus hidden pages,
+ * topped up to four from the backups (Flights, Stays, Transportation,
+ * My Expenses, Recs) in the user's personal nav order. Backups only appear
+ * when a default has been hidden, so Home never grows past four cards.
  */
 export function visibleWidgetKeys(
   navOrder: readonly string[] | undefined, hidden: readonly string[],
 ): WidgetKey[] {
-  const all = (Object.keys(WIDGET_PATHS) as WidgetKey[]).map(key => ({ key, path: WIDGET_PATHS[key] }));
-  const ordered = applyNavOrder(all, navOrder).filter(w => !isPageHidden(w.path, hidden));
-  const itin = ordered.filter(w => w.key === 'itinerary');
-  const rest = ordered.filter(w => w.key !== 'itinerary');
-  return [...itin, ...rest].map(w => w.key);
+  const visible = (k: WidgetKey) => !isPageHidden(WIDGET_PATHS[k], hidden);
+  const defaults = DEFAULT_WIDGETS.filter(visible);
+  const backups  = (Object.keys(WIDGET_PATHS) as WidgetKey[])
+    .filter(k => !DEFAULT_WIDGETS.includes(k))
+    .map(key => ({ key, path: WIDGET_PATHS[key] }));
+  const fill = applyNavOrder(backups, navOrder).map(w => w.key).filter(visible);
+  return [...defaults, ...fill].slice(0, GLANCE_SLOTS);
 }
 
 // ── Stays ─────────────────────────────────────────────────────────────────────

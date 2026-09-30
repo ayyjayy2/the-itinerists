@@ -11,27 +11,28 @@ describe('home-widgets: isPageHidden', () => {
   });
 });
 
-describe('home-widgets: visibleWidgetKeys', () => {
-  it('returns every widget in default nav order when nothing is hidden', () => {
-    expect(visibleWidgetKeys(undefined, [])).toEqual([
-      'itinerary', 'finance', 'packing', 'flights', 'accommodations',
-      'transportation', 'expenses', 'recs', 'outfits',
-    ]);
+describe('home-widgets: visibleWidgetKeys (four slots, backups fill in)', () => {
+  it('shows only the four defaults when nothing is hidden', () => {
+    expect(visibleWidgetKeys(undefined, [])).toEqual(['itinerary', 'finance', 'packing', 'outfits']);
   });
-  it('drops hidden pages and closes the gap', () => {
-    expect(visibleWidgetKeys(undefined, ['finance', 'transportation', 'map'])).toEqual([
-      'itinerary', 'packing', 'flights', 'accommodations', 'expenses', 'recs', 'outfits',
-    ]);
+  it('a hidden default is replaced by the first backup, keeping four', () => {
+    expect(visibleWidgetKeys(undefined, ['finance'])).toEqual(['itinerary', 'packing', 'outfits', 'flights']);
   });
-  it('follows the personal nav order but keeps itinerary first', () => {
-    const order = ['/recs', '/packing', '/itinerary', '/finance'];
-    expect(visibleWidgetKeys(order, [])).toEqual([
-      'itinerary', 'recs', 'packing', 'finance', 'flights', 'accommodations',
-      'transportation', 'expenses', 'outfits',
-    ]);
+  it('two hidden defaults pull in two backups, in nav order', () => {
+    expect(visibleWidgetKeys(undefined, ['packing', 'outfits'])).toEqual(['itinerary', 'finance', 'flights', 'accommodations']);
+  });
+  it('hidden backups are skipped when filling', () => {
+    expect(visibleWidgetKeys(undefined, ['finance', 'flights', 'accommodations'])).toEqual(['itinerary', 'packing', 'outfits', 'transportation']);
+  });
+  it('backups follow the personal nav order; defaults keep their fixed order', () => {
+    const order = ['/recs', '/packing', '/itinerary', '/finance', '/flights'];
+    expect(visibleWidgetKeys(order, ['finance'])).toEqual(['itinerary', 'packing', 'outfits', 'recs']);
+  });
+  it('shrinks below four when there is nothing left to fill with', () => {
+    const hidden = ['finance', 'packing', 'outfits', 'flights', 'accommodations', 'transportation', 'expenses', 'recs'];
+    expect(visibleWidgetKeys(undefined, hidden)).toEqual(['itinerary']);
   });
   it('never includes map', () => {
-    expect(visibleWidgetKeys(['/map'], [])).not.toContain('map' as never);
     expect(Object.keys(WIDGET_PATHS)).not.toContain('map');
   });
 });

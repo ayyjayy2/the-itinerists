@@ -204,68 +204,55 @@
 .pin-hint { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-top: 12px; }
 .pin-empty { font-size: 0.85rem; color: var(--text-muted); }
 
-// ── Glance rows ───────────────────────────────────────────────────────────────
-.glance-row {
-  display: flex; align-items: center; gap: 14px;
+// ── At a glance: four slots ───────────────────────────────────────────────────
+// Slots 0–1 are full-width rows (Itinerary, Finance by default); 2–3 sit side by
+// side. A lone third card stretches so the grid never shows a hole.
+.glance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+
+.glance-card {
+  display: flex; align-items: center; gap: 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 15px 16px;
+  padding: 13px 14px;
   box-shadow: var(--shadow);
-  margin-bottom: 10px;
   text-decoration: none;
   color: var(--text);
+  min-width: 0;
   transition: transform 0.12s ease;
   &:hover { transform: translateY(-2px); }
+  &.wide { grid-column: 1 / -1; gap: 14px; padding: 15px 16px; }
+  &:nth-child(3):last-child { grid-column: 1 / -1; }
 }
 
 .glance-ic {
-  width: 44px; height: 44px; flex: none; border-radius: 14px;
+  width: 36px; height: 36px; flex: none; border-radius: 12px;
   display: grid; place-items: center;
-  &.sage { background: var(--primary-tint); color: var(--primary-dark); }
-  &.gold { background: var(--accent-tint); color: var(--accent-dark); }
+  .wide & { width: 44px; height: 44px; border-radius: 14px; }
+  &.sage  { background: var(--primary-tint); color: var(--primary-dark); }
+  &.gold  { background: var(--accent-tint);  color: var(--accent-dark); }
+  &.pink  { background: rgba(244, 194, 194, .35); color: var(--highlight-dk); }
+  &.sky   { background: rgba(181, 213, 245, .45); color: #3f7fbf; }
+  &.lav   { background: rgba(212, 181, 245, .45); color: #7c5cbf; }
+  &.peach { background: rgba(245, 212, 181, .5);  color: #c2703a; }
 }
 
 .glance-body {
   flex: 1; min-width: 0; display: flex; flex-direction: column;
-  .glance-title { font-weight: 800; font-size: 0.95rem;
+  .glance-title {
+    font-weight: 800; font-size: 0.9rem;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    .wide & { font-size: 0.95rem; }
     &.owed { color: var(--primary-dark); }
     &.owe  { color: var(--danger); }
   }
-  .glance-sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 1px; }
+  .glance-sub {
+    font-size: 0.8rem; color: var(--text-muted); margin-top: 1px; font-weight: 700;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    .wide & { font-size: 0.82rem; font-weight: 600; }
+  }
 }
 .glance-arrow { color: var(--text-muted); font-size: 1.3rem; flex: none; }
-
-// Two columns that reflow as widgets come and go; the itinerary card spans both.
-.glance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-.glance-grid .wide { grid-column: 1 / -1; margin-bottom: 0; }
-
-.glance-mini {
-  text-align: left;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 15px 16px;
-  box-shadow: var(--shadow);
-  text-decoration: none;
-  color: var(--text);
-  transition: transform 0.12s ease;
-  &:hover { transform: translateY(-2px); }
-
-  .glance-mini-top {
-    display: flex; align-items: center; gap: 7px;
-    font-weight: 800; font-size: 0.9rem;
-    &.gold  { color: var(--accent-dark); }
-    &.pink  { color: var(--highlight-dk); }
-    &.sage  { color: var(--primary-dark); }
-    &.sky   { color: #3f7fbf; }
-    &.lav   { color: #7c5cbf; }
-    &.peach { color: #c2703a; }
-    .owed { color: var(--primary-dark); }
-    .owe  { color: var(--danger); }
-  }
-  .glance-mini-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-weight: 700; }
-}
 
 // ── Activity feed ─────────────────────────────────────────────────────────────
 .feed { display: flex; flex-direction: column; gap: 12px; }

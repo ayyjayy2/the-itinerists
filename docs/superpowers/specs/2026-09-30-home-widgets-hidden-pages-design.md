@@ -36,15 +36,20 @@ affects your menu and Home on this trip."
 Storage is unchanged: `members/{uid}.hiddenPages: string[]` per trip, read via
 `TripService.hiddenPages()`. Keys are the route path without the slash.
 
-### 2. Home "At a glance" becomes a widget grid (layouts A and More)
+### 2. Home "At a glance" keeps four slots; backups fill in (layouts A and More)
 
-One card per page. Each card links to its page and shows one live fact, with
-an empty state that invites the first entry. A card is rendered only when its
-page is not hidden on the active trip. Cards are laid out in a two-column grid
-that reflows, so hidden pages never leave holes.
+**Correction 2026-09-30 (after first deploy):** the new cards are *backups*,
+not additions. Out of the box Home shows exactly what it showed before:
+Itinerary, Finance, Packing, Outfits (`DEFAULT_WIDGETS`, four slots). When a
+default page is hidden on the active trip, its slot is backfilled by the first
+visible backup page in the user's personal nav order (Flights, Stays,
+Transportation, My Expenses, Recs). Hiding a backup page changes nothing
+while all four defaults are shown. If there is nothing left to fill with, the
+grid shrinks below four.
 
-Order follows the user's personal nav order (`orderedNavItems` in the shell),
-so Home matches the menu. Itinerary is always first and spans both columns.
+Layout: slots 0 and 1 are full-width rows, slots 2 and 3 sit side by side; a
+lone third card stretches to full width. Every card is one `GlanceCard` view
+model (icon, tone, title, sub-lines) rendered by a single template.
 
 | page           | card content (live)                                        | empty state                    |
 |----------------|------------------------------------------------------------|--------------------------------|

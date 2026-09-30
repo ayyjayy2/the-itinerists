@@ -76,21 +76,22 @@ describe('HomeComponent (hidden pages)', () => {
   const widgets = (el: HTMLElement) =>
     Array.from(el.querySelectorAll('[data-widget]')).map(n => n.getAttribute('data-widget'));
 
-  it('shows every widget, itinerary first, when nothing is hidden', () => {
+  it('shows only the four default widgets when nothing is hidden', () => {
     const el = render().nativeElement as HTMLElement;
-    expect(widgets(el)).toEqual([
-      'itinerary', 'finance', 'packing', 'flights', 'accommodations',
-      'transportation', 'expenses', 'recs', 'outfits',
-    ]);
+    expect(widgets(el)).toEqual(['itinerary', 'finance', 'packing', 'outfits']);
     expect(el.querySelector('[data-stub="day-map"]')).not.toBeNull();
   });
 
-  it('hiding a page removes its widget and closes the gap', () => {
+  it('hiding a default widget backfills it with the next visible page, keeping four', () => {
     hidden.set(['finance', 'transportation']);
     const el = render().nativeElement as HTMLElement;
-    expect(widgets(el)).toEqual([
-      'itinerary', 'packing', 'flights', 'accommodations', 'expenses', 'recs', 'outfits',
-    ]);
+    expect(widgets(el)).toEqual(['itinerary', 'packing', 'outfits', 'flights']);
+  });
+
+  it('hiding a backup page changes nothing while the defaults are all shown', () => {
+    hidden.set(['flights', 'recs']);
+    const el = render().nativeElement as HTMLElement;
+    expect(widgets(el)).toEqual(['itinerary', 'finance', 'packing', 'outfits']);
   });
 
   it('hiding Map removes the day-map card', () => {
@@ -123,7 +124,8 @@ describe('HomeComponent (hidden pages)', () => {
     expect(labels).not.toContain('Recs');
   });
 
-  it('shows a live fact on the new widgets', () => {
+  it('shows a live fact on the backup widgets once they are in', () => {
+    hidden.set(['packing', 'outfits', 'flights', 'transportation', 'expenses']);   // → itinerary, finance, accommodations, recs
     const stays = TestBed.inject(StaysService) as unknown as { stays: WritableSignal<any[]> };
     stays.stays.set([{ id: 's', name: 'Adlon', checkIn: '2000-01-01', checkOut: '2999-01-01' }]);
     const recs = TestBed.inject(RecsService) as unknown as { recs: WritableSignal<any[]> };
