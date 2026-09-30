@@ -45,7 +45,12 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
   WKWebView waiting on a redirect iframe), and App Check runs on a debug token (reCAPTCHA
   can't attest a web view) — the token a simulator prints on first launch must be registered
   under Firebase → App Check → Manage debug tokens. Before release, replace that with App
-  Attest via a Capacitor App Check plugin. See `docs/design-prompt.md`.
+  Attest via a Capacitor App Check plugin. See `docs/design-prompt.md`. Crashlytics
+  (`@capacitor-firebase/crashlytics`) runs in the shell only: `CrashReporterService` mirrors
+  every `ErrorLoggerService` error as a non-fatal and tags reports with the uid; the web keeps
+  the Firestore `_appLogs` log. Xcode needs `ios/App/App/GoogleService-Info.plist` (gitignored,
+  like `environment.ts`): `node scripts/fetch-ios-config.js` writes it from the service-account
+  key. A "Upload dSYMs to Crashlytics" build phase symbolicates native crashes.
 - **Backend:** Firebase — Firestore (modular `@angular/fire`), Firebase Auth
   (username → synthetic email `username@the-itinerists.local`; formerly `@trip-planner.local`).
 - **Firebase project:** `trip-planner-ayyjayy2`. Web config lives in the app env + repeated in

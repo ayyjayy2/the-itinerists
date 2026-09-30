@@ -85,3 +85,6 @@ ios/App/**/xcuserdata
 ios/App/**/DerivedData
 ios/App/Pods
 ios/App/Podfile.lock
+
+# Firebase iOS config (fetched by: node scripts/fetch-ios-config.js)
+ios/App/App/GoogleService-Info.plist

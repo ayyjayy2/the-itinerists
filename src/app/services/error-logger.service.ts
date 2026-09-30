@@ -1,6 +1,7 @@
 import { Injectable, ErrorHandler, inject } from '@angular/core';
 import { Firestore, collection, addDoc } from '@angular/fire/firestore';
 import { LocalCacheService } from './local-cache.service';
+import { CrashReporterService } from './crash-reporter.service';
 
 type LogType = 'js_error' | 'http_error' | 'firebase_error' | 'write_spike';
 
@@ -27,6 +28,7 @@ interface AppLog {
 @Injectable({ providedIn: 'root' })
 export class ErrorLoggerService {
   private firestore = inject(Firestore);
+  private crash     = inject(CrashReporterService);
 
   // Stable per-session identifier so related events can be correlated in the logs.
   // Not linked to any user account — just a random UUID for this browser tab's lifetime.
@@ -63,6 +65,7 @@ export class ErrorLoggerService {
     // The log write itself goes through Firestore; when the client is wedged
     // that write fails and would be logged again, forever.
     if (/INTERNAL ASSERTION FAILED/i.test(err.message)) return;
+    void this.crash.record(err, type);   // native shell only; no-op on the web
     this.writeLog({
       type,
       message: err.message,
