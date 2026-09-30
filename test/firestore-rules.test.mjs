@@ -61,6 +61,7 @@ async function seed() {
       setDoc(doc(db, 'trips', 'TC'), { name: 'Carol Trip', createdBy: 'carol', memberCount: 0 }),
       setDoc(doc(db, 'geocache', 'g1'), { x: 1 }),
       setDoc(doc(db, '_appLogs', 'l1'), { m: 'hi' }),
+      setDoc(doc(db, '_pulse', 'prefs'), { hiddenTrips: ['TC'] }),
       setDoc(doc(db, '_activity', 'e1'), { uid: 'bob', tripId: 'T', type: 'page', page: '/home', at: new Date(), localHour: 9, tz: 'Europe/Berlin', tzOffsetMin: 120, platform: 'web', sessionId: 's1', appVersion: '0.9.0' }),
     ]);
   });
@@ -242,6 +243,13 @@ await t('member lists events', 'deny', () => getDocs(collection(bob, '_activity'
 await t('owner updates an event', 'deny', () => updateDoc(doc(owner, '_activity', 'e1'), { page: '/x' }));
 await t('owner deletes an event', 'deny', () => deleteDoc(doc(owner, '_activity', 'e1')));
 await t('owner deletes own event', 'deny', () => deleteDoc(doc(bob, '_activity', 'e1')));
+
+console.log('\nPulse dashboard prefs (_pulse)');
+await t('owner reads prefs', 'allow', () => getDoc(doc(owner, '_pulse', 'prefs')));
+await t('owner writes prefs', 'allow', () => setDoc(doc(owner, '_pulse', 'prefs'), { hiddenTrips: ['TC', 'T'] }, { merge: true }));
+await t('admin reads prefs', 'deny', () => getDoc(doc(admin, '_pulse', 'prefs')));
+await t('member writes prefs', 'deny', () => setDoc(doc(bob, '_pulse', 'prefs'), { hiddenTrips: [] }));
+await t('anon reads prefs', 'deny', () => getDoc(doc(anon, '_pulse', 'prefs')));
 
 await testEnv.cleanup();
 console.log(`\n${fail === 0 ? '✅' : '❌'} rules tests: ${pass} passed, ${fail} failed`);

@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app-check.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
-import { getFirestore, collection, doc, getDoc, query, where, orderBy, onSnapshot, Timestamp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+import { getFirestore, collection, doc, getDoc, setDoc, query, where, orderBy, onSnapshot, Timestamp, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
 import { firebaseConfig, recaptchaSiteKey } from './config.mjs';
 import * as S from './stats.mjs';
 
@@ -21,8 +21,10 @@ const db = getFirestore(app);
 
 // ── state ──────────────────────────────────────────────────────────────────
 const viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-const state = { range: '24h', anchor: Date.now(), trip: 'all', zone: viewerZone, hourMode: 'local', rows: [], trips: new Map(), users: new Map(), now: Date.now() };
-let unsubRows = null, unsubTrips = null, unsubUsers = null;
+const state = { range: '24h', anchor: Date.now(), trip: 'all', zone: viewerZone, hourMode: 'local', rows: [], trips: new Map(), users: new Map(), now: Date.now(), hidden: new Set(), showHidden: false };
+let unsubRows = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null;
+/** The owner's dashboard preferences: which trips (tests, mostly) stay out of every number. */
+const prefsRef = () => doc(db, '_pulse', 'prefs');
 
 function showError(msg) { const e = $('err'); e.textContent = msg; e.hidden = !msg; }
 
@@ -67,10 +69,14 @@ function start() {
     state.users = new Map(snap.docs.map(d => [d.id, d.data()]));
     render();
   }, err => showError('People: ' + err.message));
+  unsubPrefs = onSnapshot(prefsRef(), snap => {
+    state.hidden = new Set(snap.exists() ? (snap.data().hiddenTrips ?? []) : []);
+    render();
+  }, err => showError('Preferences: ' + err.message));
   subscribeRows();
 }
 function stop() {
-  unsubRows?.(); unsubTrips?.(); unsubUsers?.(); unsubRows = unsubTrips = unsubUsers = null;
+  unsubRows?.(); unsubTrips?.(); unsubUsers?.(); unsubPrefs?.(); unsubRows = unsubTrips = unsubUsers = unsubPrefs = null;
   $('dot').classList.remove('on');
 }
 function queryStart() {
@@ -106,6 +112,13 @@ $('range').addEventListener('click', ev => {
 });
 $('trip').addEventListener('change', ev => { state.trip = ev.target.value; render(); });
 $('zone').addEventListener('change', ev => { state.zone = ev.target.value; if (state.range === 'today') subscribeRows(); render(); });
+$('trips').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-hide], button[data-show], button[data-toggle-hidden]'); if (!b) return;
+  if (b.dataset.toggleHidden !== undefined) { state.showHidden = !state.showHidden; render(); return; }
+  const id = b.dataset.hide ?? b.dataset.show;
+  const change = b.dataset.hide !== undefined ? arrayUnion(id) : arrayRemove(id);
+  setDoc(prefsRef(), { hiddenTrips: change }, { merge: true }).catch(err => showError('Preferences: ' + err.message));
+});
 $('hourMode').addEventListener('click', ev => {
   const b = ev.target.closest('button[data-mode]'); if (!b) return;
   state.hourMode = b.dataset.mode; render();
@@ -134,8 +147,10 @@ function avatar(uid) {
   const color = u?.avatarLetterColor ? `color:${esc(u.avatarLetterColor)};` : '';
   return `<span class="avatar" style="background:${esc(u?.color || '')};${color}">${esc(glyph)}</span>`;
 }
+/** Table order: happening now, upcoming, ended, archived, undated. */
+const PHASE_ORDER = { live: 0, soon: 1, past: 2, archived: 3, '': 4 };
 function tripPhase(t, today) {
-  if (t.archived) return ['past', 'Archived'];
+  if (t.archived) return ['archived', 'Archived'];
   if (!t.startDate || !t.endDate) return ['', 'Undated'];
   if (today < t.startDate) return ['soon', 'Upcoming'];
   if (today > t.endDate) return ['past', 'Ended'];
@@ -153,11 +168,14 @@ function bars(el, items, max, { valueLabel = false, tick } = {}) {
 // ── render ─────────────────────────────────────────────────────────────────
 function render() {
   const now = state.now;
-  const all = state.rows;
+  // Hidden trips (tests) are out of every number; events with no trip (sign-in screen) stay.
+  const all = state.rows.filter(r => !r.tripId || !state.hidden.has(r.tripId));
   const rows = state.trip === 'all' ? all : all.filter(r => r.tripId === state.trip);
+  const shownTrips = [...state.trips.values()].filter(t => !state.hidden.has(t.id));
+  const hiddenTrips = [...state.trips.values()].filter(t => state.hidden.has(t.id));
 
   // Selects: trips seen in events plus every trip doc; zones seen in events.
-  const tripIds = new Set([...state.trips.keys(), ...all.map(r => r.tripId).filter(Boolean)]);
+  const tripIds = new Set([...shownTrips.map(t => t.id), ...all.map(r => r.tripId).filter(Boolean)]);
   const tripOpts = [...tripIds].map(id => ({ id, name: tripName(id) })).sort((a, b) => a.name.localeCompare(b.name));
   syncSelect($('trip'), [{ value: 'all', label: 'All trips' }, ...tripOpts.map(t => ({ value: t.id, label: t.name }))], state.trip);
   const zones = new Set([viewerZone, ...all.map(r => r.tz).filter(Boolean)]);
@@ -171,24 +189,25 @@ function render() {
   const sessions = rows.filter(r => r.type === 'session').length;
   const online = S.onlineNow(rows, now, ONLINE);
   const today = S.dayKey(now, state.zone);
-  const liveTrips = [...state.trips.values()].filter(t => tripPhase(t, today)[0] === 'live').length;
+  const liveTrips = shownTrips.filter(t => tripPhase(t, today)[0] === 'live').length;
   $('tiles').innerHTML = [
     [users, 'people'], [sessions, 'app opens'], [views, 'page views'], [online.length, 'online now'], [liveTrips, 'trips happening now'],
   ].map(([v, l]) => `<div class="tile"><div class="v num">${v}</div><div class="l">${l}</div></div>`).join('');
   const rangeLabel = { today: 'today', '24h': 'the last 24 hours', '7d': 'the last 7 days', '30d': 'the last 30 days' }[state.range];
   $('scope').textContent = `Counts for ${rangeLabel}${state.trip === 'all' ? '' : ', ' + tripName(state.trip) + ' only'}. Days and hour labels in ${state.zone}.`;
 
-  // Trips table: every trip doc, with activity from the (unfiltered) rows.
+  // Trips table: every shown trip doc, with activity from the (unfiltered) rows,
+  // happening now first, then upcoming, then ended.
   const byTrip = new Map(S.tripStats(all).map(t => [t.tripId, t]));
   const onlineByTrip = new Map();
   for (const o of S.onlineNow(all, now, ONLINE)) onlineByTrip.set(o.tripId, (onlineByTrip.get(o.tripId) ?? 0) + 1);
-  const trips = [...state.trips.values()].map(t => ({ t, s: byTrip.get(t.id), phase: tripPhase(t, today), on: onlineByTrip.get(t.id) ?? 0 }))
-    .sort((a, b) => (b.s?.lastSeen ?? 0) - (a.s?.lastSeen ?? 0) || (a.t.name || '').localeCompare(b.t.name || ''));
-  $('tripsSub').textContent = `${state.trips.size} total · activity for ${rangeLabel}`;
-  $('trips').innerHTML = trips.length === 0 ? '<tr><td class="muted">No trips yet.</td></tr>' : `
-    <tr><th>Trip</th><th></th><th class="n">Members</th><th class="n">Online</th><th class="n">People</th><th class="n">Opens</th><th class="n">Views</th><th class="n">Last activity</th></tr>` +
-    trips.map(({ t, s, phase, on }) => `
-      <tr>
+  const tripRow = t => ({ t, s: byTrip.get(t.id), phase: tripPhase(t, today), on: onlineByTrip.get(t.id) ?? 0 });
+  const byPhase = (a, b) => PHASE_ORDER[a.phase[0]] - PHASE_ORDER[b.phase[0]] || (b.s?.lastSeen ?? 0) - (a.s?.lastSeen ?? 0) || (a.t.name || '').localeCompare(b.t.name || '');
+  const trips = shownTrips.map(tripRow).sort(byPhase);
+  const hidden = hiddenTrips.map(tripRow).sort(byPhase);
+  $('tripsSub').textContent = `${trips.length} shown${hidden.length ? `, ${hidden.length} hidden` : ''} · activity for ${rangeLabel}`;
+  const tripTr = ({ t, s, phase, on }, action) => `
+      <tr${action === 'show' ? ' class="dim"' : ''}>
         <td><strong>${esc(t.name)}</strong><br><span class="muted" style="font-size:0.8rem">${esc(t.destination || '')}${t.startDate ? ' · ' + esc(t.startDate) + ' → ' + esc(t.endDate) : ''}</span></td>
         <td><span class="chip ${phase[0]}">${phase[1]}</span></td>
         <td class="n num">${t.memberCount ?? '–'}</td>
@@ -197,7 +216,14 @@ function render() {
         <td class="n num">${s?.sessions ?? 0}</td>
         <td class="n num">${s?.views ?? 0}</td>
         <td class="n">${s ? ago(s.lastSeen) : '<span class="muted">none</span>'}</td>
-      </tr>`).join('');
+        <td class="n"><button type="button" class="btn small" data-${action}="${esc(t.id)}">${action === 'hide' ? 'Hide' : 'Show'}</button></td>
+      </tr>`;
+  const head = '<tr><th>Trip</th><th></th><th class="n">Members</th><th class="n">Online</th><th class="n">People</th><th class="n">Opens</th><th class="n">Views</th><th class="n">Last activity</th><th></th></tr>';
+  $('trips').innerHTML =
+    (trips.length === 0 ? '<tr><td class="muted" colspan="9">No trips shown.</td></tr>' : head + trips.map(r => tripTr(r, 'hide')).join('')) +
+    (hidden.length ? `<tr><td colspan="9"><div class="hidden-row"><button type="button" class="btn small" data-toggle-hidden>${state.showHidden ? 'Hide' : 'Show'} the ${hidden.length} hidden ${hidden.length === 1 ? 'trip' : 'trips'}</button>
+      <span class="muted">Hidden trips are left out of every number on this page.</span></div></td></tr>` : '') +
+    (state.showHidden ? hidden.map(r => tripTr(r, 'show')).join('') : '');
 
   // Online now
   $('online').innerHTML = online.length === 0 ? '<li class="empty">Nobody in the last 6 minutes.</li>' : online.map(o => `

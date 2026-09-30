@@ -86,6 +86,11 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── Pulse dashboard preferences: the owner's own, e.g. hidden test trips ─
+    match /_pulse/{docId} {
+      allow read, write: if isAppOwner();
+    }
+
     // ── User profiles ──────────────────────────────────────────────────────
     // Profile fields only (name, username, avatar, preferences) — never an
     // email address; those live in users/{uid}/private. Only the person and
