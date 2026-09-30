@@ -10,6 +10,7 @@
     "test": "ng test",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
     "test:rules": "firebase emulators:exec --only firestore \"node test/firestore-rules.test.mjs\"",
+    "test:pulse": "node --test test/pulse-stats.test.mjs",
     "sync-seed": "node scripts/sync-seed.js",
     "gen-env": "node scripts/gen-env.js",
     "start:demo": "ng serve --configuration demo --port 4400",

@@ -57,6 +57,7 @@ scripts/serviceAccountKey.json
 # Generated environment files (built from .env via: npm run gen-env)
 src/environments/environment.ts
 src/environments/environment.prod.ts
+public/pulse/config.mjs
 
 # Generated version stamp (scripts/set-version.js — runs on npm install and build)
 src/version.ts

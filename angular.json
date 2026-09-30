@@ -99,6 +99,15 @@
                   "replace": "src/app/demo-flag.ts",
                   "with": "src/app/demo-flag.demo.ts"
                 }
+              ],
+              "assets": [
+                {
+                  "glob": "**/*",
+                  "input": "public",
+                  "ignore": [
+                    "pulse/**"
+                  ]
+                }
               ]
             }
           },

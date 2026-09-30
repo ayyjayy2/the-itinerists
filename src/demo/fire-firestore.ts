@@ -181,6 +181,10 @@ export function writeBatch(fs: Firestore): WriteBatch {
 // these into fields of typed documents.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/** The demo never writes usage events (UsageService checks DEMO), so a plain date stands in. */
+export function serverTimestamp(): any { return new Date(); }
+
 export function increment(n: number): any { return FieldTransform.increment(n); }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function arrayUnion(...values: unknown[]): any { return FieldTransform.arrayUnion(...values); }

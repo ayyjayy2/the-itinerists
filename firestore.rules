@@ -46,6 +46,13 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/users/$(uid()))
         && get(/databases/$(database)/documents/users/$(uid())).data.isAdmin == true;
     }
+    // The app owner's own account (Alayna). The usage dashboard (/pulse/)
+    // signs in as this account; it is the only reader of usage events and
+    // the only account that can see every trip's summary doc. Not "any
+    // admin": the dashboard is personal.
+    function isAppOwner() {
+      return isSignedIn() && uid() == 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';
+    }
     // A self-join must carry the invite code it came from, and that invite
     // must exist under the trip and still be valid. This is what makes
     // membership depend on holding an invite rather than on guessing a trip id.
@@ -62,7 +69,7 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
-    // ── Usage events: append-only by the signed-in user, read by admins ────
+    // ── Usage events: append-only by the signed-in user, read by the owner ─
     // One doc per page view / session / ping (see UsageService). A user may
     // only record events as themselves, with exactly the expected fields and
     // a server timestamp, and nothing is ever edited or deleted from the app.
@@ -75,7 +82,7 @@ service cloud.firestore {
         && request.resource.data.type in ['session', 'page', 'ping']
         && request.resource.data.page is string
         && request.resource.data.at == request.time;
-      allow read: if isAdmin();
+      allow read: if isAppOwner();
       allow update, delete: if false;
     }
 
@@ -159,7 +166,10 @@ service cloud.firestore {
 
     // ── Trips and their sub-collections ────────────────────────────────────
     match /trips/{tripId} {
-      allow read:   if isMember(tripId);
+      // Members read their trip; the app owner may also read (and list) every
+      // trip's summary doc for the usage dashboard — the doc only, never the
+      // sub-collections, and no writes.
+      allow read:   if isMember(tripId) || isAppOwner();
       allow create: if isSignedIn() && request.resource.data.createdBy == uid();
       // Members maintain shared trip fields (memberCount, dates, ownership
       // transfer). Deletion happens when the last member leaves (purge).
