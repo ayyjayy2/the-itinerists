@@ -9,7 +9,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
-    "test:rules": "firebase emulators:exec --only firestore \"node test/firestore-rules.test.mjs\"",
+    "test:rules": "firebase emulators:exec --only firestore,storage \"node test/firestore-rules.test.mjs && node test/storage-rules.test.mjs\"",
     "test:pulse": "node --test test/pulse-stats.test.mjs",
     "sync-seed": "node scripts/sync-seed.js",
     "gen-env": "node scripts/gen-env.js",
@@ -18,7 +18,8 @@
     "deploy:demo": "npm run build:demo && firebase deploy --only hosting:the-itinerists-demo",
     "ios:sync": "node scripts/set-version.js --ios && npm run build && npx cap sync ios",
     "ios:run": "npm run ios:sync && npx cap run ios",
-    "ios:open": "npx cap open ios"
+    "ios:open": "npx cap open ios",
+    "test:rules:storage": "firebase emulators:exec --only storage \"node test/storage-rules.test.mjs\""
   },
   "private": true,
   "dependencies": {
@@ -58,6 +59,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "sharp": "^0.35.5",
     "typescript": "~5.7.2"
   }
 }
