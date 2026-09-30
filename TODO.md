@@ -4,7 +4,7 @@ The one live list, organised by launch phase. The plan itself (goals, who does w
 each phase ends, storage and costs) is the "Itinerists Launch Plan" artifact:
 https://claude.ai/artifact/S2rZKkQ3SgoejHD8Z7f4GP. `ROADMAP.md` is the long-range idea list
 and `docs/HANDOFF.md` the orientation doc; neither tracks status. When something ships, tick
-it here with its PR number. Last updated: 2026-09-29.
+it here with its PR number. Last updated: 2026-09-30.
 
 Alpha (Ireland, Savannah, Berlin) is done. **We are in Phase 1.**
 
@@ -26,6 +26,16 @@ Everything a tester would notice, and everything hard to change once real data e
 - [ ] Staging Firebase project (free plan), same rules file deployed to both.
 - [ ] Crashlytics in the native app (replaces the Firestore error log on phones).
 - [ ] First TestFlight build: `npm run ios:sync`, archive in Xcode, upload, external group.
+- [~] Usage analytics (design: `docs/superpowers/specs/2026-09-30-usage-analytics-design.md`):
+      - [x] Own event log: `_activity` (session / page / 5-min ping, with the person's hour and
+            zone), rules deployed 2026-09-30.
+      - [x] Admin-only `/activity` page: online now, people per hour and per day, hour of day on
+            each person's clock or one zone, pages, people; linked from Profile.
+      - [ ] Google Analytics 4: enable Analytics on the Firebase project (console → Project
+            settings → Integrations) — *Alayna*; then `provideAnalytics`, screen + user tracking,
+            user properties (platform, timezone, trip), CSP, privacy paragraph.
+      - [ ] Later: Capacitor Firebase Analytics plugin for the iOS shell; App Store privacy
+            label "Product Interaction" (+ "Crash Data" once Crashlytics lands).
 
 Ends when: a TestFlight build is on Alayna's and Makaela's phones, photos upload to Cloud
 Storage, a crash appears in Crashlytics, and a budget alert email has arrived once.
