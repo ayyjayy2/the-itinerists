@@ -1,6 +1,7 @@
 import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { IconComponent } from '../icon/icon.component';
+import { AnalyticsService } from '../../services/analytics.service';
 
 /**
  * Everything a trip owner needs to hand out one invite: the code (typed on
@@ -101,6 +102,8 @@ export class InvitePanelComponent {
   readonly canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   private timer: ReturnType<typeof setTimeout> | null = null;
 
+  private analytics = inject(AnalyticsService);
+
   constructor() { inject(DestroyRef).onDestroy(() => { if (this.timer) clearTimeout(this.timer); }); }
 
   async copy(what: 'code' | 'link'): Promise<void> {
@@ -117,6 +120,7 @@ export class InvitePanelComponent {
         text: `Join my trip on The Itinerists — invite code ${this.code()}`,
         url: this.link(),
       });
+      this.analytics.event('invite_shared');
     } catch { /* the person closed the share sheet */ }
   }
 }

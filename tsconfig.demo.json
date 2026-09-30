@@ -8,7 +8,8 @@
       "@angular/fire/firestore": ["./src/demo/fire-firestore"],
       "@angular/fire/auth":      ["./src/demo/fire-auth"],
       "@angular/fire/storage":   ["./src/demo/fire-storage"],
-      "@angular/fire/app-check": ["./src/demo/fire-app-check"]
+      "@angular/fire/app-check": ["./src/demo/fire-app-check"],
+      "@angular/fire/analytics": ["./src/demo/fire-analytics"]
     }
   },
   "files": [
