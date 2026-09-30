@@ -26,8 +26,9 @@ export interface UsageEvent {
   appVersion: string;
 }
 
-/** A user counts as "still here" if a ping lands this often while the page is visible. */
-const PING_EVERY_MS = 5 * 60_000;
+/** A user counts as "still here" if a ping lands this often while the page is visible.
+ *  Two minutes keeps the owner's dashboard close to live at ~30 writes an hour per person. */
+const PING_EVERY_MS = 2 * 60_000;
 
 /**
  * Records how the app is used — one `_activity` doc per app open (`session`),
@@ -90,7 +91,7 @@ export class UsageService {
 
   private startPinging(): void {
     this.stopPinging();
-    this.pingTimer = setInterval(() => this.pingIfDue(), 60_000);
+    this.pingTimer = setInterval(() => this.pingIfDue(), 30_000);
   }
 
   private stopPinging(): void {
@@ -98,7 +99,7 @@ export class UsageService {
     this.pingTimer = undefined;
   }
 
-  /** A ping only says "still here": it is sent when nothing else has been for five minutes. */
+  /** A ping only says "still here": it is sent when nothing else has been for two minutes. */
   private pingIfDue(): void {
     if (!this.sessionSent || document.visibilityState !== 'visible') return;
     if (Date.now() - this.lastEventAt < PING_EVERY_MS) return;

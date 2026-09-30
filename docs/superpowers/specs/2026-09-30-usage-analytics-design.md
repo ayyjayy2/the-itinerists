@@ -42,7 +42,7 @@ Events:
 - `session` — once, when the user is known after app open.
 - `page` — on every `NavigationEnd` while signed in. Route params and query strings are
   stripped; `/trips/new` stays as is since it has no id.
-- `ping` — every 5 minutes while `document.visibilityState === 'visible'`, so someone who
+- `ping` — every 2 minutes (was 5 on the first day) while `document.visibilityState === 'visible'`, so someone who
   stays on one page still counts for that hour and shows as online. Paused when hidden,
   resumed (and sent at once) when the tab becomes visible again after 5+ minutes.
 
@@ -92,6 +92,10 @@ must be hers alone (not every admin), live outside the app, and cover every trip
   views, last activity), online now, people per hour and per day, hour of day, pages, people.
 - Aggregations in `public/pulse/stats.mjs`, tested by `test/pulse-stats.test.mjs`.
 - Demo build excludes `public/pulse/`.
+- Later the same day: trips ordered happening-now → upcoming → ended; test trips tagged and
+  kept out of every number (`_pulse/prefs.testTrips`, owner-only); members per trip (owner may
+  read `trips/{id}/members`); hover details with names on the bar charts; every IANA zone in
+  the zone picker, saved to prefs; one-second clock for "x s ago" and online.
 
 The original in-app design, kept for the record:
 

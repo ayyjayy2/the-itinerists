@@ -18,6 +18,7 @@
     --lavender: #B4A6D4; --lavender-dark: #7E6FA8; --lavender-tint: #ECE7F4;
     --accent: #F2C48A; --accent-dark: #B97F35; --accent-tint: #FBEED9;
     --danger: #C0564A; --danger-tint: #F7E4E1;
+    --highlight-tint: #F9ECED; --highlight-dk: #B96A76;
     --text: #3A3328; --text-muted: #8A7E6A; --border: #EDE5D8;
     --shadow: 0 2px 12px rgba(139, 175, 124, 0.18);
     --radius: 16px; --radius-sm: 8px;
@@ -31,6 +32,7 @@
       --lavender-dark: #C3B6E0; --lavender-tint: #332E40;
       --accent-dark: #E9B86F; --accent-tint: #3E3324;
       --danger: #E07A6E; --danger-tint: #3F2925;
+      --highlight-tint: #3F2A30; --highlight-dk: #E8A5AE;
       --text: #F1EAE0; --text-muted: #A99C86; --border: #3D352C;
       --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
     }
@@ -88,6 +90,14 @@
   .chip.soon { background: var(--accent-tint); color: var(--accent-dark); }
   .chip.past { background: var(--lavender-tint); color: var(--lavender-dark); }
   .chip.archived { background: var(--surface-2); color: var(--text-muted); }
+  .chip.test { background: var(--highlight-tint); color: var(--highlight-dk); vertical-align: middle; margin-left: 0.3rem; }
+  .small { font-size: 0.8rem; }
+  .memberline { display: flex; align-items: center; gap: 0.25rem; margin-top: 0.3rem; flex-wrap: wrap; }
+  .avatar.xs { width: 20px; height: 20px; font-size: 0.7rem; }
+  #trips .tests-head { padding-top: 1rem; }
+  .tip { position: absolute; z-index: 10; max-width: 280px; background: var(--text); color: var(--bg); font-size: 0.8rem; line-height: 1.4; padding: 0.5rem 0.65rem; border-radius: var(--radius-sm); box-shadow: var(--shadow); pointer-events: none; }
+  .tip .muted { color: var(--border); }
+  .bars .col:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
   #trips tr.dim td { color: var(--text-muted); }
   #trips tr.dim strong { font-weight: 600; }
   #trips .hidden-row { padding-top: 0.8rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; font-size: 0.82rem; }
@@ -119,7 +129,7 @@
   .tbl td.n, .tbl th.n { text-align: right; white-space: nowrap; }
   .tbl .page { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; }
   .scroll { overflow-x: auto; }
-  #trips { min-width: 720px; }
+  #trips { min-width: 820px; }
   #trips td:first-child { white-space: nowrap; }
 
   /* sign-in */
@@ -180,7 +190,7 @@
 
     <div class="grid2">
       <div class="card">
-        <h2>Online now <small>last 6 minutes</small></h2>
+        <h2>Online now <small>last 3 minutes</small></h2>
         <ul class="rows" id="online"></ul>
       </div>
       <div class="card">
@@ -215,6 +225,7 @@
 
   <div class="card error" id="err" hidden></div>
 </main>
+<div class="tip" id="tip" hidden role="status"></div>
 
 <script type="module" src="./pulse.mjs"></script>
 </body>

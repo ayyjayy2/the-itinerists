@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  dayKey, hourIn, startOfDay, onlineNow, usersPerHour, usersPerDay, hourOfDay, pageStats, peopleStats, tripStats,
+  dayKey, hourIn, startOfDay, onlineNow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, peopleStats, tripStats,
 } from '../public/pulse/stats.mjs';
 
 const H = 3_600_000;
@@ -45,6 +45,7 @@ test('usersPerHour counts distinct users per clock hour and aligns to the hour',
   ];
   const b = usersPerHour(rows, NOON, NOON + 3 * H, 'Europe/Berlin');
   assert.deepEqual(b.map(x => x.users), [2, 1, 0]);
+  assert.deepEqual(b.map(x => x.uids), [['a', 'b'], ['b'], []]);
   assert.equal(b[0].start, NOON);
   assert.equal(b[0].label, '14:00');
   const aligned = usersPerHour([], NOON + 25 * 60_000, NOON + 2 * H, 'UTC');
@@ -77,6 +78,10 @@ test('hourOfDay counts a person once per hour per day, on their clock or in one 
   const berlin = hourOfDay(rows, 'Europe/Berlin');
   assert.equal(berlin[14], 3);
   assert.equal(berlin[7], 0);
+  // Who: distinct people per hour, and how many user-hours they add up to.
+  const detail = hourOfDayDetail(rows, 'Europe/Berlin');
+  assert.deepEqual(detail[14], { count: 3, uids: ['a', 'b'] });
+  assert.deepEqual(detail[7], { count: 0, uids: [] });
 });
 
 test('pageStats counts views and distinct people per page, busiest first', () => {

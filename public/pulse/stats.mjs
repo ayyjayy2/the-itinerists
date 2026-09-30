@@ -68,7 +68,10 @@ export function usersPerHour(rows, from, to, zone) {
     (seen.get(k) ?? seen.set(k, new Set()).get(k)).add(r.uid);
   }
   const out = [];
-  for (let s = first; s < to; s += HOUR) out.push({ start: s, label: hourLabel(s, zone), users: seen.get(s)?.size ?? 0 });
+  for (let s = first; s < to; s += HOUR) {
+    const uids = [...(seen.get(s) ?? [])].sort();
+    out.push({ start: s, label: hourLabel(s, zone), users: uids.length, uids });
+  }
   return out;
 }
 
@@ -89,8 +92,14 @@ export function usersPerDay(rows, zone) {
  * everyone is converted to the given zone.
  */
 export function hourOfDay(rows, mode) {
+  return hourOfDayDetail(rows, mode).map(h => h.count);
+}
+
+/** Same as hourOfDay, with who: `{ count, uids }` per hour (uids distinct, sorted). */
+export function hourOfDayDetail(rows, mode) {
   const seen = new Set();
   const counts = new Array(24).fill(0);
+  const people = Array.from({ length: 24 }, () => new Set());
   for (const r of rows) {
     let hour, day;
     if (mode === 'local') {
@@ -103,8 +112,9 @@ export function hourOfDay(rows, mode) {
     if (seen.has(key)) continue;
     seen.add(key);
     counts[hour]++;
+    people[hour].add(r.uid);
   }
-  return counts;
+  return counts.map((count, h) => ({ count, uids: [...people[h]].sort() }));
 }
 
 /** Page views (`page` events) and distinct people per page, busiest first. */
