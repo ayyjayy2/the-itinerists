@@ -25,6 +25,7 @@ const state = {
   range: '24h', anchor: Date.now(), trip: 'all', zone: viewerZone, hourMode: 'local',
   rows: [], trips: new Map(), users: new Map(), members: new Map(), now: Date.now(),
   testTrips: new Set(),
+  testUsers: new Set(),   // throwaway accounts (probes, test sign-ups): not people, out of every number
 };
 let unsubRows = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null;
 const memberSubs = new Map(); // tripId → unsubscribe
@@ -79,6 +80,7 @@ function start() {
     const p = snap.exists() ? snap.data() : {};
     // `hiddenTrips` is the earlier name for the same list.
     state.testTrips = new Set(p.testTrips ?? p.hiddenTrips ?? []);
+    state.testUsers = new Set(p.testUsers ?? []);
     if (p.zone && p.zone !== state.zone) { state.zone = p.zone; if (state.range === 'today') subscribeRows(); }
     render();
   }, err => showError('Preferences: ' + err.message));
@@ -145,6 +147,11 @@ $('trips').addEventListener('click', ev => {
   const b = ev.target.closest('button[data-test], button[data-real]'); if (!b) return;
   const id = b.dataset.test ?? b.dataset.real;
   savePrefs({ testTrips: b.dataset.test !== undefined ? arrayUnion(id) : arrayRemove(id) });
+});
+$('people').addEventListener('click', ev => {
+  const b = ev.target.closest('button[data-test], button[data-real]'); if (!b) return;
+  const id = b.dataset.test ?? b.dataset.real;
+  savePrefs({ testUsers: b.dataset.test !== undefined ? arrayUnion(id) : arrayRemove(id) });
 });
 $('hourMode').addEventListener('click', ev => {
   const b = ev.target.closest('button[data-mode]'); if (!b) return;
@@ -228,8 +235,9 @@ function allZones() {
 // ── render ─────────────────────────────────────────────────────────────────
 function render() {
   const now = state.now;
-  // Test trips are out of every number; events with no trip (sign-in screen) stay.
-  const all = state.rows.filter(r => !r.tripId || !state.testTrips.has(r.tripId));
+  // Test people are out of every number, test trips too; events with no trip (sign-in screen) stay.
+  const realRows = state.rows.filter(r => !state.testUsers.has(r.uid));
+  const all = realRows.filter(r => !r.tripId || !state.testTrips.has(r.tripId));
   const rows = state.trip === 'all' ? all : all.filter(r => r.tripId === state.trip);
   const realTrips = [...state.trips.values()].filter(t => !state.testTrips.has(t.id));
   const testTrips = [...state.trips.values()].filter(t => state.testTrips.has(t.id));
@@ -262,12 +270,12 @@ function render() {
   $('scope').textContent = `Counts for ${rangeLabel}${state.trip === 'all' ? '' : ', ' + tripName(state.trip) + ' only'}. Days and hour labels in ${state.zone}.`;
 
   // Trips: real trips by phase (happening now, upcoming, ended), then test trips, dimmed.
-  const byTrip = new Map(S.tripStats(state.rows).map(t => [t.tripId, t]));
+  const byTrip = new Map(S.tripStats(realRows).map(t => [t.tripId, t]));
   const onlineByTrip = new Map();
-  for (const o of S.onlineNow(state.rows, now, ONLINE)) onlineByTrip.set(o.tripId, (onlineByTrip.get(o.tripId) ?? 0) + 1);
+  for (const o of S.onlineNow(realRows, now, ONLINE)) onlineByTrip.set(o.tripId, (onlineByTrip.get(o.tripId) ?? 0) + 1);
   const activeByTrip = new Map();
-  for (const r of state.rows) if (r.tripId) (activeByTrip.get(r.tripId) ?? activeByTrip.set(r.tripId, new Set()).get(r.tripId)).add(r.uid);
-  const tripRow = t => ({ t, s: byTrip.get(t.id), phase: tripPhase(t, today), on: onlineByTrip.get(t.id) ?? 0, members: state.members.get(t.id) ?? [], active: activeByTrip.get(t.id) ?? new Set() });
+  for (const r of realRows) if (r.tripId) (activeByTrip.get(r.tripId) ?? activeByTrip.set(r.tripId, new Set()).get(r.tripId)).add(r.uid);
+  const tripRow = t => ({ t, s: byTrip.get(t.id), phase: tripPhase(t, today), on: onlineByTrip.get(t.id) ?? 0, members: (state.members.get(t.id) ?? []).filter(m => !state.testUsers.has(m.uid)), active: activeByTrip.get(t.id) ?? new Set() });
   const byPhase = (a, b) => PHASE_ORDER[a.phase[0]] - PHASE_ORDER[b.phase[0]] || (b.s?.lastSeen ?? 0) - (a.s?.lastSeen ?? 0) || (a.t.name || '').localeCompare(b.t.name || '');
   const real = realTrips.map(tripRow).sort(byPhase);
   const tests = testTrips.map(tripRow).sort(byPhase);
@@ -343,10 +351,15 @@ function render() {
 
   // People
   const people = S.peopleStats(rows, state.zone);
-  $('people').innerHTML = people.length === 0 ? '<li class="empty">Nobody yet.</li>' : people.map(p => `
-    <li>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}</span>
+  const testPeople = S.peopleStats(state.rows.filter(r => state.testUsers.has(r.uid) && (state.trip === 'all' || r.tripId === state.trip)), state.zone);
+  const personLi = (p, isTest) => `
+    <li${isTest ? ' class="dim"' : ''}>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}${isTest ? ' <span class="chip test">Test</span>' : ''}</span>
       <span class="sub">${esc(tripName(p.tripId))} · ${esc(p.platform)} · ${esc(zoneShort(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
-      <span class="when">${ago(p.lastSeen)}</span></li>`).join('');
+      <span class="when">${ago(p.lastSeen)}</span>
+      <button type="button" class="btn small" data-${isTest ? 'real' : 'test'}="${esc(p.uid)}">${isTest ? 'A person' : 'Not a person'}</button></li>`;
+  $('people').innerHTML = (people.length + testPeople.length === 0) ? '<li class="empty">Nobody yet.</li>' :
+    people.map(p => personLi(p, false)).join('') +
+    (testPeople.length ? `<li class="muted small tests-head">Test accounts: left out of every number on this page.</li>` + testPeople.map(p => personLi(p, true)).join('') : '');
 
   // Keep an open hover detail in place across the one-second re-render.
   if (tip.chart) showTip(tip.chart, tip.index);
