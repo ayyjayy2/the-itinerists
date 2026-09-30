@@ -8,6 +8,7 @@ import { TripService } from '../../services/trip.service';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
 import { Rates, perCurrencySubtotals, convertedTotal, convertShare } from '../../utils/currency';
+import { DirectDebt, filterSettlements } from '../../utils/settlements';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
@@ -15,20 +16,6 @@ import { CurrencySelectComponent } from '../../shared/currency-select/currency-s
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
 const LAST_CURRENCY_PREFIX = 'tripplanner_last_currency_';
-
-interface DebtItem {
-  id: string; label: string; date: string; description: string; notes?: string;
-  amount: number;        // share converted to the home currency (drives netting)
-  origAmount: number;    // share in its original currency
-  origCurrency: string;
-  estimated: boolean;    // true when a fallback rate was used
-}
-interface DirectDebt {
-  from: string;
-  to:   string;
-  amountHome: number;
-  items: DebtItem[];
-}
 
 @Component({
   selector: 'app-finance',
@@ -257,33 +244,15 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     return fields.some(f => f?.toLowerCase().includes(q));
   }
 
-  filteredSettlementItems = computed(() => {
-    const me       = this.currentUser()?.name ?? '';
-    const status   = this.settlementsStatus();
-    const scope    = this.settlementsScope();
-    const selUsers = this.selectedUsers();
-    const q        = this.searchQuery().trim().toLowerCase();
-
-    return this.directDebts()
-      .filter(d => scope === 'mine' ? d.from === me || d.to === me : true)
-      .filter(d => selUsers === null || selUsers.has(d.from) || selUsers.has(d.to))
-      .flatMap(d => {
-        const fullyPaid = this.isSettlementFullyPaid(d);
-        if (status === 'paid' && !fullyPaid) return [];
-        if (status === 'owed' &&  fullyPaid) return [];
-        const items = status === 'owed'
-          ? d.items.filter(item => !this.isItemPaid(d.from, d.to, item.id))
-          : d.items;
-        if (q) {
-          const nameMatch  = this.matchesSearch(q, d.from, d.to);
-          const itemsMatch = items.filter(item => this.matchesSearch(q, item.label, item.description, item.notes));
-          if (!nameMatch && itemsMatch.length === 0) return [];
-          const visible    = nameMatch ? items : itemsMatch;
-          return [{ ...d, items: visible, amountHome: visible.reduce((s, i) => s + i.amount, 0) }];
-        }
-        return [{ ...d, items, amountHome: items.reduce((s, i) => s + i.amount, 0) }];
-      });
-  });
+  filteredSettlementItems = computed(() =>
+    filterSettlements(this.directDebts(), {
+      me:            this.currentUser()?.name ?? '',
+      status:        this.settlementsStatus(),
+      scope:         this.settlementsScope(),
+      selectedUsers: this.selectedUsers(),
+      query:         this.searchQuery().trim().toLowerCase(),
+      isPaid:        (from, to, id) => this.isItemPaid(from, to, id),
+    }));
 
   // ── Paid tracking ─────────────────────────────────────────────────────────────
   paidKey(from: string, to: string, id: string): string { return `${from}__${to}__${id}`; }
@@ -292,9 +261,6 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   toggleItemPaid(from: string, to: string, id: string): void {
     this.financeService.togglePaidItem(this.paidKey(from, to, id));
-  }
-  isSettlementFullyPaid(d: DirectDebt): boolean {
-    return d.items.length > 0 && d.items.every(item => this.isItemPaid(d.from, d.to, item.id));
   }
 
   debtKey(d: DirectDebt): string { return `${d.from}__${d.to}`; }
