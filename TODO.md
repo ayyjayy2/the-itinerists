@@ -132,8 +132,9 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
 - [ ] Backups: Firestore point-in-time recovery + weekly export to a bucket.
 - [ ] Old trips delete themselves after a year: 12 months after the trip's end date, a daily
       Cloud Function runs the same teardown as the owner's delete button. Trip Settings shows
-      "deletes on {date}"; the My Trips card gets a 30-day badge; one-tap "Keep for another
-      year". Privacy policy "How long we keep data" updated to match. Caps storage growth.
+      "deletes on {date}"; the My Trips card gets a 30-day badge; both carry the "Keep this trip"
+      purchase ($1.99 once; see the Making money page — no free extension, the free year is the
+      extension). Privacy policy "How long we keep data" updated to match. Caps storage growth.
 - [ ] CI: GitHub Actions runs `ng test` and the rules tests on every pull request.
 - [ ] Pagination for the activity log and other unbounded lists.
 - [ ] Terms of service beside the privacy policy; "download my data" on Profile; the policy
