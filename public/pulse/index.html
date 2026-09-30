@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Pulse</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Caprasimo&display=swap" rel="stylesheet">
+<style>
+  /* The app's Dusk Garden palette, so the dashboard reads as part of the same family. */
+  :root {
+    color-scheme: light;
+    --bg: #F8F4EF; --surface: #FFFFFF; --surface-2: #F5EFE3;
+    --primary: #8BAF7C; --primary-dark: #6A8F5E; --primary-tint: #EAF1E3;
+    --lavender: #B4A6D4; --lavender-dark: #7E6FA8; --lavender-tint: #ECE7F4;
+    --accent: #F2C48A; --accent-dark: #B97F35; --accent-tint: #FBEED9;
+    --danger: #C0564A; --danger-tint: #F7E4E1;
+    --text: #3A3328; --text-muted: #8A7E6A; --border: #EDE5D8;
+    --shadow: 0 2px 12px rgba(139, 175, 124, 0.18);
+    --radius: 16px; --radius-sm: 8px;
+    --font: 'Nunito', system-ui, sans-serif; --display: 'Caprasimo', 'Nunito', serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #1F1B16; --surface: #2A241D; --surface-2: #332C24;
+      --primary: #9DBF8E; --primary-dark: #B5D3A6; --primary-tint: #2F3A2A;
+      --lavender-dark: #C3B6E0; --lavender-tint: #332E40;
+      --accent-dark: #E9B86F; --accent-tint: #3E3324;
+      --danger: #E07A6E; --danger-tint: #3F2925;
+      --text: #F1EAE0; --text-muted: #A99C86; --border: #3D352C;
+      --shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.45;
+    padding-block: 1rem 3rem; padding-inline: 16px;
+  }
+  main { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
+  h1, h2 { margin: 0; text-wrap: balance; }
+  h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; letter-spacing: 0.01em; }
+  h2 { font-size: 1.05rem; font-weight: 800; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+  h2 small { font-weight: 600; font-size: 0.78rem; color: var(--text-muted); }
+  .num { font-variant-numeric: tabular-nums; }
+  .muted { color: var(--text-muted); }
+  a { color: var(--primary-dark); }
+
+  /* header */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 0.75rem; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex: none; }
+  .dot.on { background: var(--primary); box-shadow: 0 0 0 4px var(--primary-tint); }
+  .who { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: var(--text-muted); }
+
+  /* controls */
+  .controls { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: flex-end; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--surface); }
+  .seg button { border: 0; background: transparent; color: var(--text-muted); font: inherit; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.9rem; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--primary-dark); color: var(--bg); }
+  .seg button:focus-visible, select:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  label.field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.02em; text-transform: uppercase; }
+  select, input { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.45rem 0.6rem; max-width: 100%; }
+  .btn { font: inherit; font-weight: 700; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; padding: 0.45rem 1rem; cursor: pointer; }
+  .btn.primary { background: var(--primary-dark); border-color: transparent; color: var(--bg); }
+  .btn.small { padding: 0.25rem 0.7rem; font-size: 0.8rem; }
+
+  /* cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.1rem 1.2rem; }
+  .card > h2 { margin-bottom: 0.9rem; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 0.9rem; }
+  .tile .v { font-family: var(--display); font-size: 1.9rem; line-height: 1.05; color: var(--primary-dark); }
+  .tile .l { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
+  .hint { color: var(--text-muted); font-size: 0.82rem; margin: 0.6rem 0 0; }
+  .empty { color: var(--text-muted); margin: 0; }
+  .error { color: var(--danger); background: var(--danger-tint); border-color: transparent; }
+
+  /* chips */
+  .chip { display: inline-block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--surface-2); color: var(--text-muted); }
+  .chip.live { background: var(--primary-tint); color: var(--primary-dark); }
+  .chip.soon { background: var(--accent-tint); color: var(--accent-dark); }
+  .chip.past { background: var(--lavender-tint); color: var(--lavender-dark); }
+
+  /* bars */
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 130px; }
+  .bars .col { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+  .bars .bar { width: 100%; min-height: 2px; border-radius: 3px 3px 0 0; background: var(--primary); transition: height 0.3s; }
+  .bars .bar.zero { background: var(--surface-2); }
+  .bars .tick { font-size: 0.62rem; color: var(--text-muted); height: 1rem; margin-top: 0.25rem; white-space: nowrap; overflow: hidden; }
+  .bars .val { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+  .bars.days { height: 160px; gap: 6px; justify-content: flex-start; }
+  .bars.days .col { flex: 0 1 72px; }
+  .bars.days .bar { background: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { .bars .bar { transition: none; } }
+
+  /* lists and tables */
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .rows li { display: flex; align-items: center; gap: 0.75rem; padding: 0.55rem 0; border-top: 1px solid var(--border); }
+  .rows li:first-child { border-top: 0; padding-top: 0; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none; font-size: 1rem; font-weight: 800; background: var(--surface-2); }
+  .rows .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .rows .name { font-weight: 700; }
+  .rows .sub { font-size: 0.78rem; color: var(--text-muted); }
+  .rows .when { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl td, .tbl th { padding: 0.45rem 0.25rem; border-top: 1px solid var(--border); text-align: left; font-size: 0.9rem; }
+  .tbl th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); border-top: 0; }
+  .tbl td.n, .tbl th.n { text-align: right; white-space: nowrap; }
+  .tbl .page { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; }
+  .scroll { overflow-x: auto; }
+  #trips { min-width: 640px; }
+  #trips td:first-child { white-space: nowrap; }
+
+  /* sign-in */
+  #dash { display: contents; }
+  .gate { max-width: 420px; margin: 3rem auto 0; display: flex; flex-direction: column; gap: 0.9rem; }
+  .gate form { display: flex; flex-direction: column; gap: 0.75rem; }
+  .gate label { display: flex; flex-direction: column; gap: 0.25rem; font-weight: 700; font-size: 0.85rem; }
+  .gate p { margin: 0; }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div class="brand">
+      <h1>Pulse</h1>
+      <span class="dot" id="dot" title="Live connection"></span>
+    </div>
+    <div class="who" id="who" hidden>
+      <span id="whoName"></span>
+      <button class="btn small" id="signOut" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <!-- Sign-in gate -->
+  <section class="gate" id="gate">
+    <div class="card">
+      <h2>Sign in</h2>
+      <p class="muted" style="margin-bottom:0.9rem">This page is for the app owner's account only.</p>
+      <form id="signin">
+        <label>Username or email <input id="user" name="username" autocomplete="username" autocapitalize="none" required></label>
+        <label>Password <input id="pass" name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn primary" id="signinBtn" type="submit">Sign in</button>
+      </form>
+      <p class="hint" id="gateMsg"></p>
+    </div>
+  </section>
+
+  <!-- Dashboard -->
+  <section id="dash" hidden>
+    <div class="controls">
+      <div class="seg" id="range" role="group" aria-label="Range">
+        <button type="button" data-range="today">Today</button>
+        <button type="button" data-range="24h" aria-pressed="true">24 h</button>
+        <button type="button" data-range="7d">7 days</button>
+        <button type="button" data-range="30d">30 days</button>
+      </div>
+      <label class="field">Trip <select id="trip"><option value="all">All trips</option></select></label>
+      <label class="field">Days and labels in <select id="zone"></select></label>
+    </div>
+
+    <div class="tiles" id="tiles"></div>
+    <p class="hint" id="scope"></p>
+
+    <div class="card" id="tripsCard">
+      <h2>Trips <small id="tripsSub"></small></h2>
+      <div class="scroll"><table class="tbl" id="trips"></table></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Online now <small>last 6 minutes</small></h2>
+        <ul class="rows" id="online"></ul>
+      </div>
+      <div class="card">
+        <h2>People per hour <small id="perHourSub"></small></h2>
+        <div class="bars" id="perHour"></div>
+      </div>
+    </div>
+
+    <div class="card" id="perDayCard">
+      <h2>People per day</h2>
+      <div class="bars days" id="perDay"></div>
+    </div>
+
+    <div class="card">
+      <h2>Hour of day</h2>
+      <div class="seg" id="hourMode" role="group" aria-label="Clock" style="margin-bottom:0.9rem"></div>
+      <div class="bars" id="byHour"></div>
+      <p class="hint">One count per person per hour per day. "Each person's clock" is the hour where they were.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Pages</h2>
+        <table class="tbl" id="pages"></table>
+      </div>
+      <div class="card">
+        <h2>People</h2>
+        <ul class="rows" id="people"></ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="card error" id="err" hidden></div>
+</main>
+
+<script type="module" src="./pulse.mjs"></script>
+</body>
+</html>

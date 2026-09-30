@@ -27,6 +27,8 @@ const bob   = testEnv.authenticatedContext('bob').firestore();   // trip member
 const carol = testEnv.authenticatedContext('carol').firestore(); // signed in, NOT a member
 const dave  = testEnv.authenticatedContext('dave').firestore();  // signed in, brand new
 const admin = testEnv.authenticatedContext('admin').firestore(); // app admin (isAdmin), not a member
+const OWNER_UID = 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';                           // the app owner's account (Alayna)
+const owner = testEnv.authenticatedContext(OWNER_UID).firestore(); // app owner, not a member of T
 const anon  = testEnv.unauthenticatedContext().firestore();      // logged out
 
 async function seed() {
@@ -37,6 +39,7 @@ async function seed() {
       setDoc(doc(db, 'users', 'bob'),   { uid: 'bob',   username: 'bob',   isAdmin: false }),
       setDoc(doc(db, 'users', 'carol'), { uid: 'carol', username: 'carol', isAdmin: false }),
       setDoc(doc(db, 'users', 'admin'), { uid: 'admin', username: 'admin', isAdmin: true }),
+      setDoc(doc(db, 'users', OWNER_UID), { uid: OWNER_UID, username: 'alayna', isAdmin: true }),
       setDoc(doc(db, 'users', 'bob', 'private', 'account'), { authEmail: 'bob@example.com' }),
       setDoc(doc(db, 'usernames', 'alice'), { uid: 'alice', authEmail: 'alice@example.com' }),
       setDoc(doc(db, 'usernames', 'bob'),   { uid: 'bob',   authEmail: 'bob@example.com' }),
@@ -79,6 +82,11 @@ console.log('\nTrips');
 await t('member reads trip', 'allow', () => getDoc(doc(alice, 'trips', 'T')));
 await t('member(bob) reads trip', 'allow', () => getDoc(doc(bob, 'trips', 'T')));
 await t('non-member reads trip', 'deny', () => getDoc(doc(carol, 'trips', 'T')));
+await t('owner reads a trip they are not on (dashboard)', 'allow', () => getDoc(doc(owner, 'trips', 'T')));
+await t('owner lists all trips (dashboard)', 'allow', () => getDocs(collection(owner, 'trips')));
+await t('admin lists all trips', 'deny', () => getDocs(collection(admin, 'trips')));
+await t('owner updates a trip they are not on', 'deny', () => updateDoc(doc(owner, 'trips', 'T'), { name: 'x' }));
+await t('owner reads members of a trip they are not on', 'deny', () => getDoc(doc(owner, 'trips', 'T', 'members', 'bob')));
 await t('anon reads trip', 'deny', () => getDoc(doc(anon, 'trips', 'T')));
 await t('member updates trip', 'allow', () => updateDoc(doc(bob, 'trips', 'T'), { memberCount: 3 }));
 await t('non-member updates trip', 'deny', () => updateDoc(doc(carol, 'trips', 'T'), { memberCount: 3 }));
@@ -225,12 +233,14 @@ await t('event with extra field', 'deny', () => setDoc(doc(bob, '_activity', 'e2
 await t('event with unknown type', 'deny', () => setDoc(doc(bob, '_activity', 'e2'), ev('bob', { type: 'click' })));
 await t('event with client timestamp', 'deny', () => setDoc(doc(bob, '_activity', 'e2'), ev('bob', { at: new Date() })));
 await t('anon creates event', 'deny', () => setDoc(doc(anon, '_activity', 'e2'), ev('bob')));
-await t('admin reads an event', 'allow', () => getDoc(doc(admin, '_activity', 'e1')));
-await t('admin lists events', 'allow', () => getDocs(collection(admin, '_activity')));
+await t('owner reads an event', 'allow', () => getDoc(doc(owner, '_activity', 'e1')));
+await t('owner lists events', 'allow', () => getDocs(collection(owner, '_activity')));
+await t('admin reads an event', 'deny', () => getDoc(doc(admin, '_activity', 'e1')));
+await t('admin lists events', 'deny', () => getDocs(collection(admin, '_activity')));
 await t('member reads own event', 'deny', () => getDoc(doc(bob, '_activity', 'e1')));
 await t('member lists events', 'deny', () => getDocs(collection(bob, '_activity')));
-await t('admin updates an event', 'deny', () => updateDoc(doc(admin, '_activity', 'e1'), { page: '/x' }));
-await t('admin deletes an event', 'deny', () => deleteDoc(doc(admin, '_activity', 'e1')));
+await t('owner updates an event', 'deny', () => updateDoc(doc(owner, '_activity', 'e1'), { page: '/x' }));
+await t('owner deletes an event', 'deny', () => deleteDoc(doc(owner, '_activity', 'e1')));
 await t('owner deletes own event', 'deny', () => deleteDoc(doc(bob, '_activity', 'e1')));
 
 await testEnv.cleanup();

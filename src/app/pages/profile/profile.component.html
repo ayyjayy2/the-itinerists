@@ -77,15 +77,6 @@
       </div>
     }
 
-    <!-- App admins only -->
-    @if (isAdmin()) {
-      <div class="card section-card">
-        <h2>Admin</h2>
-        <div class="input-hint">Who's using the app, when, and on which pages.</div>
-        <a class="btn btn-ghost" routerLink="/activity">Activity</a>
-      </div>
-    }
-
     <p class="about-line">The Itinerists · {{ aboutLine }} · <a routerLink="/privacy">Privacy policy</a></p>
 
   } @else {

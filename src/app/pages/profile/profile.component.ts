@@ -30,7 +30,6 @@ export class ProfileComponent implements OnInit {
   private route        = inject(ActivatedRoute);
 
   firestoreUser = this.userService.firestoreUser;
-  isAdmin       = this.userService.isAdmin;
 
   /** About line at the foot of the page — the one place the version shows.
    *  The build date is a development aid only (never in a release build). */
