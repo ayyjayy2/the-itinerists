@@ -62,7 +62,7 @@
 
   /* controls */
   .controls { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: flex-end; }
-  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--surface); }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--surface); }
   .seg button { border: 0; background: transparent; color: var(--text-muted); font: inherit; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.9rem; cursor: pointer; }
   .seg button[aria-pressed="true"] { background: var(--primary-dark); color: var(--bg); }
   .seg button:focus-visible, select:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
@@ -176,6 +176,9 @@
         <button type="button" data-range="24h" aria-pressed="true">24 h</button>
         <button type="button" data-range="7d">7 days</button>
         <button type="button" data-range="30d">30 days</button>
+        <button type="button" data-range="60d">60 days</button>
+        <button type="button" data-range="180d">180 days</button>
+        <button type="button" data-range="1y">Year</button>
       </div>
       <label class="field">Trip <select id="trip"><option value="all">All trips</option></select></label>
       <label class="field">Days and labels in <select id="zone"></select></label>
