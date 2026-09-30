@@ -236,7 +236,9 @@
 }
 .glance-arrow { color: var(--text-muted); font-size: 1.3rem; flex: none; }
 
-.glance-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+// Two columns that reflow as widgets come and go; the itinerary card spans both.
+.glance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.glance-grid .wide { grid-column: 1 / -1; margin-bottom: 0; }
 
 .glance-mini {
   text-align: left;
@@ -253,8 +255,14 @@
   .glance-mini-top {
     display: flex; align-items: center; gap: 7px;
     font-weight: 800; font-size: 0.9rem;
-    &.gold { color: var(--accent-dark); }
-    &.pink { color: var(--highlight-dk); }
+    &.gold  { color: var(--accent-dark); }
+    &.pink  { color: var(--highlight-dk); }
+    &.sage  { color: var(--primary-dark); }
+    &.sky   { color: #3f7fbf; }
+    &.lav   { color: #7c5cbf; }
+    &.peach { color: #c2703a; }
+    .owed { color: var(--primary-dark); }
+    .owe  { color: var(--danger); }
   }
   .glance-mini-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-weight: 700; }
 }
