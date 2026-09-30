@@ -25,65 +25,58 @@ and the sentence they use to describe the app to a friend is written down too.
 ## Phase 1 — Prep for beta (alongside the alpha wrap-up, ~2 weeks)
 
 Everything a tester would notice, and everything hard to change once real data exists.
+In the order things can actually happen. Only App Attest, TestFlight, universal links and the
+store listing need the $99 Apple Developer Program; enrol about a week before the TestFlight
+build (approval takes a day or two).
 
 - [x] Security lockdown: private profiles, no user listing, enumeration-safe sign-up,
       joining needs a live invite — #181, #182, #203.
 - [x] Privacy policy at /privacy, linked from Profile and sign-up — #201.
 - [x] Native iOS shell with icon and launch screen; runs on Alayna's iPhone — #191–#196.
-- [ ] Fixes from the alpha survey: the Berlin group's answers sorted — anything that blocked or
-      confused them first, then asks two or more people made (same order beta fixes will use).
-- [ ] Apple Developer Program enrollment ($99/yr) — *Alayna*. Unblocks App Attest and TestFlight.
-- [ ] Firebase pay-as-you-go (Blaze) plan + budget alerts at $10 and $25 — *Alayna*
-      (console → Usage and billing → Modify plan). Unlocks Cloud Functions and backups.
-- [x] Outfit photos to Cloud Storage — code done (resize to 1,600 px + 300 px thumbnail,
-      owner-only storage.rules with tests, dual-format reader, migration script). Writes are
-      behind OUTFIT_PHOTO_STORAGE_ENABLED = false because the project has NO Storage bucket:
-      Firebase only creates the default bucket on the Blaze plan.
+- [x] Usage analytics (design: `docs/superpowers/specs/2026-09-30-usage-analytics-design.md`):
+      own `_activity` event log (rules deployed 2026-09-30); Pulse dashboard at
+      theitinerists.com/pulse/ (owner only, live; filters + four more cards, #234); Google
+      Analytics 4 (G-EZQ46BTZY7) on the web.
+      Later: Capacitor Firebase Analytics plugin for iOS; App Store privacy label.
+- [ ] Now: Firebase pay-as-you-go (Blaze) plan + budget alerts at $10 and $25 — *Alayna*
+      (console → Usage and billing → Modify plan). Creates the Storage bucket, unlocks backups
+      and Cloud Functions.
+- [ ] Now: Staging Firebase project (free plan), same rules file deployed to both.
+- [ ] Now: Crashlytics — code shipped (#223). Enable it in the Firebase console and see one test
+      error land from Alayna's iPhone (a dev build on your own phone needs no paid account).
 - [ ] After Blaze: Firebase console → Storage → Get started (creates the default bucket
       trip-planner-ayyjayy2.firebasestorage.app) → `node scripts/set-storage-cors.js` →
       `firebase deploy --only storage` → flip OUTFIT_PHOTO_STORAGE_ENABLED to true → rerun
-      the live check → deploy hosting.
+      the live check → deploy hosting. (Photo code is done: resize to 1,600 px + 300 px
+      thumbnail, owner-only storage.rules with tests, dual-format reader, migration script.)
 - [ ] After 2026-10-10 (Berlin trip over) and once the bucket exists:
       `node scripts/migrate-outfit-photos.js` (dry run), then `--run`.
-- [ ] Real App Check on iOS: App Attest via a Capacitor App Check plugin; remove the
-      debug-token path in `src/app/app.config.ts`.
-- [ ] Staging Firebase project (free plan), same rules file deployed to both.
-- [x] Crashlytics in the native app — code done (#223): non-fatals mirrored from the error
-      logger, uid tagging, dSYM upload phase, `scripts/fetch-ios-config.js` for the plist.
-      Still to do: enable Crashlytics in the Firebase console and see one test error land.
-- [ ] First TestFlight build: `npm run ios:sync`, archive in Xcode, upload, external group.
-- [~] Usage analytics (design: `docs/superpowers/specs/2026-09-30-usage-analytics-design.md`):
-      - [x] Own event log: `_activity` (session / page / 5-min ping, with the person's hour and
-            zone), rules deployed 2026-09-30.
-      - [x] Pulse dashboard at theitinerists.com/pulse/ (owner's account only, outside the app,
-            live): trips happening now, online now, people per hour and per day, hour of day on
-            each person's clock or one zone, pages, people.
-      - [x] Google Analytics 4 (property G-EZQ46BTZY7, enabled 2026-09-30): screen + user
-            tracking, user properties platform / timezone / trip_id, events trip_created,
-            trip_joined, invite_shared; CSP; privacy policy updated. Web only.
-      - [x] Pulse filters (hide me / test trips / test accounts, multi-select trips) and four more
-            cards: return rate, visits, around the trip, platform + versions — #234.
-      - [ ] Later: Capacitor Firebase Analytics plugin for the iOS shell; App Store privacy
-            label "Product Interaction" (+ "Crash Data" once Crashlytics lands).
+- [ ] After the survey comes back (mid Oct): fixes from the alpha survey — anything that blocked
+      or confused them first, then asks two or more people made (same order beta fixes will use).
+- [ ] Apple Developer Program enrollment ($99/yr) — *Alayna*. About a week before TestFlight.
+- [ ] Needs Apple: real App Check on iOS — App Attest via a Capacitor App Check plugin; remove
+      the debug-token path in `src/app/app.config.ts`.
+- [ ] Needs Apple: first TestFlight build — `npm run ios:sync`, archive in Xcode, upload,
+      external group.
 
 Ends when: a TestFlight build is on Alayna's and Makaela's phones, photos upload to Cloud
 Storage, a crash appears in Crashlytics, a budget alert email has arrived once, and the alpha
 survey's top fixes are shipped.
 
-## Phase 2 — Marketing (2–3 weeks, can overlap phase 1)
+## Phase 2 — Marketing (2–3 weeks, can overlap phase 1; no Apple account needed)
 
 Find out whether people who don't know us want this, before anyone is invited to test it.
 
 - [ ] The one-line story: who it's for and what it replaces, in the words from the poll
       comments and the Berlin survey — *Alayna*.
+- [ ] Landing page + waitlist on theitinerists.com, before the first reel so it has somewhere
+      to send people: one line, three screenshots, one email field, "we'll tell you when it's
+      on the App Store". (Moved up from the old phase 4 email-list item.) — *Claude*.
 - [ ] Three trial reels (15–30 s screen recordings of the real app on the phone + voice-over:
       countdown and who's coming; who owes who; packing list ticking down). Shoot on Berlin
       data while it's fresh — *Alayna*.
 - [ ] Post where the poll ran (Instagram first, TikTok if the clip fits): one reel a week, the
       same hook three ways; watch saves, shares and "when?" DMs — *Alayna*.
-- [ ] Landing page + waitlist on theitinerists.com: one line, three screenshots, one email
-      field, "we'll tell you when it's on the App Store". Reels link here. (Moved up from the
-      old phase 4 email-list item.) — *Claude*.
 - [ ] Count weekly: views, saves, shares, waitlist sign-ups, DMs — one sheet, one row a week.
 - [ ] Keep the 14 planners for beta; the reels are for strangers.
 
@@ -136,13 +129,10 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
       https://theitinerists.com. The old address keeps working.
 - [ ] NOT before 2026-10-10 (after the Berlin trip ends): decide with Alayna whether to redirect
       the-itinerists.web.app → theitinerists.com. A redirect signs the existing group out once.
-- [ ] Invite links open the native app (iOS universal links; needs the domain).
 - [ ] Backups: Firestore point-in-time recovery + weekly export to a bucket.
 - [ ] CI: GitHub Actions runs `ng test` and the rules tests on every pull request.
 - [ ] Pagination for the activity log and other unbounded lists.
 - [ ] Terms of service beside the privacy policy; "download my data" on Profile.
-- [ ] Store listing: name, subtitle, description, keywords, screenshots per phone size, age
-      rating, privacy questionnaire, support URL.
 - [ ] Email updates list: move the phase 2 waitlist onto a mailing service (Brevo or Mailchimp free tier) authenticated on
       theitinerists.com (its DKIM records + one more SPF include); a "send me updates" checkbox
       at sign-up and a toggle on Profile stored on the private account doc; a one-field
@@ -150,6 +140,9 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
       a postal address in the footer and an unsubscribe link (the service handles both);
       keep it separate from Firebase's transactional mail.
 
+- [ ] Needs Apple: invite links open the native app (iOS universal links; the domain is ready).
+- [ ] Needs Apple: store listing: name, subtitle, description, keywords, screenshots per phone size, age
+      rating, privacy questionnaire, support URL.
 Ends when: the listing is complete in App Store Connect, a backup has been restored once on
 staging, and a PR with a failing test cannot merge.
 
