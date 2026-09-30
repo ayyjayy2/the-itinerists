@@ -217,6 +217,7 @@ function avatar(uid, size = '') {
   return `<span class="avatar ${size}" title="${esc(userName(uid))}" style="background:${esc(u?.color || '')};${color}">${esc(glyph)}</span>`;
 }
 const names = uids => uids.length ? uids.map(u => esc(userName(u))).join(', ') : '<span class="muted">nobody</span>';
+const pageList = pages => pages.length ? `<br><span class="muted">Pages:</span> ${pages.map(esc).join(', ')}` : '';
 /** Table order: happening now, upcoming, ended, archived, undated. */
 const PHASE_ORDER = { live: 0, soon: 1, past: 2, archived: 3, '': 4 };
 function tripPhase(t, today) {
@@ -327,7 +328,7 @@ function render() {
   $('perHourSub').textContent = `last 24 h, ${state.zone}`;
   bars('perHour', perHour.map(b => ({
     value: b.users, label: b.label,
-    tip: `<strong>${esc(b.label)}</strong> · ${b.users} ${b.users === 1 ? 'person' : 'people'}<br>${names(b.uids)}`,
+    tip: `<strong>${esc(b.label)}</strong> · ${b.users} ${b.users === 1 ? 'person' : 'people'}<br>${names(b.uids)}${pageList(b.pages)}`,
   })), Math.max(1, ...perHour.map(b => b.users)), { tick: (it, i) => i % 4 === 0 ? it.label.slice(0, 2) : '' });
 
   // People per day
@@ -351,7 +352,7 @@ function render() {
     : `everyone in ${zoneAbbr(state.hourMode)}`;
   bars('byHour', byHour.map((h, i) => ({
     value: h.count,
-    tip: `<strong>${String(i).padStart(2, '0')}:00</strong>${zoneLabel(h) ? ' ' + esc(zoneLabel(h)) : ''} · ${h.count} ${h.count === 1 ? 'person-hour' : 'person-hours'}<br>${names(h.uids)}`,
+    tip: `<strong>${String(i).padStart(2, '0')}:00</strong>${zoneLabel(h) ? ' ' + esc(zoneLabel(h)) : ''} · ${h.count} ${h.count === 1 ? 'person-hour' : 'person-hours'}<br>${names(h.uids)}${pageList(h.pages)}`,
   })), Math.max(1, ...byHour.map(h => h.count)), { tick: (it, i) => i % 6 === 0 ? String(i).padStart(2, '0') : '' });
 
   // Pages
