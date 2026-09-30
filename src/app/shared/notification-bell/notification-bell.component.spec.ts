@@ -2,15 +2,19 @@ import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { NotificationBellComponent } from './notification-bell.component';
-import { TripService } from '../../services/trip.service';
+import { TripEventsService } from '../../services/trip-events.service';
 import { UserService } from '../../services/user.service';
-import { ActivityLogEntry } from '../../models/trip.models';
+import { TripEvent } from '../../models/trip.models';
 
-const entries: ActivityLogEntry[] = [
-  { id: 'e1', action: 'member_added', targetUid: 't', targetName: 'Tess',
-    performedByUid: 'other', performedByName: 'Pat', timestamp: 2000 },
-  { id: 'e2', action: 'member_added', targetUid: 't', targetName: 'Ann',
-    performedByUid: 'me', performedByName: 'Me', timestamp: 3000 },
+const ev = (o: Partial<TripEvent>): TripEvent => ({
+  id: 'e', kind: 'itinerary', action: 'added', actorUid: 'other', actorName: 'Pat', itemId: 'i1',
+  summary: 'added Dinner to Day 1, Sat Oct 3 at 7:00 PM', path: '/itinerary', audience: 'all', timestamp: 2000, ...o,
+});
+const events: TripEvent[] = [
+  ev({ id: 'e1' }),                                                        // unseen, for me
+  ev({ id: 'e2', actorUid: 'me', actorName: 'Me', timestamp: 3000 }),      // mine → never counts
+  ev({ id: 'e3', audience: ['someone-else'], timestamp: 4000 }),           // not for me
+  ev({ id: 'e4', timestamp: 500, summary: 'added a rec: Old (Food)', path: '/recs', itemId: 'r1' }), // seen
 ];
 
 describe('NotificationBellComponent', () => {
@@ -25,13 +29,13 @@ describe('NotificationBellComponent', () => {
       imports: [NotificationBellComponent],
       providers: [
         provideRouter([]),
-        { provide: TripService, useValue: { activeActivity: signal(entries) } },
+        { provide: TripEventsService, useValue: { events: signal(events) } },
         { provide: UserService, useValue: userStub },
       ],
     });
   });
 
-  it('badges only others’ unseen entries and lists them in the dropdown', () => {
+  it('badges only unseen events meant for me, and lists them as links to the item', () => {
     const fixture = TestBed.createComponent(NotificationBellComponent);
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
@@ -39,7 +43,10 @@ describe('NotificationBellComponent', () => {
     (el.querySelector('.bell-btn') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(el.querySelector('.bell-head')?.textContent).toContain('1 update');
-    expect(el.textContent).toContain('Tess joined the trip');
+    const row = el.querySelector('a.bell-item') as HTMLAnchorElement;
+    expect(row.textContent).toContain('Pat');
+    expect(row.textContent).toContain('added Dinner to Day 1, Sat Oct 3 at 7:00 PM');
+    expect(row.getAttribute('href')).toBe('/itinerary?focus=i1');
   });
 
   it('marks activity seen on open, and keeps showing the snapshot after the marker moves', () => {
@@ -49,14 +56,13 @@ describe('NotificationBellComponent', () => {
     (el.querySelector('.bell-btn') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(userStub.markActivitySeen).toHaveBeenCalled();
-    // Simulate the Firestore echo advancing the high-water mark while open:
     userStub.firestoreUser.set({ uid: 'me', lastSeenActivityAt: 5000 });
     fixture.detectChanges();
-    expect(el.textContent).toContain('Tess joined the trip'); // snapshot survives
-    expect(el.querySelector('.bell-badge')).toBeNull();       // badge cleared
+    expect(el.textContent).toContain('added Dinner to Day 1');   // snapshot survives
+    expect(el.querySelector('.bell-badge')).toBeNull();          // badge cleared
   });
 
-  it('does not mark seen when there is nothing unseen', () => {
+  it('with nothing unseen it shows the latest for me without marking seen', () => {
     userStub.firestoreUser.set({ uid: 'me', lastSeenActivityAt: 5000 });
     const fixture = TestBed.createComponent(NotificationBellComponent);
     fixture.detectChanges();
@@ -64,5 +70,7 @@ describe('NotificationBellComponent', () => {
     (el.querySelector('.bell-btn') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(userStub.markActivitySeen).not.toHaveBeenCalled();
+    const hrefs = Array.from(el.querySelectorAll('a.bell-item')).map(a => a.getAttribute('href'));
+    expect(hrefs).toEqual(['/itinerary?focus=i1', '/recs?focus=r1']);
   });
 });

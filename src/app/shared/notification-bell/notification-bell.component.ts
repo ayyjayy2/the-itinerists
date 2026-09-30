@@ -1,10 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../icon/icon.component';
-import { TripService } from '../../services/trip.service';
 import { UserService } from '../../services/user.service';
-import { activityText, timeAgo, unseenActivityCount } from '../../utils/activity';
-import { ActivityLogEntry } from '../../models/trip.models';
+import { timeAgo } from '../../utils/activity';
+import { eventsForMe, unseenEvents } from '../../utils/trip-events';
+import { TripEventsService } from '../../services/trip-events.service';
+import { TripEvent } from '../../models/trip.models';
 
 @Component({
   selector: 'app-notification-bell',
@@ -22,8 +23,10 @@ import { ActivityLogEntry } from '../../models/trip.models';
         <div class="bell-scrim" (click)="open.set(false)"></div>
         <div class="bell-dropdown" [style.top.px]="dropTop()">
           <div class="bell-head">{{ shown().length }} {{ shown().length === 1 ? 'update' : 'updates' }}</div>
-          @for (a of shown(); track a.id) {
-            <div class="bell-item"><b>{{ a.performedByName }}</b> — {{ text(a) }} · {{ ago(a.timestamp) }}</div>
+          @for (e of shown(); track e.id) {
+            <a class="bell-item bell-link" [routerLink]="e.path" [queryParams]="e.itemId ? { focus: e.itemId } : null" (click)="open.set(false)">
+              <b>{{ e.actorName }}</b> {{ e.summary }} <span class="bell-ago">· {{ ago(e.timestamp) }}</span>
+            </a>
           } @empty {
             <div class="bell-item bell-empty">No new updates</div>
           }
@@ -50,6 +53,9 @@ import { ActivityLogEntry } from '../../models/trip.models';
     .bell-head { padding: 0.5rem 0.9rem; font-weight: 700; font-size: 0.85rem;
       border-bottom: 1px solid var(--border, #eee); }
     .bell-item { padding: 0.5rem 0.9rem; font-size: 0.85rem; line-height: 1.4; }
+    .bell-link { display: block; color: inherit; text-decoration: none; }
+    .bell-link:hover { background: var(--surface-2, #f3f3f3); }
+    .bell-ago { color: var(--muted, #8a8a8a); white-space: nowrap; }
     .bell-empty { color: var(--muted, #8a8a8a); }
     .bell-all { display: block; padding: 0.55rem 0.9rem; font-size: 0.85rem; font-weight: 700;
       color: var(--primary, #4a9c6d); text-decoration: none;
@@ -57,33 +63,30 @@ import { ActivityLogEntry } from '../../models/trip.models';
   `],
 })
 export class NotificationBellComponent {
-  private tripService = inject(TripService);
-  private userService = inject(UserService);
+  private eventsService = inject(TripEventsService);
+  private userService   = inject(UserService);
 
   open = signal(false);
   private now = signal(Date.now());
 
   private me      = computed(() => this.userService.firestoreUser());
-  readonly unseen = computed(() => unseenActivityCount(
-    this.tripService.activeActivity(),
-    this.me()?.uid ?? '',
-    this.me()?.lastSeenActivityAt ?? 0,
+  /** Events for me newer than my high-water mark (own actions never count). */
+  private unseenList = computed(() => unseenEvents(
+    this.eventsService.events(), this.me()?.uid ?? '', this.me()?.lastSeenActivityAt ?? 0,
   ));
-  readonly recent = computed(() => {
-    const uid = this.me()?.uid ?? '';
-    const seen = this.me()?.lastSeenActivityAt ?? 0;
-    return [...this.tripService.activeActivity()]
-      .filter(e => e.performedByUid !== uid && e.timestamp > seen)
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .slice(0, 5);
+  readonly unseen = computed(() => this.unseenList().length);
+  /** What the dropdown lists: the unseen ones, else the latest few for me. */
+  readonly recent = computed<TripEvent[]>(() => {
+    const unseen = this.unseenList();
+    if (unseen.length) return unseen.slice(0, 8);
+    return eventsForMe(this.eventsService.events(), this.me()?.uid ?? '').slice(0, 5);
   });
 
-  /** Snapshot of unseen entries taken when the dropdown opens — opening marks
-   *  everything seen (clears the badge), but the list stays readable. */
-  readonly shown = signal<ActivityLogEntry[]>([]);
+  /** Snapshot taken when the dropdown opens — opening marks everything seen
+   *  (clears the badge), but the list stays readable. */
+  readonly shown = signal<TripEvent[]>([]);
 
-  text = (a: ActivityLogEntry) => activityText(a);
-  ago  = (ts: number) => timeAgo(ts, this.now());
+  ago = (ts: number) => timeAgo(ts, this.now());
 
   /** Viewport-fixed top for the dropdown, measured from the bell on open. */
   readonly dropTop = signal(64);
