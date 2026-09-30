@@ -23,6 +23,7 @@ import { FinanceService } from './services/finance.service';
 import { RecsService } from './services/recs.service';
 import { OutfitsService } from './services/outfits.service';
 import { ThemeService } from './services/theme.service';
+import { UsageService } from './services/usage.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../version';
 import { DEMO } from './demo-flag';
 import { effectiveHomeLayout } from './utils/layout';
@@ -57,6 +58,7 @@ export class AppComponent implements OnInit {
   recsService       = inject(RecsService);
   outfitsService    = inject(OutfitsService);
   themeService  = inject(ThemeService);   // constructed early so the theme applies on load (DP2-4)
+  private usage = inject(UsageService);   // records page views for the admin Activity page
   router        = inject(Router);
   private swUpdate = inject(SwUpdate);
 
@@ -202,6 +204,8 @@ export class AppComponent implements OnInit {
   readonly drawerItems = computed(() => this.orderedNavItems());
 
   constructor() {
+    this.usage.start();
+
     // Native shell: the launch screen is held (launchAutoHide: false) until we
     // know whether someone is signed in, then fades into the first real screen.
     if (Capacitor.isNativePlatform()) {

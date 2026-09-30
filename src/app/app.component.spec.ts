@@ -17,6 +17,7 @@ import { StaysService } from './services/stays.service';
 import { FinanceService } from './services/finance.service';
 import { RecsService } from './services/recs.service';
 import { OutfitsService } from './services/outfits.service';
+import { UsageService } from './services/usage.service';
 
 /**
  * AppComponent pulls in the full service graph (UserService → Firebase Auth,
@@ -63,6 +64,7 @@ describe('AppComponent', () => {
         { provide: RecsService, useValue: initStub() },
         { provide: OutfitsService, useValue: initStub() },
         { provide: SwUpdate, useValue: { isEnabled: false } },
+        { provide: UsageService, useValue: { start: () => {} } },
       ],
     }).compileComponents();
   });

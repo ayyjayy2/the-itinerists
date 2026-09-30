@@ -62,6 +62,23 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // ── Usage events: append-only by the signed-in user, read by admins ────
+    // One doc per page view / session / ping (see UsageService). A user may
+    // only record events as themselves, with exactly the expected fields and
+    // a server timestamp, and nothing is ever edited or deleted from the app.
+    match /_activity/{event} {
+      allow create: if isSignedIn()
+        && request.resource.data.uid == uid()
+        && request.resource.data.keys().hasOnly([
+             'uid', 'tripId', 'type', 'page', 'at', 'localHour', 'tz',
+             'tzOffsetMin', 'platform', 'sessionId', 'appVersion'])
+        && request.resource.data.type in ['session', 'page', 'ping']
+        && request.resource.data.page is string
+        && request.resource.data.at == request.time;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
     // ── User profiles ──────────────────────────────────────────────────────
     // Profile fields only (name, username, avatar, preferences) — never an
     // email address; those live in users/{uid}/private. Only the person and
