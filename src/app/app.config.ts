@@ -8,6 +8,8 @@ import { provideStorage, getStorage } from '@angular/fire/storage';
 import { provideAuth, getAuth, initializeAuth, indexedDBLocalPersistence } from '@angular/fire/auth';
 import { Capacitor } from '@capacitor/core';
 import { provideAppCheck, initializeAppCheck, ReCaptchaV3Provider, getToken } from '@angular/fire/app-check';
+import { provideAnalytics, getAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
+import { DEMO } from './demo-flag';
 
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
@@ -69,6 +71,14 @@ export const appConfig: ApplicationConfig = {
         })]
       : []),
 
+    // Google Analytics 4 (free): every route becomes a screen view, users are
+    // counted across sessions, and AnalyticsService adds platform / time zone /
+    // trip. Web only: gtag can't run inside the Capacitor shell (a native
+    // plugin will cover that later) and the demo reports nothing. Without a
+    // measurementId in .env this contributes no providers — a safe no-op.
+    ...(environment.firebase.measurementId && !NATIVE && !DEMO
+      ? [provideAnalytics(() => getAnalytics()), ScreenTrackingService, UserTrackingService]
+      : []),
     { provide: ErrorHandler, useClass: AppErrorHandler },
 
     provideServiceWorker('ngsw-worker.js', {

@@ -6,6 +6,7 @@ import {
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
 import { AuthService } from './auth.service';
+import { AnalyticsService } from './analytics.service';
 import {
   TripDoc, TripDestination, TripMember, UserTripsDoc, FirestoreUser, ActivityLogEntry, ActivityAction, InviteCode,
 } from '../models/trip.models';
@@ -56,6 +57,7 @@ export class TripService {
   private userService = inject(UserService);
   private tripContext = inject(TripContextService);
   private authService = inject(AuthService);
+  private analytics   = inject(AnalyticsService);
 
   /** Live document for the active trip (null when none is selected). */
   private _activeTrip = signal<TripDoc | null>(null);
@@ -221,6 +223,7 @@ export class TripService {
       await this.indexTrip(user.uid, tripId);
 
       this.tripContext.switchTrip(tripId);
+      this.analytics.event('trip_created');
       return tripId;
     });
   }
@@ -253,6 +256,7 @@ export class TripService {
       await this.indexTrip(user.uid, tripId);
       this.logActivity(tripId, 'member_added', user, user); // self-join
       this.tripContext.switchTrip(tripId);
+      this.analytics.event('trip_joined');
     });
   }
 

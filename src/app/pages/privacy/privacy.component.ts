@@ -20,7 +20,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <header class="policy-head">
           <app-brand [mark]="40" [showWordmark]="false" />
           <h1>Privacy Policy</h1>
-          <p class="effective">Effective September 29, 2026</p>
+          <p class="effective">Effective September 30, 2026</p>
           <p class="lede">The Itinerists is a group trip planner. This page says exactly what the app stores, who can see it, and which outside services it talks to. Short version: your trip data is shared only with the people on your trip, your email is private, we don't sell or advertise with anything, and you can delete your account yourself at any time.</p>
         </header>
 
@@ -41,9 +41,10 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <h3>Technical information</h3>
         <ul>
           <li><strong>Error reports.</strong> If something breaks, the app records the error message, where in the app it happened, the time, and a random session id that is not linked to your account. No personal data is included.</li>
+          <li><strong>Usage analytics.</strong> To see how the app is used, we record which screens you open and when, the app version, your device's time zone and whether you're on the web, the installed web app or the iOS app. We keep this in our own database, and the same screen views go to Google Analytics, which also estimates your country and device type from your connection. It is used only to improve the app, never for advertising, and it is not sold or shared beyond that.</li>
           <li><strong>App integrity checks.</strong> Firebase App Check confirms requests come from the genuine app. On the web this uses Google reCAPTCHA, which analyses browser signals; on iOS it uses Apple's device attestation. Neither tells us who you are.</li>
         </ul>
-        <p>The app does <strong>not</strong> use your device's location, read your contacts, run analytics or advertising trackers, or sell any data.</p>
+        <p>The app does <strong>not</strong> use your device's location, read your contacts, run advertising trackers, or sell any data.</p>
 
         <h2>Who can see what</h2>
         <ul>
@@ -59,6 +60,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
           <thead><tr><th>Service</th><th>What it does</th><th>What it receives</th></tr></thead>
           <tbody>
             <tr><td>Google Firebase</td><td>Sign-in, database, hosting, integrity checks</td><td>Everything listed above; stored in Google's data centers in the United States</td></tr>
+            <tr><td>Google Analytics</td><td>Usage statistics</td><td>Screens opened, app version, time zone, platform, a random device id. Not your name, email or trip content</td></tr>
             <tr><td>Open-Meteo</td><td>Weather on the home screen</td><td>Your trip destination's coordinates. Never your own location</td></tr>
             <tr><td>OpenStreetMap Nominatim</td><td>Turns place names into map pins</td><td>The place name you typed</td></tr>
             <tr><td>Frankfurter</td><td>Currency conversion rates</td><td>Currency codes only</td></tr>

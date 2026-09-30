@@ -32,9 +32,9 @@ Everything a tester would notice, and everything hard to change once real data e
       - [x] Pulse dashboard at theitinerists.com/pulse/ (owner's account only, outside the app,
             live): trips happening now, online now, people per hour and per day, hour of day on
             each person's clock or one zone, pages, people.
-      - [ ] Google Analytics 4: enable Analytics on the Firebase project (console → Project
-            settings → Integrations) — *Alayna*; then `provideAnalytics`, screen + user tracking,
-            user properties (platform, timezone, trip), CSP, privacy paragraph.
+      - [x] Google Analytics 4 (property G-EZQ46BTZY7, enabled 2026-09-30): screen + user
+            tracking, user properties platform / timezone / trip_id, events trip_created,
+            trip_joined, invite_shared; CSP; privacy policy updated. Web only.
       - [ ] Later: Capacitor Firebase Analytics plugin for the iOS shell; App Store privacy
             label "Product Interaction" (+ "Crash Data" once Crashlytics lands).
 
