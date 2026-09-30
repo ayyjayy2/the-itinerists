@@ -6,7 +6,7 @@ import { firebaseConfig, recaptchaSiteKey } from './config.mjs';
 import * as S from './stats.mjs';
 
 const OWNER_UID = 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';
-const HOUR = 3_600_000, DAY = 24 * HOUR, ONLINE = 6 * 60_000;
+const HOUR = 3_600_000, DAY = 24 * HOUR, ONLINE = 3 * 60_000; // the app pings every 2 minutes while visible
 const $ = id => document.getElementById(id);
 
 // Local dev: localhost can't pass reCAPTCHA, so use a debug token (a verify
@@ -21,10 +21,16 @@ const db = getFirestore(app);
 
 // ── state ──────────────────────────────────────────────────────────────────
 const viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-const state = { range: '24h', anchor: Date.now(), trip: 'all', zone: viewerZone, hourMode: 'local', rows: [], trips: new Map(), users: new Map(), now: Date.now(), hidden: new Set(), showHidden: false };
+const state = {
+  range: '24h', anchor: Date.now(), trip: 'all', zone: viewerZone, hourMode: 'local',
+  rows: [], trips: new Map(), users: new Map(), members: new Map(), now: Date.now(),
+  testTrips: new Set(),
+};
 let unsubRows = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null;
-/** The owner's dashboard preferences: which trips (tests, mostly) stay out of every number. */
+const memberSubs = new Map(); // tripId → unsubscribe
+/** The owner's dashboard preferences: test trips (kept out of every number) and the display zone. */
 const prefsRef = () => doc(db, '_pulse', 'prefs');
+const savePrefs = patch => setDoc(prefsRef(), patch, { merge: true }).catch(err => showError('Preferences: ' + err.message));
 
 function showError(msg) { const e = $('err'); e.textContent = msg; e.hidden = !msg; }
 
@@ -57,12 +63,12 @@ onAuthStateChanged(auth, user => {
   if (user && !owner) signOut(auth);
   if (owner) start(); else stop();
 });
-
 // ── data ───────────────────────────────────────────────────────────────────
 function start() {
   $('whoName').textContent = 'Signed in as the app owner';
   unsubTrips = onSnapshot(collection(db, 'trips'), snap => {
     state.trips = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
+    syncMemberSubs();
     render();
   }, err => showError('Trips: ' + err.message));
   unsubUsers = onSnapshot(collection(db, 'users'), snap => {
@@ -70,13 +76,29 @@ function start() {
     render();
   }, err => showError('People: ' + err.message));
   unsubPrefs = onSnapshot(prefsRef(), snap => {
-    state.hidden = new Set(snap.exists() ? (snap.data().hiddenTrips ?? []) : []);
+    const p = snap.exists() ? snap.data() : {};
+    // `hiddenTrips` is the earlier name for the same list.
+    state.testTrips = new Set(p.testTrips ?? p.hiddenTrips ?? []);
+    if (p.zone && p.zone !== state.zone) { state.zone = p.zone; if (state.range === 'today') subscribeRows(); }
     render();
   }, err => showError('Preferences: ' + err.message));
   subscribeRows();
 }
+/** One members listener per trip, following the trip list. */
+function syncMemberSubs() {
+  for (const [id, unsub] of memberSubs) if (!state.trips.has(id)) { unsub(); memberSubs.delete(id); state.members.delete(id); }
+  for (const id of state.trips.keys()) {
+    if (memberSubs.has(id)) continue;
+    memberSubs.set(id, onSnapshot(collection(db, 'trips', id, 'members'), snap => {
+      state.members.set(id, snap.docs.map(d => ({ uid: d.id, ...d.data() })).sort((a, b) => (a.joinedAt ?? 0) - (b.joinedAt ?? 0)));
+      render();
+    }, err => showError('Members: ' + err.message)));
+  }
+}
 function stop() {
   unsubRows?.(); unsubTrips?.(); unsubUsers?.(); unsubPrefs?.(); unsubRows = unsubTrips = unsubUsers = unsubPrefs = null;
+  for (const unsub of memberSubs.values()) unsub();
+  memberSubs.clear();
   $('dot').classList.remove('on');
 }
 function queryStart() {
@@ -101,7 +123,9 @@ function subscribeRows() {
     render();
   }, err => { showError('Activity: ' + err.message); $('dot').classList.remove('on'); });
 }
-setInterval(() => { state.now = Date.now(); if (!$('dash').hidden) render(); }, 30_000);
+// Events arrive by push the moment they are written; this clock only keeps
+// "x s ago" and the online window moving between them.
+setInterval(() => { state.now = Date.now(); if (!$('dash').hidden) render(); }, 1000);
 
 // ── controls ───────────────────────────────────────────────────────────────
 $('range').addEventListener('click', ev => {
@@ -111,42 +135,73 @@ $('range').addEventListener('click', ev => {
   subscribeRows(); render();
 });
 $('trip').addEventListener('change', ev => { state.trip = ev.target.value; render(); });
-$('zone').addEventListener('change', ev => { state.zone = ev.target.value; if (state.range === 'today') subscribeRows(); render(); });
+$('zone').addEventListener('change', ev => {
+  state.zone = ev.target.value;
+  if (state.range === 'today') subscribeRows();
+  render();
+  savePrefs({ zone: state.zone });
+});
 $('trips').addEventListener('click', ev => {
-  const b = ev.target.closest('button[data-hide], button[data-show], button[data-toggle-hidden]'); if (!b) return;
-  if (b.dataset.toggleHidden !== undefined) { state.showHidden = !state.showHidden; render(); return; }
-  const id = b.dataset.hide ?? b.dataset.show;
-  const change = b.dataset.hide !== undefined ? arrayUnion(id) : arrayRemove(id);
-  setDoc(prefsRef(), { hiddenTrips: change }, { merge: true }).catch(err => showError('Preferences: ' + err.message));
+  const b = ev.target.closest('button[data-test], button[data-real]'); if (!b) return;
+  const id = b.dataset.test ?? b.dataset.real;
+  savePrefs({ testTrips: b.dataset.test !== undefined ? arrayUnion(id) : arrayRemove(id) });
 });
 $('hourMode').addEventListener('click', ev => {
   const b = ev.target.closest('button[data-mode]'); if (!b) return;
   state.hourMode = b.dataset.mode; render();
 });
 
+// ── hover details on the bar charts ────────────────────────────────────────
+const tip = { el: $('tip'), chart: null, index: -1, html: new Map() };
+function showTip(chart, index) {
+  const col = document.querySelector(`#${chart} .col[data-i="${index}"]`);
+  const html = tip.html.get(chart)?.[index];
+  if (!col || !html) { hideTip(); return; }
+  tip.chart = chart; tip.index = index;
+  tip.el.innerHTML = html;
+  tip.el.hidden = false;
+  const r = col.getBoundingClientRect(), t = tip.el.getBoundingClientRect();
+  const left = Math.min(Math.max(8, r.left + r.width / 2 - t.width / 2), window.innerWidth - t.width - 8);
+  tip.el.style.left = `${left + window.scrollX}px`;
+  tip.el.style.top = `${r.top + window.scrollY - t.height - 8}px`;
+}
+function hideTip() { tip.chart = null; tip.index = -1; tip.el.hidden = true; }
+for (const chart of ['perHour', 'byHour', 'perDay']) {
+  const el = $(chart);
+  el.addEventListener('pointerover', ev => { const c = ev.target.closest('.col'); if (c) showTip(chart, Number(c.dataset.i)); });
+  el.addEventListener('pointerleave', hideTip);
+  el.addEventListener('click', ev => { const c = ev.target.closest('.col'); if (c) showTip(chart, Number(c.dataset.i)); });
+}
+document.addEventListener('pointerdown', ev => { if (!ev.target.closest('.bars, #tip')) hideTip(); });
+
 // ── helpers ────────────────────────────────────────────────────────────────
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const userName = uid => state.users.get(uid)?.displayName ?? `…${uid.slice(-5)}`;
+const userName = uid => state.users.get(uid)?.displayName ?? memberName(uid) ?? `…${uid.slice(-5)}`;
+function memberName(uid) {
+  for (const list of state.members.values()) { const m = list.find(x => x.uid === uid); if (m) return m.displayName; }
+  return undefined;
+}
 const tripName = id => id ? (state.trips.get(id)?.name ?? `Trip …${id.slice(-4)}`) : 'No trip';
 const zoneShort = tz => (tz || '').split('/').pop().replace(/_/g, ' ') || tz;
 function ago(ms) {
   const s = Math.max(0, Math.round((state.now - ms) / 1000));
-  if (s < 60) return 'just now';
-  const m = Math.round(s / 60); if (m < 60) return `${m} min ago`;
-  const h = Math.round(m / 60); if (h < 48) return `${h} h ago`;
-  return `${Math.round(h / 24)} d ago`;
+  if (s < 60) return `${s} s ago`;
+  const m = Math.floor(s / 60); if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60); if (h < 48) return `${h} h ago`;
+  return `${Math.floor(h / 24)} d ago`;
 }
 function dayLabel(day) {
   if (day === S.dayKey(state.now, state.zone)) return 'Today';
   const [y, m, d] = day.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
-function avatar(uid) {
+function avatar(uid, size = '') {
   const u = state.users.get(uid);
-  const glyph = u?.avatarEmoji || (u?.displayName?.[0] ?? '?');
+  const glyph = u?.avatarEmoji || (userName(uid)?.[0] ?? '?');
   const color = u?.avatarLetterColor ? `color:${esc(u.avatarLetterColor)};` : '';
-  return `<span class="avatar" style="background:${esc(u?.color || '')};${color}">${esc(glyph)}</span>`;
+  return `<span class="avatar ${size}" title="${esc(userName(uid))}" style="background:${esc(u?.color || '')};${color}">${esc(glyph)}</span>`;
 }
+const names = uids => uids.length ? uids.map(u => esc(userName(u))).join(', ') : '<span class="muted">nobody</span>';
 /** Table order: happening now, upcoming, ended, archived, undated. */
 const PHASE_ORDER = { live: 0, soon: 1, past: 2, archived: 3, '': 4 };
 function tripPhase(t, today) {
@@ -156,31 +211,40 @@ function tripPhase(t, today) {
   if (today > t.endDate) return ['past', 'Ended'];
   return ['live', 'Happening now'];
 }
-function bars(el, items, max, { valueLabel = false, tick } = {}) {
-  el.innerHTML = items.map((it, i) => `
-    <div class="col" title="${esc(it.title)}">
+/** Bars: items carry value + tip html; `tick` labels the axis. */
+function bars(chart, items, max, { valueLabel = false, tick }) {
+  tip.html.set(chart, items.map(it => it.tip));
+  $(chart).innerHTML = items.map((it, i) => `
+    <div class="col" data-i="${i}" tabindex="0">
       ${valueLabel ? `<div class="val num">${it.value}</div>` : ''}
       <div class="bar${it.value === 0 ? ' zero' : ''}" style="height:${max ? (it.value / max) * 100 : 0}%"></div>
       <div class="tick">${esc(tick(it, i))}</div>
     </div>`).join('');
 }
+function allZones() {
+  try { return Intl.supportedValuesOf('timeZone'); } catch { return []; }
+}
 
 // ── render ─────────────────────────────────────────────────────────────────
 function render() {
   const now = state.now;
-  // Hidden trips (tests) are out of every number; events with no trip (sign-in screen) stay.
-  const all = state.rows.filter(r => !r.tripId || !state.hidden.has(r.tripId));
+  // Test trips are out of every number; events with no trip (sign-in screen) stay.
+  const all = state.rows.filter(r => !r.tripId || !state.testTrips.has(r.tripId));
   const rows = state.trip === 'all' ? all : all.filter(r => r.tripId === state.trip);
-  const shownTrips = [...state.trips.values()].filter(t => !state.hidden.has(t.id));
-  const hiddenTrips = [...state.trips.values()].filter(t => state.hidden.has(t.id));
+  const realTrips = [...state.trips.values()].filter(t => !state.testTrips.has(t.id));
+  const testTrips = [...state.trips.values()].filter(t => state.testTrips.has(t.id));
 
-  // Selects: trips seen in events plus every trip doc; zones seen in events.
-  const tripIds = new Set([...shownTrips.map(t => t.id), ...all.map(r => r.tripId).filter(Boolean)]);
+  // Selects: real trips; zones seen in activity, then every zone the browser knows.
+  const tripIds = new Set([...realTrips.map(t => t.id), ...all.map(r => r.tripId).filter(Boolean)]);
   const tripOpts = [...tripIds].map(id => ({ id, name: tripName(id) })).sort((a, b) => a.name.localeCompare(b.name));
   syncSelect($('trip'), [{ value: 'all', label: 'All trips' }, ...tripOpts.map(t => ({ value: t.id, label: t.name }))], state.trip);
-  const zones = new Set([viewerZone, ...all.map(r => r.tz).filter(Boolean)]);
-  syncSelect($('zone'), [...zones].sort().map(z => ({ value: z, label: z })), state.zone);
-  const modes = [{ mode: 'local', label: "Each person's clock" }, ...[...zones].sort().map(z => ({ mode: z, label: zoneShort(z) }))];
+  const seenZones = [...new Set([viewerZone, state.zone, ...all.map(r => r.tz).filter(Boolean)])].sort();
+  const zoneOpts = [
+    { group: 'Seen in activity', items: seenZones },
+    { group: 'All zones', items: allZones().filter(z => !seenZones.includes(z)) },
+  ];
+  syncSelect($('zone'), zoneOpts, state.zone);
+  const modes = [{ mode: 'local', label: "Each person's clock" }, ...seenZones.map(z => ({ mode: z, label: zoneShort(z) }))];
   $('hourMode').innerHTML = modes.map(m => `<button type="button" data-mode="${esc(m.mode)}" aria-pressed="${state.hourMode === m.mode}">${esc(m.label)}</button>`).join('');
 
   // Totals
@@ -189,44 +253,50 @@ function render() {
   const sessions = rows.filter(r => r.type === 'session').length;
   const online = S.onlineNow(rows, now, ONLINE);
   const today = S.dayKey(now, state.zone);
-  const liveTrips = shownTrips.filter(t => tripPhase(t, today)[0] === 'live').length;
+  const liveTrips = realTrips.filter(t => tripPhase(t, today)[0] === 'live').length;
   $('tiles').innerHTML = [
     [users, 'people'], [sessions, 'app opens'], [views, 'page views'], [online.length, 'online now'], [liveTrips, 'trips happening now'],
   ].map(([v, l]) => `<div class="tile"><div class="v num">${v}</div><div class="l">${l}</div></div>`).join('');
   const rangeLabel = { today: 'today', '24h': 'the last 24 hours', '7d': 'the last 7 days', '30d': 'the last 30 days' }[state.range];
   $('scope').textContent = `Counts for ${rangeLabel}${state.trip === 'all' ? '' : ', ' + tripName(state.trip) + ' only'}. Days and hour labels in ${state.zone}.`;
 
-  // Trips table: every shown trip doc, with activity from the (unfiltered) rows,
-  // happening now first, then upcoming, then ended.
-  const byTrip = new Map(S.tripStats(all).map(t => [t.tripId, t]));
+  // Trips: real trips by phase (happening now, upcoming, ended), then test trips, dimmed.
+  const byTrip = new Map(S.tripStats(state.rows).map(t => [t.tripId, t]));
   const onlineByTrip = new Map();
-  for (const o of S.onlineNow(all, now, ONLINE)) onlineByTrip.set(o.tripId, (onlineByTrip.get(o.tripId) ?? 0) + 1);
-  const tripRow = t => ({ t, s: byTrip.get(t.id), phase: tripPhase(t, today), on: onlineByTrip.get(t.id) ?? 0 });
+  for (const o of S.onlineNow(state.rows, now, ONLINE)) onlineByTrip.set(o.tripId, (onlineByTrip.get(o.tripId) ?? 0) + 1);
+  const activeByTrip = new Map();
+  for (const r of state.rows) if (r.tripId) (activeByTrip.get(r.tripId) ?? activeByTrip.set(r.tripId, new Set()).get(r.tripId)).add(r.uid);
+  const tripRow = t => ({ t, s: byTrip.get(t.id), phase: tripPhase(t, today), on: onlineByTrip.get(t.id) ?? 0, members: state.members.get(t.id) ?? [], active: activeByTrip.get(t.id) ?? new Set() });
   const byPhase = (a, b) => PHASE_ORDER[a.phase[0]] - PHASE_ORDER[b.phase[0]] || (b.s?.lastSeen ?? 0) - (a.s?.lastSeen ?? 0) || (a.t.name || '').localeCompare(b.t.name || '');
-  const trips = shownTrips.map(tripRow).sort(byPhase);
-  const hidden = hiddenTrips.map(tripRow).sort(byPhase);
-  $('tripsSub').textContent = `${trips.length} shown${hidden.length ? `, ${hidden.length} hidden` : ''} · activity for ${rangeLabel}`;
-  const tripTr = ({ t, s, phase, on }, action) => `
-      <tr${action === 'show' ? ' class="dim"' : ''}>
-        <td><strong>${esc(t.name)}</strong><br><span class="muted" style="font-size:0.8rem">${esc(t.destination || '')}${t.startDate ? ' · ' + esc(t.startDate) + ' → ' + esc(t.endDate) : ''}</span></td>
+  const real = realTrips.map(tripRow).sort(byPhase);
+  const tests = testTrips.map(tripRow).sort(byPhase);
+  $('tripsSub').textContent = `${real.length} ${real.length === 1 ? 'trip' : 'trips'}${tests.length ? `, ${tests.length} test` : ''} · activity for ${rangeLabel}`;
+  const tripTr = ({ t, s, phase, on, members, active }, isTest) => {
+    const memberCount = members.length || t.memberCount || 0;
+    const quiet = members.filter(m => !active.has(m.uid));
+    return `
+      <tr${isTest ? ' class="dim"' : ''}>
+        <td><strong>${esc(t.name)}</strong>${isTest ? ' <span class="chip test">Test</span>' : ''}<br>
+          <span class="muted small">${esc(t.destination || '')}${t.startDate ? ' · ' + esc(t.startDate) + ' → ' + esc(t.endDate) : ''}</span>
+          <div class="memberline" title="${esc(members.map(m => m.displayName).join(', '))}">${members.map(m => avatar(m.uid, 'xs')).join('')}
+            <span class="muted small">${members.length ? members.map(m => esc(m.displayName)).join(', ') : 'members not loaded'}</span></div></td>
         <td><span class="chip ${phase[0]}">${phase[1]}</span></td>
-        <td class="n num">${t.memberCount ?? '–'}</td>
+        <td class="n num">${memberCount}</td>
         <td class="n num">${on}</td>
-        <td class="n num">${s?.users ?? 0}</td>
+        <td class="n num" title="${esc(quiet.length ? 'Not active: ' + quiet.map(m => m.displayName).join(', ') : 'Everyone has been active')}">${active.size}<span class="muted"> of ${memberCount}</span></td>
         <td class="n num">${s?.sessions ?? 0}</td>
         <td class="n num">${s?.views ?? 0}</td>
         <td class="n">${s ? ago(s.lastSeen) : '<span class="muted">none</span>'}</td>
-        <td class="n"><button type="button" class="btn small" data-${action}="${esc(t.id)}">${action === 'hide' ? 'Hide' : 'Show'}</button></td>
+        <td class="n"><button type="button" class="btn small" data-${isTest ? 'real' : 'test'}="${esc(t.id)}">${isTest ? 'Not a test' : 'Mark as test'}</button></td>
       </tr>`;
-  const head = '<tr><th>Trip</th><th></th><th class="n">Members</th><th class="n">Online</th><th class="n">People</th><th class="n">Opens</th><th class="n">Views</th><th class="n">Last activity</th><th></th></tr>';
-  $('trips').innerHTML =
-    (trips.length === 0 ? '<tr><td class="muted" colspan="9">No trips shown.</td></tr>' : head + trips.map(r => tripTr(r, 'hide')).join('')) +
-    (hidden.length ? `<tr><td colspan="9"><div class="hidden-row"><button type="button" class="btn small" data-toggle-hidden>${state.showHidden ? 'Hide' : 'Show'} the ${hidden.length} hidden ${hidden.length === 1 ? 'trip' : 'trips'}</button>
-      <span class="muted">Hidden trips are left out of every number on this page.</span></div></td></tr>` : '') +
-    (state.showHidden ? hidden.map(r => tripTr(r, 'show')).join('') : '');
+  };
+  const head = '<tr><th>Trip</th><th></th><th class="n">Members</th><th class="n">Online</th><th class="n">Active</th><th class="n">Opens</th><th class="n">Views</th><th class="n">Last activity</th><th></th></tr>';
+  $('trips').innerHTML = (real.length + tests.length === 0) ? '<tr><td class="muted">No trips yet.</td></tr>' :
+    head + real.map(r => tripTr(r, false)).join('') +
+    (tests.length ? `<tr><td colspan="9" class="muted small tests-head">Test trips: kept here for reference, left out of every number on this page.</td></tr>` + tests.map(r => tripTr(r, true)).join('') : '');
 
   // Online now
-  $('online').innerHTML = online.length === 0 ? '<li class="empty">Nobody in the last 6 minutes.</li>' : online.map(o => `
+  $('online').innerHTML = online.length === 0 ? '<li class="empty">Nobody in the last 3 minutes.</li>' : online.map(o => `
     <li>${avatar(o.uid)}<span class="main"><span class="name">${esc(userName(o.uid))}</span>
       <span class="sub">${esc(o.page)} · ${esc(tripName(o.tripId))} · ${esc(o.platform)} · ${esc(zoneShort(o.tz))}</span></span>
       <span class="when">${ago(o.lastSeen)}</span></li>`).join('');
@@ -235,22 +305,31 @@ function render() {
   const end = Math.ceil(now / HOUR) * HOUR;
   const perHour = S.usersPerHour(rows, end - DAY, end, state.zone);
   $('perHourSub').textContent = `last 24 h, ${state.zone}`;
-  bars($('perHour'), perHour.map(b => ({ value: b.users, title: `${b.label}: ${b.users}`, label: b.label })), Math.max(1, ...perHour.map(b => b.users)),
-    { tick: (it, i) => i % 4 === 0 ? it.label.slice(0, 2) : '' });
+  bars('perHour', perHour.map(b => ({
+    value: b.users, label: b.label,
+    tip: `<strong>${esc(b.label)}</strong> · ${b.users} ${b.users === 1 ? 'person' : 'people'}<br>${names(b.uids)}`,
+  })), Math.max(1, ...perHour.map(b => b.users)), { tick: (it, i) => i % 4 === 0 ? it.label.slice(0, 2) : '' });
 
   // People per day
   const showDays = state.range === '7d' || state.range === '30d';
   $('perDayCard').hidden = !showDays;
   if (showDays) {
     const perDay = S.usersPerDay(rows, state.zone);
-    bars($('perDay'), perDay.map(d => ({ value: d.users, title: `${d.day}: ${d.users}`, label: dayLabel(d.day) })), Math.max(1, ...perDay.map(d => d.users)),
-      { valueLabel: true, tick: it => it.label });
+    const whoByDay = new Map();
+    for (const r of rows) { const k = S.dayKey(r.at, state.zone); (whoByDay.get(k) ?? whoByDay.set(k, new Set()).get(k)).add(r.uid); }
+    bars('perDay', perDay.map(d => ({
+      value: d.users, label: dayLabel(d.day),
+      tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.users} ${d.users === 1 ? 'person' : 'people'}<br>${names([...whoByDay.get(d.day) ?? []].sort())}`,
+    })), Math.max(1, ...perDay.map(d => d.users)), { valueLabel: true, tick: it => it.label });
   }
 
   // Hour of day
-  const byHour = S.hourOfDay(rows, state.hourMode);
-  bars($('byHour'), byHour.map((n, i) => ({ value: n, title: `${String(i).padStart(2, '0')}:00 — ${n}` })), Math.max(1, ...byHour),
-    { tick: (it, i) => i % 6 === 0 ? String(i).padStart(2, '0') : '' });
+  const byHour = S.hourOfDayDetail(rows, state.hourMode);
+  const modeLabel = state.hourMode === 'local' ? "on their own clock" : `in ${state.hourMode}`;
+  bars('byHour', byHour.map((h, i) => ({
+    value: h.count,
+    tip: `<strong>${String(i).padStart(2, '0')}:00</strong> ${esc(modeLabel)} · ${h.count} ${h.count === 1 ? 'person-hour' : 'person-hours'}<br>${names(h.uids)}`,
+  })), Math.max(1, ...byHour.map(h => h.count)), { tick: (it, i) => i % 6 === 0 ? String(i).padStart(2, '0') : '' });
 
   // Pages
   const pages = S.pageStats(rows);
@@ -264,13 +343,23 @@ function render() {
     <li>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}</span>
       <span class="sub">${esc(tripName(p.tripId))} · ${esc(p.platform)} · ${esc(zoneShort(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
       <span class="when">${ago(p.lastSeen)}</span></li>`).join('');
+
+  // Keep an open hover detail in place across the one-second re-render.
+  if (tip.chart) showTip(tip.chart, tip.index);
 }
 
-/** Rebuild a select's options only when they change, keeping the current value. */
+/** Rebuild a select's options only when they change, keeping the current value. Accepts flat items or groups. */
 function syncSelect(sel, opts, value) {
-  const key = opts.map(o => o.value + '\u0000' + o.label).join('\u0001');
+  const flat = opts.flatMap(o => o.group ? o.items.map(v => ({ value: v, label: v, group: o.group })) : [o]);
+  const key = flat.map(o => o.value + '\u0000' + o.label + '\u0000' + (o.group ?? '')).join('\u0001');
   if (sel.dataset.key !== key) {
-    sel.innerHTML = opts.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+    let html = '', group = null;
+    for (const o of flat) {
+      if (o.group !== group) { if (group !== null) html += '</optgroup>'; group = o.group ?? null; if (group !== null) html += `<optgroup label="${esc(group)}">`; }
+      html += `<option value="${esc(o.value)}">${esc(o.label)}</option>`;
+    }
+    if (group !== null) html += '</optgroup>';
+    sel.innerHTML = html;
     sel.dataset.key = key;
   }
   sel.value = value;

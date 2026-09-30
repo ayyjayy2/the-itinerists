@@ -172,8 +172,8 @@ service cloud.firestore {
     // ── Trips and their sub-collections ────────────────────────────────────
     match /trips/{tripId} {
       // Members read their trip; the app owner may also read (and list) every
-      // trip's summary doc for the usage dashboard — the doc only, never the
-      // sub-collections, and no writes.
+      // trip's summary doc and its members for the usage dashboard — nothing
+      // else under the trip, and no writes.
       allow read:   if isMember(tripId) || isAppOwner();
       allow create: if isSignedIn() && request.resource.data.createdBy == uid();
       // Members maintain shared trip fields (memberCount, dates, ownership
@@ -183,7 +183,8 @@ service cloud.firestore {
       // Members: owners manage roles/removal; you can add or remove *yourself*
       // (self-join via invite, self-leave).
       match /members/{memberId} {
-        allow read:   if isMember(tripId);
+        // The app owner may also read (and list) members for the usage dashboard.
+        allow read:   if isMember(tripId) || isAppOwner();
         // Self-join is allowed only as a plain 'member' — you can't make yourself
         // an owner. The one exception is the trip's creator seeding themselves as
         // the initial owner. Existing owners/admins may add anyone in any role.
