@@ -163,7 +163,10 @@ staging, and a PR with a failing test cannot merge.
 
 - [ ] Push notifications (FCM) and event/flight reminders.
 - [ ] Shared photo albums; activity voting; real-time flight tracking; AI itinerary builder.
-- [ ] Billing — in-app subscriptions must use Apple's in-app purchase, not Stripe.
+- [ ] Billing — see the "Making money" page of the launch plan artifact: launch free; then
+      "Keep this trip" ($1.99 once) when the first deletion warnings go out; then Trip Pass;
+      Plus only with 3+ features. Apple in-app purchase on iOS (15% small-business rate), Stripe
+      on web, RevenueCat for both; entitlements on the account doc and the trip doc.
 - [ ] PDF export.
 - [ ] Optional: live invite on My Trips cards.
 - [ ] Optional: custom avatar images instead of emoji (issue #198); not required for the store.
