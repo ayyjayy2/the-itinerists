@@ -24,7 +24,7 @@ describe('ProfileComponent recovery-email modal', () => {
     TestBed.configureTestingModule({
       imports: [ProfileComponent],
       providers: [
-        { provide: UserService,  useValue: { firestoreUser: user } },
+        { provide: UserService,  useValue: { firestoreUser: user, isAdmin: () => false } },
         { provide: TripService, useValue: { activeMembers: signal([]) } },
         { provide: AuthService,  useValue: auth },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
@@ -97,7 +97,7 @@ describe('ProfileComponent delete-account modal', () => {
     TestBed.configureTestingModule({
       imports: [ProfileComponent],
       providers: [
-        { provide: UserService,  useValue: { firestoreUser: user } },
+        { provide: UserService,  useValue: { firestoreUser: user, isAdmin: () => false } },
         { provide: TripService, useValue: { activeMembers: signal([]) } },
         { provide: AuthService,  useValue: auth },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
@@ -170,7 +170,7 @@ describe('ProfileComponent change-username modal', () => {
     TestBed.configureTestingModule({
       imports: [ProfileComponent],
       providers: [
-        { provide: UserService,  useValue: { firestoreUser: user } },
+        { provide: UserService,  useValue: { firestoreUser: user, isAdmin: () => false } },
         { provide: TripService, useValue: { activeMembers: signal([]) } },
         { provide: AuthService,  useValue: auth },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
