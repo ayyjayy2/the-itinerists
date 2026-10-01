@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PackingService } from '../../services/packing.service';
@@ -11,9 +11,11 @@ import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.c
 
 type TabType = 'list' | 'suggestions' | 'send';
 
+import { FocusTargetDirective } from '../../shared/focus-target.directive';
+import { FocusService } from '../../services/focus.service';
 @Component({
   selector: 'app-packing-list',
-  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule],
+  imports: [FocusTargetDirective, LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule],
   templateUrl: './packing-list.component.html',
   styleUrl: './packing-list.component.scss'
 })
@@ -28,6 +30,10 @@ export class PackingListComponent implements OnInit {
 
   currentUser = this.userService.currentUser;
   tab = signal<TabType>('list');
+  private focus = inject(FocusService);
+  private readonly focusOpensInbox = effect(() => {
+    if (this.focus.id() === 'suggestions') untracked(() => this.tab.set('suggestions'));
+  });
 
   // My items
   newItem         = signal('');

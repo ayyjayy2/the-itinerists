@@ -125,6 +125,7 @@
 
   <!-- ── Suggestions Inbox Tab ── -->
   @if (tab() === 'suggestions') {
+    <div appFocusTarget="suggestions"></div>
     @if (inbox().length === 0) {
       <div class="empty-state">
         <span class="empty-icon"><app-icon name="inbox" [size]="40" /></span>

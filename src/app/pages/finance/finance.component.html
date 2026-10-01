@@ -351,7 +351,7 @@
           </div>
 
           @for (entry of enrichedEntries(); track entry.id) {
-            <div class="table-row" [class.is-editing]="isEditingEntry(entry)">
+            <div class="table-row" [class.is-editing]="isEditingEntry(entry)" [appFocusTarget]="entry.id">
               <span class="date-cell">{{ formatDate(entry.date) }}</span>
               <div class="desc-cell">
                 @if (entry.vendor) { <span class="entry-vendor">{{ entry.vendor }}</span> }

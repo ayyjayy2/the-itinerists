@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, inject, signal, computed, effect, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, inject, signal, computed, effect, untracked, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FinanceService } from '../../services/finance.service';
@@ -17,9 +17,11 @@ import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
 const LAST_CURRENCY_PREFIX = 'tripplanner_last_currency_';
 
+import { FocusTargetDirective } from '../../shared/focus-target.directive';
+import { FocusService } from '../../services/focus.service';
 @Component({
   selector: 'app-finance',
-  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule, EmptyDateHintDirective],
+  imports: [FocusTargetDirective, LoadingComponent, IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule, EmptyDateHintDirective],
   templateUrl: './finance.component.html',
   styleUrl: './finance.component.scss'
 })
@@ -80,6 +82,12 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   settlementsScope   = signal<'mine' | 'all'>('mine');
   expandedDebt       = signal<string | null>(null);
   showExpenses       = signal(false);
+  private focus = inject(FocusService);
+  /** A deep link to an expense opens the log so the row can scroll into view. */
+  private readonly focusOpensLog = effect(() => {
+    const id = this.focus.id();
+    if (id && this.entries().some(e => e.id === id)) untracked(() => this.showExpenses.set(true));
+  });
   showGroupSummary   = signal(false);
   expandedGroupUsers = signal<Set<string>>(new Set());
 

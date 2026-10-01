@@ -97,7 +97,7 @@
 
         @if (!isEditing(stay)) {
           <!-- ── Display card ── -->
-          <div class="stay-card card">
+          <div class="stay-card card" [appFocusTarget]="stay.id">
             <div class="stay-header">
               <div>
                 <h3>{{ stay.name }}</h3>
