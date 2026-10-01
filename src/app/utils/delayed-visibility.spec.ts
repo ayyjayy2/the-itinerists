@@ -60,4 +60,12 @@ describe('DelayedVisibility', () => {
     jasmine.clock().tick(100);   // 300ms since the first call
     expect(dv.visible()).toBeTrue();
   });
+
+  it('shows at once when asked to (right after sign-in)', () => {
+    dv.set(true, true);
+    expect(dv.visible()).toBeTrue();
+    dv.set(false);
+    jasmine.clock().tick(300);
+    expect(dv.visible()).toBeFalse();
+  });
 });

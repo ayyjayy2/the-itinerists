@@ -47,8 +47,14 @@ export class LoginComponent {
     }
     // Don't wait for the profile or the trip list here — Home shows its own
     // spinner while they stream in, and its no-trip state covers first-timers.
-    // That takes two round trips off the time between "Sign in" and a screen.
-    this.router.navigate(['/home']);
-    this.loading.set(false);
+    // The button keeps saying "Signing in…" until Home is on screen, so there
+    // is never a moment where it looks like nothing happened.
+    const ok = await this.router.navigate(['/home']).catch(() => false);
+    if (!ok) this.loading.set(false);
+  }
+
+  /** Look the username up as soon as the person moves on to the password. */
+  prefetch(): void {
+    this.authService.prefetchSignInEmail(this.username);
   }
 }

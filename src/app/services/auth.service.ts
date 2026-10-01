@@ -87,7 +87,11 @@ export class AuthService {
       await signInWithEmailAndPassword(this.auth, id.toLowerCase(), password);
       return;
     }
-    const { authEmail, pendingEmail } = await this.resolveEmails(id);
+    // Use the lookup the sign-in page started while the password was typed, if any.
+    const key = normalizeUsername(id);
+    const lookup = this.emailLookups.get(key) ?? this.resolveEmails(id);
+    this.emailLookups.delete(key);
+    const { authEmail, pendingEmail } = await lookup;
     try {
       await signInWithEmailAndPassword(this.auth, authEmail, password);
     } catch (err) {
@@ -99,6 +103,22 @@ export class AuthService {
         throw err;
       }
     }
+  }
+
+  /** Username → sign-in email lookups started before the person taps Sign in (one-shot). */
+  private emailLookups = new Map<string, Promise<{ authEmail: string; pendingEmail?: string }>>();
+
+  /**
+   * Start resolving a username's sign-in email while the person is still on
+   * the form (they moved to the password field), so tapping Sign in goes
+   * straight to the password check: one round trip fewer on the critical path.
+   */
+  prefetchSignInEmail(usernameOrEmail: string): void {
+    const id = usernameOrEmail.trim();
+    if (!id || isValidEmail(id)) return;
+    const key = normalizeUsername(id);
+    if (!key || this.emailLookups.has(key)) return;
+    this.emailLookups.set(key, this.resolveEmails(id));
   }
 
   // ── Username index / private account helpers ─────────────────────────────
