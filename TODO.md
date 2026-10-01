@@ -94,7 +94,7 @@ native build on phones we don't own. Smallest honest version = two weeks on Test
 the 14 planners, phases 3 and 4 folded together. Skipping TestFlight entirely means the first
 crash on an unfamiliar iPhone is reported by a stranger in a store review.
 
-- [~] Beta plan drafted 2026-09-30 as the "Beta plan" page of the Launch Plan artifact: goals
+- [~] Beta plan drafted 2026-09-30 under "Beta details" in Phase 3 of the Launch Plan artifact: goals
       and numbers, three invite waves, the invite message, TestFlight install steps, one
       iMessage group as the channel, three short surveys (after set-up, week one, exit), the
       bug-report template with the version line, the Monday build rhythm, the thank-you.
