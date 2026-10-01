@@ -13,6 +13,9 @@ export interface TripEventInput {
   path: string;
   summary: string;
   audience: AudienceSpec;
+  targetUid?: string;
+  /** Set by callers when the affected person is a tester; the actor's own flag is added here. */
+  test?: boolean;
 }
 
 /**
@@ -85,11 +88,12 @@ export class TripEventsService {
     const uid = me?.uid;
     if (!tid || !me || !uid) return;
     const now = Date.now();
+    const test = !!(input.test || this.userService.firestoreUser()?.isTest);
     const reuse = input.action === 'removed' ? null : this.collapse.reuse(uid, input.kind, input.itemId, now);
     runInInjectionContext(this.injector, () => {
       if (reuse) {
         updateDoc(doc(this.firestore, 'trips', tid, 'events', reuse), {
-          action: input.action, summary: input.summary, audience: input.audience, timestamp: now,
+          action: input.action, summary: input.summary, audience: input.audience, timestamp: now, test,
         }).catch(err => console.warn('[TripEvents] update failed:', err));
         this.collapse.remember(uid, input.kind, input.itemId, reuse, now);
         return;
@@ -99,7 +103,8 @@ export class TripEventsService {
         id: ref.id, kind: input.kind, action: input.action,
         actorUid: uid, actorName: me.name,
         itemId: input.itemId, summary: input.summary, path: input.path,
-        audience: input.audience, timestamp: now,
+        audience: input.audience, timestamp: now, test,
+        ...(input.targetUid ? { targetUid: input.targetUid } : {}),
       };
       setDoc(ref, event).catch(err => console.warn('[TripEvents] write failed:', err));
       if (input.action === 'removed') this.collapse.forget(uid, input.kind, input.itemId);

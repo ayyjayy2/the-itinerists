@@ -349,7 +349,7 @@ export class TripService {
         .catch(() => {/* tolerate a missing index doc */});
       await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(-1) });
       this.logActivity(tripId, 'member_removed',
-        { uid, displayName: target?.displayName ?? 'A member' }, actor);
+        { uid, displayName: target?.displayName ?? 'A member', isTest: target?.isTest }, actor);
     });
   }
 
@@ -514,13 +514,14 @@ export class TripService {
         avatarEmoji: prior?.avatarEmoji ?? '🌸',
         color: prior?.color ?? '#F4C2C2',
         avatarLetterColor: prior?.avatarLetterColor ?? '',
+        ...(prior?.isTest ? { isTest: true } : {}),
       };
       await setDoc(this.memberRef(tripId, uid), member);
       await setDoc(doc(this.firestore, 'userTrips', uid), { tripIds: arrayUnion(tripId) }, { merge: true })
         .catch(() => {/* only self/admin may write another index; the member's app self-heals via membership */});
       await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(1) });
       await deleteDoc(snapRef).catch(() => {/* best effort */});
-      this.logActivity(tripId, 'member_restored', { uid, displayName: member.displayName }, actor);
+      this.logActivity(tripId, 'member_restored', { uid, displayName: member.displayName, isTest: member.isTest }, actor);
     });
   }
 
@@ -544,7 +545,7 @@ export class TripService {
   private logActivity(
     tripId: string,
     action: ActivityAction,
-    target: { uid: string; displayName: string },
+    target: { uid: string; displayName: string; isTest?: boolean },
     performedBy: { uid: string; displayName: string },
   ): void {
     const ref = doc(collection(this.firestore, 'trips', tripId, 'activityLog'));
@@ -559,7 +560,7 @@ export class TripService {
     const map = { member_added: 'joined', member_left: 'left', member_removed: 'kicked', member_restored: 'restored' } as const;
     const kind = map[action];
     const t = memberEvent(kind, target.displayName, target.uid === performedBy.uid);
-    this.events.emit({ kind: 'member', action: kind, itemId: '', path: '/trip-settings', ...t }, tripId);
+    this.events.emit({ kind: 'member', action: kind, itemId: '', path: '/trip-settings', targetUid: target.uid, test: !!target.isTest, ...t }, tripId);
   }
 
   private memberSnapshot(user: FirestoreUser, role: TripMember['role'], now: number): TripMember {

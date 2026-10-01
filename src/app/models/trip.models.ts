@@ -32,6 +32,8 @@ export interface FirestoreUser {
   avatarLetterColor?: string; // letter avatars only: hex color of the letter
   isAdmin: boolean;
   isDisabled?: boolean;
+  /** Throwaway account used for testing: its actions never reach other people's feeds. */
+  isTest?: boolean;
   createdAt: number;   // unix ms
   /** Email the Auth account signs in with. NOT stored on the profile doc —
    *  it lives in users/{uid}/private/account and UserService merges it in for
@@ -128,6 +130,7 @@ export interface TripMember {
   color: string;
   avatarLetterColor?: string;   // letter avatars only
   joinedAt: number;             // unix ms
+  isTest?: boolean;             // throwaway tester (see FirestoreUser.isTest)
   inviteCode?: string;          // the invite this member joined with (self-joins; required by the rules)
   travelMode?: TravelMode | null;
   arrivalDate?: string;         // YYYY-MM-DD (derived from travel entries or set manually)
@@ -177,6 +180,9 @@ export interface TripEvent {
   path: string;               // deep-link page, e.g. '/itinerary'
   audience: 'all' | string[]; // member uids
   timestamp: number;          // unix ms
+  targetUid?: string;         // member events: who was affected
+  /** Done by or to a test account: hidden from every feed and never pushed. */
+  test?: boolean;
 }
 
 // ── Currency ──────────────────────────────────────────────────────────────────

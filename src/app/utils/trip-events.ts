@@ -2,6 +2,7 @@ import { TripEvent } from '../models/trip.models';
 
 /** True when this event is meant for `uid` (everyone, or named) and is not their own. */
 export function isFor(ev: TripEvent, uid: string): boolean {
+  if (ev.test) return false;
   if (ev.actorUid === uid) return false;
   return ev.audience === 'all' || ev.audience.includes(uid);
 }

@@ -51,3 +51,12 @@ describe('trip-events: CollapseTracker', () => {
     expect(t.reuse('u', 'rec', 'r1', 10)).toBeNull();
   });
 });
+
+describe('trip-events: test accounts', () => {
+  it('events done by or to a tester never reach anyone', () => {
+    const list = [ev({ id: 'a', timestamp: 1 }), ev({ id: 't', timestamp: 2, test: true })];
+    expect(isFor(list[1], 'me')).toBeFalse();
+    expect(eventsForMe(list, 'me').map(e => e.id)).toEqual(['a']);
+    expect(unseenEvents(list, 'me', 0).map(e => e.id)).toEqual(['a']);
+  });
+});
