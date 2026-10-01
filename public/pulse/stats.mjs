@@ -308,3 +308,28 @@ export function countryStats(rows, countryOf) {
     .map(c => ({ country: c.country, uids: [...c.uids].sort(), sessions: c.sessions, zones: [...c.zones].sort() }))
     .sort((a, b) => b.uids.length - a.uids.length || a.country.localeCompare(b.country));
 }
+
+// ── Sign-ups and things written ───────────────────────────────────────────────
+
+/** Distinct new accounts per day (from users' createdAt) between `from` and `to`, days ascending; uids per day. */
+export function signupsPerDay(users, from, to, zone) {
+  const days = new Map();
+  for (const [uid, u] of users) {
+    const at = u.createdAt?.toMillis?.() ?? (typeof u.createdAt === 'number' ? u.createdAt : NaN);
+    if (isNaN(at) || at < from || at >= to) continue;
+    const k = dayKey(at, zone);
+    (days.get(k) ?? days.set(k, new Set()).get(k)).add(uid);
+  }
+  return [...days.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([day, s]) => ({ day, uids: [...s].sort() }));
+}
+
+/** Things written per day, by kind, with who: `{ day, total, byKind: {kind: n}, uids }`, days ascending. */
+export function writesPerDay(writes, zone) {
+  const days = new Map();
+  for (const w of writes) {
+    const k = dayKey(w.at, zone);
+    const d = days.get(k) ?? days.set(k, { day: k, total: 0, byKind: {}, uids: new Set() }).get(k);
+    d.total++; d.byKind[w.kind] = (d.byKind[w.kind] ?? 0) + 1; d.uids.add(w.uid);
+  }
+  return [...days.values()].sort((a, b) => a.day.localeCompare(b.day)).map(d => ({ ...d, uids: [...d.uids].sort() }));
+}

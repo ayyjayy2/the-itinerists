@@ -1,5 +1,5 @@
 import { Injectable, signal, inject, Injector, runInInjectionContext, effect, computed } from '@angular/core';
-import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, Unsubscribe } from '@angular/fire/firestore';
+import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, Unsubscribe } from '@angular/fire/firestore';
 import { TripEvent, TripEventKind, TripEventAction } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
@@ -107,6 +107,10 @@ export class TripEventsService {
         ...(input.targetUid ? { targetUid: input.targetUid } : {}),
       };
       setDoc(ref, event).catch(err => console.warn('[TripEvents] write failed:', err));
+      // The owner's dashboard counts "things written per day" from `_writes`:
+      // kind and action only, never the summary or the item (see firestore.rules).
+      addDoc(collection(this.firestore, '_writes'), { uid, tripId: tid, kind: input.kind, action: input.action, at: serverTimestamp() })
+        .catch(() => { /* analytics never blocks the change it describes */ });
       if (input.action === 'removed') this.collapse.forget(uid, input.kind, input.itemId);
       else this.collapse.remember(uid, input.kind, input.itemId, ref.id, now);
     });

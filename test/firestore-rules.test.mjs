@@ -230,6 +230,17 @@ await t('member updates another member photo', 'deny', () => updateDoc(doc(alice
 await t('owner deletes own photo', 'allow', () => deleteDoc(doc(bob, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
 await t('non-member deletes a photo', 'deny', () => deleteDoc(doc(carol, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
 
+console.log('\nWrite log (_writes)');
+const wr = (uid, extra = {}) => ({ uid, tripId: 'T', kind: 'itinerary', action: 'added', at: serverTimestamp(), ...extra });
+await t('member logs own write', 'allow', () => setDoc(doc(bob, '_writes', 'w1'), wr('bob')));
+await t('write with spoofed uid', 'deny', () => setDoc(doc(bob, '_writes', 'w1'), wr('alice')));
+await t('write with content field', 'deny', () => setDoc(doc(bob, '_writes', 'w1'), wr('bob', { summary: 'Dinner at Baixa' })));
+await t('write with unknown kind', 'deny', () => setDoc(doc(bob, '_writes', 'w1'), wr('bob', { kind: 'photo' })));
+await t('write with client timestamp', 'deny', () => setDoc(doc(bob, '_writes', 'w1'), wr('bob', { at: new Date() })));
+await t('anon logs a write', 'deny', () => setDoc(doc(anon, '_writes', 'w1'), wr('bob')));
+await t('owner lists writes', 'allow', () => getDocs(collection(owner, '_writes')));
+await t('member lists writes', 'deny', () => getDocs(collection(bob, '_writes')));
+
 console.log('\nUsage events (_activity)');
 const ev = (uid, extra = {}) => ({ uid, tripId: 'T', type: 'page', page: '/itinerary', at: serverTimestamp(), localHour: 10, tz: 'Europe/Berlin', tzOffsetMin: 120, platform: 'web', sessionId: 's2', appVersion: '0.9.0', ...extra });
 await t('member creates own event', 'allow', () => setDoc(doc(bob, '_activity', 'e2'), ev('bob')));
