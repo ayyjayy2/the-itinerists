@@ -61,6 +61,12 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private async loadRates(home: string, dates: string[]): Promise<void> {
+    this.ratesPending.update(n => n + 1);
+    try { await this.fetchRates(home, dates); }
+    finally { this.ratesPending.update(n => n - 1); }
+  }
+
+  private async fetchRates(home: string, dates: string[]): Promise<void> {
     const [dated, latest] = await Promise.all([
       Promise.all(dates.map(async d => [d, await this.rateService.ratesFor(home, d)] as const)),
       this.rateService.ratesFor(home, 'latest'),
@@ -75,6 +81,10 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   /** False until the first rate lookup finishes: before that every foreign item
    *  looks "estimated", which flashed the caveat for a moment on every visit. */
   private ratesLoaded = signal(false);
+  /** Lookups in flight. Entries arrive in batches (cache, then server; then edits),
+   *  and each new date is "estimated" until its rate lands, so the caveat waits
+   *  until nothing is pending rather than flashing between batches. */
+  private ratesPending = signal(0);
 
   currentUser  = this.userService.currentUser;
   financeUsers = this.usersService.tripUsers;
@@ -133,7 +143,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   });
   /** True when any settlement item used a fallback (non-date) rate. */
   readonly settlementEstimated = computed(() =>
-    this.ratesLoaded() && this.directDebts().some(d => d.items.some(i => i.estimated)));
+    this.ratesLoaded() && this.ratesPending() === 0 && this.directDebts().some(d => d.items.some(i => i.estimated)));
   /** "≈ " when settlement figures include converted amounts, else "". */
   approxPrefix(): string { return this.settlementConverted() ? '≈ ' : ''; }
 
