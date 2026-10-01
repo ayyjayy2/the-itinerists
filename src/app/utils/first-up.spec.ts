@@ -1,5 +1,5 @@
 import { parseTimeString, entryCutoffMs, pickFirstUp, FirstUpEntry } from './first-up';
-import { FlightMoment } from './flight-events';
+import { FlightMoment, flightMomentsForUid } from './flight-events';
 
 const at = (date: string, h: number, min = 0) => new Date(`${date}T00:00`).setHours(h, min);
 
@@ -93,5 +93,36 @@ describe('entryCutoffMs', () => {
     expect(entryCutoffMs(spans)).toBe(at('2026-09-24', 18, 0));
     const untimed = item({});
     expect(entryCutoffMs(untimed)).toBeGreaterThan(at('2026-09-24', 23, 58));
+  });
+});
+
+describe('pickFirstUp with time zones (2026-10-01)', () => {
+  // 11:35 in Chicago = 16:35 UTC = 17:35 in Lisbon.
+  const NOW = Date.UTC(2026, 9, 1, 16, 35);
+  const land = { date: '2026-10-01', time: '2:30 PM', endTime: '', activity: 'Land at Lisbon Airport', location: 'Humberto Delgado Airport', sortOrder: 0, category: 'Transport' };
+  const dinner = { date: '2026-10-01', time: '8:00 PM', endTime: '', activity: 'Welcome dinner', location: 'Time Out Market', sortOrder: 2, category: 'Food' };
+  const zoneFor = (iata: string) => ({ JFK: 'America/New_York', LIS: 'Europe/Lisbon' } as Record<string, string>)[iata];
+  const flights = flightMomentsForUid([
+    { uid: 'me', section: 'ARRIVALS', from: 'JFK', to: 'LIS', departureDate: '2026-09-30', departureTime: '9:45 PM', arrivalDate: '2026-10-01', arrivalTime: '10:30 AM' },
+  ], 'me', 'Lisbon', zoneFor);
+
+  it('reads itinerary times in the trip zone, so a Lisbon afternoon item is past at 17:35 Lisbon', () => {
+    const pick = pickFirstUp([land, dinner], [], NOW, 'Europe/Lisbon');
+    expect(pick?.activity).toBe('Welcome dinner');
+    expect(pick?.zone).toBe('Europe/Lisbon');
+  });
+
+  it('would still show the landing on the phone clock (the old behaviour) without a zone', () => {
+    // 2:30 PM Chicago is still ahead at 11:35 Chicago — exactly the bug.
+    expect(pickFirstUp([land, dinner], [], NOW)?.activity).toBe('Land at Lisbon Airport');
+  });
+
+  it('puts each flight moment in its airport zone and orders them by instant', () => {
+    const inFlight = Date.UTC(2026, 9, 1, 5, 0); // 1 AM New York, 6 AM Lisbon: airborne
+    const pick = pickFirstUp([land, dinner], flights, inFlight, 'Europe/Lisbon');
+    expect(pick?.activity).toBe('Arrive at LIS – Lisbon');
+    expect(pick?.zone).toBe('Europe/Lisbon');
+    const beforeTakeoff = Date.UTC(2026, 10 - 1, 1, 0, 30); // 8:30 PM New York on Sep 30
+    expect(pickFirstUp([], flights, beforeTakeoff, 'Europe/Lisbon')?.activity).toBe('Depart from JFK');
   });
 });

@@ -14,6 +14,7 @@ this file whenever a service is added or removed (the privacy policy at
 | **Capacitor** | 8 (Swift Package Manager, no CocoaPods) | Native iOS shell around the same web build | `ios/`, `capacitor.config.ts`, `npm run ios:run` |
 | **Leaflet** | 1.9 | The trip map | `src/app/pages/map/`, `src/app/shared/day-map-card/` |
 | **RxJS** | 7 | Streams from Firebase into signals | throughout |
+| **tz-lookup** | 6 | Coordinates → IANA time zone, for a trip leg's zone when it is saved | `src/app/services/geocode.service.ts`, `src/app/utils/zones.ts` (Intl-only zone math) |
 
 ## Firebase (project `trip-planner-ayyjayy2`, Spark plan until Blaze)
 
@@ -33,7 +34,7 @@ this file whenever a service is added or removed (the privacy policy at
 | Service | What it does | Cost / key | Where |
 |---|---|---|---|
 | **Open-Meteo** | Weather for trip destinations on Home | Free, no key | `src/app/services/weather.service.ts` |
-| **Nominatim** (OpenStreetMap) | Place names → coordinates; results cached in Firestore `geocache` | Free, no key, 1 req/s etiquette | `src/app/pages/map/map.component.ts`, `day-map-card` |
+| **Nominatim** (OpenStreetMap) | Place names → coordinates; results cached in Firestore `geocache`. Also gives a saved trip leg its coordinates and zone | Free, no key, 1 req/s etiquette | `src/app/pages/map/map.component.ts`, `day-map-card`, `services/geocode.service.ts` |
 | **OpenStreetMap tiles** | Map imagery under Leaflet | Free | `map.component.ts` |
 | **Frankfurter** | Currency conversion rates for Finance | Free, no key | `src/app/services/exchange-rate.service.ts` |
 | **Google Fonts** | Nunito and Caprasimo | Free | `src/index.html`, `public/pulse/index.html` |
@@ -60,6 +61,8 @@ host must be added there or the browser blocks it.
 | `gen-env.js` | `.env` → `src/environments/*.ts` and `public/pulse/config.mjs` (all gitignored) |
 | `set-version.js` | Writes `src/version.ts`; `--ios` also stamps the Xcode project |
 | `gen-zones.js` | Regenerates `public/pulse/zones.mjs` (zone → city, US state, country) from `@vvo/tzdb` |
+| `gen-airports.js` | Regenerates `public/data/airports.json` (IATA → zone, 5,500 airports from OpenFlights + overrides such as BER); the app loads it lazily so each flight time is read in its airport's zone |
+| `backfill-trip-zones.js` | One-off: gives existing trip legs a `timeZone` (and coordinates) via Nominatim + tz-lookup; dry run by default, `--run` writes |
 | `fetch-ios-config.js` | Writes `ios/App/App/GoogleService-Info.plist` from the Firebase Management API (gitignored) |
 | `set-storage-cors.js`, `migrate-outfit-photos.js` | After Blaze: bucket CORS; move inline photos to Storage |
 | `seed-admin.js`, `sync-seed.js`, `create-test-member.js`, `mark-test-accounts.js` | Seeding and test data |

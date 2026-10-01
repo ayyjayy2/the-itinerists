@@ -8,7 +8,7 @@ import { Rec, RecDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
-import { tripDestinations, activeLeg, localTodayISO } from '../../utils/trip-destinations';
+import { tripDestinations, activeLeg, localTodayISO, tripZone } from '../../utils/trip-destinations';
 import { groupRecsByCategory, groupRecsByDestination, ANYWHERE, DestinationSection } from '../../utils/rec-groups';
 
 const CATEGORIES = ['Food', 'Drink', 'Places', 'Activities', 'Tips', 'Culture'];
@@ -49,7 +49,7 @@ export class RecsComponent {
   private defaultDestination(): string {
     const t = this.tripService.activeTrip();
     if (!t || !this.isMultiDestination()) return '';
-    return activeLeg(tripDestinations(t), localTodayISO()).destination;
+    return activeLeg(tripDestinations(t), localTodayISO(new Date(), tripZone(t))).destination;
   }
 
   form: Rec = { category: 'Tips', title: '', description: '', extra: '', destination: '' };

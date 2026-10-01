@@ -8,6 +8,7 @@ import { UserService } from '../../services/user.service';
 import { ThemeService } from '../../services/theme.service';
 import { TripDoc, TripDestination, TripMember, ActivityLogEntry } from '../../models/trip.models';
 import { tripDestinations, tripSummary, buildEditedDestinations, DestinationEdit } from '../../utils/trip-destinations';
+import { GeocodeService } from '../../services/geocode.service';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { InvitePanelComponent } from '../../shared/invite-panel/invite-panel.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
@@ -39,6 +40,7 @@ export class TripSettingsComponent {
   readonly dateRangeProblem = dateRangeProblem;
 
   private tripService = inject(TripService);
+  private geocode = inject(GeocodeService);
   private userService = inject(UserService);
   private themeService = inject(ThemeService);
   private router      = inject(Router);
@@ -181,6 +183,7 @@ export class TripSettingsComponent {
     this.error.set(''); this.savedOk.set(false); this.saving.set(true);
     try {
       await this.tripService.updateTrip(t.id, patch);
+      void this.geocode.resolveTripZones(t.id, destinations);   // a renamed or new stop gets its zone
       this.savedOk.set(true);
       setTimeout(() => this.savedOk.set(false), 2500);
     } catch (e: unknown) {

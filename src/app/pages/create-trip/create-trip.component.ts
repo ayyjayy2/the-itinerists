@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { TripService, CreateTripInput } from '../../services/trip.service';
 import { TripDestination } from '../../models/trip.models';
 import { tripSummary } from '../../utils/trip-destinations';
+import { GeocodeService } from '../../services/geocode.service';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
@@ -30,6 +31,7 @@ export class CreateTripComponent {
   readonly dateRangeProblem = dateRangeProblem;
 
   private tripService = inject(TripService);
+  private geocode = inject(GeocodeService);
   private router      = inject(Router);
 
   name = '';
@@ -103,7 +105,11 @@ export class CreateTripComponent {
     this.error.set('');
     this.saving.set(true);
     try {
-      await this.tripService.createTrip(input);
+      const tripId = await this.tripService.createTrip(input);
+      // The destination's time zone is looked up in the background; Home is not kept waiting.
+      const legs: TripDestination[] = 'destinations' in input && input.destinations ? input.destinations
+        : [{ destination: input.destination, startDate: input.startDate, endDate: input.endDate, currency: input.currency }];
+      void this.geocode.resolveTripZones(tripId, legs);
       // createTrip sets the new trip active; land on Home.
       this.router.navigate(['/home']);
     } catch (e: unknown) {
