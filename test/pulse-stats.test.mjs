@@ -236,7 +236,7 @@ test('pageStats folds the "/" entry route into /home', () => {
   assert.deepEqual(p.map(x => [x.page, x.views, x.users]), [['/home', 3, 2]]);
 });
 
-import { signupsPerDay, writesPerDay } from '../public/pulse/stats.mjs';
+import { signupsPerDay } from '../public/pulse/stats.mjs';
 
 test('signupsPerDay counts new accounts per day in the zone, within the range', () => {
   const users = new Map([
@@ -247,15 +247,6 @@ test('signupsPerDay counts new accounts per day in the zone, within the range', 
   assert.deepEqual(s, [{ day: '2026-09-30', uids: ['a', 'b'] }, { day: '2026-10-01', uids: ['c'] }]);
 });
 
-test('writesPerDay groups things written by day and kind, with who', () => {
-  const w = (uid, at, kind, action = 'added') => ({ uid, tripId: 'T', kind, action, at });
-  const rows = [w('m', NOON, 'itinerary'), w('m', NOON + H, 'itinerary'), w('m', NOON + 2 * H, 'flight'), w('n', NOON + 24 * H, 'member', 'joined')];
-  const d = writesPerDay(rows, 'Europe/Berlin');
-  assert.deepEqual(d, [
-    { day: '2026-09-30', total: 3, byKind: { itinerary: 2, flight: 1 }, byPerson: { m: { itinerary: 2, flight: 1 } }, uids: ['m'] },
-    { day: '2026-10-01', total: 1, byKind: { member: 1 }, byPerson: { n: { member: 1 } }, uids: ['n'] },
-  ]);
-});
 
 import { activityTimeline } from '../public/pulse/stats.mjs';
 

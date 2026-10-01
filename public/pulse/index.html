@@ -122,13 +122,6 @@
   .bar.pwa, .sw.pwa { background: var(--accent); }
   .bar.ios, .sw.ios { background: var(--primary-dark); }
   .hint.since { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
-  .bar.itinerary, .sw.itinerary { background: var(--primary); }
-  .bar.finance, .sw.finance { background: var(--accent); }
-  .bar.rec, .sw.rec { background: var(--primary-dark); }
-  .bar.flight, .sw.flight { background: var(--highlight, #B4A6D4); }
-  .bar.stay, .sw.stay { background: var(--accent-dark); }
-  .bar.member, .sw.member { background: var(--text-muted); }
-  .bar.transport, .bar.packing, .bar.trip, .bar.pin, .sw.other { background: var(--surface-2); border: 1px solid var(--border); }
   .legend { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.6rem; }
   .legend .sw { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 2px; vertical-align: -0.05em; margin: 0 0.2em 0 0.6em; border: 1px solid var(--border); }
   .card h3 { font-size: 0.85rem; color: var(--text-muted); margin: 0 0 0.5rem; font-weight: 600; }
@@ -283,17 +276,10 @@
       <p class="legend"><span class="sw before"></span> before <span class="sw during"></span> during <span class="sw after"></span> after · two weeks before to a week after, all selected trips summed</p>
     </div>
 
-    <div class="grid2">
-      <div class="card">
-        <h2>Sign-ups <small id="signupsSub"></small></h2>
-        <div class="bars days" id="signups"></div>
-        <p class="hint">New accounts per day, from each account's creation date. Pick Year to see everyone since June.</p>
-      </div>
-      <div class="card">
-        <h2>Things written <small id="writesSub"></small></h2>
-        <div class="bars days" id="writes"></div>
-        <p class="hint">Each bar is a day; its height is how many things were written, split by person in their avatar colour. Hover for each person's line: what they added.</p>
-      </div>
+    <div class="card">
+      <h2>Sign-ups <small id="signupsSub"></small></h2>
+      <div class="bars days" id="signups"></div>
+      <p class="hint">New accounts per day, from each account's creation date. Pick Year to see everyone since June.</p>
     </div>
 
     <div class="card">
