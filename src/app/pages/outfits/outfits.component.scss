@@ -111,7 +111,9 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: linear-gradient(135deg, #e8f4ff, #dff0e8);
+  // Lilac into sage from the theme's own tints: soft in light, deep in dark, text always --text.
+  background: linear-gradient(135deg, var(--lavender-tint), var(--primary-tint));
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 0.75rem 1rem;
   flex: 1;

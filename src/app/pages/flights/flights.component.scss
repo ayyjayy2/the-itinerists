@@ -69,7 +69,9 @@
 
   &.mine {
     border-left: 3px solid var(--primary);
-    background: linear-gradient(135deg, rgba(136,201,161,0.06), #fff);
+    // One solid sage-tinted surface from the theme, so every part of the card
+    // reads the same in light and dark (no gradient, never a hard white).
+    background: color-mix(in srgb, var(--primary) 16%, var(--surface));
   }
 }
 
@@ -169,7 +171,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.2rem;
+  gap: 0.55rem;                // air between airline, line and flight number
   padding-top: 0.25rem; // visually align with IATA text
 }
 

@@ -69,7 +69,12 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     for (const [d, r] of dated) if (r) next[d] = r;
     this.ratesByDate.set(next);
     this.latestRates.set(latest);
+    this.ratesLoaded.set(true);
   }
+
+  /** False until the first rate lookup finishes: before that every foreign item
+   *  looks "estimated", which flashed the caveat for a moment on every visit. */
+  private ratesLoaded = signal(false);
 
   currentUser  = this.userService.currentUser;
   financeUsers = this.usersService.tripUsers;
@@ -128,7 +133,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   });
   /** True when any settlement item used a fallback (non-date) rate. */
   readonly settlementEstimated = computed(() =>
-    this.directDebts().some(d => d.items.some(i => i.estimated)));
+    this.ratesLoaded() && this.directDebts().some(d => d.items.some(i => i.estimated)));
   /** "≈ " when settlement figures include converted amounts, else "". */
   approxPrefix(): string { return this.settlementConverted() ? '≈ ' : ''; }
 
