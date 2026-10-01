@@ -40,5 +40,21 @@ describe('zones', () => {
     expect(zoneAbbr('Europe/Lisbon', T)).toBe('WEST');
     expect(zoneAbbr('Europe/Berlin', T)).toBe('CEST');
     expect(zoneAbbr('America/New_York', T)).toBe('EDT');
+    expect(zoneAbbr('Europe/London', T)).toBe('BST');
+  });
+
+  it('always has a code, never a bare offset, for places English locale data leaves out', () => {
+    expect(zoneAbbr('Asia/Bangkok', T)).toBe('ICT');
+    expect(zoneAbbr('Asia/Tokyo', T)).toBe('JST');
+    expect(zoneAbbr('Asia/Seoul', T)).toBe('KST');
+    expect(zoneAbbr('Asia/Jakarta', T)).toBe('WIB');
+    expect(zoneAbbr('Asia/Makassar', T)).toBe('WITA');
+    expect(zoneAbbr('America/Sao_Paulo', T)).toBe('BRT');
+    expect(zoneAbbr('Europe/Moscow', T)).toBe('MSK');
+    expect(zoneAbbr('Africa/Abidjan', T)).toBe('GMT');
+    expect(zoneAbbr('Europe/Jersey', T)).toBe('BST');
+    for (const z of Intl.supportedValuesOf('timeZone')) {
+      expect(zoneAbbr(z, T)).withContext(z).not.toMatch(/^(GMT|UTC)[+\-]\d/);
+    }
   });
 });
