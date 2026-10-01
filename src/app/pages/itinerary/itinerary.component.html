@@ -69,7 +69,7 @@
           @for (flight of flightEventsForDate(group[0]); track flight.label) {
             <div class="flight-banner">
               <span class="flight-ic"><app-icon name="flights" [size]="16" /></span>
-              <span class="flight-time">{{ flight.time | time12 }}</span>
+              <span class="flight-time">{{ flight.time | time12 }}@if (flight.zoneLabel) { <span class="flight-zone">{{ flight.zoneLabel }}</span> }</span>
               <span class="flight-label">{{ flight.label }}</span>
             </div>
           }
