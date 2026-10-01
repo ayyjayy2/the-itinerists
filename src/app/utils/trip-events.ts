@@ -54,3 +54,14 @@ export class CollapseTracker {
 
   reset(): void { this.last.clear(); }
 }
+
+/**
+ * The bell's high-water mark for one trip: when the person last opened that
+ * trip's updates. Seen is per trip, so reading Lisbon's updates leaves Central
+ * America's waiting until they switch to it. Accounts from before per-trip
+ * marks fall back to the old account-wide one.
+ */
+export function seenMarkFor(user: { lastSeenActivityAt?: number; lastSeenByTrip?: Record<string, number> } | null | undefined, tripId: string | null | undefined): number {
+  if (!user) return 0;
+  return (tripId && user.lastSeenByTrip?.[tripId]) || user.lastSeenActivityAt || 0;
+}

@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { IconComponent } from '../icon/icon.component';
 import { UserService } from '../../services/user.service';
 import { timeAgo } from '../../utils/activity';
-import { eventsForMe, unseenEvents } from '../../utils/trip-events';
+import { eventsForMe, unseenEvents, seenMarkFor } from '../../utils/trip-events';
 import { TripEventsService } from '../../services/trip-events.service';
 import { TripService } from '../../services/trip.service';
 import { TripEvent } from '../../models/trip.models';
@@ -77,7 +77,7 @@ export class NotificationBellComponent {
   private me      = computed(() => this.userService.firestoreUser());
   /** Events for me newer than my high-water mark (own actions never count). */
   private unseenList = computed(() => unseenEvents(
-    this.eventsService.events(), this.me()?.uid ?? '', this.me()?.lastSeenActivityAt ?? 0, this.showTest(),
+    this.eventsService.events(), this.me()?.uid ?? '', seenMarkFor(this.me(), this.tripService.activeTrip()?.id), this.showTest(),
   ));
   readonly unseen = computed(() => this.unseenList().length);
   /** What the dropdown lists: the unseen ones, else the latest few for me. */
@@ -102,7 +102,7 @@ export class NotificationBellComponent {
       const btn = ev?.currentTarget as HTMLElement | undefined;
       if (btn) this.dropTop.set(btn.getBoundingClientRect().bottom + 6);
       this.shown.set(this.recent());
-      if (this.unseen() > 0) void this.userService.markActivitySeen();
+      if (this.unseen() > 0) void this.userService.markActivitySeen(this.tripService.activeTrip()?.id);
     }
     this.open.update(v => !v);
   }

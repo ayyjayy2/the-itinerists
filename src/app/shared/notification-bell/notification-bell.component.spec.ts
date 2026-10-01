@@ -60,7 +60,7 @@ describe('NotificationBellComponent', () => {
     const el = fixture.nativeElement as HTMLElement;
     (el.querySelector('.bell-btn') as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(userStub.markActivitySeen).toHaveBeenCalled();
+    expect(userStub.markActivitySeen).toHaveBeenCalledWith('t1');   // only the active trip is marked seen
     userStub.firestoreUser.set({ uid: 'me', lastSeenActivityAt: 5000 });
     fixture.detectChanges();
     expect(el.textContent).toContain('added Dinner to Day 1');   // snapshot survives
