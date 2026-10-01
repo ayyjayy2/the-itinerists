@@ -94,12 +94,12 @@ native build on phones we don't own. Smallest honest version = two weeks on Test
 the 14 planners, phases 3 and 4 folded together. Skipping TestFlight entirely means the first
 crash on an unfamiliar iPhone is reported by a stranger in a store review.
 
-- [ ] Write the full beta plan and design before inviting anyone: goals and success
-      metrics; who is invited in which wave; the invite message; onboarding instructions
-      (TestFlight install, first trip, bringing joiners); how feedback is collected (one
-      channel + short surveys: after first trip set-up, after week 1, exit survey); survey
-      questions; a bug-report template that asks for the version line; the weekly build
-      cadence; how testers hear about fixes; the thank-you at the end.
+- [~] Beta plan drafted 2026-09-30 as the "Beta plan" page of the Launch Plan artifact: goals
+      and numbers, three invite waves, the invite message, TestFlight install steps, one
+      iMessage group as the channel, three short surveys (after set-up, week one, exit), the
+      bug-report template with the version line, the Monday build rhythm, the thank-you.
+      Left for Alayna: wave order, group vs DMs, two or four weeks, pretend trips, the gift.
+      Still to build before day 1: the three Google Forms and the weekly beta sheet.
 - [ ] Invite the 14 "Yes!! As the planner" voters one at a time (Headcount artifact, Poll page).
 - [ ] Ask each to set up one trip and bring at least two joiners.
 - [ ] One place for feedback (group chat or short form); ask for the version line with reports.
