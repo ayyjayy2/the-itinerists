@@ -1,20 +1,107 @@
-# APIs & External Services
+# Tools & services
 
-## Active
+Everything the app, the dashboards and the build depend on, as of 2026-09-30. One
+row per tool: what it does for us, what it costs, and where it is wired in. Update
+this file whenever a service is added or removed (the privacy policy at
+`src/app/pages/privacy/privacy.component.ts` must say the same things).
 
-| Service | Purpose | Cost | Auth |
+## The app itself
+
+| Tool | Version | What it does | Where |
 |---|---|---|---|
-| **Firebase Firestore** | Database — trip data, finances, itinerary, map pins, outfits, etc. | Free tier | API key (`.env`) |
-| **Firebase Storage** | Outfit photo uploads | Free tier | API key (`.env`) |
-| **Open-Meteo** | Weather forecasts for trip cities | Free, no key needed | None |
-| **OpenStreetMap (Leaflet)** | Interactive map tile rendering | Free | None |
-| **Nominatim (OSM)** | Geocoding — converts location names to lat/lng coordinates | Free | None |
-| **Google Fonts** | Nunito font via CDN | Free | None |
+| **Angular** | 19 | The web app: standalone components, signals, lazy routes | `src/app/` |
+| **Angular service worker** (PWA) | 19 | Installable web app, offline shell, cached assets | `ngsw-config.json`, `public/manifest.webmanifest` |
+| **Capacitor** | 8 (Swift Package Manager, no CocoaPods) | Native iOS shell around the same web build | `ios/`, `capacitor.config.ts`, `npm run ios:run` |
+| **Leaflet** | 1.9 | The trip map | `src/app/pages/map/`, `src/app/shared/day-map-card/` |
+| **RxJS** | 7 | Streams from Firebase into signals | throughout |
 
-## Key config files
+## Firebase (project `trip-planner-ayyjayy2`, Spark plan until Blaze)
 
-- Firebase credentials: `.env` → auto-generated into `src/environments/`
-- Firebase + App Check setup: `src/app/app.config.ts`
-- Weather API calls: `src/app/services/weather.service.ts`
-- Map + geocoding: `src/app/pages/map/map.component.ts`
-- Firestore read/write: `src/app/services/data.service.ts`
+| Service | What it does | Cost | Where |
+|---|---|---|---|
+| **Authentication** | Email + password sign-in (username → synthetic email), password reset, email change. Sender: `noreply@theitinerists.com` | Free, unlimited | `src/app/services/auth.service.ts`, `user.service.ts` |
+| **Firestore** | Every document: users, trips and their subcollections, invites, geocache, the `_activity` event log, the `_appLogs` error log, `_pulse` prefs | Free tier; see Launch Plan → Storage & costs | `src/app/services/*.service.ts`, rules in `firestore.rules` (tests: `npm run test:rules`) |
+| **Cloud Storage** | Outfit photos (1,600 px + 300 px thumbnail), owner-only. **Code done, switched off** (`OUTFIT_PHOTO_STORAGE_ENABLED = false`): the bucket only exists on Blaze | Free tier | `src/app/services/outfit-photo.service.ts`, `storage.rules`, `scripts/set-storage-cors.js`, `scripts/migrate-outfit-photos.js` |
+| **Hosting** | theitinerists.com (+ the-itinerists.web.app), the demo site, and `/pulse/` | Free tier | `firebase.json` (headers, CSP), `public/` |
+| **App Check** | Proves requests come from the real app; **enforced** on Firestore and Storage. reCAPTCHA v3 on the web, a debug token on the iOS shell (App Attest later) | Free | `src/app/app.config.ts`, `.env` keys |
+| **Google Analytics 4** | Screen views, user id, properties platform / timezone / trip_id, events trip_created / trip_joined / invite_shared. Web only; property G-EZQ46BTZY7 | Free | `src/app/services/analytics.service.ts`, `app.config.ts` |
+| **Crashlytics** | Crashes and non-fatals from the iOS app, tagged with the uid. Live since 2026-09-30. Web stays on `_appLogs` | Free | `src/app/services/crash-reporter.service.ts`, `error-logger.service.ts`, Xcode "Upload dSYMs" phase, `scripts/fetch-ios-config.js` |
+| **Local emulators** | Firestore + Storage emulators for the rules tests (needs a JDK: `PATH="/opt/homebrew/opt/openjdk/bin:$PATH"`) | Free | `test/firestore-rules.test.mjs`, `test/storage-rules.test.mjs` |
+
+## Outside APIs the app calls
+
+| Service | What it does | Cost / key | Where |
+|---|---|---|---|
+| **Open-Meteo** | Weather for trip destinations on Home | Free, no key | `src/app/services/weather.service.ts` |
+| **Nominatim** (OpenStreetMap) | Place names → coordinates; results cached in Firestore `geocache` | Free, no key, 1 req/s etiquette | `src/app/pages/map/map.component.ts`, `day-map-card` |
+| **OpenStreetMap tiles** | Map imagery under Leaflet | Free | `map.component.ts` |
+| **Frankfurter** | Currency conversion rates for Finance | Free, no key | `src/app/services/exchange-rate.service.ts` |
+| **Google Fonts** | Nunito and Caprasimo | Free | `src/index.html`, `public/pulse/index.html` |
+| **Google reCAPTCHA v3** | Behind App Check on the web | Free | `app.config.ts` |
+
+All of these are listed in the hosting Content-Security-Policy in `firebase.json`; a new
+host must be added there or the browser blocks it.
+
+## Our own instruments
+
+| Tool | What it does | Where |
+|---|---|---|
+| **Event log** (`_activity`) | One row per app open, page view and 2-minute ping while visible: uid, trip, page, local hour, zone, platform, version. Written by the app, never edited | `src/app/services/usage.service.ts`, `src/app/utils/usage.ts` |
+| **Pulse** | Owner-only live dashboard at theitinerists.com/pulse/, outside the Angular app. Trips by phase, online now, people per hour / day, hour of day on each person's clock or a zone, pages, people, return rate, visits, around the trip, platform + versions. Filters: range (today → year), Hide (me / test trips / test accounts), multi-select trips, zone. Test lists live in `_pulse/prefs` | `public/pulse/` (`pulse.mjs`, `stats.mjs` + `npm run test:pulse`, `zones.mjs`), design: `docs/superpowers/specs/2026-09-30-usage-analytics-design.md` and `...-pulse-filters-and-cards-design.md` |
+| **Error log** (`_appLogs`) | JS, HTTP and Firebase errors from the web app with a random session id | `src/app/services/error-logger.service.ts` |
+| **Trip event feed** (`trips/{id}/events`) | What changed on a trip; feeds the bell and Updates | `src/app/services/trip-events.service.ts`, spec `docs/superpowers/specs/2026-09-30-trip-events-and-push-design.md` |
+| **Demo build** | The app with in-memory stand-ins for Firebase, for screenshots and the demo site | `src/demo/`, `tsconfig.demo.json`, `npm run start:demo` / `deploy:demo` |
+| **Version stamp** | `APP_VERSION` + build number (git commit count) in the app and the Xcode project | `scripts/set-version.js` (runs on install and build) |
+
+## Scripts (`scripts/`, run with `node`)
+
+| Script | Purpose |
+|---|---|
+| `gen-env.js` | `.env` → `src/environments/*.ts` and `public/pulse/config.mjs` (all gitignored) |
+| `set-version.js` | Writes `src/version.ts`; `--ios` also stamps the Xcode project |
+| `gen-zones.js` | Regenerates `public/pulse/zones.mjs` (zone → city, US state, country) from `@vvo/tzdb` |
+| `fetch-ios-config.js` | Writes `ios/App/App/GoogleService-Info.plist` from the Firebase Management API (gitignored) |
+| `set-storage-cors.js`, `migrate-outfit-photos.js` | After Blaze: bucket CORS; move inline photos to Storage |
+| `seed-admin.js`, `sync-seed.js`, `create-test-member.js`, `mark-test-accounts.js` | Seeding and test data |
+| `reset-password.js`, `gen-reset-link.js`, `migrate-account-privacy.js` | Account admin |
+| `check-balances.js`, `compare-to-spreadsheet.js`, `fix-makaela-entries.js`, `apply-v6-fixes.js` | One-off finance checks and fixes |
+| `stats.js` *(gitignored)* | Read-only headcount of real users and trips; feeds the private Headcount artifact. Never commit its output |
+| `verify-outfit-storage.local.mjs` *(gitignored)* | Playwright check of the photo upload path, signed in as the `photoprobe` test account |
+
+Admin scripts need `scripts/serviceAccountKey.json` (gitignored) and check that its
+project is `trip-planner-ayyjayy2` before doing anything.
+
+## Build, test and ship
+
+| Tool | What for | How |
+|---|---|---|
+| **Node** 25 / npm | Everything above | `npm install` |
+| **Angular CLI** | Build, dev server (`:4200`), demo (`:4400`) | `npm run build`, `npm start` |
+| **Karma + Jasmine** | Unit tests (309 specs) | `npm test`, `npm run test:ci` |
+| **Node test runner** | Pulse aggregations (12 tests) | `npm run test:pulse` |
+| **@firebase/rules-unit-testing** | Firestore and Storage rules | `npm run test:rules` |
+| **Firebase CLI** | Deploys: `firebase deploy --only hosting:the-itinerists`, `--only firestore:rules`, `--only storage` | authenticated as the owner |
+| **firebase-admin**, **google-auth-library** | Admin scripts | with the service-account key |
+| **sharp** | Photo resizing in the migration script | dev dependency |
+| **@vvo/tzdb** | Zone names table for Pulse | dev dependency |
+| **Xcode** 26 | iOS build, simulator, archive for TestFlight | `npm run ios:open` |
+| **GitHub** (`ayyjayy2/the-itinerists`) | Code, pull requests. **No CI yet** (phase 5) | `gh` CLI |
+| **Hostinger** | Registrar for theitinerists.com; DNS points at Firebase Hosting | bought 2026-09-29 |
+
+## Outside the repo
+
+| Tool | What for |
+|---|---|
+| **Claude artifacts** (private) | Launch Plan (phases, storage & costs, Making money), Headcount (users, costs, timeline, poll), User Flow |
+| **Google Forms** | Berlin alpha feedback survey (laynajay2 account) |
+| **Instagram** | The story poll; marketing reels in phase 2 |
+| **Firebase console** | Needs the alaynajohnston12 account |
+
+## Planned, not yet in use
+
+RevenueCat + Apple in-app purchase (+ Stripe on the web) for Trip Pass / Keep / Plus;
+Cloud Functions (entitlements, trip deletion job, push fan-out); Firebase Cloud Messaging
+for push; a Capacitor App Check plugin for App Attest; Firebase Analytics plugin for the
+iOS shell; a staging Firebase project; Brevo or Mailchimp for the updates list;
+Booking.com / Expedia / GetYourGuide / Viator / Kiwi partner links; GitHub Actions CI.
+See the Launch Plan artifact and `TODO.md`.
