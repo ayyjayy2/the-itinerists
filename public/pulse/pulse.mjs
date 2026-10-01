@@ -419,12 +419,16 @@ function render() {
   $('perDaySub').textContent = timeline.length ? `${timeline.length} ${timeline.length === 1 ? 'day' : 'days'} with activity in ${rangeLabel} · times in ${zoneAbbr(state.zone)}` : `nothing in ${rangeLabel}`;
   bars('perDay', timeline.map(d => {
     const when = d.firstMs === d.lastMs ? clock(d.firstMs) : `${clock(d.firstMs)} – ${clock(d.lastMs)}`;
-    const edits = Object.entries(d.writes.byKind).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n} ${KIND_WORD[k] ?? k}${n === 1 ? '' : 's'}`).join(', ');
+    // Edits per person: "3 recs, 1 itinerary by Makaela · 5 expenses by Derek"
+    const edits = Object.entries(d.writes.byPerson)
+      .sort((a, b) => Object.values(b[1]).reduce((n, x) => n + x, 0) - Object.values(a[1]).reduce((n, x) => n + x, 0))
+      .map(([uid, kinds]) => `${Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n} ${KIND_WORD[k] ?? k}${n === 1 ? '' : 's'}`).join(', ')} <span class="muted">by</span> ${esc(userName(uid))}`)
+      .join(' · ');
     return {
       value: d.uids.length, label: dayLabel(d.day),
       tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.uids.length} ${d.uids.length === 1 ? 'person' : 'people'} · ${esc(when)} ${esc(zoneAbbr(state.zone, d.firstMs))}<br>${names(d.uids)}`
         + (d.pages.length ? `<br><span class="muted">Pages:</span> ${d.pages.map(esc).join(', ')}` : '')
-        + (d.writes.total ? `<br><span class="muted">Edits:</span> ${esc(edits)} <span class="muted">by</span> ${names(d.writes.uids)}` : ''),
+        + (d.writes.total ? `<br><span class="muted">Edits:</span> ${edits}` : ''),
     };
   }), Math.max(1, ...timeline.map(d => d.uids.length)), {
     // Past a month the columns are too narrow for a number each, so label every nth day.
