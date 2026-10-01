@@ -6,6 +6,7 @@ import { UserService } from './user.service';
 import { TripService } from './trip.service';
 import { TripEventsService } from './trip-events.service';
 import { itineraryAdded, itineraryChanged, itineraryRemoved } from '../utils/event-text';
+import { tripZone } from '../utils/trip-destinations';
 
 @Injectable({ providedIn: 'root' })
 export class ItineraryService {
@@ -83,7 +84,7 @@ export class ItineraryService {
     const ref = doc(collection(this.firestore, 'trips', tid, 'itinerary'));
     const full = { ...item, id: ref.id } as ItineraryItemDoc;
     await setDoc(ref, full);
-    const t = itineraryAdded(full, this.dayNumber(full.date), this.tripService.activeMembers());
+    const t = itineraryAdded(full, this.dayNumber(full.date), this.tripService.activeMembers(), tripZone(this.tripService.activeTrip()));
     this.events.emit({ kind: 'itinerary', action: 'added', itemId: ref.id, path: '/itinerary', ...t });
   }
 
@@ -92,7 +93,7 @@ export class ItineraryService {
     const before = this._items().find(i => i.id === id);
     await updateDoc(doc(this.firestore, 'trips', tid, 'itinerary', id), { ...updates });
     if (!before) return;
-    const t = itineraryChanged(before, { ...before, ...updates }, this.tripService.activeMembers());
+    const t = itineraryChanged(before, { ...before, ...updates }, this.tripService.activeMembers(), tripZone(this.tripService.activeTrip()));
     if (t) this.events.emit({ kind: 'itinerary', action: 'changed', itemId: id, path: '/itinerary', ...t });
   }
 

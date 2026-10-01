@@ -6,6 +6,7 @@ import { UserService } from './user.service';
 import { TripService } from './trip.service';
 import { TripEventsService } from './trip-events.service';
 import { flightAdded, flightChanged, flightRemoved } from '../utils/event-text';
+import { AirportZoneService } from './airport-zone.service';
 
 @Injectable({ providedIn: 'root' })
 export class FlightsService {
@@ -15,6 +16,7 @@ export class FlightsService {
   private userService = inject(UserService);
   private tripService = inject(TripService);
   private events      = inject(TripEventsService);
+  private airportZones = inject(AirportZoneService);
 
   /** The active trip id, but only while someone is signed in. Listeners opened
    *  while signed out are refused by the rules and never recover, so trip
@@ -63,7 +65,7 @@ export class FlightsService {
     const ref = doc(collection(this.firestore, 'trips', tid, 'flights'));
     const full = { ...data, id: ref.id } as FlightDoc;
     await setDoc(ref, full);
-    const t = flightAdded(full, this.ownerName(full.uid), this.me());
+    const t = flightAdded(full, this.ownerName(full.uid), this.me(), this.airportZones.zoneFor(full.from));
     this.events.emit({ kind: 'flight', action: 'added', itemId: ref.id, path: '/flights', ...t });
   }
 
