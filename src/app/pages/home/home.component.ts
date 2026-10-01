@@ -25,6 +25,7 @@ import {
 import { TripDoc, TripDestination, ActivityLogEntry } from '../../models/trip.models';
 import { tripDestinations, activeLeg, legIsCurrent, localTodayISO, tripZone } from '../../utils/trip-destinations';
 import { zoneLabelIfForeign, zoneAbbr, wallToUtcMs } from '../../utils/zones';
+import { parseTimeString } from '../../utils/first-up';
 import { AirportZoneService } from '../../services/airport-zone.service';
 import { effectivePins } from '../../utils/pins';
 import { activityText as activityLine, timeAgo as agoOf } from '../../utils/activity';
@@ -289,7 +290,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Flights always say their zone (a missed flight is the one mistake that cannot be undone);
     // other items only when the trip's zone is not the phone's: "Thu, Oct 1 · 10:30 AM WEST".
     const isFlight = e.sortOrder === -1;
-    const label = isFlight && e.zone ? zoneAbbr(e.zone, this.now()) : zoneLabelIfForeign(e.zone, this.now());
+    // The abbreviation at the entry's own moment (CST in November, even if it is CDT today).
+    const t = parseTimeString(e.time);
+    const at = e.zone && t ? wallToUtcMs(e.date, t.h, t.min, e.zone) : this.now();
+    const label = isFlight && e.zone ? zoneAbbr(e.zone, at) : zoneLabelIfForeign(e.zone, at);
     return `${d} · ${normalizeTime(e.time)}${label ? ' ' + label : ''}`;
   });
 
