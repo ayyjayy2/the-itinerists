@@ -26,7 +26,7 @@ describe('UpdatesComponent', () => {
       imports: [UpdatesComponent],
       providers: [
         provideRouter([]),
-        { provide: TripService, useValue: { activeMembers: signal([{ uid: 'p1', displayName: 'Pat', color: '#abc', avatarEmoji: '🐸' }]) } },
+        { provide: TripService, useValue: { activeTrip: signal({ id: 't1', name: 'Berlin' }), activeMembers: signal([{ uid: 'p1', displayName: 'Pat', color: '#abc', avatarEmoji: '🐸' }]) } },
         { provide: TripEventsService, useValue: { events: signal(events) } },
         { provide: UserService, useValue: userStub },
       ],

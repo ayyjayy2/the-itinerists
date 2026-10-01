@@ -44,13 +44,13 @@ function makePassword() {
 
   await db.collection('users').doc(user.uid).set({
     uid: user.uid, displayName, username: uname, avatarEmoji: emoji, color,
-    isAdmin: false, isDisabled: false, createdAt: now,
+    isAdmin: false, isDisabled: false, isTest: true, createdAt: now,
   });
   // Sign-in address lives in the private account doc and the username index, never on the profile.
   await db.collection('users').doc(user.uid).collection('private').doc('account').set({ authEmail: email });
   await db.collection('usernames').doc(uname).set({ uid: user.uid, authEmail: email });
   await tripRef.collection('members').doc(user.uid).set({
-    uid: user.uid, role: 'member', displayName, avatarEmoji: emoji, color, joinedAt: now,
+    uid: user.uid, role: 'member', displayName, avatarEmoji: emoji, color, joinedAt: now, isTest: true,
   });
   await db.collection('userTrips').doc(user.uid).set({ tripIds: [tripId], lastActiveTrip: tripId });
   await tripRef.update({ memberCount: admin.firestore.FieldValue.increment(1) });

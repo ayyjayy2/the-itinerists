@@ -55,8 +55,9 @@ export class UpdatesComponent implements OnInit, OnDestroy {
   readonly feed = computed(() => {
     const me    = this.userService.firestoreUser()?.uid ?? '';
     const byUid = new Map(this.tripService.activeMembers().map(m => [m.uid, m]));
+    const showTest = !!this.tripService.activeTrip()?.isTest;   // tester activity is part of a test trip
     return this.eventsService.events()
-      .filter(e => e.actorUid === me || e.audience === 'all' || e.audience.includes(me))
+      .filter(e => (showTest || !e.test) && (e.actorUid === me || e.audience === 'all' || e.audience.includes(me)))
       .map(event => ({ event, member: byUid.get(event.actorUid), mine: event.actorUid === me }));
   });
 

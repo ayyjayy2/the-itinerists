@@ -5,6 +5,7 @@ import { UserService } from '../../services/user.service';
 import { timeAgo } from '../../utils/activity';
 import { eventsForMe, unseenEvents } from '../../utils/trip-events';
 import { TripEventsService } from '../../services/trip-events.service';
+import { TripService } from '../../services/trip.service';
 import { TripEvent } from '../../models/trip.models';
 
 @Component({
@@ -65,6 +66,10 @@ import { TripEvent } from '../../models/trip.models';
 export class NotificationBellComponent {
   private eventsService = inject(TripEventsService);
   private userService   = inject(UserService);
+  private tripService   = inject(TripService);
+
+  /** On a test trip, tester activity is part of what we're checking. */
+  private showTest = computed(() => !!this.tripService.activeTrip()?.isTest);
 
   open = signal(false);
   private now = signal(Date.now());
@@ -72,14 +77,14 @@ export class NotificationBellComponent {
   private me      = computed(() => this.userService.firestoreUser());
   /** Events for me newer than my high-water mark (own actions never count). */
   private unseenList = computed(() => unseenEvents(
-    this.eventsService.events(), this.me()?.uid ?? '', this.me()?.lastSeenActivityAt ?? 0,
+    this.eventsService.events(), this.me()?.uid ?? '', this.me()?.lastSeenActivityAt ?? 0, this.showTest(),
   ));
   readonly unseen = computed(() => this.unseenList().length);
   /** What the dropdown lists: the unseen ones, else the latest few for me. */
   readonly recent = computed<TripEvent[]>(() => {
     const unseen = this.unseenList();
     if (unseen.length) return unseen.slice(0, 8);
-    return eventsForMe(this.eventsService.events(), this.me()?.uid ?? '').slice(0, 5);
+    return eventsForMe(this.eventsService.events(), this.me()?.uid ?? '', this.showTest()).slice(0, 5);
   });
 
   /** Snapshot taken when the dropdown opens — opening marks everything seen
