@@ -411,22 +411,26 @@ function render() {
     tip: `<strong>${esc(b.label)}</strong> · ${b.users} ${b.users === 1 ? 'person' : 'people'}<br>${names(b.uids)}${pageList(b.pages)}`,
   })), Math.max(1, ...perHour.map(b => b.users)), { tick: (it, i) => i % 4 === 0 ? it.label.slice(0, 2) : '' });
 
-  // People per day
-  const showDays = !['today', '24h'].includes(state.range);
-  $('perDayCard').hidden = !showDays;
-  if (showDays) {
-    const perDay = S.usersPerDay(rows, state.zone);
-    const whoByDay = new Map();
-    for (const r of rows) { const k = S.dayKey(r.at, state.zone); (whoByDay.get(k) ?? whoByDay.set(k, new Set()).get(k)).add(r.uid); }
-    bars('perDay', perDay.map(d => ({
-      value: d.users, label: dayLabel(d.day),
-      tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.users} ${d.users === 1 ? 'person' : 'people'}<br>${names([...whoByDay.get(d.day) ?? []].sort())}`,
-    })), Math.max(1, ...perDay.map(d => d.users)), {
-      // Past a month the columns are too narrow for a number each, so label every nth day.
-      valueLabel: perDay.length <= 31,
-      tick: (it, i) => perDay.length <= 31 ? it.label : (i % Math.ceil(perDay.length / 12) === 0 ? it.label : ''),
-    });
-  }
+  // Activity timeline: dates along the bottom, people active that day up the side.
+  // Hover: who, the pages, first and last moment, and what was edited by whom.
+  const KIND_WORD = { itinerary: 'itinerary', finance: 'expense', rec: 'rec', flight: 'flight', stay: 'stay', transport: 'transport', packing: 'packing', member: 'join', trip: 'trip', pin: 'pin' };
+  const clock = ms => new Date(ms).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: state.zone });
+  const timeline = S.activityTimeline(rows, writes, state.zone);
+  $('perDaySub').textContent = timeline.length ? `${timeline.length} ${timeline.length === 1 ? 'day' : 'days'} with activity in ${rangeLabel} · times in ${zoneAbbr(state.zone)}` : `nothing in ${rangeLabel}`;
+  bars('perDay', timeline.map(d => {
+    const when = d.firstMs === d.lastMs ? clock(d.firstMs) : `${clock(d.firstMs)} – ${clock(d.lastMs)}`;
+    const edits = Object.entries(d.writes.byKind).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n} ${KIND_WORD[k] ?? k}${n === 1 ? '' : 's'}`).join(', ');
+    return {
+      value: d.uids.length, label: dayLabel(d.day),
+      tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.uids.length} ${d.uids.length === 1 ? 'person' : 'people'} · ${esc(when)} ${esc(zoneAbbr(state.zone, d.firstMs))}<br>${names(d.uids)}`
+        + (d.pages.length ? `<br><span class="muted">Pages:</span> ${d.pages.map(esc).join(', ')}` : '')
+        + (d.writes.total ? `<br><span class="muted">Edits:</span> ${esc(edits)} <span class="muted">by</span> ${names(d.writes.uids)}` : ''),
+    };
+  }), Math.max(1, ...timeline.map(d => d.uids.length)), {
+    // Past a month the columns are too narrow for a number each, so label every nth day.
+    valueLabel: timeline.length <= 31,
+    tick: (it, i) => timeline.length <= 14 ? it.label : (i % Math.ceil(timeline.length / 12) === 0 ? it.label : ''),
+  });
 
   // Hour of day
   const byHour = S.hourOfDayDetail(rows, state.hourMode);
@@ -572,4 +576,4 @@ function syncSelect(sel, opts, value) {
 }
 
 // For browser checks: lets a test script feed rows in and re-render.
-window.pulse = { state, render };
+window.pulse = { state, render, tips: tip.html };

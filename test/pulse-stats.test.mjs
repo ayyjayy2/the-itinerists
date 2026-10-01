@@ -256,3 +256,20 @@ test('writesPerDay groups things written by day and kind, with who', () => {
     { day: '2026-10-01', total: 1, byKind: { member: 1 }, uids: ['n'] },
   ]);
 });
+
+import { activityTimeline } from '../public/pulse/stats.mjs';
+
+test('activityTimeline merges visits and writes per day with the hover details', () => {
+  const w = (uid, at, kind) => ({ uid, tripId: 'T', kind, action: 'added', at });
+  const rows = [row({ uid: 'a', at: NOON, page: '/home' }), row({ uid: 'a', at: NOON + 3 * H, page: '/map', type: 'ping' }), row({ uid: 'b', at: NOON + H, page: '/home' })];
+  const writes = [w('b', NOON + 2 * H, 'itinerary'), w('c', NOON - 10 * D, 'rec'), w('c', NOON - 10 * D + H, 'rec')];
+  const t = activityTimeline(rows, writes, 'Europe/Berlin');
+  assert.deepEqual(t.map(d => [d.day, d.uids]), [['2026-09-20', ['c']], ['2026-09-30', ['a', 'b']]]);
+  const today = t[1];
+  assert.deepEqual(today.pages, ['/home', '/map']);
+  assert.equal(today.firstMs, NOON); assert.equal(today.lastMs, NOON + 3 * H);
+  assert.deepEqual(today.writes, { total: 1, byKind: { itinerary: 1 }, uids: ['b'] });
+  // a day known only from the write log still counts its writer as active
+  assert.deepEqual(t[0].writes, { total: 2, byKind: { rec: 2 }, uids: ['c'] });
+  assert.deepEqual(t[0].pages, []);
+});
