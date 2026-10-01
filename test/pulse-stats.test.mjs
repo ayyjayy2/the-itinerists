@@ -269,6 +269,7 @@ test('activityTimeline merges visits and writes per day with the hover details',
   assert.deepEqual(today.pages, ['/home', '/map']);
   assert.equal(today.firstMs, NOON); assert.equal(today.lastMs, NOON + 3 * H);
   assert.deepEqual(today.writes, { total: 1, byKind: { itinerary: 1 }, byPerson: { b: { itinerary: 1 } }, uids: ['b'] });
+  assert.deepEqual(today.activity, { a: 2, b: 2 });   // a: 2 events; b: 1 event + 1 edit
   // a day known only from the write log still counts its writer as active
   assert.deepEqual(t[0].writes, { total: 2, byKind: { rec: 2 }, byPerson: { c: { rec: 2 } }, uids: ['c'] });
   assert.deepEqual(t[0].pages, []);

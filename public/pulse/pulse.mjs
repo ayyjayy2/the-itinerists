@@ -417,16 +417,20 @@ function render() {
   const clock = ms => new Date(ms).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: state.zone });
   const timeline = S.activityTimeline(rows, writes, state.zone);
   $('perDaySub').textContent = timeline.length ? `${timeline.length} ${timeline.length === 1 ? 'day' : 'days'} with activity in ${rangeLabel} · times in ${zoneAbbr(state.zone)}` : `nothing in ${rangeLabel}`;
-  bars('perDay', timeline.map(d => {
+  personBars('perDay', timeline.map(d => {
     const when = d.firstMs === d.lastMs ? clock(d.firstMs) : `${clock(d.firstMs)} – ${clock(d.lastMs)}`;
+    // Segments: one per person, proportional to their share of the day's events + edits, busiest at the bottom.
+    const people = Object.entries(d.activity).sort((a, b) => b[1] - a[1]);
+    const segments = people.map(([uid, n]) => ({ share: n, color: personColor(uid), name: `${userName(uid)} · ${n}` }));
+    const whoLine = people.map(([uid, n]) => `<span class="dot" style="background:${esc(personColor(uid))}"></span>${esc(userName(uid))} <span class="muted">${n}</span>`).join(' · ');
     // Edits per person: "3 recs, 1 itinerary by Makaela · 5 expenses by Derek"
     const edits = Object.entries(d.writes.byPerson)
       .sort((a, b) => Object.values(b[1]).reduce((n, x) => n + x, 0) - Object.values(a[1]).reduce((n, x) => n + x, 0))
       .map(([uid, kinds]) => `${Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n} ${KIND_WORD[k] ?? k}${n === 1 ? '' : 's'}`).join(', ')} <span class="muted">by</span> ${esc(userName(uid))}`)
       .join(' · ');
     return {
-      value: d.uids.length, label: dayLabel(d.day),
-      tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.uids.length} ${d.uids.length === 1 ? 'person' : 'people'} · ${esc(when)} ${esc(zoneAbbr(state.zone, d.firstMs))}<br>${names(d.uids)}`
+      value: d.uids.length, label: dayLabel(d.day), segments,
+      tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.uids.length} ${d.uids.length === 1 ? 'person' : 'people'} · ${esc(when)} ${esc(zoneAbbr(state.zone, d.firstMs))}<br>${whoLine}`
         + (d.pages.length ? `<br><span class="muted">Pages:</span> ${d.pages.map(esc).join(', ')}` : '')
         + (d.writes.total ? `<br><span class="muted">Edits:</span> ${edits}` : ''),
     };
@@ -544,6 +548,31 @@ function syncTripPicker(trips) {
     $('tripList').dataset.key = key;
   }
   $('tripSummary').textContent = !state.tripSel ? 'All trips' : state.tripSel.size === 1 ? tripName([...state.tripSel][0]) : `${state.tripSel.size} trips`;
+}
+
+/** A person's colour: their avatar colour in the app, else a steady pick from a small palette. */
+const PALETTE = ['#8BAF7C', '#B4A6D4', '#F2C48A', '#7E6FA8', '#B97F35', '#6A8F5E', '#B5485D', '#6E7A86'];
+function personColor(uid) {
+  const c = state.users.get(uid)?.color;
+  if (c) return c;
+  let h = 0; for (const ch of uid) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return PALETTE[h % PALETTE.length];
+}
+/** Columns split by person: height is the day's people, the segments are each person's share of its activity. */
+function personBars(chart, items, max, { tick, valueLabel = false }) {
+  tip.html.set(chart, items.map(it => it.tip));
+  $(chart).innerHTML = items.map((it, i) => {
+    const total = it.segments.reduce((n, s) => n + s.share, 0);
+    return `
+    <div class="col" data-i="${i}" tabindex="0">
+      ${valueLabel ? `<div class="val num">${it.value}</div>` : ''}
+      <div class="stack" style="height:${max ? (it.value / max) * 100 : 0}%">
+        ${it.segments.map(s => `<div class="bar person" style="flex:${s.share};background:${esc(s.color)}" title="${esc(s.name)}"></div>`).join('')}
+        ${total === 0 ? '<div class="bar zero"></div>' : ''}
+      </div>
+      <div class="tick">${esc(tick(it, i))}</div>
+    </div>`;
+  }).join('');
 }
 
 /** Stacked columns: each item has `parts` keyed by series; the tip shows on hover like the other charts. */
