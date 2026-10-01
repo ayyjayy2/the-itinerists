@@ -23,10 +23,20 @@ function fmt(zone) {
   return f;
 }
 
+// Memoised per zone and quarter hour: every aggregation asks for the day and
+// hour of every row, and Intl's formatToParts is the slowest thing on the page.
+// A quarter hour is safe for zones on :30 and :45 offsets as well.
+const partsCache = new Map();
 function parts(ms, zone) {
+  const key = zone + '|' + Math.floor(ms / 900_000);
+  let r = partsCache.get(key);
+  if (r) return r;
+  if (partsCache.size > 60_000) partsCache.clear();
   const p = fmt(zone).formatToParts(new Date(ms));
   const get = t => p.find(x => x.type === t)?.value ?? '';
-  return { day: `${get('year')}-${get('month')}-${get('day')}`, hour: Number(get('hour')) % 24 };
+  r = { day: `${get('year')}-${get('month')}-${get('day')}`, hour: Number(get('hour')) % 24 };
+  partsCache.set(key, r);
+  return r;
 }
 
 /** Calendar day (`YYYY-MM-DD`) of an instant in a zone. */

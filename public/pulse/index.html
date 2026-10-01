@@ -100,6 +100,10 @@
   .bars .col:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
   #trips tr.dim td { color: var(--text-muted); }
   #trips tr.dim strong { font-weight: 600; }
+  .loading { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin: 0.25rem 0 0.75rem; }
+  .loading .spin { width: 0.9rem; height: 0.9rem; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--primary); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #dash.is-loading .card, #dash.is-loading .tiles { opacity: 0.55; transition: opacity 0.2s; }
   .linkish { background: none; border: 0; padding: 0; font: inherit; color: var(--accent, inherit); text-decoration: underline; cursor: pointer; }
   #trips .hidden-row { padding-top: 0.8rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; font-size: 0.82rem; }
 
@@ -212,6 +216,7 @@
       </details>
     </div>
 
+    <div class="loading" id="loading" hidden><span class="spin"></span> Loading this range…</div>
     <div class="tiles" id="tiles"></div>
     <p class="hint" id="scope"></p>
 
