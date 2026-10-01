@@ -1,4 +1,4 @@
-import { flightMomentsForUid, FlightLike } from './flight-events';
+import { mirroredFlightMoment, flightMomentsForUid, FlightLike } from './flight-events';
 
 const ordToBer: FlightLike = {
   uid: 'u1', section: 'ARRIVALS', from: 'ORD', to: 'BER',
@@ -45,5 +45,23 @@ describe('flightMomentsForUid', () => {
     expect(flightMomentsForUid([noDates], 'u1', 'Berlin')).toEqual([]);
     const noTime = flightMomentsForUid([{ ...ordToBer, departureTime: '' }], 'u1', 'Berlin');
     expect(noTime.find(m => m.kind === 'depart')?.time).toBe('');
+  });
+});
+
+describe('mirroredFlightMoment', () => {
+  const moments = flightMomentsForUid([
+    { uid: 'me', section: 'ARRIVALS', from: 'ORD', to: 'BER', departureDate: '2026-09-24', departureTime: '4:20pm', arrivalDate: '2026-09-25', arrivalTime: '12:40pm' },
+  ], 'me', 'Berlin', c => ({ ORD: 'America/Chicago', BER: 'Europe/Berlin' } as Record<string, string>)[c]);
+
+  it('maps "Fly Out" to the departure and "Arrive in Berlin" to the arrival', () => {
+    const out = mirroredFlightMoment({ date: '2026-09-24', activity: 'Fly Out', category: 'Activity' }, moments);
+    expect(out?.kind).toBe('depart'); expect(out?.time).toBe('4:20pm'); expect(out?.zone).toBe('America/Chicago');
+    const inn = mirroredFlightMoment({ date: '2026-09-25', activity: 'Arrive in Berlin', category: 'Transport' }, moments);
+    expect(inn?.kind).toBe('arrive'); expect(inn?.time).toBe('12:40pm'); expect(inn?.zone).toBe('Europe/Berlin');
+  });
+
+  it('leaves ordinary items and flight-like items on other days alone', () => {
+    expect(mirroredFlightMoment({ date: '2026-09-24', activity: 'Dinner', category: 'Food' }, moments)).toBeNull();
+    expect(mirroredFlightMoment({ date: '2026-09-26', activity: 'Taxi to the airport', category: 'Transport' }, moments)).toBeNull();
   });
 });

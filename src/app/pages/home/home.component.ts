@@ -24,7 +24,7 @@ import {
 } from '../../utils/home-widgets';
 import { TripDoc, TripDestination, ActivityLogEntry } from '../../models/trip.models';
 import { tripDestinations, activeLeg, legIsCurrent, localTodayISO, tripZone } from '../../utils/trip-destinations';
-import { zoneLabelIfForeign, zoneAbbr, wallToUtcMs } from '../../utils/zones';
+import { zoneAbbr, wallToUtcMs } from '../../utils/zones';
 import { parseTimeString } from '../../utils/first-up';
 import { AirportZoneService } from '../../services/airport-zone.service';
 import { effectivePins } from '../../utils/pins';
@@ -287,13 +287,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (!e) return '';
     const d = new Date(e.date + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     if (!e.time) return d;
-    // Flights always say their zone (a missed flight is the one mistake that cannot be undone);
-    // other items only when the trip's zone is not the phone's: "Thu, Oct 1 · 10:30 AM WEST".
-    const isFlight = e.sortOrder === -1;
-    // The abbreviation at the entry's own moment (CST in November, even if it is CDT today).
+    // The time always says its zone: the airport's for a flight, the trip's for
+    // anything else ("Thu, Oct 1 · 8:00 PM WEST"), as of the entry's own moment
+    // (CST in November even if it is CDT today). A time with no known zone is bare.
     const t = parseTimeString(e.time);
     const at = e.zone && t ? wallToUtcMs(e.date, t.h, t.min, e.zone) : this.now();
-    const label = isFlight && e.zone ? zoneAbbr(e.zone, at) : zoneLabelIfForeign(e.zone, at);
+    const label = e.zone ? zoneAbbr(e.zone, at) : '';
     return `${d} · ${normalizeTime(e.time)}${label ? ' ' + label : ''}`;
   });
 
