@@ -44,6 +44,16 @@ route + nav entry).
   legacy rows default to Rental Car, **no data migration**. Model: `RentalCar` + `TransportMode`
   in `trip.models.ts`.
 
+### Group updates (the bell)
+- Every shared change writes a **trip event** (`trips/{id}/events`): who, what, for whom, with a
+  deep link. Itinerary, flights, stays, transportation, finance, recs, map pins, packing
+  suggestions, member changes and trip edits. Personal pages (My Expenses, own packing list,
+  outfits, day labels) never notify. Wording from `utils/event-text.ts` ("changed Museum Island
+  to 2:00 PM (was 11:00 AM)"); edits by one person to one item within 5 minutes collapse into one
+  line. The bell and Updates page read this feed; each row links to `page?focus=<id>` and the
+  item scrolls into view and flashes (`appFocusTarget`). Push delivery is the next two PRs
+  (spec: `docs/superpowers/specs/2026-09-30-trip-events-and-push-design.md`).
+
 ### Home
 - "At a glance" **finance card** now shows the running **"tracked so far"** total (#84), matching
   the prototype (net owed/owe title + total subtitle).
