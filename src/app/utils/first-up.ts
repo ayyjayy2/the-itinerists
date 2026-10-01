@@ -107,7 +107,8 @@ export function pickFirstUp(
   // truth, so the copy never reaches the card, before or after the flight.
   const flightDays = new Set(flights.map(f => f.date));
   const own = items.filter(i => !(flightDays.has(i.date) && looksLikeFlight(i)));
-  const manual = pickManual(own, nowMs, zone);
+  // When the only items that day are such copies, the old fallback still applies.
+  const manual = pickManual(own, nowMs, zone) ?? pickManual(items, nowMs, zone);
   const flight = pickFlight(flights, nowMs, zone);
   if (!flight) return manual;
   if (!manual) return flight;
