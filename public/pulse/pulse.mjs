@@ -206,7 +206,7 @@ function showTip(chart, index) {
   tip.el.style.top = `${r.top + window.scrollY - t.height - 8}px`;
 }
 function hideTip() { tip.chart = null; tip.index = -1; tip.el.hidden = true; }
-for (const chart of ['perHour', 'byHour', 'perDay', 'visitMinutes', 'visitPages', 'around', 'platform', 'countries', 'signups', 'writes']) {
+for (const chart of ['perHour', 'byHour', 'perDay', 'visitMinutes', 'visitPages', 'around', 'platform', 'countries', 'signups']) {
   const el = $(chart);
   el.addEventListener('pointerover', ev => { const c = ev.target.closest('.col'); if (c) showTip(chart, Number(c.dataset.i)); });
   el.addEventListener('pointerleave', hideTip);
@@ -515,19 +515,6 @@ function render() {
     value: d.uids.length, label: dayLabel(d.day),
     tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.uids.length} ${d.uids.length === 1 ? 'sign-up' : 'sign-ups'}<br>${names(d.uids)}`,
   })), Math.max(1, ...signups.map(d => d.uids.length)), { valueLabel: signups.length <= 31, tick: (it, i) => signups.length <= 14 ? it.label : (i % Math.ceil(signups.length / 8) === 0 ? it.label : '') });
-
-  // Things written per day, stacked by kind, with who
-  const wpd = S.writesPerDay(writes, state.zone);
-  $('writesSub').textContent = wpd.length ? `${writes.length} in ${rangeLabel}` : `none in ${rangeLabel}`;
-  const KIND_WORD2 = { itinerary: 'itinerary', finance: 'expense', rec: 'rec', flight: 'flight', stay: 'stay', transport: 'transport', packing: 'packing', member: 'join', trip: 'trip', pin: 'pin' };
-  personBars('writes', wpd.map(d => {
-    // Bar height is the day's things written; segments are each person's share, in their colour.
-    const people = Object.entries(d.byPerson).map(([uid, kinds]) => [uid, Object.values(kinds).reduce((n, x) => n + x, 0), kinds]).sort((a, b) => b[1] - a[1]);
-    const segments = people.map(([uid, n]) => ({ share: n, color: personColor(uid), name: `${userName(uid)} · ${n}` }));
-    const lines = people.map(([uid, n, kinds]) => `<span class="dot" style="background:${esc(personColor(uid))}"></span>${esc(userName(uid))} <span class="muted">${n}</span> <span class="muted">·</span> ${esc(Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([k, c]) => `${c} ${KIND_WORD2[k] ?? k}${c === 1 ? '' : 's'}`).join(', '))}`).join('<br>');
-    return { value: d.total, label: dayLabel(d.day), segments, tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.total} ${d.total === 1 ? 'thing' : 'things'} written<br>${lines}` };
-  }), Math.max(1, ...wpd.map(d => d.total)),
-    { valueLabel: wpd.length <= 31, tick: (it, i) => wpd.length <= 14 ? it.label : (i % Math.ceil(wpd.length / 8) === 0 ? it.label : '') });
 
   // Countries the app was used in (from each event's zone, recorded at the moment of use)
   const countries = S.countryStats(rows, zoneCountry);
