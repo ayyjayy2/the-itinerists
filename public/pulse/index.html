@@ -119,6 +119,7 @@
   .bar.web, .sw.web { background: var(--primary); }
   .bar.pwa, .sw.pwa { background: var(--accent); }
   .bar.ios, .sw.ios { background: var(--primary-dark); }
+  .hint.since { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
   .legend { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.6rem; }
   .legend .sw { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 2px; vertical-align: -0.05em; margin: 0 0.2em 0 0.6em; border: 1px solid var(--border); }
   .card h3 { font-size: 0.85rem; color: var(--text-muted); margin: 0 0 0.5rem; font-weight: 600; }
@@ -283,6 +284,8 @@
         <table class="tbl" id="versions"></table>
       </div>
     </div>
+
+    <p class="hint since">Collecting since <strong>September 30, 2026</strong>, the day this page and the app's event log went live. Nothing before that date was recorded. <span id="firstEvent"></span></p>
   </section>
 
   <div class="card error" id="err" hidden></div>
