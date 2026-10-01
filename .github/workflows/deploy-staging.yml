@@ -1,0 +1,46 @@
+name: deploy-staging
+
+# Every commit on master that passes CI goes to staging
+# (https://the-itinerists-staging.web.app): same code, same rules, separate
+# Firebase project and data. Production is still deployed by hand.
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: staging
+      url: https://the-itinerists-staging.web.app
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # The staging build swaps in src/environments/environment.staging.ts; the
+      # default environment file only has to exist for the compiler.
+      - run: cp .env.example .env && node scripts/gen-env.js
+      - name: Build (staging configuration)
+        run: npm run build:staging
+      - name: Deploy hosting, rules and indexes to staging
+        env:
+          SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}
+        run: |
+          echo "$SA_KEY" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx --yes firebase-tools@latest deploy --project the-itinerists-staging \
+            --only hosting:the-itinerists-staging,firestore:rules,firestore:indexes --non-interactive

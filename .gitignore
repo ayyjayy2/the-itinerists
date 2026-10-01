@@ -93,3 +93,6 @@ ios/App/App/GoogleService-Info.plist
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Service account keys (production and staging)
+scripts/serviceAccountKey*.json

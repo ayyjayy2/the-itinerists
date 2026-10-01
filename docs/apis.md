@@ -91,6 +91,7 @@ project is `trip-planner-ayyjayy2` before doing anything.
 | **@vvo/tzdb** | Zone names table for Pulse | dev dependency |
 | **Xcode** 26 | iOS build, simulator, archive for TestFlight | `npm run ios:open` |
 | **GitHub** (`ayyjayy2/the-itinerists`) | Code, pull requests | `gh` CLI |
+| **Staging** (`the-itinerists-staging`) | A second Firebase project: own Firestore, accounts and hosting at https://the-itinerists-staging.web.app. Same rules and indexes as production. No App Check, no Analytics, no Pulse. Every master commit that passes CI deploys there automatically; production stays a manual deploy. Seeded with the demo's Chiang Mai trip and four test accounts (`node scripts/seed-staging.js`, passwords in `scripts/staging-accounts.local.json`) | `src/environments/environment.staging.ts`, `ng build --configuration staging`, `npm run deploy:staging`, `.github/workflows/deploy-staging.yml` |
 | **GitHub Actions** | CI on every pull request and push to master: unit tests, Pulse tests, production build, rules tests (emulators), Playwright end-to-end on the demo build. Master requires the `test` job green to merge | `.github/workflows/ci.yml` |
 | **Hostinger** | Registrar for theitinerists.com; DNS points at Firebase Hosting | bought 2026-09-29 |
 
