@@ -76,11 +76,11 @@ function start() {
   unsubTrips = onSnapshot(collection(db, 'trips'), snap => {
     state.trips = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
     syncMemberSubs();
-    render();
+    scheduleRender();
   }, err => showError('Trips: ' + err.message));
   unsubUsers = onSnapshot(collection(db, 'users'), snap => {
     state.users = new Map(snap.docs.map(d => [d.id, d.data()]));
-    render();
+    scheduleRender();
   }, err => showError('People: ' + err.message));
   unsubPrefs = onSnapshot(prefsRef(), snap => {
     const p = snap.exists() ? snap.data() : {};
@@ -114,7 +114,7 @@ function syncMemberSubs() {
     if (memberSubs.has(id)) continue;
     memberSubs.set(id, onSnapshot(collection(db, 'trips', id, 'members'), snap => {
       state.members.set(id, snap.docs.map(d => ({ uid: d.id, ...d.data() })).sort((a, b) => (a.joinedAt ?? 0) - (b.joinedAt ?? 0)));
-      render();
+      scheduleRender();
     }, err => showError('Members: ' + err.message)));
   }
 }
@@ -129,11 +129,12 @@ function queryStart() {
   return { today: S.startOfDay(a, state.zone), '24h': a - DAY, '7d': a - 7 * DAY, '30d': a - 30 * DAY, '60d': a - 60 * DAY, '180d': a - 180 * DAY, '1y': a - 365 * DAY }[state.range];
 }
 function subscribeRows() {
+  state.loading = true;   // until the first snapshot of the new range lands
   unsubWrites?.();
   const qw = query(collection(db, '_writes'), where('at', '>=', Timestamp.fromMillis(queryStart())), orderBy('at'));
   unsubWrites = onSnapshot(qw, snap => {
     state.writes = snap.docs.map(d => { const w = d.data(); return { ...w, at: w.at?.toMillis?.() ?? 0 }; }).filter(w => w.at);
-    render();
+    scheduleRender();
   }, err => showError('Writes: ' + err.message));
   unsubRows?.();
   $('dot').classList.remove('on');
@@ -147,21 +148,38 @@ function subscribeRows() {
       rows.push({ ...e, at });
     }
     state.rows = rows;
+    state.loading = false;
     $('dot').classList.add('on');
     showError('');
-    render();
+    scheduleRender();
   }, err => { showError('Activity: ' + err.message); $('dot').classList.remove('on'); });
 }
 // Events arrive by push the moment they are written; this clock only keeps
 // "x s ago" and the online window moving between them.
-setInterval(() => { state.now = Date.now(); if (!$('dash').hidden) render(); }, 1000);
+// Snapshots arrive in bursts (rows, writes, trips, users, members); one render per frame.
+let renderQueued = false;
+function scheduleRender() {
+  if (renderQueued) return;
+  renderQueued = true;
+  (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : f => setTimeout(f, 0))(() => { renderQueued = false; if (!$('dash').hidden) render(); });
+}
+// Every second only the clock and the "x s ago" labels move; the charts are
+// rebuilt when data changes and once a minute (the online window, hour roll).
+let lastFull = 0;
+setInterval(() => {
+  state.now = Date.now();
+  if ($('dash').hidden) return;
+  for (const el of document.querySelectorAll('[data-ago]')) el.textContent = ago(Number(el.dataset.ago));
+  const clock = $('clock'); if (clock) clock.textContent = clockText();
+  if (state.now - lastFull > 60_000) { lastFull = state.now; render(); }
+}, 1000);
 
 // ── controls ───────────────────────────────────────────────────────────────
 $('range').addEventListener('click', ev => {
   const b = ev.target.closest('button[data-range]'); if (!b) return;
   state.range = b.dataset.range; state.anchor = Date.now();
   for (const x of $('range').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
-  subscribeRows(); render();
+  subscribeRows(); scheduleRender();
 });
 $('tripList').addEventListener('change', () => {
   const boxes = [...document.querySelectorAll('#tripList input')];
@@ -238,10 +256,20 @@ function memberTrip(uid) {
 const personTrip = (uid, tripId) => tripId ?? memberTrip(uid);
 const zoneShort = tz => (tz || '').split('/').pop().replace(/_/g, ' ') || tz;
 /** Zone code as of now (CDT, CEST, ICT): the same three-step lookup as the app, so every zone has a code. */
-function zoneAbbr(tz) {
+const abbrCache = new Map();
+function zoneAbbr(tz, atMs) {
   if (!tz) return '';
-  if (CODE_BY_ZONE[tz]) return CODE_BY_ZONE[tz].includes('/') ? zoneAbbr(CODE_BY_ZONE[tz]) : CODE_BY_ZONE[tz];
-  const at = new Date(state.now);
+  if (CODE_BY_ZONE[tz]) return CODE_BY_ZONE[tz].includes('/') ? zoneAbbr(CODE_BY_ZONE[tz], atMs) : CODE_BY_ZONE[tz];
+  const ms = atMs ?? state.now;
+  const key = tz + '|' + Math.floor(ms / 3_600_000);   // a code only changes at a DST edge
+  const hit = abbrCache.get(key); if (hit) return hit;
+  const code = zoneAbbrUncached(tz, ms);
+  if (abbrCache.size > 5000) abbrCache.clear();
+  abbrCache.set(key, code);
+  return code;
+}
+function zoneAbbrUncached(tz, ms) {
+  const at = new Date(ms);
   const name = (locale, style) => {
     try { return new Intl.DateTimeFormat(locale, { timeZone: tz, timeZoneName: style }).formatToParts(at).find(p => p.type === 'timeZoneName')?.value ?? ''; }
     catch { return ''; }
@@ -256,7 +284,8 @@ function zoneAbbr(tz) {
   return zoneShort(tz);
 }
 /** "Berlin, Germany" / "Chicago, Illinois, USA": where a zone is named after. */
-const zonePlace = tz => { const z = ZONES[tz]; return z ? [z.city, z.region, z.country].filter(Boolean).join(', ') : zoneShort(tz); };
+const placeCache = new Map();
+const zonePlace = tz => { let p = placeCache.get(tz); if (p === undefined) { const z = ZONES[tz]; p = z ? [z.city, z.region, z.country].filter(Boolean).join(', ') : zoneShort(tz); placeCache.set(tz, p); } return p; };
 /** The country a zone belongs to, for the Countries card. */
 const zoneCountry = tz => ZONES[tz]?.country ?? '';
 /** "CEST · Berlin, Germany": the zone the app was used in, said plainly. */
@@ -267,6 +296,9 @@ function zoneName(tz) {
   const place = z ? [z.city, z.region, z.country].filter(Boolean).join(', ') : zoneShort(tz);
   return `${zoneAbbr(tz)} (${place})`;
 }
+function clockText() { return new Date(state.now).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', timeZone: state.zone }); }
+/** "x s ago" that the one-second tick keeps fresh without a rebuild. */
+const agoHtml = ms => `<span data-ago="${ms}">${ago(ms)}</span>`;
 function ago(ms) {
   const s = Math.max(0, Math.round((state.now - ms) / 1000));
   if (s < 60) return `${s} s ago`;
@@ -312,6 +344,9 @@ function allZones() {
 
 // ── render ─────────────────────────────────────────────────────────────────
 function render() {
+  lastFull = state.now;
+  $('loading').hidden = !state.loading;
+  $('dash').classList.toggle('is-loading', !!state.loading);
   const now = state.now;
   // Hide: the owner, test trips and throwaway accounts leave every number; events with no trip (sign-in screen) stay.
   const hiddenUids = new Set([...(state.hide.testUsers ? state.testUsers : []), ...(state.hide.me ? [OWNER_UID] : [])]);
@@ -384,7 +419,7 @@ function render() {
         <td class="n num" title="${esc(quiet.length ? 'Not active: ' + quiet.map(m => m.displayName).join(', ') : 'Everyone has been active')}">${active.size}</td>
         <td class="n num">${s?.sessions ?? 0}</td>
         <td class="n num">${s?.views ?? 0}</td>
-        <td class="n">${s ? ago(s.lastSeen) : '<span class="muted">none</span>'}</td>
+        <td class="n">${s ? agoHtml(s.lastSeen) : '<span class="muted">none</span>'}</td>
         <td class="n"><button type="button" class="btn small" data-${isTest ? 'real' : 'test'}="${esc(t.id)}">${isTest ? 'Not a test' : 'Mark as test'}</button></td>
       </tr>`;
   };
@@ -400,7 +435,7 @@ function render() {
   $('online').innerHTML = online.length === 0 ? '<li class="empty">Nobody in the last 3 minutes.</li>' : online.map(o => `
     <li>${avatar(o.uid)}<span class="main"><span class="name">${esc(userName(o.uid))}</span>
       <span class="sub">${esc(o.page)} · ${esc(tripName(personTrip(o.uid, o.tripId)))} · ${esc(o.platform)} · ${esc(usedIn(o.tz))}</span></span>
-      <span class="when">${ago(o.lastSeen)}</span></li>`).join('');
+      <span class="when">${agoHtml(o.lastSeen)}</span></li>`).join('');
 
   // People per hour (last 24 h)
   const end = Math.ceil(now / HOUR) * HOUR;
@@ -462,7 +497,7 @@ function render() {
   $('people').innerHTML = people.length === 0 ? '<li class="empty">Nobody yet.</li>' : people.map(p => `
     <li>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}</span>
       <span class="sub">${esc(tripName(personTrip(p.uid, p.tripId)))} · ${esc(p.platform)} · ${esc(usedIn(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
-      <span class="when">${ago(p.lastSeen)}</span></li>`).join('');
+      <span class="when">${agoHtml(p.lastSeen)}</span></li>`).join('');
 
   // Return rate
   const cohorts = S.returnCohorts(rows, state.zone);
@@ -505,7 +540,7 @@ function render() {
   const versions = S.versionStats(rows);
   $('versions').innerHTML = versions.length === 0 ? '<tr><td class="muted">Nothing yet.</td></tr>' :
     '<tr><th>Version</th><th class="n">People</th><th class="n">Last seen</th></tr>' +
-    versions.map(v => `<tr><td>${esc(v.version)}</td><td class="n num" ${who(v.uids)}>${v.uids.length}</td><td class="n">${ago(v.lastSeen)}</td></tr>`).join('');
+    versions.map(v => `<tr><td>${esc(v.version)}</td><td class="n num" ${who(v.uids)}>${v.uids.length}</td><td class="n">${agoHtml(v.lastSeen)}</td></tr>`).join('');
 
   // Sign-ups per day (every account carries its creation date), under the Hide rules
   const visibleUsers = new Map([...state.users.entries()].filter(([uid]) => !hiddenUids.has(uid)));
