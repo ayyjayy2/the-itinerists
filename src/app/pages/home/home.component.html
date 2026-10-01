@@ -16,7 +16,7 @@
   }
 
   @if (loading()) {
-    <app-loading />
+    <app-loading [immediate]="true" />
   } @else if (hasActiveTrip()) {
     <!-- Trip switcher (Type A only — B and C switch trips on My Trips) -->
     @if (layout() === 'A') {

@@ -25,11 +25,13 @@ export class LoadingComponent {
   /** Set false once the content is ready (defaults to "still loading"). */
   readonly active = input(true);
   readonly label  = input('Loading…');
+  /** Show at once (no 300ms grace), e.g. on Home right after signing in. */
+  readonly immediate = input(false);
 
   protected readonly dv = new DelayedVisibility();
 
   constructor() {
-    effect(() => this.dv.set(this.active()));
+    effect(() => this.dv.set(this.active(), this.immediate()));
     inject(DestroyRef).onDestroy(() => this.dv.destroy());
   }
 }

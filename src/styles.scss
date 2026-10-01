@@ -149,7 +149,10 @@ h1 > app-icon, h2 > app-icon {
   padding: 1.5rem 2rem;
   max-width: 860px;
   margin: 0 auto;
-  animation: fadeIn 0.2s ease;
+  // Fade only: a transform here (even for 0.2s) would make every fixed child,
+  // such as the page loader, position itself against the page instead of the
+  // screen, so the loader would jump from the top to the middle.
+  animation: pageIn 0.2s ease;
 
   @media (max-width: 480px) {
     padding: 1rem;
@@ -389,13 +392,20 @@ label {
   animation: spin 0.8s linear infinite;
 }
 
+// A page's loader sits in the middle of the screen (it stands in for the
+// whole page), above the content area but under the header and tab bar, and
+// never blocks a tap on them.
 .loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
-  padding: 3rem;
   color: var(--text-muted);
+  pointer-events: none;
 }
 
 // ── Scrollbar ─────────────────────────────────────────────────────────────────
@@ -442,6 +452,7 @@ label {
 
 // ── Animations ────────────────────────────────────────────────────────────────
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes spin   { to { transform: rotate(360deg); } }
 
 // ── Deep-link landing: the item a bell row / push pointed at ─────────────────

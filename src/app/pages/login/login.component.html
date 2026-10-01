@@ -16,6 +16,7 @@
           placeholder="Username or recovery email"
           autocomplete="username"
           autocapitalize="none"
+          (blur)="prefetch()"
           required
         />
       </div>
@@ -30,6 +31,8 @@
             name="password"
             placeholder="Enter your password"
             autocomplete="current-password"
+            (focus)="prefetch()"
+            (input)="prefetch()"
             required
           />
           <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"

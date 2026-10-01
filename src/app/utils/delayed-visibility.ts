@@ -23,12 +23,14 @@ export class DelayedVisibility {
 
   constructor(private readonly showAfterMs = 300, private readonly minShowMs = 300) {}
 
-  set(busy: boolean): void {
+  /** `immediate`: show at once, skipping the grace period (e.g. right after sign-in). */
+  set(busy: boolean, immediate = false): void {
     if (busy === this.busy) return;
     this.busy = busy;
 
     if (busy) {
       if (this._visible() || this.showTimer) return;     // already up, or already counting
+      if (immediate) { this.show(); return; }
       this.showTimer = setTimeout(() => this.show(), this.showAfterMs);
       return;
     }
