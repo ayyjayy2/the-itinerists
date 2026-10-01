@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "trip-planner-ayyjayy2"
+    "default": "trip-planner-ayyjayy2",
+    "staging": "the-itinerists-staging"
   }
 }

@@ -41,7 +41,8 @@ build (approval takes a day or two).
 - [ ] Now: Firebase pay-as-you-go (Blaze) plan + budget alerts at $10 and $25 — *Alayna*
       (console → Usage and billing → Modify plan). Creates the Storage bucket, unlocks backups
       and Cloud Functions.
-- [ ] Now: Staging Firebase project (free plan), same rules file deployed to both.
+- [x] Staging Firebase project `the-itinerists-staging` (free plan), same rules and indexes; master
+      auto-deploys there after CI; seeded demo trip + 4 test accounts — 2026-10-01.
 - [x] Crashlytics — code shipped (#223); live since 2026-09-30: the console shows the iOS app,
       two test crashes from the simulator were received and symbolicated (dSYMs uploaded with
       `upload-symbols`; `cap run ios` debug builds make none, archive builds do).
