@@ -1,20 +1,24 @@
 import { TripEvent } from '../models/trip.models';
 
-/** True when this event is meant for `uid` (everyone, or named) and is not their own. */
-export function isFor(ev: TripEvent, uid: string): boolean {
-  if (ev.test) return false;
+/**
+ * True when this event is meant for `uid` (everyone, or named) and is not
+ * their own. Events done by or to a test account are left out unless
+ * `showTest` is on, which the pages set for a test trip.
+ */
+export function isFor(ev: TripEvent, uid: string, showTest = false): boolean {
+  if (ev.test && !showTest) return false;
   if (ev.actorUid === uid) return false;
   return ev.audience === 'all' || ev.audience.includes(uid);
 }
 
 /** Events aimed at `uid`, newest first (own actions excluded). */
-export function eventsForMe(events: readonly TripEvent[], uid: string): TripEvent[] {
-  return events.filter(e => isFor(e, uid)).sort((a, b) => b.timestamp - a.timestamp);
+export function eventsForMe(events: readonly TripEvent[], uid: string, showTest = false): TripEvent[] {
+  return events.filter(e => isFor(e, uid, showTest)).sort((a, b) => b.timestamp - a.timestamp);
 }
 
 /** Bell badge: events for `uid` newer than their high-water mark. */
-export function unseenEvents(events: readonly TripEvent[], uid: string, lastSeenAt: number): TripEvent[] {
-  return eventsForMe(events, uid).filter(e => e.timestamp > lastSeenAt);
+export function unseenEvents(events: readonly TripEvent[], uid: string, lastSeenAt: number, showTest = false): TripEvent[] {
+  return eventsForMe(events, uid, showTest).filter(e => e.timestamp > lastSeenAt);
 }
 
 /** Several edits by one person to one item inside this window update the same event. */

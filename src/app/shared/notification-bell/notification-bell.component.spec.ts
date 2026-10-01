@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { NotificationBellComponent } from './notification-bell.component';
 import { TripEventsService } from '../../services/trip-events.service';
 import { UserService } from '../../services/user.service';
+import { TripService } from '../../services/trip.service';
 import { TripEvent } from '../../models/trip.models';
 
 const ev = (o: Partial<TripEvent>): TripEvent => ({
@@ -15,12 +16,15 @@ const events: TripEvent[] = [
   ev({ id: 'e2', actorUid: 'me', actorName: 'Me', timestamp: 3000 }),      // mine → never counts
   ev({ id: 'e3', audience: ['someone-else'], timestamp: 4000 }),           // not for me
   ev({ id: 'e4', timestamp: 500, summary: 'added a rec: Old (Food)', path: '/recs', itemId: 'r1' }), // seen
+  ev({ id: 'e5', timestamp: 6000, test: true, summary: 'removed Tester 1', kind: 'member', action: 'kicked', path: '/trip-settings', itemId: '' }), // tester
 ];
 
 describe('NotificationBellComponent', () => {
   let userStub: { firestoreUser: any; markActivitySeen: jasmine.Spy };
+  let tripStub: ReturnType<typeof signal<any>>;
 
   beforeEach(() => {
+    tripStub = signal<any>({ id: 't1', name: 'Berlin' });
     userStub = {
       firestoreUser: signal({ uid: 'me', lastSeenActivityAt: 1000 }),
       markActivitySeen: jasmine.createSpy(),
@@ -31,6 +35,7 @@ describe('NotificationBellComponent', () => {
         provideRouter([]),
         { provide: TripEventsService, useValue: { events: signal(events) } },
         { provide: UserService, useValue: userStub },
+        { provide: TripService, useValue: { activeTrip: tripStub } },
       ],
     });
   });
@@ -72,5 +77,17 @@ describe('NotificationBellComponent', () => {
     expect(userStub.markActivitySeen).not.toHaveBeenCalled();
     const hrefs = Array.from(el.querySelectorAll('a.bell-item')).map(a => a.getAttribute('href'));
     expect(hrefs).toEqual(['/itinerary?focus=i1', '/recs?focus=r1']);
+  });
+
+  it('hides tester events on a real trip and shows them on a test trip', () => {
+    let fixture = TestBed.createComponent(NotificationBellComponent);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.bell-badge')?.textContent?.trim()).toBe('1');
+    tripStub.set({ id: 't1', name: 'Sandbox', isTest: true });
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.bell-badge')?.textContent?.trim()).toBe('2');
+    (fixture.nativeElement.querySelector('.bell-btn') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('removed Tester 1');
   });
 });

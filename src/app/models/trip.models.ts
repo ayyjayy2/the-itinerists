@@ -119,6 +119,8 @@ export interface TripDoc {
   createdAt: number;            // unix ms
   memberCount: number;          // denormalized count, for plan/limit checks
   archived?: boolean;           // set true by archiveTrip()
+  /** A trip used for testing: tester activity shows in its feed (it is hidden on real trips). */
+  isTest?: boolean;
 }
 
 /** Stored at Firestore `/trips/{tripId}/members/{uid}` — one doc per member (doc id = uid). */

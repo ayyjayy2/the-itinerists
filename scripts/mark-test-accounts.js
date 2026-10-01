@@ -9,7 +9,8 @@
  * was done to them (member events name them in the summary).
  *
  * Tester uids come from Pulse's hand-kept list (_pulse/prefs.testUsers) plus
- * any uids given on the command line.
+ * any uids given on the command line. Pulse's test trips (_pulse/prefs.testTrips)
+ * get `isTest: true` on the trip doc, so tester activity still shows there.
  *
  * Dry run (default):  node scripts/mark-test-accounts.js [uid ...]
  * Apply:              node scripts/mark-test-accounts.js --run [uid ...]
@@ -27,14 +28,15 @@ const extraUids = args.filter(a => !a.startsWith('--'));
 (async () => {
   const prefs = await db.collection('_pulse').doc('prefs').get();
   const uids = new Set([...(prefs.exists ? prefs.data().testUsers ?? [] : []), ...extraUids]);
-  if (!uids.size) { console.log('No tester uids (Pulse prefs.testUsers is empty and none given).'); return; }
+  const testTrips = new Set(prefs.exists ? prefs.data().testTrips ?? [] : []);
+  if (!uids.size && !testTrips.size) { console.log('Nothing to do: Pulse prefs has no testUsers or testTrips and no uids were given.'); return; }
 
   const names = new Map();
   for (const uid of uids) {
     const u = await db.collection('users').doc(uid).get();
     if (u.exists) names.set(uid, u.data().displayName ?? '');
   }
-  console.log(`${RUN ? 'Applying to' : 'Would flag'} ${uids.size} tester account(s).`);
+  console.log(`${RUN ? 'Applying to' : 'Would flag'} ${uids.size} tester account(s) and ${testTrips.size} test trip(s).`);
 
   let writes = 0;
   const batchWrite = async (ref, data) => {
@@ -46,6 +48,7 @@ const extraUids = args.filter(a => !a.startsWith('--'));
 
   const trips = await db.collection('trips').get();
   for (const t of trips.docs) {
+    if (testTrips.has(t.id) && !t.data().isTest) { console.log(`  test trip ${t.id}: ${t.data().name}`); await batchWrite(t.ref, { isTest: true }); }
     for (const sub of ['members', 'removedMembers']) {
       for (const uid of uids) {
         const ref = t.ref.collection(sub).doc(uid);

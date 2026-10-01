@@ -53,10 +53,15 @@ describe('trip-events: CollapseTracker', () => {
 });
 
 describe('trip-events: test accounts', () => {
-  it('events done by or to a tester never reach anyone', () => {
-    const list = [ev({ id: 'a', timestamp: 1 }), ev({ id: 't', timestamp: 2, test: true })];
+  const list = [ev({ id: 'a', timestamp: 1 }), ev({ id: 't', timestamp: 2, test: true })];
+  it('events done by or to a tester are hidden on a real trip', () => {
     expect(isFor(list[1], 'me')).toBeFalse();
     expect(eventsForMe(list, 'me').map(e => e.id)).toEqual(['a']);
     expect(unseenEvents(list, 'me', 0).map(e => e.id)).toEqual(['a']);
+  });
+  it('and shown on a test trip', () => {
+    expect(isFor(list[1], 'me', true)).toBeTrue();
+    expect(eventsForMe(list, 'me', true).map(e => e.id)).toEqual(['t', 'a']);
+    expect(unseenEvents(list, 'me', 0, true).map(e => e.id)).toEqual(['t', 'a']);
   });
 });
