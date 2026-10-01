@@ -60,12 +60,13 @@ export class UserService {
       updateDoc(doc(this.firestore, 'users', uid), { homeLayout: layout }));
   }
 
-  /** Stamp the bell's high-water mark — clears the badge on every device. */
-  async markActivitySeen(): Promise<void> {
+  /** Stamp one trip's bell high-water mark — clears that trip's badge on every device,
+   *  and leaves other trips' updates unseen until the person switches to them. */
+  async markActivitySeen(tripId: string | null | undefined): Promise<void> {
     const uid = this._firestoreUser()?.uid;
-    if (!uid) return;
+    if (!uid || !tripId) return;
     await runInInjectionContext(this.injector, () =>
-      updateDoc(doc(this.firestore, 'users', uid), { lastSeenActivityAt: Date.now() }));
+      updateDoc(doc(this.firestore, 'users', uid), { [`lastSeenByTrip.${tripId}`]: Date.now() }));
   }
 
   /** Persist the personal nav/tab order on the account. */

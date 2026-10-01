@@ -64,7 +64,7 @@ export class UpdatesComponent implements OnInit, OnDestroy {
   ago = (ts: number) => timeAgo(ts, this.now());
 
   ngOnInit(): void {
-    void this.userService.markActivitySeen();
+    void this.userService.markActivitySeen(this.tripService.activeTrip()?.id);
     this.timer = setInterval(() => this.now.set(Date.now()), 60_000);
   }
   ngOnDestroy(): void { if (this.timer) clearInterval(this.timer); }

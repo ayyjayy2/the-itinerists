@@ -55,20 +55,13 @@ export class CollapseTracker {
   reset(): void { this.last.clear(); }
 }
 
-/** An event plus the trip it happened on, for the bell's all-trips view. */
-export interface TripEventInTrip extends TripEvent {
-  tripId: string;
-  tripName: string;
-  /** Test trips show tester activity (the same rule each page applies to its own trip). */
-  tripIsTest: boolean;
-}
-
-/** Events for `uid` across all their trips, newest first; each trip's own test rule applies. */
-export function forMeAcrossTrips(events: readonly TripEventInTrip[], uid: string): TripEventInTrip[] {
-  return events.filter(e => isFor(e, uid, e.tripIsTest)).sort((a, b) => b.timestamp - a.timestamp);
-}
-
-/** The above, newer than the person's high-water mark. */
-export function unseenAcrossTrips(events: readonly TripEventInTrip[], uid: string, lastSeenAt: number): TripEventInTrip[] {
-  return forMeAcrossTrips(events, uid).filter(e => e.timestamp > lastSeenAt);
+/**
+ * The bell's high-water mark for one trip: when the person last opened that
+ * trip's updates. Seen is per trip, so reading Lisbon's updates leaves Central
+ * America's waiting until they switch to it. Accounts from before per-trip
+ * marks fall back to the old account-wide one.
+ */
+export function seenMarkFor(user: { lastSeenActivityAt?: number; lastSeenByTrip?: Record<string, number> } | null | undefined, tripId: string | null | undefined): number {
+  if (!user) return 0;
+  return (tripId && user.lastSeenByTrip?.[tripId]) || user.lastSeenActivityAt || 0;
 }

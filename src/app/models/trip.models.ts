@@ -48,6 +48,8 @@ export interface FirestoreUser {
   homeLayout?: 'A' | 'B' | 'C';
   /** High-water mark for the notification bell (unix ms). Absent → 0. */
   lastSeenActivityAt?: number;
+  /** Per trip: when the person last opened that trip's bell or Updates page (falls back to lastSeenActivityAt). */
+  lastSeenByTrip?: Record<string, number>;
   /** Personal nav order (paths, Home/Admin excluded). Absent → default order. */
   navOrder?: string[];
 }

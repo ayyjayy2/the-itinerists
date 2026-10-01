@@ -1,4 +1,4 @@
-import { CollapseTracker, COLLAPSE_WINDOW_MS, eventsForMe, isFor, unseenEvents } from './trip-events';
+import { CollapseTracker, COLLAPSE_WINDOW_MS, eventsForMe, isFor, unseenEvents, seenMarkFor } from './trip-events';
 import { TripEvent } from '../models/trip.models';
 
 const ev = (o: Partial<TripEvent>): TripEvent => ({
@@ -63,5 +63,15 @@ describe('trip-events: test accounts', () => {
     expect(isFor(list[1], 'me', true)).toBeTrue();
     expect(eventsForMe(list, 'me', true).map(e => e.id)).toEqual(['t', 'a']);
     expect(unseenEvents(list, 'me', 0, true).map(e => e.id)).toEqual(['t', 'a']);
+  });
+});
+
+describe('seenMarkFor', () => {
+  it('is per trip, falling back to the old account-wide mark', () => {
+    const user = { lastSeenActivityAt: 100, lastSeenByTrip: { lisbon: 900 } };
+    expect(seenMarkFor(user, 'lisbon')).toBe(900);
+    expect(seenMarkFor(user, 'central')).toBe(100);   // never opened there yet: Lisbon's read does not count
+    expect(seenMarkFor({}, 'lisbon')).toBe(0);
+    expect(seenMarkFor(null, 'lisbon')).toBe(0);
   });
 });
