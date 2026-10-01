@@ -215,6 +215,20 @@ function memberName(uid) {
   return undefined;
 }
 const tripName = id => id ? (state.trips.get(id)?.name ?? `Trip …${id.slice(-4)}`) : 'No trip';
+/**
+ * The trip a person belongs to, from the members lists, for rows whose events
+ * carry no trip (a visit that ended before the app had picked the active trip).
+ * The trip happening today wins; otherwise the one that starts next or ended last.
+ */
+function memberTrip(uid) {
+  const today = S.dayKey(state.now, state.zone);
+  const mine = [...state.members.entries()].filter(([, list]) => list.some(m => m.uid === uid)).map(([id]) => state.trips.get(id)).filter(Boolean);
+  if (!mine.length) return null;
+  const live = mine.find(t => t.startDate && t.endDate && t.startDate <= today && today <= t.endDate);
+  return (live ?? [...mine].sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''))[0]).id;
+}
+/** The trip to show for a person: the one their events name, else the one they are a member of. */
+const personTrip = (uid, tripId) => tripId ?? memberTrip(uid);
 const zoneShort = tz => (tz || '').split('/').pop().replace(/_/g, ' ') || tz;
 /** Zone code as of now (CDT, CEST, ICT): the same three-step lookup as the app, so every zone has a code. */
 function zoneAbbr(tz) {
@@ -374,7 +388,7 @@ function render() {
   // Online now
   $('online').innerHTML = online.length === 0 ? '<li class="empty">Nobody in the last 3 minutes.</li>' : online.map(o => `
     <li>${avatar(o.uid)}<span class="main"><span class="name">${esc(userName(o.uid))}</span>
-      <span class="sub">${esc(o.page)} · ${esc(tripName(o.tripId))} · ${esc(o.platform)} · ${esc(usedIn(o.tz))}</span></span>
+      <span class="sub">${esc(o.page)} · ${esc(tripName(personTrip(o.uid, o.tripId)))} · ${esc(o.platform)} · ${esc(usedIn(o.tz))}</span></span>
       <span class="when">${ago(o.lastSeen)}</span></li>`).join('');
 
   // People per hour (last 24 h)
@@ -424,7 +438,7 @@ function render() {
   const people = S.peopleStats(rows, state.zone);
   $('people').innerHTML = people.length === 0 ? '<li class="empty">Nobody yet.</li>' : people.map(p => `
     <li>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}</span>
-      <span class="sub">${esc(tripName(p.tripId))} · ${esc(p.platform)} · ${esc(usedIn(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
+      <span class="sub">${esc(tripName(personTrip(p.uid, p.tripId)))} · ${esc(p.platform)} · ${esc(usedIn(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
       <span class="when">${ago(p.lastSeen)}</span></li>`).join('');
 
   // Return rate
