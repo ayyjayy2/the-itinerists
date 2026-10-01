@@ -559,9 +559,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     // Near the trip's current leg first; the same forms unbounded only if nothing is found there.
     const plan = near ? [...attempts.map(q => ({ q, near })), ...attempts.map(q => ({ q, near: null }))] : attempts.map(q => ({ q, near: null }));
+    // A result from the unbounded pass still has to be on this trip: a place
+    // Nominatim does not know must get no pin, not a namesake on another continent.
+    const MAX_KM = 300;
+    const kmFrom = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) =>
+      Math.hypot(a.lat - b.lat, (a.lng - b.lng) * Math.cos(b.lat * Math.PI / 180)) * 111;
     for (let i = 0; i < plan.length; i++) {
       if (i > 0) await new Promise(r => setTimeout(r, 1100));
-      const coords = await this.fetchGeocode(plan[i].q, plan[i].near);
+      let coords = await this.fetchGeocode(plan[i].q, plan[i].near);
+      if (coords && near && !plan[i].near && kmFrom(coords, near) > MAX_KM) coords = null;
       if (coords) {
         this.geocache[key] = coords;
         this.geocodedLocations.set(location, coords);
