@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app-check.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
-import { getFirestore, collection, doc, getDoc, setDoc, query, where, orderBy, onSnapshot, Timestamp, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, query, where, orderBy, limit, onSnapshot, Timestamp, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
 import { firebaseConfig, recaptchaSiteKey } from './config.mjs';
 import * as S from './stats.mjs';
 import { ZONES } from './zones.mjs';
@@ -91,6 +91,17 @@ function start() {
     render();
   }, err => showError('Preferences: ' + err.message));
   subscribeRows();
+  showFirstEvent();
+}
+/** The oldest row in the event log, once: the exact moment collection began. */
+async function showFirstEvent() {
+  try {
+    const snap = await getDocs(query(collection(db, '_activity'), orderBy('at'), limit(1)));
+    const at = snap.docs[0]?.data().at?.toMillis?.();
+    if (!at) return;
+    const when = new Date(at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short', timeZone: state.zone });
+    $('firstEvent').textContent = `First event: ${when} (${zoneAbbr(state.zone)}).`;
+  } catch { /* cosmetic */ }
 }
 /** One members listener per trip, following the trip list. */
 function syncMemberSubs() {
