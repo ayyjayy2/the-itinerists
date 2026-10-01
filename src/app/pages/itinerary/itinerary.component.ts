@@ -14,6 +14,10 @@ import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { flightMomentsForUid } from '../../utils/flight-events';
+import { AirportZoneService } from '../../services/airport-zone.service';
+import { zoneAbbr } from '../../utils/zones';
+import { parseTimeString } from '../../utils/first-up';
+import { wallToUtcMs } from '../../utils/zones';
 import { stayMomentsFor } from '../../utils/stay-events';
 import { TimeInputComponent } from '../../shared/time-input/time-input.component';
 import { Time12Pipe } from '../../shared/time12.pipe';
@@ -55,6 +59,7 @@ export class ItineraryComponent implements OnInit {
   userService       = inject(UserService);
   usersService      = inject(UsersService);
   flightsService    = inject(FlightsService);
+  private airportZones = inject(AirportZoneService);
   tripService       = inject(TripService);
   dataService       = inject(DataService);
   private focus     = inject(FocusService);
@@ -136,9 +141,15 @@ export class ItineraryComponent implements OnInit {
   readonly flightEvents = computed(() => {
     const uid  = this.currentUser()?.uid ?? '';
     const dest = this.tripService.activeTrip()?.destination ?? 'your destination';
-    return flightMomentsForUid(this.flightsService.flights(), uid, dest)
+    const zones = this.airportZones.zones();   // read so this re-runs when the table lands
+    return flightMomentsForUid(this.flightsService.flights(), uid, dest, iata => zones[iata?.toUpperCase()] ?? this.airportZones.zoneFor(iata))
       .filter(m => m.kind === (m.section === 'ARRIVALS' ? 'arrive' : 'depart'))
-      .map(({ date, label, time }) => ({ date, label, time }));
+      .map(({ date, label, time, zone }) => {
+        // A flight time always says its airport's zone (CEST, CDT), as on the Flights page.
+        const t = parseTimeString(time);
+        const zoneLabel = zone ? zoneAbbr(zone, t ? wallToUtcMs(date, t.h, t.min, zone) : Date.now()) : '';
+        return { date, label, time, zoneLabel };
+      });
   });
 
   /** Auto-generated check-in / check-out events from the Stays page for the current user — not editable here. */
