@@ -99,8 +99,10 @@ async function showFirstEvent() {
     const snap = await getDocs(query(collection(db, '_activity'), orderBy('at'), limit(1)));
     const at = snap.docs[0]?.data().at?.toMillis?.();
     if (!at) return;
-    const when = new Date(at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short', timeZone: state.zone });
-    $('firstEvent').textContent = `First event: ${when} (${zoneAbbr(state.zone)}).`;
+    const d = new Date(at);
+    const day = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: state.zone });
+    const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: state.zone });
+    $('firstEvent').textContent = `Collected since ${day} at ${time} (${zoneAbbr(state.zone)})`;
   } catch { /* cosmetic */ }
 }
 /** One members listener per trip, following the trip list. */
