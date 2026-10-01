@@ -69,7 +69,8 @@
 
   &.mine {
     border-left: 3px solid var(--primary);
-    background: linear-gradient(135deg, rgba(136,201,161,0.06), #fff);
+    // Sage wash into the card surface, so it reads on every theme (never a hard white).
+    background: linear-gradient(135deg, var(--primary-tint), var(--surface) 70%);
   }
 }
 
