@@ -56,7 +56,7 @@ export function onlineNow(rows, now, windowMs) {
   }
   return [...latest.values()]
     .sort((a, b) => b.at - a.at)
-    .map(r => ({ uid: r.uid, tripId: r.tripId, page: r.page, platform: r.platform, tz: r.tz, lastSeen: r.at }));
+    .map(r => ({ uid: r.uid, tripId: r.tripId, page: pageName(r.page), platform: r.platform, tz: r.tz, lastSeen: r.at }));
 }
 
 /** Distinct users per clock hour from `from` (rounded down to the hour) up to `to`. */
@@ -81,7 +81,7 @@ export function usersPerHour(rows, from, to, zone) {
 /** Distinct pages in these rows, busiest first (every event type counts: a ping says where someone stayed). */
 export function pagesOf(rows) {
   const n = new Map();
-  for (const r of rows) if (r.page) n.set(r.page, (n.get(r.page) ?? 0) + 1);
+  for (const r of rows) if (r.page) n.set(pageName(r.page), (n.get(pageName(r.page)) ?? 0) + 1);
   return [...n.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([page]) => page);
 }
 
@@ -131,11 +131,15 @@ export function hourOfDayDetail(rows, mode) {
   return counts.map((count, h) => ({ count, uids: [...people[h]].sort(), zones: [...zones[h]].sort(), pages: pagesOf(hits[h]) }));
 }
 
+/** "/" is the app's entry before it redirects to Home; count it as Home. */
+export const pageName = page => page === '/' ? '/home' : page;
+
 /** Page views (`page` events) and distinct people per page, busiest first. */
 export function pageStats(rows) {
   const byPage = new Map();
   for (const r of rows) {
-    const s = byPage.get(r.page) ?? byPage.set(r.page, { views: 0, users: new Set() }).get(r.page);
+    const page = pageName(r.page);
+    const s = byPage.get(page) ?? byPage.set(page, { views: 0, users: new Set() }).get(page);
     if (r.type === 'page') s.views++;
     s.users.add(r.uid);
   }
@@ -222,7 +226,7 @@ export function sessionStats(rows) {
   for (const r of rows) {
     const v = s.get(r.sessionId) ?? s.set(r.sessionId, { uid: r.uid, first: r.at, last: r.at, pages: new Set() }).get(r.sessionId);
     v.first = Math.min(v.first, r.at); v.last = Math.max(v.last, r.at);
-    if (r.page) v.pages.add(r.page);
+    if (r.page) v.pages.add(pageName(r.page));
   }
   const bucket = (defs, pick) => defs.map(([label, lo, hi]) => {
     const uids = new Set(); let count = 0;
@@ -284,4 +288,23 @@ export function versionStats(rows) {
   const num = s => String(s).split('.').map(n => parseInt(n, 10) || 0);
   const cmp = (a, b) => { const x = num(a), y = num(b); for (let i = 0; i < 3; i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (y[i] ?? 0) - (x[i] ?? 0); return 0; };
   return [...v.values()].sort((a, b) => cmp(a.version, b.version)).map(x => ({ ...x, uids: sortedUids(x.uids) }));
+}
+
+/**
+ * Where the app was used: distinct people, app opens and zones per country,
+ * most people first. `countryOf` turns an event's zone into a country name
+ * (the page passes its zones table); events with an unknown zone are skipped.
+ */
+export function countryStats(rows, countryOf) {
+  const acc = new Map();
+  for (const r of rows) {
+    const country = r.tz ? countryOf(r.tz) : '';
+    if (!country) continue;
+    const c = acc.get(country) ?? acc.set(country, { country, uids: new Set(), sessions: 0, zones: new Set() }).get(country);
+    c.uids.add(r.uid); c.zones.add(r.tz);
+    if (r.type === 'session') c.sessions++;
+  }
+  return [...acc.values()]
+    .map(c => ({ country: c.country, uids: [...c.uids].sort(), sessions: c.sessions, zones: [...c.zones].sort() }))
+    .sort((a, b) => b.uids.length - a.uids.length || a.country.localeCompare(b.country));
 }

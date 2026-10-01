@@ -5,6 +5,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, setDoc, query, where, o
 import { firebaseConfig, recaptchaSiteKey } from './config.mjs';
 import * as S from './stats.mjs';
 import { ZONES } from './zones.mjs';
+import { CODE_BY_LONG_NAME, CODE_BY_ZONE } from './zone-codes.mjs';
 
 const OWNER_UID = 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';
 const HOUR = 3_600_000, DAY = 24 * HOUR, ONLINE = 3 * 60_000; // the app pings every 2 minutes while visible
@@ -198,7 +199,7 @@ function showTip(chart, index) {
   tip.el.style.top = `${r.top + window.scrollY - t.height - 8}px`;
 }
 function hideTip() { tip.chart = null; tip.index = -1; tip.el.hidden = true; }
-for (const chart of ['perHour', 'byHour', 'perDay', 'visitMinutes', 'visitPages', 'around', 'platform']) {
+for (const chart of ['perHour', 'byHour', 'perDay', 'visitMinutes', 'visitPages', 'around', 'platform', 'countries']) {
   const el = $(chart);
   el.addEventListener('pointerover', ev => { const c = ev.target.closest('.col'); if (c) showTip(chart, Number(c.dataset.i)); });
   el.addEventListener('pointerleave', hideTip);
@@ -215,17 +216,30 @@ function memberName(uid) {
 }
 const tripName = id => id ? (state.trips.get(id)?.name ?? `Trip …${id.slice(-4)}`) : 'No trip';
 const zoneShort = tz => (tz || '').split('/').pop().replace(/_/g, ' ') || tz;
-/** Zone abbreviation as of now (CDT, CEST); falls back to GMT+2 where a locale has no name for it. */
+/** Zone code as of now (CDT, CEST, ICT): the same three-step lookup as the app, so every zone has a code. */
 function zoneAbbr(tz) {
   if (!tz) return '';
+  if (CODE_BY_ZONE[tz]) return CODE_BY_ZONE[tz].includes('/') ? zoneAbbr(CODE_BY_ZONE[tz]) : CODE_BY_ZONE[tz];
   const at = new Date(state.now);
-  const abbr = locale => {
-    try { return new Intl.DateTimeFormat(locale, { timeZone: tz, timeZoneName: 'short' }).formatToParts(at).find(p => p.type === 'timeZoneName')?.value ?? ''; }
+  const name = (locale, style) => {
+    try { return new Intl.DateTimeFormat(locale, { timeZone: tz, timeZoneName: style }).formatToParts(at).find(p => p.type === 'timeZoneName')?.value ?? ''; }
     catch { return ''; }
   };
-  const named = ['en-US', 'en-GB', 'en-AU'].map(abbr).find(a => a && !/^(GMT|UTC)/.test(a));
-  return named || abbr('en-US') || zoneShort(tz);
+  const isOffset = a => /^(GMT|UTC)[+\-−]/.test(a);
+  for (const locale of ['en-US', 'en-GB', 'en-AU', 'en-IN', 'en-NZ', 'en-ZA', 'en-SG', 'en-HK', 'en-PH', 'en-IE', 'en-CA', 'en-MY']) {
+    const a = name(locale, 'short'); if (a && !isOffset(a)) return a;
+  }
+  const long = name('en-US', 'long');
+  if (CODE_BY_LONG_NAME[long]) return CODE_BY_LONG_NAME[long];
+  if (long && !isOffset(long)) { const i = long.replace(/[’'&]/g, '').split(/\s+/).filter(w => w !== 'Time').map(w => w[0].toUpperCase()).join(''); if (i.length >= 2) return i; }
+  return zoneShort(tz);
 }
+/** "Berlin, Germany" / "Chicago, Illinois, USA": where a zone is named after. */
+const zonePlace = tz => { const z = ZONES[tz]; return z ? [z.city, z.region, z.country].filter(Boolean).join(', ') : zoneShort(tz); };
+/** The country a zone belongs to, for the Countries card. */
+const zoneCountry = tz => ZONES[tz]?.country ?? '';
+/** "CEST · Berlin, Germany": the zone the app was used in, said plainly. */
+const usedIn = tz => tz ? `${zoneAbbr(tz)} · ${zonePlace(tz)}` : '';
 /** "CST (Chicago, Illinois, USA)": the abbreviation as of now, then where the zone is named after. */
 function zoneName(tz) {
   const z = ZONES[tz];
@@ -360,7 +374,7 @@ function render() {
   // Online now
   $('online').innerHTML = online.length === 0 ? '<li class="empty">Nobody in the last 3 minutes.</li>' : online.map(o => `
     <li>${avatar(o.uid)}<span class="main"><span class="name">${esc(userName(o.uid))}</span>
-      <span class="sub">${esc(o.page)} · ${esc(tripName(o.tripId))} · ${esc(o.platform)} · ${esc(zoneAbbr(o.tz))}</span></span>
+      <span class="sub">${esc(o.page)} · ${esc(tripName(o.tripId))} · ${esc(o.platform)} · ${esc(usedIn(o.tz))}</span></span>
       <span class="when">${ago(o.lastSeen)}</span></li>`).join('');
 
   // People per hour (last 24 h)
@@ -410,7 +424,7 @@ function render() {
   const people = S.peopleStats(rows, state.zone);
   $('people').innerHTML = people.length === 0 ? '<li class="empty">Nobody yet.</li>' : people.map(p => `
     <li>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}</span>
-      <span class="sub">${esc(tripName(p.tripId))} · ${esc(p.platform)} · ${esc(zoneAbbr(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
+      <span class="sub">${esc(tripName(p.tripId))} · ${esc(p.platform)} · ${esc(usedIn(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
       <span class="when">${ago(p.lastSeen)}</span></li>`).join('');
 
   // Return rate
@@ -455,6 +469,14 @@ function render() {
   $('versions').innerHTML = versions.length === 0 ? '<tr><td class="muted">Nothing yet.</td></tr>' :
     '<tr><th>Version</th><th class="n">People</th><th class="n">Last seen</th></tr>' +
     versions.map(v => `<tr><td>${esc(v.version)}</td><td class="n num" ${who(v.uids)}>${v.uids.length}</td><td class="n">${ago(v.lastSeen)}</td></tr>`).join('');
+
+  // Countries the app was used in (from each event's zone, recorded at the moment of use)
+  const countries = S.countryStats(rows, zoneCountry);
+  bars('countries', countries.map(c => ({
+    value: c.uids.length, label: c.country,
+    tip: `<strong>${esc(c.country)}</strong> · ${c.uids.length} ${c.uids.length === 1 ? 'person' : 'people'} · ${c.sessions} ${c.sessions === 1 ? 'open' : 'opens'}<br>${names(c.uids)}<br><span class="muted">${esc(c.zones.map(zoneAbbr).join(', '))}</span>`,
+  })), Math.max(1, ...countries.map(c => c.uids.length)), { valueLabel: true, tick: it => it.label });
+  $('countriesSub').textContent = countries.length ? `${countries.length} ${countries.length === 1 ? 'country' : 'countries'}` : '';
 
   // Keep an open hover detail in place across the one-second re-render.
   if (tip.chart) showTip(tip.chart, tip.index);
