@@ -113,8 +113,10 @@ describe('pickFirstUp with time zones (2026-10-01)', () => {
   });
 
   it('would still show the landing on the phone clock (the old behaviour) without a zone', () => {
-    // 2:30 PM Chicago is still ahead at 11:35 Chicago — exactly the bug.
-    expect(pickFirstUp([land, dinner], [], NOW)?.activity).toBe('Land at Lisbon Airport');
+    // Without a zone the entry is read on this machine's clock, so take "now" as
+    // 11:35 local on Oct 1: 2:30 PM local is still ahead — exactly the bug.
+    const localNow = new Date(2026, 9, 1, 11, 35).getTime();
+    expect(pickFirstUp([land, dinner], [], localNow)?.activity).toBe('Land at Lisbon Airport');
   });
 
   it('puts each flight moment in its airport zone and orders them by instant', () => {

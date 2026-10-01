@@ -19,7 +19,9 @@
     "ios:sync": "node scripts/set-version.js --ios && npm run build && npx cap sync ios",
     "ios:run": "npm run ios:sync && npx cap run ios",
     "ios:open": "npx cap open ios",
-    "test:rules:storage": "firebase emulators:exec --only storage \"node test/storage-rules.test.mjs\""
+    "test:rules:storage": "firebase emulators:exec --only storage \"node test/storage-rules.test.mjs\"",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "private": true,
   "dependencies": {
@@ -53,6 +55,7 @@
     "@angular/compiler-cli": "^19.1.0",
     "@capacitor/cli": "^8.5.2",
     "@firebase/rules-unit-testing": "^5.0.1",
+    "@playwright/test": "^1.63.0",
     "@types/jasmine": "~5.1.0",
     "@vvo/tzdb": "^6.198.0",
     "firebase-admin": "^13.7.0",

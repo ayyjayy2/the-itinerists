@@ -140,7 +140,9 @@ Ends when: a week of no new reports on the newest build, and the parked list is 
       Plus and Pass trips are exempt; emails to the planner at 7 days and 1 day (with the
       settlement sheet). Privacy policy "How long we keep data" updated. The clock starts the day
       purchases ship, never before. See the Making money page.
-- [ ] CI: GitHub Actions runs `ng test` and the rules tests on every pull request.
+- [x] CI: GitHub Actions on every PR and push to master: `ng test`, Pulse tests, production build,
+      rules tests, and a Playwright end-to-end suite of the beta flows on the demo build; master
+      requires it green — 2026-10-01.
 - [ ] Pagination for the activity log and other unbounded lists.
 - [ ] Terms of service beside the privacy policy; "download my data" on Profile; the policy
       states the 30-day trip retention and the paid keep option.
