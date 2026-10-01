@@ -29,10 +29,11 @@ const state = {
   testTrips: new Set(),
   showTests: false,       // test trips stay out of the table unless the owner asks to see them
   testUsers: new Set(),   // throwaway accounts (_pulse/prefs.testUsers, set by hand)
+  writes: [],             // `_writes` rows in range: who wrote what kind of thing on which trip, when
   hide: { me: false, testTrips: true, testUsers: true },   // the Hide checkboxes, saved to prefs
   tripSel: null,          // Set of trip ids, or null for all
 };
-let unsubRows = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null;
+let unsubRows = null, unsubWrites = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null;
 const memberSubs = new Map(); // tripId → unsubscribe
 /** The owner's dashboard preferences: test trips (kept out of every number) and the display zone. */
 const prefsRef = () => doc(db, '_pulse', 'prefs');
@@ -118,7 +119,7 @@ function syncMemberSubs() {
   }
 }
 function stop() {
-  unsubRows?.(); unsubTrips?.(); unsubUsers?.(); unsubPrefs?.(); unsubRows = unsubTrips = unsubUsers = unsubPrefs = null;
+  unsubRows?.(); unsubWrites?.(); unsubTrips?.(); unsubUsers?.(); unsubPrefs?.(); unsubRows = unsubWrites = unsubTrips = unsubUsers = unsubPrefs = null;
   for (const unsub of memberSubs.values()) unsub();
   memberSubs.clear();
   $('dot').classList.remove('on');
@@ -128,6 +129,12 @@ function queryStart() {
   return { today: S.startOfDay(a, state.zone), '24h': a - DAY, '7d': a - 7 * DAY, '30d': a - 30 * DAY, '60d': a - 60 * DAY, '180d': a - 180 * DAY, '1y': a - 365 * DAY }[state.range];
 }
 function subscribeRows() {
+  unsubWrites?.();
+  const qw = query(collection(db, '_writes'), where('at', '>=', Timestamp.fromMillis(queryStart())), orderBy('at'));
+  unsubWrites = onSnapshot(qw, snap => {
+    state.writes = snap.docs.map(d => { const w = d.data(); return { ...w, at: w.at?.toMillis?.() ?? 0 }; }).filter(w => w.at);
+    render();
+  }, err => showError('Writes: ' + err.message));
   unsubRows?.();
   $('dot').classList.remove('on');
   const q = query(collection(db, '_activity'), where('at', '>=', Timestamp.fromMillis(queryStart())), orderBy('at'));
@@ -199,7 +206,7 @@ function showTip(chart, index) {
   tip.el.style.top = `${r.top + window.scrollY - t.height - 8}px`;
 }
 function hideTip() { tip.chart = null; tip.index = -1; tip.el.hidden = true; }
-for (const chart of ['perHour', 'byHour', 'perDay', 'visitMinutes', 'visitPages', 'around', 'platform', 'countries']) {
+for (const chart of ['perHour', 'byHour', 'perDay', 'visitMinutes', 'visitPages', 'around', 'platform', 'countries', 'signups', 'writes']) {
   const el = $(chart);
   el.addEventListener('pointerover', ev => { const c = ev.target.closest('.col'); if (c) showTip(chart, Number(c.dataset.i)); });
   el.addEventListener('pointerleave', hideTip);
@@ -311,6 +318,10 @@ function render() {
   const realRows = state.rows.filter(r => !hiddenUids.has(r.uid));
   const all = state.hide.testTrips ? realRows.filter(r => !r.tripId || !state.testTrips.has(r.tripId)) : realRows;
   const rows = !state.tripSel ? all : all.filter(r => r.tripId && state.tripSel.has(r.tripId));
+  // The write log under the same Hide and trip rules.
+  const writes = state.writes
+    .filter(w => !hiddenUids.has(w.uid) && (!state.hide.testTrips || !w.tripId || !state.testTrips.has(w.tripId)))
+    .filter(w => !state.tripSel || (w.tripId && state.tripSel.has(w.tripId)));
   const realTrips = [...state.trips.values()].filter(t => !state.testTrips.has(t.id) || !state.hide.testTrips);
   const testTrips = [...state.trips.values()].filter(t => state.testTrips.has(t.id) && state.hide.testTrips);
 
@@ -483,6 +494,26 @@ function render() {
   $('versions').innerHTML = versions.length === 0 ? '<tr><td class="muted">Nothing yet.</td></tr>' :
     '<tr><th>Version</th><th class="n">People</th><th class="n">Last seen</th></tr>' +
     versions.map(v => `<tr><td>${esc(v.version)}</td><td class="n num" ${who(v.uids)}>${v.uids.length}</td><td class="n">${ago(v.lastSeen)}</td></tr>`).join('');
+
+  // Sign-ups per day (every account carries its creation date), under the Hide rules
+  const visibleUsers = new Map([...state.users.entries()].filter(([uid]) => !hiddenUids.has(uid)));
+  const signups = S.signupsPerDay(visibleUsers, queryStart(), now + DAY, state.zone);
+  $('signupsSub').textContent = signups.length ? `${signups.reduce((n, d) => n + d.uids.length, 0)} in ${rangeLabel}` : `none in ${rangeLabel}`;
+  bars('signups', signups.map(d => ({
+    value: d.uids.length, label: dayLabel(d.day),
+    tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.uids.length} ${d.uids.length === 1 ? 'sign-up' : 'sign-ups'}<br>${names(d.uids)}`,
+  })), Math.max(1, ...signups.map(d => d.uids.length)), { valueLabel: signups.length <= 31, tick: (it, i) => signups.length <= 14 ? it.label : (i % Math.ceil(signups.length / 8) === 0 ? it.label : '') });
+
+  // Things written per day, stacked by kind, with who
+  const WRITE_KINDS = ['itinerary', 'finance', 'rec', 'flight', 'stay', 'transport', 'packing', 'member', 'trip', 'pin'];
+  const KIND_LABEL = { itinerary: 'itinerary', finance: 'expenses', rec: 'recs', flight: 'flights', stay: 'stays', transport: 'transport', packing: 'packing', member: 'joins', trip: 'trips', pin: 'pins' };
+  const wpd = S.writesPerDay(writes, state.zone);
+  $('writesSub').textContent = wpd.length ? `${writes.length} in ${rangeLabel}` : `none in ${rangeLabel}`;
+  stackBars('writes', wpd.map(d => ({
+    parts: Object.fromEntries(WRITE_KINDS.map(k => [k, d.byKind[k] ?? 0])), label: dayLabel(d.day),
+    tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.total} ${d.total === 1 ? 'thing' : 'things'} written<br>${names(d.uids)}<br><span class="muted">${esc(WRITE_KINDS.filter(k => d.byKind[k]).map(k => `${d.byKind[k]} ${KIND_LABEL[k]}`).join(' · '))}</span>`,
+  })), WRITE_KINDS, Math.max(1, ...wpd.map(d => d.total)),
+    { tick: (it, i) => wpd.length <= 14 ? it.label : (i % Math.ceil(wpd.length / 8) === 0 ? it.label : '') });
 
   // Countries the app was used in (from each event's zone, recorded at the moment of use)
   const countries = S.countryStats(rows, zoneCountry);

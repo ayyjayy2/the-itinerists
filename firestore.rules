@@ -86,6 +86,20 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── Write log: one doc per change a person makes (kind + action only, no
+    // content), appended by the signed-in user as themselves, read by the owner.
+    // Pulse charts "things written per day" from it (see TripEventsService).
+    match /_writes/{entry} {
+      allow create: if isSignedIn()
+        && request.resource.data.uid == uid()
+        && request.resource.data.keys().hasOnly(['uid', 'tripId', 'kind', 'action', 'at'])
+        && request.resource.data.kind in ['itinerary', 'flight', 'stay', 'transport', 'finance', 'rec', 'pin', 'packing', 'member', 'trip']
+        && request.resource.data.action is string
+        && request.resource.data.at == request.time;
+      allow read: if isAppOwner();
+      allow update, delete: if false;
+    }
+
     // ── Pulse dashboard preferences: the owner's own, e.g. hidden test trips ─
     match /_pulse/{docId} {
       allow read, write: if isAppOwner();
