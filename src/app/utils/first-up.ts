@@ -102,7 +102,12 @@ function pickFlight(moments: FlightMoment[], nowMs: number, zone?: string): Firs
 export function pickFirstUp(
   items: FirstUpEntry[], flights: FlightMoment[], nowMs: number, zone?: string,
 ): FirstUpEntry | null {
-  const manual = pickManual(items, nowMs, zone);
+  // A hand-typed flight on a day the person really flies is a copy of that
+  // flight, usually with a stale or guessed time. The Flights page is the
+  // truth, so the copy never reaches the card, before or after the flight.
+  const flightDays = new Set(flights.map(f => f.date));
+  const own = items.filter(i => !(flightDays.has(i.date) && looksLikeFlight(i)));
+  const manual = pickManual(own, nowMs, zone);
   const flight = pickFlight(flights, nowMs, zone);
   if (!flight) return manual;
   if (!manual) return flight;

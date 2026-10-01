@@ -126,3 +126,30 @@ describe('pickFirstUp with time zones (2026-10-01)', () => {
     expect(pickFirstUp([], flights, beforeTakeoff, 'Europe/Lisbon')?.activity).toBe('Depart from JFK');
   });
 });
+
+describe('pickFirstUp ignores hand-typed copies of a real flight', () => {
+  const zoneFor = (iata: string) => ({ JFK: 'America/New_York', LIS: 'Europe/Lisbon' } as Record<string, string>)[iata];
+  const flights = flightMomentsForUid([
+    { uid: 'me', section: 'ARRIVALS', from: 'JFK', to: 'LIS', departureDate: '2026-09-30', departureTime: '9:45 PM', arrivalDate: '2026-10-01', arrivalTime: '10:30 AM' },
+  ], 'me', 'Lisbon', zoneFor);
+  const land   = { date: '2026-10-01', time: '2:30 PM', endTime: '', activity: 'Land at Lisbon Airport', location: 'Humberto Delgado Airport', sortOrder: 0, category: 'Transport' };
+  const hotel  = { date: '2026-10-01', time: '4:30 PM', endTime: '', activity: 'Check in at hotel', location: 'Baixa', sortOrder: 1, category: 'Accommodation' };
+  const dinner = { date: '2026-10-01', time: '8:00 PM', endTime: '', activity: 'Welcome dinner', location: 'Time Out Market', sortOrder: 2, category: 'Food' };
+
+  it('after the flight has landed, moves on to the next real item instead of the stale copy', () => {
+    const noonLisbon = Date.UTC(2026, 9, 1, 11, 0); // flight landed 10:30; the copy says 2:30 PM
+    expect(pickFirstUp([land, hotel, dinner], flights, noonLisbon, 'Europe/Lisbon')?.activity).toBe('Check in at hotel');
+  });
+
+  it('before landing, shows the real arrival time', () => {
+    const inFlight = Date.UTC(2026, 9, 1, 5, 0);
+    const pick = pickFirstUp([land, hotel, dinner], flights, inFlight, 'Europe/Lisbon');
+    expect(pick?.activity).toBe('Arrive at LIS – Lisbon');
+    expect(pick?.time).toBe('10:30 AM');
+  });
+
+  it('keeps a flight-like item on a day with no real flight', () => {
+    const taxi = { ...land, date: '2026-10-02', activity: 'Taxi to the airport' };
+    expect(pickFirstUp([taxi], flights, Date.UTC(2026, 9, 2, 8, 0), 'Europe/Lisbon')?.activity).toBe('Taxi to the airport');
+  });
+});
