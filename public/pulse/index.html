@@ -113,6 +113,8 @@
   .bars .stack { width: 100%; display: flex; flex-direction: column-reverse; min-height: 2px; }
   .bars .stack .bar { border-radius: 0; min-height: 0; }
   .bars .stack .bar:last-child { border-radius: 3px 3px 0 0; }
+  .bars .stack .bar.person { min-height: 3px; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.55); }
+  .tip .dot { display: inline-block; width: 0.6em; height: 0.6em; border-radius: 50%; margin-right: 0.3em; vertical-align: 0.02em; }
   .bar.before, .sw.before { background: var(--surface-2); }
   .bar.during, .sw.during { background: var(--primary); }
   .bar.after, .sw.after { background: var(--accent); }
@@ -239,7 +241,7 @@
     <div class="card" id="perDayCard">
       <h2>Activity <small id="perDaySub"></small></h2>
       <div class="bars days" id="perDay"></div>
-      <p class="hint">Each bar is a day; its height is how many people were active. Hover for who, which pages, when they were on, and what they added. A day before the event log began counts from what was written that day.</p>
+      <p class="hint">Each bar is a day; its height is how many people were active, split by person in proportion to their share of that day's views and edits, in their avatar colour. Hover for who, which pages, when they were on, and what each one added. A day before the event log began counts from what was written that day.</p>
     </div>
 
     <div class="card">
