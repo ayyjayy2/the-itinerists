@@ -4,7 +4,7 @@ The one live list, organised by launch phase. The plan itself (goals, who does w
 each phase ends, storage and costs) is the "Itinerists Launch Plan" artifact:
 https://claude.ai/artifact/S2rZKkQ3SgoejHD8Z7f4GP. `ROADMAP.md` is the long-range idea list
 and `docs/HANDOFF.md` the orientation doc; neither tracks status. When something ships, tick
-it here with its PR number. Last updated: 2026-09-30 (evening).
+it here with its PR number. Last updated: 2026-09-30 (late evening).
 
 **The alpha is still wrapping up** (Berlin home Oct 9, survey after). Phase 1 runs alongside it.
 A marketing phase now sits between prep and beta, so the app has an audience before it has
@@ -42,8 +42,9 @@ build (approval takes a day or two).
       (console → Usage and billing → Modify plan). Creates the Storage bucket, unlocks backups
       and Cloud Functions.
 - [ ] Now: Staging Firebase project (free plan), same rules file deployed to both.
-- [ ] Now: Crashlytics — code shipped (#223). Enable it in the Firebase console and see one test
-      error land from Alayna's iPhone (a dev build on your own phone needs no paid account).
+- [x] Crashlytics — code shipped (#223); live since 2026-09-30: the console shows the iOS app,
+      two test crashes from the simulator were received and symbolicated (dSYMs uploaded with
+      `upload-symbols`; `cap run ios` debug builds make none, archive builds do).
 - [ ] After Blaze: Firebase console → Storage → Get started (creates the default bucket
       trip-planner-ayyjayy2.firebasestorage.app) → `node scripts/set-storage-cors.js` →
       `firebase deploy --only storage` → flip OUTFIT_PHOTO_STORAGE_ENABLED to true → rerun
