@@ -10,7 +10,7 @@ this file whenever a service is added or removed (the privacy policy at
 | Tool | Version | What it does | Where |
 |---|---|---|---|
 | **Angular** | 19 | The web app: standalone components, signals, lazy routes | `src/app/` |
-| **Angular service worker** (PWA) | 19 | Installable web app, offline shell, cached assets | `ngsw-config.json`, `src/manifest.webmanifest` |
+| **Angular service worker** (PWA) | 19 | Installable web app, offline shell, cached assets | `ngsw-config.json`, `public/manifest.webmanifest` |
 | **Capacitor** | 8 (Swift Package Manager, no CocoaPods) | Native iOS shell around the same web build | `ios/`, `capacitor.config.ts`, `npm run ios:run` |
 | **Leaflet** | 1.9 | The trip map | `src/app/pages/map/`, `src/app/shared/day-map-card/` |
 | **RxJS** | 7 | Streams from Firebase into signals | throughout |
