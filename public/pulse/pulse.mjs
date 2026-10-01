@@ -422,17 +422,17 @@ function render() {
     // Segments: one per person, proportional to their share of the day's events + edits, busiest at the bottom.
     const people = Object.entries(d.activity).sort((a, b) => b[1] - a[1]);
     const segments = people.map(([uid, n]) => ({ share: n, color: personColor(uid), name: `${userName(uid)} · ${n}` }));
-    const whoLine = people.map(([uid, n]) => `<span class="dot" style="background:${esc(personColor(uid))}"></span>${esc(userName(uid))} <span class="muted">${n}</span>`).join(' · ');
-    // Edits per person: "3 recs, 1 itinerary by Makaela · 5 expenses by Derek"
-    const edits = Object.entries(d.writes.byPerson)
-      .sort((a, b) => Object.values(b[1]).reduce((n, x) => n + x, 0) - Object.values(a[1]).reduce((n, x) => n + x, 0))
-      .map(([uid, kinds]) => `${Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n} ${KIND_WORD[k] ?? k}${n === 1 ? '' : 's'}`).join(', ')} <span class="muted">by</span> ${esc(userName(uid))}`)
-      .join(' · ');
+
+    // One line per person: colour dot, name, activity count, then their edits ("22 recs, 1 itinerary").
+    const personLines = people.map(([uid, n]) => {
+      const kinds = d.writes.byPerson[uid];
+      const edits = kinds ? Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([k, c]) => `${c} ${KIND_WORD[k] ?? k}${c === 1 ? '' : 's'}`).join(', ') : '';
+      return `<span class="dot" style="background:${esc(personColor(uid))}"></span>${esc(userName(uid))} <span class="muted">${n}</span>${edits ? ` <span class="muted">·</span> ${esc(edits)}` : ''}`;
+    }).join('<br>');
     return {
       value: d.uids.length, label: dayLabel(d.day), segments,
-      tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.uids.length} ${d.uids.length === 1 ? 'person' : 'people'} · ${esc(when)} ${esc(zoneAbbr(state.zone, d.firstMs))}<br>${whoLine}`
-        + (d.pages.length ? `<br><span class="muted">Pages:</span> ${d.pages.map(esc).join(', ')}` : '')
-        + (d.writes.total ? `<br><span class="muted">Edits:</span> ${edits}` : ''),
+      tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.uids.length} ${d.uids.length === 1 ? 'person' : 'people'} · ${esc(when)} ${esc(zoneAbbr(state.zone, d.firstMs))}<br>${personLines}`
+        + (d.pages.length ? `<br><span class="muted">Pages:</span> ${d.pages.map(esc).join(', ')}` : ''),
     };
   }), Math.max(1, ...timeline.map(d => d.uids.length)), {
     // Past a month the columns are too narrow for a number each, so label every nth day.
@@ -517,15 +517,17 @@ function render() {
   })), Math.max(1, ...signups.map(d => d.uids.length)), { valueLabel: signups.length <= 31, tick: (it, i) => signups.length <= 14 ? it.label : (i % Math.ceil(signups.length / 8) === 0 ? it.label : '') });
 
   // Things written per day, stacked by kind, with who
-  const WRITE_KINDS = ['itinerary', 'finance', 'rec', 'flight', 'stay', 'transport', 'packing', 'member', 'trip', 'pin'];
-  const KIND_LABEL = { itinerary: 'itinerary', finance: 'expenses', rec: 'recs', flight: 'flights', stay: 'stays', transport: 'transport', packing: 'packing', member: 'joins', trip: 'trips', pin: 'pins' };
   const wpd = S.writesPerDay(writes, state.zone);
   $('writesSub').textContent = wpd.length ? `${writes.length} in ${rangeLabel}` : `none in ${rangeLabel}`;
-  stackBars('writes', wpd.map(d => ({
-    parts: Object.fromEntries(WRITE_KINDS.map(k => [k, d.byKind[k] ?? 0])), label: dayLabel(d.day),
-    tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.total} ${d.total === 1 ? 'thing' : 'things'} written<br>${names(d.uids)}<br><span class="muted">${esc(WRITE_KINDS.filter(k => d.byKind[k]).map(k => `${d.byKind[k]} ${KIND_LABEL[k]}`).join(' · '))}</span>`,
-  })), WRITE_KINDS, Math.max(1, ...wpd.map(d => d.total)),
-    { tick: (it, i) => wpd.length <= 14 ? it.label : (i % Math.ceil(wpd.length / 8) === 0 ? it.label : '') });
+  const KIND_WORD2 = { itinerary: 'itinerary', finance: 'expense', rec: 'rec', flight: 'flight', stay: 'stay', transport: 'transport', packing: 'packing', member: 'join', trip: 'trip', pin: 'pin' };
+  personBars('writes', wpd.map(d => {
+    // Bar height is the day's things written; segments are each person's share, in their colour.
+    const people = Object.entries(d.byPerson).map(([uid, kinds]) => [uid, Object.values(kinds).reduce((n, x) => n + x, 0), kinds]).sort((a, b) => b[1] - a[1]);
+    const segments = people.map(([uid, n]) => ({ share: n, color: personColor(uid), name: `${userName(uid)} · ${n}` }));
+    const lines = people.map(([uid, n, kinds]) => `<span class="dot" style="background:${esc(personColor(uid))}"></span>${esc(userName(uid))} <span class="muted">${n}</span> <span class="muted">·</span> ${esc(Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([k, c]) => `${c} ${KIND_WORD2[k] ?? k}${c === 1 ? '' : 's'}`).join(', '))}`).join('<br>');
+    return { value: d.total, label: dayLabel(d.day), segments, tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.total} ${d.total === 1 ? 'thing' : 'things'} written<br>${lines}` };
+  }), Math.max(1, ...wpd.map(d => d.total)),
+    { valueLabel: wpd.length <= 31, tick: (it, i) => wpd.length <= 14 ? it.label : (i % Math.ceil(wpd.length / 8) === 0 ? it.label : '') });
 
   // Countries the app was used in (from each event's zone, recorded at the moment of use)
   const countries = S.countryStats(rows, zoneCountry);

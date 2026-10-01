@@ -323,13 +323,14 @@ export function signupsPerDay(users, from, to, zone) {
   return [...days.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([day, s]) => ({ day, uids: [...s].sort() }));
 }
 
-/** Things written per day, by kind, with who: `{ day, total, byKind: {kind: n}, uids }`, days ascending. */
+/** Things written per day: `{ day, total, byKind: {kind: n}, byPerson: {uid: {kind: n}}, uids }`, days ascending. */
 export function writesPerDay(writes, zone) {
   const days = new Map();
   for (const w of writes) {
     const k = dayKey(w.at, zone);
-    const d = days.get(k) ?? days.set(k, { day: k, total: 0, byKind: {}, uids: new Set() }).get(k);
+    const d = days.get(k) ?? days.set(k, { day: k, total: 0, byKind: {}, byPerson: {}, uids: new Set() }).get(k);
     d.total++; d.byKind[w.kind] = (d.byKind[w.kind] ?? 0) + 1; d.uids.add(w.uid);
+    const mine = d.byPerson[w.uid] ?? (d.byPerson[w.uid] = {}); mine[w.kind] = (mine[w.kind] ?? 0) + 1;
   }
   return [...days.values()].sort((a, b) => a.day.localeCompare(b.day)).map(d => ({ ...d, uids: [...d.uids].sort() }));
 }
