@@ -3,7 +3,7 @@ import { NgControl } from '@angular/forms';
 
 /**
  * Marks a native date/time input with `data-empty` while it has no value, so
- * the stylesheet can draw a "Pick a date" hint inside it. Needed on iOS, where
+ * the stylesheet can draw an mm/dd/yyyy hint inside it. Needed on iOS, where
  * removing the native appearance (so the field can shrink to fit its column)
  * also removes Safari's own mm/dd/yyyy hint.
  */
@@ -17,7 +17,7 @@ export class EmptyDateHintDirective implements AfterViewInit {
   ngAfterViewInit(): void {
     const input = this.el.nativeElement;
     if (!input.dataset['hint']) {
-      input.dataset['hint'] = input.type === 'time' ? 'Pick a time' : 'Pick a date';
+      input.dataset['hint'] = input.type === 'time' ? 'hh:mm am' : 'mm/dd/yyyy';
     }
     // ngModel writes the initial value a tick later; check after that.
     queueMicrotask(() => this.sync());
