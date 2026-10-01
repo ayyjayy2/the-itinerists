@@ -19,7 +19,7 @@ import { fromInputTime, toInputTime } from '../../utils/time-format';
       [attr.name]="name"
       [attr.aria-label]="label"
       [attr.data-empty]="value ? null : ''"
-      data-hint="Pick a time"
+      data-hint="hh:mm am"
       (input)="onInput($any($event.target).value)"
       (blur)="onTouched()"
     />
