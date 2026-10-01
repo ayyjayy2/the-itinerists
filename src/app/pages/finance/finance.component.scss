@@ -148,7 +148,7 @@
   flex: 1;
   min-width: 90px;
   label { font-size: 0.78rem; }
-  input { font-size: 0.88rem; }
+  input { font-size: max(1rem, 16px); }   // under 16px makes iOS zoom in on focus
 }
 .rate-actions {
   display: flex;
@@ -422,7 +422,7 @@
   border: none;
   background: transparent;
   font-family: var(--font);
-  font-size: 0.88rem;
+  font-size: max(1rem, 16px);   // under 16px makes iOS zoom in on focus
   color: var(--text);
   padding: 0.5rem 0;
 

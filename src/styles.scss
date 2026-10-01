@@ -113,6 +113,8 @@
 
 html, body {
   height: 100%;
+  // No double-tap-to-zoom (it also removes the tap delay); pinch-zoom still works.
+  touch-action: manipulation;
   // The document never scrolls: the app shell's content area (and the auth
   // screens) are the scroll containers. Without this, iOS rubber-bands the
   // whole page — header and tab bar included — at the ends of a scroll.
@@ -273,7 +275,10 @@ h1 > app-icon, h2 > app-icon {
 // ── Forms ─────────────────────────────────────────────────────────────────────
 input, select, textarea {
   font-family: var(--font);
-  font-size: 0.95rem;
+  // 16px minimum: iPhone Safari and the native web view zoom the whole page in
+  // when a smaller field is focused, and stay zoomed across pages (the header
+  // and tab bar then look as if they scroll away). e2e/no-zoom.spec.ts guards it.
+  font-size: max(1rem, 16px);
   color: var(--text);
   background: var(--surface);
   border: 1.5px solid var(--border);
