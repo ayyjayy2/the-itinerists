@@ -333,3 +333,31 @@ export function writesPerDay(writes, zone) {
   }
   return [...days.values()].sort((a, b) => a.day.localeCompare(b.day)).map(d => ({ ...d, uids: [...d.uids].sort() }));
 }
+
+// ── Activity timeline ───────────────────────────────────────────────────────
+
+/**
+ * One entry per day with anyone active: people seen in the event log that day
+ * plus people who wrote something (so days before the event log, known only
+ * from the write log, still count). Carries what a hover needs: who, the
+ * pages seen (busiest first), the first and last moment of activity, and the
+ * edits by kind with who made them. Days ascending.
+ */
+export function activityTimeline(rows, writes, zone) {
+  const days = new Map();
+  const get = k => days.get(k) ?? days.set(k, { day: k, uids: new Set(), hits: [], firstMs: Infinity, lastMs: -Infinity, writes: { total: 0, byKind: {}, uids: new Set() } }).get(k);
+  for (const r of rows) {
+    const d = get(dayKey(r.at, zone));
+    d.uids.add(r.uid); d.hits.push(r);
+    if (r.at < d.firstMs) d.firstMs = r.at; if (r.at > d.lastMs) d.lastMs = r.at;
+  }
+  for (const w of writes) {
+    const d = get(dayKey(w.at, zone));
+    d.uids.add(w.uid); d.writes.total++; d.writes.byKind[w.kind] = (d.writes.byKind[w.kind] ?? 0) + 1; d.writes.uids.add(w.uid);
+    if (w.at < d.firstMs) d.firstMs = w.at; if (w.at > d.lastMs) d.lastMs = w.at;
+  }
+  return [...days.values()].sort((a, b) => a.day.localeCompare(b.day)).map(d => ({
+    day: d.day, uids: [...d.uids].sort(), pages: pagesOf(d.hits), firstMs: d.firstMs, lastMs: d.lastMs,
+    writes: { total: d.writes.total, byKind: d.writes.byKind, uids: [...d.writes.uids].sort() },
+  }));
+}
