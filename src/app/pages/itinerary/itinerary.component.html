@@ -104,7 +104,9 @@
                   <!-- ── Display mode ── -->
                   <div class="drag-handle" cdkDragHandle title="Drag to reorder">⠿</div>
                   <div class="item-left">
-                    @if (item.time) {
+                    @if (flightTimeFor(item); as ft) {
+                      <span class="item-time" title="Time from the Flights page">{{ ft.time | time12 }}@if (ft.zoneLabel) { <span class="item-zone">{{ ft.zoneLabel }}</span> }</span>
+                    } @else if (item.time) {
                       <span class="item-time">{{ item.time | time12 }}</span>
                       @if (item.endTime) {
                         <span class="item-time item-time-end">– {{ item.endTime | time12 }}</span>

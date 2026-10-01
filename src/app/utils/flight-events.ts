@@ -45,3 +45,23 @@ export function flightMomentsForUid(flights: FlightLike[], uid: string, dest: st
   }
   return moments;
 }
+
+/**
+ * The real flight moment a hand-typed itinerary item stands for, if any: a
+ * Transport / Travel item, or one titled like flying, on a day the person has
+ * a flight. "Land", "arrive" and the like mean the arrival; anything else the
+ * departure. The Flights page is the truth, so the item shows that moment's
+ * time (in its airport's zone) instead of whatever was typed.
+ */
+export function mirroredFlightMoment(
+  item: { date: string; activity: string; category?: string },
+  moments: FlightMoment[],
+): FlightMoment | null {
+  const flightLike = item.category === 'Transport' || item.category === 'Travel'
+    || /\b(fly|flight|flying|depart|take ?off|land|landing|arriv|airport)/i.test(item.activity);
+  if (!flightLike) return null;
+  const sameDay = moments.filter(m => m.date === item.date);
+  if (!sameDay.length) return null;
+  const wantsArrival = /\b(land|landing|arriv)/i.test(item.activity);
+  return sameDay.find(m => m.kind === (wantsArrival ? 'arrive' : 'depart')) ?? sameDay[0];
+}

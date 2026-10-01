@@ -13,7 +13,7 @@ import { ItineraryItemDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
-import { flightMomentsForUid } from '../../utils/flight-events';
+import { flightMomentsForUid, mirroredFlightMoment } from '../../utils/flight-events';
 import { AirportZoneService } from '../../services/airport-zone.service';
 import { zoneAbbr } from '../../utils/zones';
 import { parseTimeString } from '../../utils/first-up';
@@ -136,13 +136,31 @@ export class ItineraryComponent implements OnInit {
     )
   );
 
-  /** Auto-generated flight events for the current user — not stored, not editable.
-   *  Arrivals show the landing moment; departures show the leaving moment. */
-  readonly flightEvents = computed(() => {
+  /** Every depart / arrive moment of the current user's flights, each in its airport's zone. */
+  private readonly flightMoments = computed(() => {
     const uid  = this.currentUser()?.uid ?? '';
     const dest = this.tripService.activeTrip()?.destination ?? 'your destination';
     const zones = this.airportZones.zones();   // read so this re-runs when the table lands
-    return flightMomentsForUid(this.flightsService.flights(), uid, dest, iata => zones[iata?.toUpperCase()] ?? this.airportZones.zoneFor(iata))
+    return flightMomentsForUid(this.flightsService.flights(), uid, dest, iata => zones[iata?.toUpperCase()] ?? this.airportZones.zoneFor(iata));
+  });
+
+  /**
+   * What a hand-typed item should show for its time. One that stands for a
+   * real flight (Transport, or titled like flying, on a day with a flight)
+   * shows the Flights page's time in the airport's zone, never the typed one.
+   */
+  flightTimeFor(item: ItineraryItemDoc): { time: string; zoneLabel: string } | null {
+    const m = mirroredFlightMoment(item, this.flightMoments());
+    if (!m) return null;
+    const t = parseTimeString(m.time);
+    const zoneLabel = m.zone ? zoneAbbr(m.zone, t ? wallToUtcMs(m.date, t.h, t.min, m.zone) : Date.now()) : '';
+    return { time: m.time, zoneLabel };
+  }
+
+  /** Auto-generated flight events for the current user — not stored, not editable.
+   *  Arrivals show the landing moment; departures show the leaving moment. */
+  readonly flightEvents = computed(() => {
+    return this.flightMoments()
       .filter(m => m.kind === (m.section === 'ARRIVALS' ? 'arrive' : 'depart'))
       .map(({ date, label, time, zone }) => {
         // A flight time always says its airport's zone (CEST, CDT), as on the Flights page.
