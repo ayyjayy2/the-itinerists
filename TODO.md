@@ -70,9 +70,12 @@ Find out whether people who don't know us want this, before anyone is invited to
 
 - [ ] The one-line story: who it's for and what it replaces, in the words from the poll
       comments and the Berlin survey — *Alayna*.
-- [ ] Landing page + waitlist on theitinerists.com, before the first reel so it has somewhere
-      to send people: one line, three screenshots, one email field, "we'll tell you when it's
-      on the App Store". (Moved up from the old phase 4 email-list item.) — *Claude*.
+- [ ] Waitlist, before the first reel so it has somewhere to send people: one email field
+      reachable from theitinerists.com ("we'll tell you when it's on the App Store"); the app's
+      sign-in screen keeps the root until the store launch. — *Claude*.
+      Decided 2026-09-30: the real landing page comes with the store launch (phase 6): mobile
+      first, a "Download on the App Store" button with a smaller "continue in browser" link
+      under it. Not before, since there is nothing to download yet.
 - [ ] Three trial reels (15–30 s screen recordings of the real app on the phone + voice-over:
       countdown and who's coming; who owes who; packing list ticking down). Shoot on Berlin
       data while it's fresh — *Alayna*.
