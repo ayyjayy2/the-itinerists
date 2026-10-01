@@ -7,6 +7,17 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
 
 ## 1. Snapshot
 
+> **As of 2026-09-30.** The app is **The Itinerists**, live at **https://theitinerists.com**
+> (the-itinerists.web.app still works), Angular 19 + Firebase, with a Capacitor iOS shell that
+> runs on a simulator and Alayna's iPhone. The alpha (Ireland, Savannah, Berlin) is wrapping up:
+> the Berlin group is on the road until Oct 9. We are in **Phase 1, prep for beta**; the live
+> checklist is `TODO.md` and the plan is the Launch Plan artifact. Shipped this week: security
+> lockdown, privacy policy, custom domain, usage analytics (`_activity` event log, the owner-only
+> Pulse dashboard at /pulse/, Google Analytics 4), Crashlytics on iOS, the trip event feed
+> behind the bell, and the tools list in `docs/apis.md`. Waiting on Alayna: the Firebase Blaze
+> plan (unblocks the Storage bucket, backups, Cloud Functions) and the Apple Developer Program.
+> The bullets below are the July 2026 view, kept for history.
+
 - **DESIGN PHASES — both complete & frozen:**
   - **Design Phase 1** (pre-redesign baseline) — tag `design-phase-1` (commit `0ef2426`).
   - **Design Phase 2** (wireframe-driven visual redesign, mobile-first) — **DONE**, tag
@@ -18,7 +29,7 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
   Revived the two orphaned pages (Map, Transportation), destination-aware map geocoding, map
   locations list, multi-mode Transportation surfaced across Home/Itinerary/Map, finance
   "tracked so far" total. Full detail: **`docs/feature-log.md`**.
-- **App:** "The Itinerists" (formerly "Getaway Club") — Angular 19 multi-trip travel app. Live: https://the-itinerists.web.app
+- **App:** "The Itinerists" (formerly "Getaway Club") — Angular 19 multi-trip travel app. Live: https://theitinerists.com (and https://the-itinerists.web.app)
 - **Branch:** `master` (clean, nothing uncommitted). **Open PRs:** none.
 - **No orphaned pages remain** — every `src/app/pages/*` is routed + in the nav.
 - **What's next (open, not started):** see §5 — mostly user-decision items (final app name,
