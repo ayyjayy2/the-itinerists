@@ -12,9 +12,15 @@
  * any uids given on the command line. Pulse's test trips (_pulse/prefs.testTrips)
  * get `isTest: true` on the trip doc, so tester activity still shows there.
  *
+ * Accounts whose display name starts with "Tester" (the create-test-member
+ * convention) count too, found on users/, members/ and removedMembers/ — so a
+ * tester whose profile was deleted after being removed is still recognised
+ * from the name left on the trip.
+ *
  * Dry run (default):  node scripts/mark-test-accounts.js [uid ...]
  * Apply:              node scripts/mark-test-accounts.js --run [uid ...]
  */
+const NAME_PREFIX = /^Tester\b/i;
 const admin = require('firebase-admin');
 const key = require('./serviceAccountKey.json');
 if (key.project_id !== 'trip-planner-ayyjayy2') throw new Error('wrong project: ' + key.project_id);
@@ -31,12 +37,25 @@ const extraUids = args.filter(a => !a.startsWith('--'));
   const testTrips = new Set(prefs.exists ? prefs.data().testTrips ?? [] : []);
   if (!uids.size && !testTrips.size) { console.log('Nothing to do: Pulse prefs has no testUsers or testTrips and no uids were given.'); return; }
 
+  // Names by uid, from profiles and from member / removed-member records (a
+  // deleted tester lives on only there). Any "Tester …" name is a tester.
   const names = new Map();
+  const noteName = (uid, name) => { if (name && !names.get(uid)) names.set(uid, name); };
   for (const uid of uids) {
     const u = await db.collection('users').doc(uid).get();
-    if (u.exists) names.set(uid, u.data().displayName ?? '');
+    if (u.exists) noteName(uid, u.data().displayName);
+  }
+  const allUsers = await db.collection('users').get();
+  for (const u of allUsers.docs) if (NAME_PREFIX.test(u.data().displayName ?? '')) { uids.add(u.id); noteName(u.id, u.data().displayName); }
+  const tripsForNames = await db.collection('trips').get();
+  for (const t of tripsForNames.docs) {
+    for (const sub of ['members', 'removedMembers']) {
+      const col = await t.ref.collection(sub).get();
+      for (const m of col.docs) if (NAME_PREFIX.test(m.data().displayName ?? '')) { uids.add(m.id); noteName(m.id, m.data().displayName); }
+    }
   }
   console.log(`${RUN ? 'Applying to' : 'Would flag'} ${uids.size} tester account(s) and ${testTrips.size} test trip(s).`);
+  for (const [uid, name] of names) console.log(`  tester ${uid}: ${name}`);
 
   let writes = 0;
   const batchWrite = async (ref, data) => {
@@ -61,7 +80,8 @@ const extraUids = args.filter(a => !a.startsWith('--'));
       if (d.test) continue;
       const byTester = uids.has(d.actorUid);
       const toTester = d.targetUid ? uids.has(d.targetUid)
-        : d.kind === 'member' && [...names.values()].some(n => n && (d.summary ?? '').endsWith(n));
+        : d.kind === 'member' && ([...names.values()].some(n => n && (d.summary ?? '').endsWith(n))
+                                   || /\bTester\b/i.test(d.summary ?? ''));
       if (byTester || toTester) {
         console.log(`  event ${t.id}/${e.id}: "${d.actorName} ${d.summary}"`);
         await batchWrite(e.ref, { test: true });
