@@ -7,6 +7,10 @@ import { UsersService } from '../../services/users.service';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { FlightDoc } from '../../models/trip.models';
+import { AirportZoneService } from '../../services/airport-zone.service';
+import { tripZone } from '../../utils/trip-destinations';
+import { zoneAbbr } from '../../utils/zones';
+import { flightMomentMs, flightStatus, FlightStatus, FLIGHT_STATUS_LABEL } from '../../utils/flight-status';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
@@ -22,6 +26,8 @@ interface Stop {
   departureDate?: string;
   arrivalTime?: string;
   arrivalDate?: string;
+  /** The airport's zone abbreviation at that moment (EDT, WEST): always shown, so nobody misreads a flight time. */
+  zoneLabel?: string;
 }
 
 interface Segment {
@@ -38,6 +44,9 @@ interface Journey {
   notes: string[];
   isMyJourney: boolean;
   legIds: string[];
+  /** Boarding soon / in flight / landed, from the first departure to the last arrival, each in its airport's zone. */
+  status: FlightStatus;
+  statusLabel: string;
 }
 
 // ── Form types ────────────────────────────────────────────────────────────────
@@ -89,6 +98,10 @@ export class FlightsComponent {
   usersService      = inject(UsersService);
   userService       = inject(UserService);
   tripService       = inject(TripService);
+  private airportZones = inject(AirportZoneService);
+  /** Ticks every minute so the status chips move on their own. */
+  private readonly now = signal(Date.now());
+  private readonly clock = setInterval(() => this.now.set(Date.now()), 60_000);
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
   /** Spinner (delayed) until we know the trip and its data — no empty-state flash. */
   readonly loading = computed(() => !this.tripService.ready() || !this.flightsService.loaded());
@@ -256,6 +269,12 @@ export class FlightsComponent {
     const flights = this.flightsService.flights();
     const users   = this.tripService.activeMembers();
     const myUid   = this.currentUser()?.uid ?? '';
+    const nowMs   = this.now();
+    const zones   = this.airportZones.zones();
+    const fallback = tripZone(this.tripService.activeTrip(), new Date(nowMs));
+    // An airport's zone, else the trip's for the destination end (a code the table lacks).
+    const zoneOf = (iata: string, atDestination: boolean): string | undefined =>
+      zones[iata?.toUpperCase()] ?? this.airportZones.zoneFor(iata) ?? (atDestination ? fallback : undefined);
 
     const sorted = [...flights].sort((a, b) =>
       a.uid.localeCompare(b.uid) ||
@@ -283,6 +302,8 @@ export class FlightsComponent {
           notes:       f.notes ? [f.notes] : [],
           isMyJourney: f.uid === myUid,
           legIds:      [f.id],
+          status:      null,
+          statusLabel: '',
         };
         result.push(current);
       } else {
@@ -295,6 +316,21 @@ export class FlightsComponent {
         if (f.notes) c.notes.push(f.notes);
         c.legIds.push(f.id);
       }
+    }
+    for (const j of result) {
+      const first = j.stops[0], last = j.stops[j.stops.length - 1];
+      // Arrivals land at the destination; departures leave from it.
+      const depZone = zoneOf(first.iata, j.section === 'DEPARTURES');
+      const arrZone = zoneOf(last.iata,  j.section === 'ARRIVALS');
+      const depMs = flightMomentMs(first.departureDate, first.departureTime, depZone);
+      const arrMs = flightMomentMs(last.arrivalDate, last.arrivalTime, arrZone);
+      j.status = flightStatus(depMs, arrMs, nowMs);
+      j.statusLabel = j.status ? FLIGHT_STATUS_LABEL[j.status] : '';
+      j.stops.forEach((s, i) => {
+        const z = i === 0 ? depZone : i === j.stops.length - 1 ? arrZone : zoneOf(s.iata, false);
+        const at = i === 0 ? depMs : arrMs;
+        if (z) s.zoneLabel = zoneAbbr(z, isNaN(at) ? nowMs : at);
+      });
     }
     return result;
   });

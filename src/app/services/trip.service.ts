@@ -318,7 +318,7 @@ export class TripService {
 
   /** Edit a trip's core details (any member). Only defined fields are written. */
   async updateTrip(tripId: string, patch: Partial<Pick<TripDoc,
-    'name' | 'destination' | 'destinationPlaceId' | 'destinationCoords'
+    'name' | 'destination' | 'destinationPlaceId' | 'destinationCoords' | 'timeZone'
     | 'startDate' | 'endDate' | 'currency' | 'destinations'>>): Promise<void> {
     const data = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
     if (Object.keys(data).length === 0) return;

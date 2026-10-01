@@ -1,10 +1,12 @@
 import { TripDestination, TripDoc } from '../models/trip.models';
+import { todayISOInZone } from './zones';
 
 /** The flat "primary + overall" summary fields derived from a trip's legs. */
 export interface TripSummary {
   destination: string;
   destinationPlaceId?: string;
   destinationCoords?: { lat: number; lng: number };
+  timeZone?: string;
   startDate: string;
   endDate: string;
   currency: string;
@@ -25,6 +27,7 @@ export function tripSummary(destinations: TripDestination[]): TripSummary {
   };
   if (primary.destinationPlaceId) summary.destinationPlaceId = primary.destinationPlaceId;
   if (primary.destinationCoords)  summary.destinationCoords  = primary.destinationCoords;
+  if (primary.timeZone)           summary.timeZone           = primary.timeZone;
   return summary;
 }
 
@@ -58,12 +61,27 @@ export function legIsCurrent(leg: TripDestination, todayISO: string): boolean {
          leg.startDate <= todayISO && todayISO <= leg.endDate;
 }
 
-/** Today's date in the user's local timezone as YYYY-MM-DD (not UTC — an
- *  evening in the Americas must not count as tomorrow). */
-export function localTodayISO(now: Date = new Date()): string {
+/** Today's date as YYYY-MM-DD: in `zone` when given (the trip's), else on the
+ *  phone's clock (not UTC — an evening in the Americas must not count as tomorrow). */
+export function localTodayISO(now: Date = new Date(), zone?: string): string {
+  if (zone) return todayISOInZone(zone, now.getTime());
   const m = String(now.getMonth() + 1).padStart(2, '0');
   const d = String(now.getDate()).padStart(2, '0');
   return `${now.getFullYear()}-${m}-${d}`;
+}
+
+/**
+ * The zone a trip's times are written in right now: the current (or next)
+ * leg's zone, else the trip's, else undefined (= the phone's clock, as before
+ * zones existed). Legs are resolved on the phone's today first; a one-day
+ * drift at a zone edge only matters on the travel day itself.
+ */
+export function tripZone(trip: TripDoc | null | undefined, now: Date = new Date()): string | undefined {
+  if (!trip) return undefined;
+  const legs = tripDestinations(trip);
+  if (!legs.length) return trip.timeZone;
+  const leg = activeLeg(legs, localTodayISO(now));
+  return leg.timeZone ?? trip.timeZone;
 }
 
 /** A destination row from the edit form, carrying the leg it was loaded from. */
@@ -91,6 +109,7 @@ export function buildEditedDestinations(rows: DestinationEdit[]): TripDestinatio
     };
     if (r.original && r.original.destination.trim() === destination) {
       if (r.original.destinationCoords)  leg.destinationCoords  = r.original.destinationCoords;
+      if (r.original.timeZone)           leg.timeZone           = r.original.timeZone;
       if (r.original.destinationPlaceId) leg.destinationPlaceId = r.original.destinationPlaceId;
     }
     return leg;
@@ -112,5 +131,6 @@ export function tripDestinations(trip: TripDoc): TripDestination[] {
   };
   if (trip.destinationPlaceId) leg.destinationPlaceId = trip.destinationPlaceId;
   if (trip.destinationCoords)  leg.destinationCoords  = trip.destinationCoords;
+  if (trip.timeZone)           leg.timeZone           = trip.timeZone;
   return [leg];
 }

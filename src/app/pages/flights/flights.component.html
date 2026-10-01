@@ -61,6 +61,7 @@
         @if (journey.isMyJourney) { <span class="chip chip-primary">You</span> }
       </div>
       <div class="journey-header-right">
+        @if (journey.status) { <span class="status-chip" [class]="'status-chip ' + journey.status">{{ journey.statusLabel }}</span> }
         <span class="section-badge" [class.dep]="journey.section === 'DEPARTURES'">
           {{ journey.section === 'ARRIVALS' ? '↓ Arrival' : '↑ Departure' }}
         </span>
@@ -76,14 +77,14 @@
             @if (stop.arrivalTime) {
               <div class="time arr">
                 <span class="t-arrow">↓</span>
-                <span class="t-val">{{ stop.arrivalTime | time12 }}</span>
+                <span class="t-val">{{ stop.arrivalTime | time12 }}@if (stop.zoneLabel) { <span class="t-zone">{{ stop.zoneLabel }}</span> }</span>
                 @if (stop.arrivalDate) { <span class="t-date">{{ formatShortDate(stop.arrivalDate) }}</span> }
               </div>
             }
             @if (stop.departureTime) {
               <div class="time dep">
                 <span class="t-arrow">↑</span>
-                <span class="t-val">{{ stop.departureTime | time12 }}</span>
+                <span class="t-val">{{ stop.departureTime | time12 }}@if (stop.zoneLabel) { <span class="t-zone">{{ stop.zoneLabel }}</span> }</span>
                 @if (stop.departureDate) { <span class="t-date">{{ formatShortDate(stop.departureDate) }}</span> }
               </div>
             }

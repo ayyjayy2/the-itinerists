@@ -23,7 +23,9 @@ import {
   nextStay, nextTransport, nextFlight, expensesTotalBetween, recsGlance,
 } from '../../utils/home-widgets';
 import { TripDoc, TripDestination, ActivityLogEntry } from '../../models/trip.models';
-import { tripDestinations, activeLeg, legIsCurrent, localTodayISO } from '../../utils/trip-destinations';
+import { tripDestinations, activeLeg, legIsCurrent, localTodayISO, tripZone } from '../../utils/trip-destinations';
+import { zoneLabelIfForeign, zoneAbbr, wallToUtcMs } from '../../utils/zones';
+import { AirportZoneService } from '../../services/airport-zone.service';
 import { effectivePins } from '../../utils/pins';
 import { activityText as activityLine, timeAgo as agoOf } from '../../utils/activity';
 import { effectiveHomeLayout } from '../../utils/layout';
@@ -49,6 +51,9 @@ export interface GlanceCard {
 export class HomeComponent implements OnInit, OnDestroy {
   userService     = inject(UserService);
   flightCountdown = inject(FlightCountdownService);
+  private airportZones = inject(AirportZoneService);
+  /** The zone the trip's times are written in right now (undefined = phone clock, pre-zone trips). */
+  readonly tripZone = computed(() => tripZone(this.activeTrip(), new Date(this.now())));
   flightsService  = inject(FlightsService);
   tripService     = inject(TripService);
   tripContext     = inject(TripContextService);
@@ -211,7 +216,7 @@ export class HomeComponent implements OnInit, OnDestroy {
    *  before the trip starts, no leg is "now" (currentLeg() would return the
    *  next upcoming leg, which is for glance cards, not this label). */
   isCurrentLeg(leg: TripDestination): boolean {
-    return legIsCurrent(leg, localTodayISO(new Date(this.now())));
+    return legIsCurrent(leg, localTodayISO(new Date(this.now()), this.tripZone()));
   }
 
   // ── Hero ───────────────────────────────────────────────────────────────────
@@ -245,11 +250,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     const now = new Date(this.now());
     if (!t)                              return { big: '', small: 'No active trip' };
     if (!t.startDate || !t.endDate)      return { big: '', small: 'Dates not set yet' };
-    const start = new Date(t.startDate + 'T00:00:00');
-    const end   = new Date(t.endDate + 'T00:00:00');
-    const diff  = start.getTime() - now.getTime();
+    // Midnight where the trip is, so the count flips when the destination's day does.
+    const zone  = this.tripZone();
+    const startMs = zone ? wallToUtcMs(t.startDate, 0, 0, zone) : new Date(t.startDate + 'T00:00:00').getTime();
+    const endMs   = zone ? wallToUtcMs(t.endDate, 0, 0, zone)   : new Date(t.endDate + 'T00:00:00').getTime();
+    const diff  = startMs - now.getTime();
     if (diff <= 0) {
-      const rem = end.getTime() - now.getTime();
+      const rem = endMs - now.getTime();
       if (rem > 0) { const d = Math.ceil(rem / 86_400_000); return { big: `${d} day${d !== 1 ? 's' : ''} left`, small: '' }; }
       return { big: '', small: 'Trip complete 🌿' };
     }
@@ -269,15 +276,21 @@ export class HomeComponent implements OnInit, OnDestroy {
   readonly firstUp = computed(() => {
     const uid  = this.currentUser()?.uid ?? '';
     const dest = this.activeTrip()?.destination ?? 'your destination';
-    const flights = flightMomentsForUid(this.flightsService.flights(), uid, dest);
-    return pickFirstUp(this.itineraryService.items(), flights, this.now());
+    const zones = this.airportZones.zones();   // read so the computed re-runs when the table lands
+    const flights = flightMomentsForUid(this.flightsService.flights(), uid, dest, iata => zones[iata?.toUpperCase()] ?? this.airportZones.zoneFor(iata));
+    return pickFirstUp(this.itineraryService.items(), flights, this.now(), this.tripZone());
   });
 
   readonly firstUpWhen = computed(() => {
     const e = this.firstUp();
     if (!e) return '';
     const d = new Date(e.date + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    return e.time ? `${d} · ${normalizeTime(e.time)}` : d;
+    if (!e.time) return d;
+    // Flights always say their zone (a missed flight is the one mistake that cannot be undone);
+    // other items only when the trip's zone is not the phone's: "Thu, Oct 1 · 10:30 AM WEST".
+    const isFlight = e.sortOrder === -1;
+    const label = isFlight && e.zone ? zoneAbbr(e.zone, this.now()) : zoneLabelIfForeign(e.zone, this.now());
+    return `${d} · ${normalizeTime(e.time)}${label ? ' ' + label : ''}`;
   });
 
   /** Up to 3 unpacked items, surfaced on the glance card as the next to grab. */
@@ -352,7 +365,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   });
 
   /** Local calendar date for "today" comparisons (YYYY-MM-DD). */
-  private readonly todayISO = computed(() => localTodayISO(new Date(this.now())));
+  private readonly todayISO = computed(() => localTodayISO(new Date(this.now()), this.tripZone()));
 
   // ── New widgets ────────────────────────────────────────────────────────────
   readonly stayGlance = computed(() => nextStay(this.staysService.stays(), this.todayISO()));

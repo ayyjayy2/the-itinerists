@@ -91,6 +91,7 @@ export interface TripDestination {
   destination: string;
   destinationPlaceId?: string;
   destinationCoords?: { lat: number; lng: number };
+  timeZone?: string;            // IANA zone of the destination, e.g. "Europe/Lisbon" (set on save, backfilled)
   startDate: string;            // YYYY-MM-DD
   endDate: string;              // YYYY-MM-DD
   currency: string;             // ISO currency code
@@ -107,6 +108,7 @@ export interface TripDoc {
   destinations?: TripDestination[];
   destination: string;          // "Bali, Indonesia" (primary)
   destinationPlaceId?: string;  // Google Places ID, for maps/weather (optional — freeform destinations have none)
+  timeZone?: string;            // the primary leg's zone
   destinationCoords?: {         // lat/lng for the weather API + map centering
     lat: number;
     lng: number;

@@ -1,36 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Flight, FlightDoc } from '../models/trip.models';
+import { AirportZoneService } from './airport-zone.service';
+import { wallToUtcMs } from '../utils/zones';
 
-// UTC offsets for common US airports (after DST springs forward in March)
-const AIRPORT_UTC_OFFSET: Record<string, number> = {
-  'SAV': -4,  // EDT  — Savannah/Hilton Head
-  'ATL': -4,  // EDT  — Atlanta
-  'CLT': -4,  // EDT  — Charlotte
-  'IAD': -4,  // EDT  — Washington Dulles
-  'DCA': -4,  // EDT  — Reagan National
-  'JFK': -4,  // EDT  — New York JFK
-  'LGA': -4,  // EDT  — LaGuardia
-  'BOS': -4,  // EDT  — Boston
-  'RDU': -4,  // EDT  — Raleigh-Durham
-  'MIA': -4,  // EDT  — Miami
-  'MCO': -4,  // EDT  — Orlando
-  'TPA': -4,  // EDT  — Tampa
-  'ORD': -5,  // CDT  — Chicago O'Hare
-  'MDW': -5,  // CDT  — Chicago Midway
-  'BNA': -5,  // CDT  — Nashville
-  'MSP': -5,  // CDT  — Minneapolis
-  'DFW': -5,  // CDT  — Dallas
-  'IAH': -5,  // CDT  — Houston Intercontinental
-  'STL': -5,  // CDT  — St. Louis
-  'DEN': -6,  // MDT  — Denver
-  'PHX': -7,  // MST  — Phoenix (no DST)
-  'LAX': -7,  // PDT  — Los Angeles
-  'SFO': -7,  // PDT  — San Francisco
-  'SEA': -7,  // PDT  — Seattle
-};
 
 @Injectable({ providedIn: 'root' })
 export class FlightCountdownService {
+  private airportZones = inject(AirportZoneService);
 
   /** Countdown for the new uid-based FlightDoc collection. */
   getCountdownForUid(uid: string, flights: FlightDoc[]): string {
@@ -104,16 +80,16 @@ export class FlightCountdownService {
     return false;
   }
 
+  /** The instant a flight time happens, read in its airport's zone (the phone's zone if the code is unknown). */
   parseToUtcMs(date: string, time: string, airport: string): number {
-    const clean = time.replace(/\s+(CT|ET|PT|MT|IST|CDT|EDT|CST|EST)$/i, '').trim();
+    const clean = time.replace(/\s+(CT|ET|PT|MT|IST|CDT|EDT|CST|EST|WEST|CEST|BST|GMT)$/i, '').trim();
     const m = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (!m) return NaN;
     let h = parseInt(m[1], 10);
     const min = parseInt(m[2], 10);
     if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
     if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
-    const offset = AIRPORT_UTC_OFFSET[airport] ?? -4; // default EDT
-    const [y, mo, d] = date.split('-').map(Number);
-    return new Date(Date.UTC(y, mo - 1, d, h - offset, min)).getTime();
+    const zone = this.airportZones.zoneFor(airport) ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return wallToUtcMs(date, h, min, zone);
   }
 }
