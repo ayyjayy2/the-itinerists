@@ -208,3 +208,34 @@ describe('event-text: packing, members, trip', () => {
     expect(tripChanged(trip(), { name: 'B', endDate: '2026-10-12' })!.summary).toBe('updated the trip (name, dates)');
   });
 });
+
+describe('update text carries the zone code with every time', () => {
+  const members = [{ uid: 'u1', displayName: 'Maya' }];
+  const base = { id: 'i', dayLabel: '', endTime: '', location: '', category: '', notes: '', forWho: 'All', addedByUid: 'u1', sortOrder: 0, createdAt: 0 } as any;
+
+  it('itinerary added: the trip zone as of that day', () => {
+    const r = itineraryAdded({ ...base, date: '2026-10-02', time: '6:30 PM', activity: 'Sunset' }, 2, members, 'Europe/Lisbon');
+    expect(r.summary).toContain('at 6:30 PM WEST');
+  });
+
+  it('itinerary time change shows both times with their code', () => {
+    const before = { ...base, date: '2026-11-12', time: '11:00 AM', activity: 'Museum' };
+    const r = itineraryChanged(before, { ...before, time: '2:00 PM' }, members, 'America/Chicago')!;
+    expect(r.summary).toBe('changed Museum to 2:00 PM CST (was 11:00 AM CST)');
+  });
+
+  it('flight added: the departure airport zone', () => {
+    const f = { uid: 'u1', from: 'ORD', to: 'BER', departureDate: '2026-09-24', departureTime: '4:20 PM' } as any;
+    expect(flightAdded(f, 'Makaela', 'u1', 'America/Chicago').summary).toContain('at 4:20 PM CDT');
+  });
+
+  it('transport added: the trip zone', () => {
+    const c = { company: 'Hertz', mode: 'Rental Car', pickupDate: '2026-10-03', pickupTime: '9:00 AM' } as any;
+    expect(transportAdded(c, 'Europe/Vienna').summary).toContain('at 9:00 AM CEST');
+  });
+
+  it('stays bare when no zone is known', () => {
+    expect(itineraryAdded({ ...base, date: '2026-10-02', time: '6:30 PM', activity: 'Sunset' }, 2, members).summary).toMatch(/at 6:30 PM$/);
+  });
+});
+

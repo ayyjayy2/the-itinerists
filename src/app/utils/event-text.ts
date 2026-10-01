@@ -9,6 +9,8 @@ import {
   ItineraryItemDoc, FlightDoc, AccommodationDoc, RentalCar, FinanceEntryDoc, RecDoc, MapPin, TripDoc,
 } from '../models/trip.models';
 import { normalizeTime } from './time-format';
+import { parseTimeString } from './first-up';
+import { wallToUtcMs, zoneAbbr } from './zones';
 
 export type AudienceSpec = 'all' | string[];
 export interface EventText { summary: string; audience: AudienceSpec; }
@@ -54,6 +56,18 @@ export function money(amount: number, currency: string): string {
 }
 
 const time = (t: string | undefined) => (t ? normalizeTime(t) : '');
+/**
+ * "6:30 PM WEST": the time with its zone code as of that moment, the same rule
+ * as everywhere else in the app. Without a zone (a trip from before zones) the
+ * time stays bare rather than guessing.
+ */
+const zoned = (t: string | undefined, dateISO: string | undefined, zone: string | undefined): string => {
+  const shown = time(t);
+  if (!shown || !zone) return shown;
+  const p = parseTimeString(t);
+  const at = p && dateISO ? wallToUtcMs(dateISO, p.h, p.min, zone) : Date.now();
+  return `${shown} ${zoneAbbr(zone, at)}`;
+};
 const same = (a: unknown, b: unknown) => (a ?? '') === (b ?? '');
 
 /** Labels of the watched fields that differ between before and after. */
@@ -67,8 +81,8 @@ function dayRef(item: ItineraryItemDoc, dayNumber: number | null): string {
   return dayNumber ? `Day ${dayNumber}, ${fmtDay(item.date)}` : fmtDay(item.date);
 }
 
-export function itineraryAdded(item: ItineraryItemDoc, dayNumber: number | null, members: readonly MemberLike[]): EventText {
-  const when = time(item.time);
+export function itineraryAdded(item: ItineraryItemDoc, dayNumber: number | null, members: readonly MemberLike[], zone?: string): EventText {
+  const when = zoned(item.time, item.date, zone);
   const where = dayNumber ? `to ${dayRef(item, dayNumber)}` : `on ${fmtDay(item.date)}`;
   return {
     summary: `added ${item.activity} ${where}${when ? ` at ${when}` : ''}`,
@@ -76,7 +90,7 @@ export function itineraryAdded(item: ItineraryItemDoc, dayNumber: number | null,
   };
 }
 
-export function itineraryChanged(before: ItineraryItemDoc, after: ItineraryItemDoc, members: readonly MemberLike[]): EventText | null {
+export function itineraryChanged(before: ItineraryItemDoc, after: ItineraryItemDoc, members: readonly MemberLike[], zone?: string): EventText | null {
   const changed = changedFields(before, after, [
     ['time', 'time'], ['date', 'date'], ['activity', 'name'], ['location', 'location'], ['endTime', 'end time'], ['notes', 'notes'],
   ]);
@@ -87,8 +101,8 @@ export function itineraryChanged(before: ItineraryItemDoc, after: ItineraryItemD
   if (changed.length === 1) {
     switch (changed[0]) {
       case 'time': {
-        const was = time(before.time);
-        summary = `changed ${name} to ${time(after.time) || 'no set time'}${was ? ` (was ${was})` : ''}`;
+        const was = zoned(before.time, before.date, zone);
+        summary = `changed ${name} to ${zoned(after.time, after.date, zone) || 'no set time'}${was ? ` (was ${was})` : ''}`;
         break;
       }
       case 'date':     summary = `moved ${name} to ${fmtDay(after.date)}`; break;
@@ -112,8 +126,9 @@ const whose = (ownerName: string, actorUid: string, ownerUid: string) =>
   actorUid === ownerUid ? 'their' : `${ownerName}'s`;
 const route = (f: FlightDoc) => `${f.from} → ${f.to}`;
 
-export function flightAdded(f: FlightDoc, ownerName: string, actorUid: string): EventText {
-  const when = time(f.departureTime);
+/** `departureZone`: the departure airport's zone, so the time reads as the boarding pass does. */
+export function flightAdded(f: FlightDoc, ownerName: string, actorUid: string, departureZone?: string): EventText {
+  const when = zoned(f.departureTime, f.departureDate, departureZone);
   return {
     summary: `added ${whose(ownerName, actorUid, f.uid)} flight ${route(f)}, ${fmtDay(f.departureDate)}${when ? ` at ${when}` : ''}`,
     audience: 'all',
@@ -157,8 +172,8 @@ export function stayRemoved(s: AccommodationDoc, members: readonly MemberLike[])
 
 const modeWord = (c: RentalCar) => (c.mode ?? 'Rental Car').toLowerCase();
 
-export function transportAdded(c: RentalCar): EventText {
-  const when = time(c.pickupTime);
+export function transportAdded(c: RentalCar, zone?: string): EventText {
+  const when = zoned(c.pickupTime, c.pickupDate, zone);
   return {
     summary: `added a ${modeWord(c)}: ${c.company}, pick-up ${fmtDay(c.pickupDate)}${when ? ` at ${when}` : ''}`,
     audience: 'all',

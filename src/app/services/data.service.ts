@@ -11,6 +11,8 @@ import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
 import { TripEventsService } from './trip-events.service';
 import { transportAdded, transportChanged, transportRemoved, pinAdded, pinRemoved } from '../utils/event-text';
+import { TripService } from './trip.service';
+import { tripZone } from '../utils/trip-destinations';
 
 const EMPTY_SHEET: SheetData = {
   users: [], flights: [], itinerary: [], accommodations: [], finance: [],
@@ -36,6 +38,7 @@ export class DataService {
   private tripContext = inject(TripContextService);
   private userService = inject(UserService);
   private events      = inject(TripEventsService);
+  private tripService = inject(TripService);
 
   /** The active trip id, but only while someone is signed in. Listeners opened
    *  while signed out are refused by the rules and never recover, so trip
@@ -79,7 +82,7 @@ export class DataService {
     runInInjectionContext(this.injector, () => {
       const ref = doc(collection(this.firestore, 'trips', tid, 'cars'));
       setDoc(ref, sanitizeStrings(car)).catch(err => console.error('[DataService] addRentalCar failed:', err));
-      this.events.emit({ kind: 'transport', action: 'added', itemId: ref.id, path: '/transportation', ...transportAdded(car) });
+      this.events.emit({ kind: 'transport', action: 'added', itemId: ref.id, path: '/transportation', ...transportAdded(car, tripZone(this.tripService.activeTrip())) });
     });
   }
 
