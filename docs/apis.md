@@ -84,12 +84,14 @@ project is `trip-planner-ayyjayy2` before doing anything.
 | **Karma + Jasmine** | Unit tests (309 specs) | `npm test`, `npm run test:ci` |
 | **Node test runner** | Pulse aggregations (12 tests) | `npm run test:pulse` |
 | **@firebase/rules-unit-testing** | Firestore and Storage rules | `npm run test:rules` |
+| **Playwright** (`@playwright/test`) | End-to-end tests of the beta flows on the demo build (sign-up, create trip, expense, itinerary event, invite), phone viewport in Chromium | `npm run test:e2e` (`e2e/`, `playwright.config.ts`; `e2e/serve.mjs` serves the demo build in CI) |
 | **Firebase CLI** | Deploys: `firebase deploy --only hosting:the-itinerists`, `--only firestore:rules`, `--only storage` | authenticated as the owner |
 | **firebase-admin**, **google-auth-library** | Admin scripts | with the service-account key |
 | **sharp** | Photo resizing in the migration script | dev dependency |
 | **@vvo/tzdb** | Zone names table for Pulse | dev dependency |
 | **Xcode** 26 | iOS build, simulator, archive for TestFlight | `npm run ios:open` |
-| **GitHub** (`ayyjayy2/the-itinerists`) | Code, pull requests. **No CI yet** (phase 5) | `gh` CLI |
+| **GitHub** (`ayyjayy2/the-itinerists`) | Code, pull requests | `gh` CLI |
+| **GitHub Actions** | CI on every pull request and push to master: unit tests, Pulse tests, production build, rules tests (emulators), Playwright end-to-end on the demo build. Master requires the `test` job green to merge | `.github/workflows/ci.yml` |
 | **Hostinger** | Registrar for theitinerists.com; DNS points at Firebase Hosting | bought 2026-09-29 |
 
 ## Outside the repo

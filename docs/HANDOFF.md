@@ -208,6 +208,8 @@ reminders (`ROADMAP.md` §3.6); the larger Phase 3/4 items below.
   (`export PATH="$(brew --prefix openjdk)/bin:$PATH"` before running the emulator).
 - **Firestore emulator jar** is cached in `~/.cache/firebase/emulators/`. Emulator debug logs
   (`firestore-debug.log` etc.) are gitignored.
+- **CI:** GitHub Actions (`.github/workflows/ci.yml`) runs unit, Pulse, rules and Playwright end-to-end
+  tests on every PR; `npm run test:e2e` locally reuses a demo server on :4400 or builds one.
 - **Deploy rules:** `firebase deploy --only firestore:rules` (manual, gated on user OK; no CI
   deploys rules). `.firebaserc` default project = `trip-planner-ayyjayy2`. CLI is authenticated.
 - **Signals gotcha (bit us once):** `computed()` only tracks **signal** reads. A computed that reads
