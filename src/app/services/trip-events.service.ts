@@ -1,5 +1,6 @@
 import { Injectable, signal, inject, Injector, runInInjectionContext, effect, computed } from '@angular/core';
 import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp, Unsubscribe } from '@angular/fire/firestore';
+import { TripEventInTrip } from '../utils/trip-events';
 import { TripEvent, TripEventKind, TripEventAction } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
@@ -45,8 +46,54 @@ export class TripEventsService {
   private unsub?: Unsubscribe;
   private collapse = new CollapseTracker();
 
+  /** Every event on every trip the signed-in person belongs to (the bell's view), newest first. */
+  private _allEvents = signal<TripEventInTrip[]>([]);
+  readonly allEvents = this._allEvents.asReadonly();
+  private indexUnsub?: Unsubscribe;
+  private tripWatch = new Map<string, { unsubs: Unsubscribe[]; name: string; isTest: boolean; events: TripEvent[] }>();
+
   constructor() {
     effect(() => this.subscribe(this.signedInTripId()));
+    effect(() => this.watchAllTrips(this.userService.currentUser()?.uid ?? null));
+  }
+
+  /** Follow `userTrips/{uid}` and keep one events listener (and trip-name listener) per trip. */
+  private watchAllTrips(uid: string | null): void {
+    this.indexUnsub?.(); this.indexUnsub = undefined;
+    for (const w of this.tripWatch.values()) w.unsubs.forEach(u => u());
+    this.tripWatch.clear();
+    this._allEvents.set([]);
+    if (!uid) return;
+    runInInjectionContext(this.injector, () => {
+      this.indexUnsub = onSnapshot(doc(this.firestore, 'userTrips', uid), snap => {
+        const ids = new Set<string>((snap.data()?.['tripIds'] as string[] | undefined) ?? []);
+        for (const [id, w] of this.tripWatch) if (!ids.has(id)) { w.unsubs.forEach(u => u()); this.tripWatch.delete(id); }
+        for (const id of ids) if (!this.tripWatch.has(id)) this.watchTrip(id);
+        this.publishAll();
+      }, () => { /* offline: the active trip's feed still works */ });
+    });
+  }
+
+  private watchTrip(tripId: string): void {
+    const w = { unsubs: [] as Unsubscribe[], name: '', isTest: false, events: [] as TripEvent[] };
+    this.tripWatch.set(tripId, w);
+    runInInjectionContext(this.injector, () => {
+      w.unsubs.push(onSnapshot(doc(this.firestore, 'trips', tripId), snap => {
+        const t = snap.data();
+        w.name = (t?.['name'] as string) ?? ''; w.isTest = !!t?.['isTest'];
+        this.publishAll();
+      }, () => { /* removed from the trip: the index listener drops it */ }));
+      w.unsubs.push(onSnapshot(collection(this.firestore, 'trips', tripId, 'events'), snap => {
+        w.events = snap.docs.map(d => d.data() as TripEvent);
+        this.publishAll();
+      }, () => { /* no access any more */ }));
+    });
+  }
+
+  private publishAll(): void {
+    const all: TripEventInTrip[] = [];
+    for (const [tripId, w] of this.tripWatch) for (const e of w.events) all.push({ ...e, tripId, tripName: w.name, tripIsTest: w.isTest });
+    this._allEvents.set(all.sort((a, b) => b.timestamp - a.timestamp));
   }
 
   private subscribe(tripId: string | null): void {
