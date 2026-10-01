@@ -140,7 +140,7 @@ test('tripStats summarises each trip, most recently active first', () => {
 });
 
 // ── new cards (2026-09-30): return rate, visits, around the trip, platform & version ──
-import { returnCohorts, sessionStats, aroundTrips, platformPerDay, versionStats } from '../public/pulse/stats.mjs';
+import { returnCohorts, sessionStats, aroundTrips, platformPerDay, versionStats, countryStats } from '../public/pulse/stats.mjs';
 const D = 24 * H;
 
 test('returnCohorts groups people by first-seen week and counts who came back', () => {
@@ -211,4 +211,27 @@ test('platformPerDay and versionStats', () => {
   assert.deepEqual(p.map(d => [d.day, d.web.length, d.pwa.length, d.ios.length]), [['2026-09-30', 1, 0, 1], ['2026-10-01', 0, 1, 0]]);
   const v = versionStats(rows);
   assert.deepEqual(v.map(x => [x.version, x.uids, x.lastSeen]), [['0.9.1', ['b', 'c'], NOON + D], ['0.9.0', ['a'], NOON + H]]);
+});
+
+test('countryStats groups people by the country of the zone their phone reported', () => {
+  const countryOf = tz => ({ 'Europe/Berlin': 'Germany', 'Europe/Vienna': 'Austria', 'America/Chicago': 'USA' })[tz] ?? '';
+  const rows = [
+    row({ uid: 'a', at: NOON, type: 'session' }),                                            // Berlin
+    row({ uid: 'a', at: NOON + H, tz: 'Europe/Vienna', tzOffsetMin: 120 }),                 // moved on to Innsbruck
+    row({ uid: 'b', at: NOON, type: 'session', tz: 'America/Chicago', tzOffsetMin: -300 }),
+    row({ uid: 'c', at: NOON, tz: 'America/Chicago', tzOffsetMin: -300 }),
+    row({ uid: 'd', at: NOON, tz: 'Mars/Olympus' }),                                         // unknown zone: skipped
+  ];
+  const c = countryStats(rows, countryOf);
+  assert.deepEqual(c.map(x => [x.country, x.uids, x.sessions, x.zones]), [
+    ['USA', ['b', 'c'], 1, ['America/Chicago']],
+    ['Austria', ['a'], 0, ['Europe/Vienna']],
+    ['Germany', ['a'], 1, ['Europe/Berlin']],
+  ]);
+});
+
+test('pageStats folds the "/" entry route into /home', () => {
+  const rows = [row({ uid: 'a', at: NOON, page: '/' }), row({ uid: 'a', at: NOON + 1, page: '/home' }), row({ uid: 'b', at: NOON, page: '/' })];
+  const p = pageStats(rows);
+  assert.deepEqual(p.map(x => [x.page, x.views, x.users]), [['/home', 3, 2]]);
 });

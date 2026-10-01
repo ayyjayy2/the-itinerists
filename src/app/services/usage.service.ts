@@ -119,6 +119,9 @@ export class UsageService {
     const uid = this.userService.currentUser()?.uid;
     if (!uid) return;
     const now = Date.now();
+    // "/" is only ever the entry before the router redirects (to /home or /login); it
+    // is not a page anyone sees, so it never counts as a view.
+    if (type === 'page' && this.currentPage === '/') return;
     if (type === 'page') {
       if (isRepeatPageView(this.lastPageView, this.currentPage, now)) return;
       this.lastPageView = { page: this.currentPage, at: now };
