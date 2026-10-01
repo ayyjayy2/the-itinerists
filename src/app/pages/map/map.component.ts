@@ -10,18 +10,21 @@ import { DataService } from '../../services/data.service';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { Flight, ItineraryItem, MapPin, TripUser } from '../../models/trip.models';
-import { activeLeg, tripDestinations } from '../../utils/trip-destinations';
+import { activeLeg, tripDestinations, localTodayISO, tripZone } from '../../utils/trip-destinations';
+import { AirportZoneService } from '../../services/airport-zone.service';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
 // Bump this to wipe the geocache and re-resolve all locations with new strategy.
 // v5: destination-aware queries + cache keys (was Ireland-biased before).
+// v7: lookups bounded to the trip's leg (Alfama was landing in Dublin, Belém in
+//     Brazil); airports come from the bundled table, never from a name search.
 const GEOCACHE_KEY         = 'tripmap_geocache';
 const GEOCACHE_VERSION_KEY = 'tripmap_geocache_version';
-const GEOCACHE_VERSION     = '6';
+const GEOCACHE_VERSION     = '7';
 // Shared (cross-user) geocache doc — versioned so the old Ireland-biased,
 // non-namespaced entries are abandoned rather than reused.
-const FIRESTORE_GEOCACHE_DOC = 'trip_locations_v6';
+const FIRESTORE_GEOCACHE_DOC = 'trip_locations_v7';
 
 // Dusk Garden palette (light-theme hexes — the map tiles are always light).
 // Markers carry a white outline, so these muted tones still read on the map.
@@ -184,6 +187,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private ngZone      = inject(NgZone);
   private focus       = inject(FocusService);
   private firestore   = inject(Firestore);
+  private airportZones = inject(AirportZoneService);
 
   /** Active trip's destination — appended to geocode queries to disambiguate
    *  local place names (e.g. "Baixa" → "Baixa, Lisbon, Portugal"). */
@@ -195,6 +199,18 @@ export class MapComponent implements AfterViewInit, OnDestroy {
    *  "already contains the city" checks. */
   private destinationHint(): string {
     return this.tripDestination().split(',')[0].trim().toLowerCase();
+  }
+
+  /** Where the trip is right now (the current leg's coordinates), so a place
+   *  name is looked up near it: "Alfama" in Lisbon, not Dublin. */
+  private nearCoords(): { lat: number; lng: number } | null {
+    const trip = this.tripService.activeTrip();
+    if (!trip) return null;
+    const legs = tripDestinations(trip);
+    if (!legs.length) return trip.destinationCoords ?? null;
+    const now = new Date();
+    const leg = activeLeg(legs, localTodayISO(now, tripZone(trip, now)));
+    return leg.destinationCoords ?? legs.find(l => l.destinationCoords)?.destinationCoords ?? trip.destinationCoords ?? null;
   }
 
   /** Cache key namespaced by destination so the same place name in two
@@ -320,7 +336,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     if (!this.addForm.address || !this.addForm.name) return;
     this.addSearching.set(true);
     this.addError.set('');
-    const coords = await this.geocodeWithFallback(this.addForm.address, this.tripDestination());
+    const coords = await this.geocodeWithFallback(this.addForm.address, this.tripDestination(), this.nearCoords());
     this.addSearching.set(false);
     if (!coords) { this.addError.set('Location not found — try a more specific address.'); return; }
 
@@ -477,9 +493,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     ).catch(() => { /* ignore write failures */ });
   }
 
-  private async fetchGeocode(query: string): Promise<{ lat: number; lng: number } | null> {
+  /** One Nominatim lookup. With `near`, only results within about 150 km of it count
+   *  (viewbox + bounded), which is what keeps a neighbourhood in its own city. */
+  private async fetchGeocode(query: string, near?: { lat: number; lng: number } | null): Promise<{ lat: number; lng: number } | null> {
     try {
-      const url  = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`;
+      let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`;
+      if (near) {
+        const dLat = 1.4, dLng = 1.4 / Math.max(0.2, Math.cos(near.lat * Math.PI / 180));
+        url += `&viewbox=${(near.lng - dLng).toFixed(3)},${(near.lat + dLat).toFixed(3)},${(near.lng + dLng).toFixed(3)},${(near.lat - dLat).toFixed(3)}&bounded=1`;
+      }
       const res  = await fetch(url);
       const data = await res.json();
       return data[0] ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
@@ -493,11 +515,23 @@ export class MapComponent implements AfterViewInit, OnDestroy {
    * 3. Last 1 comma part (city)
    * Caches successful result under the original key.
    */
-  private async geocodeWithFallback(location: string, context = ''): Promise<{ lat: number; lng: number } | null> {
+  private async geocodeWithFallback(location: string, context = '', near: { lat: number; lng: number } | null = null): Promise<{ lat: number; lng: number } | null> {
     const key = this.cacheKey(location, context);
     if (this.geocache[key]) {
       this.geocodedLocations.set(location, this.geocache[key]);
       return this.geocache[key];
+    }
+
+    // An airport code is answered from the bundled table: exact, instant, no network.
+    const code = location.trim().toUpperCase();
+    if (/^[A-Z]{3}$/.test(code)) {
+      const airport = await this.airportZones.coordsFor(code);
+      if (airport) {
+        this.geocache[key] = airport;
+        this.geocodedLocations.set(location, airport);
+        this.saveCache();
+        return airport;
+      }
     }
 
     const cleaned = location.replace(/\s*\([A-Z0-9]{2,5}\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
@@ -523,9 +557,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         ]
     ).filter((v, i, a) => v && a.indexOf(v) === i); // drop blanks + duplicates
 
-    for (let i = 0; i < attempts.length; i++) {
+    // Near the trip's current leg first; the same forms unbounded only if nothing is found there.
+    const plan = near ? [...attempts.map(q => ({ q, near })), ...attempts.map(q => ({ q, near: null }))] : attempts.map(q => ({ q, near: null }));
+    for (let i = 0; i < plan.length; i++) {
       if (i > 0) await new Promise(r => setTimeout(r, 1100));
-      const coords = await this.fetchGeocode(attempts[i]);
+      const coords = await this.fetchGeocode(plan[i].q, plan[i].near);
       if (coords) {
         this.geocache[key] = coords;
         this.geocodedLocations.set(location, coords);
@@ -583,7 +619,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     for (const n of locs) {
       if (this.destroyed) return;
       if (!isCached(n)) {
-        await this.geocodeWithFallback(n.loc, n.ctx);
+        await this.geocodeWithFallback(n.loc, n.ctx, this.nearCoords());
         this.ngZone.run(() => this.geocodedCount.update(c => c + 1));
         await new Promise(r => setTimeout(r, 1100));
       } else {
@@ -601,7 +637,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       const newLocs = this.allNeededLocations().filter(n => !this.geocodedLocations.has(n.loc));
       for (const n of newLocs) {
         if (this.destroyed) return;
-        await this.geocodeWithFallback(n.loc, n.ctx);
+        await this.geocodeWithFallback(n.loc, n.ctx, this.nearCoords());
         await new Promise(r => setTimeout(r, 1100));
       }
     } finally {
