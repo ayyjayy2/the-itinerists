@@ -19,11 +19,17 @@ const events: TripEvent[] = [
   ev({ id: 'e5', timestamp: 6000, test: true, summary: 'removed Tester 1', kind: 'member', action: 'kicked', path: '/trip-settings', itemId: '' }), // tester
 ];
 
+const inTrip = (e: TripEvent, tripId = 't1', tripName = 'Berlin', tripIsTest = false) => ({ ...e, tripId, tripName, tripIsTest });
+
 describe('NotificationBellComponent', () => {
+  let allEvents: ReturnType<typeof signal<any[]>>;
+  let switchSpy: jasmine.Spy;
   let userStub: { firestoreUser: any; markActivitySeen: jasmine.Spy };
   let tripStub: ReturnType<typeof signal<any>>;
 
   beforeEach(() => {
+    allEvents = signal<any[]>(events.map(e => inTrip(e)));
+    switchSpy = jasmine.createSpy('switchTrip').and.resolveTo();
     tripStub = signal<any>({ id: 't1', name: 'Berlin' });
     userStub = {
       firestoreUser: signal({ uid: 'me', lastSeenActivityAt: 1000 }),
@@ -33,9 +39,9 @@ describe('NotificationBellComponent', () => {
       imports: [NotificationBellComponent],
       providers: [
         provideRouter([]),
-        { provide: TripEventsService, useValue: { events: signal(events) } },
+        { provide: TripEventsService, useValue: { events: signal(events), allEvents: allEvents } },
         { provide: UserService, useValue: userStub },
-        { provide: TripService, useValue: { activeTrip: tripStub } },
+        { provide: TripService, useValue: { activeTrip: tripStub, switchTrip: switchSpy } },
       ],
     });
   });
@@ -83,11 +89,35 @@ describe('NotificationBellComponent', () => {
     let fixture = TestBed.createComponent(NotificationBellComponent);
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('.bell-badge')?.textContent?.trim()).toBe('1');
-    tripStub.set({ id: 't1', name: 'Sandbox', isTest: true });
+    // The rule now follows each event's own trip: the same events on a test trip include the tester's.
+    allEvents.set(events.map(e => inTrip(e, 't1', 'Sandbox', true)));
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('.bell-badge')?.textContent?.trim()).toBe('2');
     (fixture.nativeElement.querySelector('.bell-btn') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('removed Tester 1');
+  });
+
+  it('counts updates from my other trips, labels them, and switches trip when one is opened', () => {
+    allEvents.set([...events.map(e => inTrip(e)), inTrip(ev({ id: 'x1', actorName: 'Maya', timestamp: 7000, summary: 'added Sunset to Day 2' }), 't2', 'Lisbon')]);
+    const fixture = TestBed.createComponent(NotificationBellComponent);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.bell-badge')?.textContent?.trim()).toBe('2');
+    (el.querySelector('.bell-btn') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const rows = Array.from(el.querySelectorAll('a.bell-item')) as HTMLAnchorElement[];
+    expect(rows[0].textContent).toContain('Lisbon');
+    expect(rows[0].querySelector('.bell-trip.other')).not.toBeNull();
+    rows[0].click();
+    expect(switchSpy).toHaveBeenCalledWith('t2');
+  });
+
+  it('shows tester activity only on a test trip', () => {
+    const tester = ev({ id: 't9', timestamp: 8000, test: true, summary: 'added Probe item' });
+    allEvents.set([inTrip(tester, 't3', 'Lisbon', true), inTrip({ ...tester, id: 't10' }, 't1', 'Berlin', false)]);
+    const fixture = TestBed.createComponent(NotificationBellComponent);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.bell-badge')?.textContent?.trim()).toBe('1');
   });
 });

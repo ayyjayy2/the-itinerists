@@ -3,10 +3,9 @@ import { RouterLink } from '@angular/router';
 import { IconComponent } from '../icon/icon.component';
 import { UserService } from '../../services/user.service';
 import { timeAgo } from '../../utils/activity';
-import { eventsForMe, unseenEvents } from '../../utils/trip-events';
+import { forMeAcrossTrips, unseenAcrossTrips, TripEventInTrip } from '../../utils/trip-events';
 import { TripEventsService } from '../../services/trip-events.service';
 import { TripService } from '../../services/trip.service';
-import { TripEvent } from '../../models/trip.models';
 
 @Component({
   selector: 'app-notification-bell',
@@ -25,7 +24,8 @@ import { TripEvent } from '../../models/trip.models';
         <div class="bell-dropdown" [style.top.px]="dropTop()">
           <div class="bell-head">{{ shown().length }} {{ shown().length === 1 ? 'update' : 'updates' }}</div>
           @for (e of shown(); track e.id) {
-            <a class="bell-item bell-link" [routerLink]="e.path" [queryParams]="e.itemId ? { focus: e.itemId } : null" (click)="open.set(false)">
+            <a class="bell-item bell-link" [routerLink]="e.path" [queryParams]="e.itemId ? { focus: e.itemId } : null" (click)="go(e)">
+              @if (multiTrip()) { <span class="bell-trip" [class.other]="e.tripId !== activeTripId()">{{ e.tripName || 'Trip' }}</span> }
               <b>{{ e.actorName }}</b> {{ e.summary }} <span class="bell-ago">· {{ ago(e.timestamp) }}</span>
             </a>
           } @empty {
@@ -57,6 +57,9 @@ import { TripEvent } from '../../models/trip.models';
     .bell-link { display: block; color: inherit; text-decoration: none; }
     .bell-link:hover { background: var(--surface-2, #f3f3f3); }
     .bell-ago { color: var(--muted, #8a8a8a); white-space: nowrap; }
+    .bell-trip { display: block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--muted, #8a8a8a); margin-bottom: 0.1rem; }
+    .bell-trip.other { color: var(--primary, #4a9c6d); }
     .bell-empty { color: var(--muted, #8a8a8a); }
     .bell-all { display: block; padding: 0.55rem 0.9rem; font-size: 0.85rem; font-weight: 700;
       color: var(--primary, #4a9c6d); text-decoration: none;
@@ -68,28 +71,37 @@ export class NotificationBellComponent {
   private userService   = inject(UserService);
   private tripService   = inject(TripService);
 
-  /** On a test trip, tester activity is part of what we're checking. */
-  private showTest = computed(() => !!this.tripService.activeTrip()?.isTest);
+  readonly activeTripId = computed(() => this.tripService.activeTrip()?.id ?? '');
 
   open = signal(false);
   private now = signal(Date.now());
 
   private me      = computed(() => this.userService.firestoreUser());
-  /** Events for me newer than my high-water mark (own actions never count). */
-  private unseenList = computed(() => unseenEvents(
-    this.eventsService.events(), this.me()?.uid ?? '', this.me()?.lastSeenActivityAt ?? 0, this.showTest(),
+  /** Events for me on any of my trips, newer than my high-water mark (own actions never count;
+   *  each trip's own test rule applies). */
+  private unseenList = computed(() => unseenAcrossTrips(
+    this.eventsService.allEvents(), this.me()?.uid ?? '', this.me()?.lastSeenActivityAt ?? 0,
   ));
   readonly unseen = computed(() => this.unseenList().length);
   /** What the dropdown lists: the unseen ones, else the latest few for me. */
-  readonly recent = computed<TripEvent[]>(() => {
+  readonly recent = computed<TripEventInTrip[]>(() => {
     const unseen = this.unseenList();
     if (unseen.length) return unseen.slice(0, 8);
-    return eventsForMe(this.eventsService.events(), this.me()?.uid ?? '', this.showTest()).slice(0, 5);
+    return forMeAcrossTrips(this.eventsService.allEvents(), this.me()?.uid ?? '').slice(0, 5);
   });
+  /** Label entries with their trip once updates come from more than one trip. */
+  readonly multiTrip = computed(() => new Set(this.shown().map(e => e.tripId)).size > 1
+    || this.shown().some(e => e.tripId !== this.activeTripId()));
 
   /** Snapshot taken when the dropdown opens — opening marks everything seen
    *  (clears the badge), but the list stays readable. */
-  readonly shown = signal<TripEvent[]>([]);
+  readonly shown = signal<TripEventInTrip[]>([]);
+
+  /** An update on another trip makes that trip active first, so the link opens the right item. */
+  go(e: TripEventInTrip): void {
+    this.open.set(false);
+    if (e.tripId && e.tripId !== this.activeTripId()) void this.tripService.switchTrip(e.tripId);
+  }
 
   ago = (ts: number) => timeAgo(ts, this.now());
 
