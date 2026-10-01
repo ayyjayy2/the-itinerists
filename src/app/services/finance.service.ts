@@ -3,6 +3,9 @@ import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, U
 import { FinanceEntryDoc } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
+import { TripService } from './trip.service';
+import { TripEventsService } from './trip-events.service';
+import { financeAdded, financeChanged, financeRemoved } from '../utils/event-text';
 
 const PAID_PREFIX = 'tripplanner_paid_items_'; // per-trip: paid state shouldn't bleed across trips
 
@@ -12,6 +15,8 @@ export class FinanceService {
   private injector    = inject(Injector);
   private tripContext = inject(TripContextService);
   private userService = inject(UserService);
+  private tripService = inject(TripService);
+  private events      = inject(TripEventsService);
 
   /** The active trip id, but only while someone is signed in. Listeners opened
    *  while signed out are refused by the rules and never recover, so trip
@@ -62,7 +67,10 @@ export class FinanceService {
   async addEntry(entry: Omit<FinanceEntryDoc, 'id'>): Promise<void> {
     const tid = this.requireTrip();
     const ref = doc(collection(this.firestore, 'trips', tid, 'finance'));
-    await setDoc(ref, { ...entry, id: ref.id });
+    const full = { ...entry, id: ref.id } as FinanceEntryDoc;
+    await setDoc(ref, full);
+    const t = financeAdded(full, this.userService.currentUser()?.name ?? '', this.currency(), this.tripService.activeMembers());
+    this.events.emit({ kind: 'finance', action: 'added', itemId: ref.id, path: '/finance', ...t });
   }
 
   async updateEntry(id: string, updates: Partial<FinanceEntryDoc>): Promise<void> {
@@ -70,13 +78,23 @@ export class FinanceService {
     const data = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
+    const before = this._entries().find(e => e.id === id);
     await updateDoc(doc(this.firestore, 'trips', tid, 'finance', id), data);
+    if (!before) return;
+    const t = financeChanged(before, { ...before, ...data } as FinanceEntryDoc, this.currency(), this.tripService.activeMembers());
+    if (t) this.events.emit({ kind: 'finance', action: 'changed', itemId: id, path: '/finance', ...t });
   }
 
   async deleteEntry(id: string): Promise<void> {
     const tid = this.requireTrip();
+    const before = this._entries().find(e => e.id === id);
     await deleteDoc(doc(this.firestore, 'trips', tid, 'finance', id));
+    if (!before) return;
+    const t = financeRemoved(before, this.currency(), this.tripService.activeMembers());
+    this.events.emit({ kind: 'finance', action: 'removed', itemId: id, path: '/finance', ...t });
   }
+
+  private currency(): string { return this.tripService.activeTrip()?.currency || 'USD'; }
 
   togglePaidItem(key: string): void {
     const tid = this.tripContext.activeTripId();

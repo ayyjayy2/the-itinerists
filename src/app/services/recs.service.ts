@@ -3,6 +3,8 @@ import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, U
 import { RecDoc } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
+import { TripEventsService } from './trip-events.service';
+import { recAdded, recChanged, recRemoved } from '../utils/event-text';
 
 @Injectable({ providedIn: 'root' })
 export class RecsService {
@@ -10,6 +12,7 @@ export class RecsService {
   private injector    = inject(Injector);
   private tripContext = inject(TripContextService);
   private userService = inject(UserService);
+  private events      = inject(TripEventsService);
 
   /** The active trip id, but only while someone is signed in. Listeners opened
    *  while signed out are refused by the rules and never recover, so trip
@@ -53,18 +56,26 @@ export class RecsService {
   async addRec(rec: Omit<RecDoc, 'id'>): Promise<void> {
     const tid = this.requireTrip();
     const ref = doc(collection(this.firestore, 'trips', tid, 'recs'));
-    await setDoc(ref, { ...rec, id: ref.id });
+    const full = { ...rec, id: ref.id } as RecDoc;
+    await setDoc(ref, full);
+    this.events.emit({ kind: 'rec', action: 'added', itemId: ref.id, path: '/recs', ...recAdded(full) });
   }
 
   /** Edit a rec's fields; the id, author and creation time stay as they were. */
   async updateRec(id: string, patch: Partial<Pick<RecDoc, 'category' | 'title' | 'description' | 'extra' | 'destination'>>): Promise<void> {
     const tid = this.requireTrip();
+    const before = this._recs().find(r => r.id === id);
     await updateDoc(doc(this.firestore, 'trips', tid, 'recs', id), { ...patch });
+    if (!before) return;
+    const t = recChanged(before, { ...before, ...patch });
+    if (t) this.events.emit({ kind: 'rec', action: 'changed', itemId: id, path: '/recs', ...t });
   }
 
   async deleteRec(id: string): Promise<void> {
     const tid = this.requireTrip();
+    const before = this._recs().find(r => r.id === id);
     await deleteDoc(doc(this.firestore, 'trips', tid, 'recs', id));
+    if (before) this.events.emit({ kind: 'rec', action: 'removed', itemId: id, path: '/recs', ...recRemoved(before) });
   }
 
   private requireTrip(): string {

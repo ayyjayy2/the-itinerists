@@ -14,9 +14,10 @@ import { TimeInputComponent } from '../../shared/time-input/time-input.component
 import { Time12Pipe } from '../../shared/time12.pipe';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
+import { FocusTargetDirective } from '../../shared/focus-target.directive';
 @Component({
   selector: 'app-accommodations',
-  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
+  imports: [FocusTargetDirective, LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
   templateUrl: './accommodations.component.html',
   styleUrl: './accommodations.component.scss'
 })

@@ -10,6 +10,9 @@
       <button class="btn btn-sm" [class.btn-primary]="view() === 'list'"     [class.btn-ghost]="view() !== 'list'"     (click)="setView('list')">List</button>
       <button class="btn btn-sm" [class.btn-primary]="view() === 'calendar'" [class.btn-ghost]="view() !== 'calendar'" (click)="setView('calendar')">Calendar</button>
     </div>
+  @if (focusMissing()) {
+    <p class="focus-missing">That one was removed from the itinerary.</p>
+  }
   </div>
 
   <!-- ── Scope tabs ── -->
@@ -95,7 +98,7 @@
                (cdkDropListDropped)="onDrop($event, group[0])">
             @for (item of group[1]; track item.id) {
 
-              <div class="itinerary-item card" cdkDrag [cdkDragDisabled]="isEditing(item)" [class.editing]="isEditing(item)">
+              <div class="itinerary-item card" cdkDrag [cdkDragDisabled]="isEditing(item)" [class.editing]="isEditing(item)" [appFocusTarget]="item.id">
 
                 @if (!isEditing(item)) {
                   <!-- ── Display mode ── -->

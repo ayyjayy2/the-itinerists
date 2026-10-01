@@ -54,7 +54,7 @@
 
 <!-- ── Journey card ── -->
 <ng-template #journeyCard let-journey="journey">
-  <div class="journey-card card" [class.mine]="journey.isMyJourney">
+  <div class="journey-card card" [class.mine]="journey.isMyJourney" [appFocusTarget]="journey.legIds">
     <div class="journey-header">
       <div class="journey-group">
         <span class="group-name">{{ journey.groupName }}</span>

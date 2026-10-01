@@ -25,9 +25,10 @@ function blankForm(): CarForm {
   };
 }
 
+import { FocusTargetDirective } from '../../shared/focus-target.directive';
 @Component({
   selector: 'app-rental-car',
-  imports: [IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
+  imports: [FocusTargetDirective, IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
   templateUrl: './rental-car.component.html',
   styleUrl: './rental-car.component.scss'
 })
@@ -40,6 +41,8 @@ export class RentalCarComponent {
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
 
   cars  = computed(() => this.dataService.data()?.rentalCar ?? []);
+  /** Firestore id for the card at this index: the bell deep-links on it. */
+  carId(i: number): string | undefined { return this.dataService.carId(i); }
   users = computed(() => this.dataService.data()?.users ?? []);
 
   readonly modes = MODES;

@@ -3,14 +3,18 @@ import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { UpdatesComponent } from './updates.component';
 import { TripService } from '../../services/trip.service';
+import { TripEventsService } from '../../services/trip-events.service';
 import { UserService } from '../../services/user.service';
-import { ActivityLogEntry } from '../../models/trip.models';
+import { TripEvent } from '../../models/trip.models';
 
-const entries: ActivityLogEntry[] = [
-  { id: 'e1', action: 'member_added', targetUid: 't1', targetName: 'Tess',
-    performedByUid: 'p1', performedByName: 'Pat', timestamp: 2000 },
-  { id: 'e2', action: 'member_left', targetUid: 't2', targetName: 'Lou',
-    performedByUid: 'p2', performedByName: 'Lou', timestamp: 1000 },
+const ev = (o: Partial<TripEvent>): TripEvent => ({
+  id: 'e', kind: 'itinerary', action: 'added', actorUid: 'p1', actorName: 'Pat', itemId: 'i1',
+  summary: 'added Dinner to Day 1, Sat Oct 3 at 7:00 PM', path: '/itinerary', audience: 'all', timestamp: 2000, ...o,
+});
+const events: TripEvent[] = [
+  ev({ id: 'e1', timestamp: 3000, actorUid: 'me', actorName: 'Me', summary: 'added a rec: Mine (Food)', path: '/recs', itemId: 'r1' }),
+  ev({ id: 'e2', timestamp: 2000 }),
+  ev({ id: 'e3', timestamp: 1000, audience: ['someone-else'], summary: 'suggested you pack: hat' }),
 ];
 
 describe('UpdatesComponent', () => {
@@ -22,17 +26,25 @@ describe('UpdatesComponent', () => {
       imports: [UpdatesComponent],
       providers: [
         provideRouter([]),
-        { provide: TripService, useValue: { activeActivity: signal(entries), activeMembers: signal([]) } },
+        { provide: TripService, useValue: { activeMembers: signal([{ uid: 'p1', displayName: 'Pat', color: '#abc', avatarEmoji: '🐸' }]) } },
+        { provide: TripEventsService, useValue: { events: signal(events) } },
         { provide: UserService, useValue: userStub },
       ],
     });
   });
 
-  it('lists entries newest-first and marks activity seen on init', () => {
+  it('lists my own and others’ events for me, newest first, each linking to its item, and marks seen', () => {
     const fixture = TestBed.createComponent(UpdatesComponent);
     fixture.detectChanges();
-    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(text.indexOf('Tess joined the trip')).toBeLessThan(text.indexOf('Lou left the trip'));
+    const el = fixture.nativeElement as HTMLElement;
+    const rows = Array.from(el.querySelectorAll('a.feed-row'));
+    expect(rows.length).toBe(2);                                   // the one aimed at someone else is left out
+    expect(rows[0].textContent).toContain('You');
+    expect(rows[0].textContent).toContain('added a rec: Mine (Food)');
+    expect(rows[0].classList).toContain('mine');
+    expect(rows[0].getAttribute('href')).toBe('/recs?focus=r1');
+    expect(rows[1].textContent).toContain('Pat');
+    expect(rows[1].getAttribute('href')).toBe('/itinerary?focus=i1');
     expect(userStub.markActivitySeen).toHaveBeenCalled();
   });
 });

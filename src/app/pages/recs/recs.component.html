@@ -97,7 +97,7 @@
         </h3>
         <div class="rec-cards">
           @for (rec of group.recs; track rec.id) {
-            <div class="rec-card card" [class.editing]="isEditing(rec)" [style.border-left-color]="categoryMeta(group.category).color">
+            <div class="rec-card card" [class.editing]="isEditing(rec)" [appFocusTarget]="rec.id" [style.border-left-color]="categoryMeta(group.category).color">
               @if (isEditing(rec)) {
                 <!-- ── Inline edit ── -->
                 <div class="rec-edit-form">

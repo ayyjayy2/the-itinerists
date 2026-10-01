@@ -36,6 +36,7 @@ import { BACKGROUND_COLORS } from '../utils/avatar-contrast';
 import { PLACEHOLDER_DOMAIN, isPlaceholderEmail, isValidEmail } from '../utils/email';
 import { usernameProblem, normalizeUsername } from '../utils/signup-form';
 import { UserService } from './user.service';
+import { TripEventsService } from './trip-events.service';
 
 const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
 
@@ -76,6 +77,7 @@ export class AuthService {
   private tripContext = inject(TripContextService);
   private injector    = inject(Injector);   // TripService is resolved lazily: it injects AuthService itself
   private userService = inject(UserService);
+  private events      = inject(TripEventsService);
 
   /** Sign in with either the username or the account's (verified) email —
    *  adding a recovery email never replaces the username. */
@@ -261,6 +263,7 @@ export class AuthService {
       performedByUid: uid, performedByName: userDoc.displayName,
       timestamp: now,
     }).catch(err => console.warn('[AuthService] activity log failed:', err));
+    this.events.emit({ kind: 'member', action: 'joined', itemId: '', path: '/trip-settings', summary: 'joined the trip', audience: 'all' }, tripId);
 
     this.tripContext.switchTrip(tripId);
   }

@@ -169,6 +169,7 @@ interface LocationEntry {
   num?: number;                                  // itinerary sequence when a day is selected
 }
 
+import { FocusService } from '../../services/focus.service';
 @Component({
   selector: 'app-map',
   imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
@@ -181,6 +182,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private tripService = inject(TripService);
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
   private ngZone      = inject(NgZone);
+  private focus       = inject(FocusService);
   private firestore   = inject(Firestore);
 
   /** Active trip's destination — appended to geocode queries to disambiguate
@@ -923,6 +925,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         });
       }
       marker.addTo(this.customLayer);
+      if (this.focus.id() === pin.id) {
+        // Deep link from the bell: land on this pin.
+        this.map.setView([pin.lat, pin.lng], Math.max(this.map.getZoom(), 14));
+        marker.openPopup();
+        this.ngZone.run(() => this.focus.clear());
+      }
 
       const key = `pin:${pin.id}`;
       this.markerByKey.set(key, marker);

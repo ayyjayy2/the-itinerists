@@ -42,9 +42,11 @@ function fallbackWindow(): string[] {
   return days;
 }
 
+import { FocusTargetDirective } from '../../shared/focus-target.directive';
+import { FocusService, focusDate } from '../../services/focus.service';
 @Component({
   selector: 'app-itinerary',
-  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule, DragDropModule, RouterLink, TimeInputComponent, Time12Pipe],
+  imports: [FocusTargetDirective, LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule, DragDropModule, RouterLink, TimeInputComponent, Time12Pipe],
   templateUrl: './itinerary.component.html',
   styleUrl: './itinerary.component.scss'
 })
@@ -55,6 +57,7 @@ export class ItineraryComponent implements OnInit {
   flightsService    = inject(FlightsService);
   tripService       = inject(TripService);
   dataService       = inject(DataService);
+  private focus     = inject(FocusService);
 
   view         = signal<ViewMode>('list');
   selectedDate = signal<string>('All');
@@ -283,6 +286,16 @@ export class ItineraryComponent implements OnInit {
     const uid = this.currentUser()?.uid;
     if (uid) this.itineraryService.loadDayLabels(uid);
   }
+
+  /** Deep link (`?focus=<item id>` from the bell or a push): show that item's day. */
+  readonly focusMissing = this.focus.missing;
+  private readonly focusDayEffect = effect(() => {
+    const id = this.focus.id();
+    if (!id || !this.itineraryService.loaded()) return;
+    const date = focusDate(this.itineraryService.items(), id);
+    if (date) untracked(() => { this.view.set('list'); this.selectedDate.set(date); });
+    else untracked(() => this.focus.markMissing());
+  });
 
   // ── ForWho helpers ─────────────────────────────────────────────────────────
   private buildForWho(map: Record<string, boolean>): string {

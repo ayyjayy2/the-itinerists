@@ -9,6 +9,8 @@ import {
 import { sanitizeStrings } from '../utils/sanitize';
 import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
+import { TripEventsService } from './trip-events.service';
+import { transportAdded, transportChanged, transportRemoved, pinAdded, pinRemoved } from '../utils/event-text';
 
 const EMPTY_SHEET: SheetData = {
   users: [], flights: [], itinerary: [], accommodations: [], finance: [],
@@ -33,6 +35,7 @@ export class DataService {
   private injector    = inject(Injector);
   private tripContext = inject(TripContextService);
   private userService = inject(UserService);
+  private events      = inject(TripEventsService);
 
   /** The active trip id, but only while someone is signed in. Listeners opened
    *  while signed out are refused by the rules and never recover, so trip
@@ -67,31 +70,41 @@ export class DataService {
 
   // ── Rental car (trips/{tid}/cars) ───────────────────────────────────────────
 
+  /** Firestore id of the car at this index (the page anchors deep links on it). */
+  carId(index: number): string | undefined { return this.carIds[index]; }
+
   addRentalCar(car: RentalCar): void {
     const tid = this.currentTripId;
     if (!tid) return;
     runInInjectionContext(this.injector, () => {
       const ref = doc(collection(this.firestore, 'trips', tid, 'cars'));
       setDoc(ref, sanitizeStrings(car)).catch(err => console.error('[DataService] addRentalCar failed:', err));
+      this.events.emit({ kind: 'transport', action: 'added', itemId: ref.id, path: '/transportation', ...transportAdded(car) });
     });
   }
 
   patchRentalCar(index: number, updates: Partial<RentalCar>): void {
     const tid = this.currentTripId; const id = this.carIds[index];
     if (!tid || !id) return;
+    const before = this.parts.rentalCar[index];
     runInInjectionContext(this.injector, () => {
       updateDoc(doc(this.firestore, 'trips', tid, 'cars', id), sanitizeStrings(updates))
         .catch(err => console.error('[DataService] patchRentalCar failed:', err));
     });
+    if (!before) return;
+    const t = transportChanged(before, { ...before, ...updates });
+    if (t) this.events.emit({ kind: 'transport', action: 'changed', itemId: id, path: '/transportation', ...t });
   }
 
   deleteRentalCar(index: number): void {
     const tid = this.currentTripId; const id = this.carIds[index];
     if (!tid || !id) return;
+    const before = this.parts.rentalCar[index];
     runInInjectionContext(this.injector, () => {
       deleteDoc(doc(this.firestore, 'trips', tid, 'cars', id))
         .catch(err => console.error('[DataService] deleteRentalCar failed:', err));
     });
+    if (before) this.events.emit({ kind: 'transport', action: 'removed', itemId: id, path: '/transportation', ...transportRemoved(before) });
   }
 
   // ── Map pins (trips/{tid}/pins) ─────────────────────────────────────────────
@@ -104,15 +117,18 @@ export class DataService {
       setDoc(doc(this.firestore, 'trips', tid, 'pins', clean.id), clean)
         .catch(err => console.error('[DataService] addMapPin failed:', err));
     });
+    this.events.emit({ kind: 'pin', action: 'added', itemId: clean.id, path: '/map', ...pinAdded(clean, this.parts.members) });
   }
 
   removeMapPin(id: string): void {
     const tid = this.currentTripId;
     if (!tid) return;
+    const before = this.parts.mapPins.find(p => p.id === id);
     runInInjectionContext(this.injector, () => {
       deleteDoc(doc(this.firestore, 'trips', tid, 'pins', id))
         .catch(err => console.error('[DataService] removeMapPin failed:', err));
     });
+    if (before) this.events.emit({ kind: 'pin', action: 'removed', itemId: id, path: '/map', ...pinRemoved(before, this.parts.members) });
   }
 
   // ── Live subscription ────────────────────────────────────────────────────────

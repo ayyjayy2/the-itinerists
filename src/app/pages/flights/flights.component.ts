@@ -74,9 +74,10 @@ function emptyForm(): FlightForm {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+import { FocusTargetDirective } from '../../shared/focus-target.directive';
 @Component({
   selector: 'app-flights',
-  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
+  imports: [FocusTargetDirective, LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
   templateUrl: './flights.component.html',
   styleUrl: './flights.component.scss'
 })

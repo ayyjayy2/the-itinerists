@@ -163,7 +163,10 @@ staging, and a PR with a failing test cannot merge.
 
 ## Parked (after launch)
 
-- [ ] Push notifications (FCM) and event/flight reminders.
+- [ ] Push notifications: the in-app feed + deep links shipped (trip events); next, after the
+      Blaze plan: Cloud Function fan-out, device tokens, web push, Profile switches; after the
+      Apple program: iOS push via APNs + icon badge. Spec:
+      `docs/superpowers/specs/2026-09-30-trip-events-and-push-design.md`.
 - [ ] Shared photo albums; activity voting; real-time flight tracking (Plus/Pass feature).
 - [ ] Billing — see the "Making money" page of the launch plan artifact. Launch free with no
       caps; 2–3 months in: Trip Pass ($4.99 per trip: multi-destination, unlimited outfit photos,
