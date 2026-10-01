@@ -343,6 +343,10 @@ input[type='time']::-webkit-date-and-time-value { text-align: left; min-height: 
       position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
       color: var(--text-muted); pointer-events: none;
     }
+    // Blink (Chrome on Android, Chrome's phone emulation) keeps its own
+    // mm/dd/yyyy even without the native appearance, so both hints showed.
+    // Hide the built-in one under ours until the field is focused.
+    &:not(:focus)::-webkit-datetime-edit { color: transparent; }
   }
 }
 
