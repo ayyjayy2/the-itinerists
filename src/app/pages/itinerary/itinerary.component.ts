@@ -231,6 +231,10 @@ export class ItineraryComponent implements OnInit {
     return this.allItems().filter(i => isOutsideTripDates(i.date, t)).sort((a, b) => a.date.localeCompare(b.date));
   });
   isOutside(item: ItineraryItemDoc): boolean { return isOutsideTripDates(item.date, this.tripService.activeTrip()); }
+  readonly tripStart = computed(() => this.tripService.activeTrip()?.startDate ?? '');
+  readonly tripEnd   = computed(() => this.tripService.activeTrip()?.endDate ?? '');
+  /** The date being edited is outside the trip (read on change detection; draft is a plain object). */
+  draftOutside(): boolean { return isOutsideTripDates(this.draft.date ?? '', this.tripService.activeTrip()); }
   readonly tripRangeLabel = computed(() => {
     const t = this.tripService.activeTrip();
     return t?.startDate && t?.endDate ? stopDateRange(t.startDate, t.endDate) : '';
@@ -406,13 +410,17 @@ export class ItineraryComponent implements OnInit {
 
   async saveEdit(original: ItineraryItemDoc): Promise<void> {
     if (!this.draft.activity?.trim()) return;
+    const date = this.draft.date || original.date;
     await this.itineraryService.updateItem(original.id, {
       ...this.draft,
+      date,
       time:    this.draft.time    ?? '',
       endTime: this.draft.endTime ?? '',
       forWho:  this.buildForWho(this.editForWhoMap),
     });
     this.cancelEdit();
+    // Moved to another day: follow it there, so it doesn't just disappear from this one.
+    if (date !== original.date && this.selectedDate() !== 'All') this.selectedDate.set(date);
   }
 
   async deleteItem(item: ItineraryItemDoc): Promise<void> {

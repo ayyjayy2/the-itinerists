@@ -158,6 +158,14 @@
                 } @else {
                   <!-- ── Edit mode ── -->
                   <div class="edit-form">
+                    <div class="form-group">
+                      <label for="edit-date-{{ item.id }}">Date</label>
+                      <input id="edit-date-{{ item.id }}" type="date" [(ngModel)]="draft.date"
+                             [min]="tripStart() || null" [max]="tripEnd() || null" required />
+                      @if (draftOutside()) {
+                        <p class="field-hint outside-hint">Outside this trip's dates. Pick a day from {{ tripRangeLabel() }} to bring it back.</p>
+                      }
+                    </div>
                     <div class="form-row">
                       <div class="form-group">
                         <label>Start time</label>
