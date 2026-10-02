@@ -29,10 +29,12 @@ const trip = {
 describe('HomeComponent (hidden pages)', () => {
   let hidden: WritableSignal<string[]>;
   let firestoreUser: WritableSignal<any>;
+  let activeMembers: ReturnType<typeof signal<any[]>>;
 
   beforeEach(async () => {
     hidden = signal<string[]>([]);
     // homeLayout is honoured only for picker accounts; username 'alayna' is one.
+    activeMembers = signal<any[]>([]);
     firestoreUser = signal<any>({ uid: 'me', username: 'alayna', homeLayout: 'C', homePins: ['/finance', '/packing'] });
 
     await TestBed.configureTestingModule({
@@ -44,7 +46,7 @@ describe('HomeComponent (hidden pages)', () => {
           firestoreUser, updateHomePins: () => Promise.resolve(),
         } },
         { provide: TripService, useValue: {
-          activeTrip: signal(trip), ready: signal(true), activeMembers: signal([]),
+          activeTrip: signal(trip), ready: signal(true), activeMembers,
           hiddenPages: hidden, activeActivity: signal([]),
           getUserTrips: () => Promise.resolve([trip]), switchTrip: () => Promise.resolve(),
         } },
@@ -135,4 +137,16 @@ describe('HomeComponent (hidden pages)', () => {
     expect(el.querySelector('[data-widget="recs"]')?.textContent).toContain('1 rec');
     expect(el.querySelector('[data-widget="recs"]')?.textContent).toContain('Café Einstein');
   });
+
+  it('the hero counts the members it shows, not the stored counter', () => {
+    // Stored counter says 2, but three people are on the trip.
+    activeMembers.set([
+      { uid: 'me', displayName: 'Alayna', joinedAt: 1 },
+      { uid: 'tico', displayName: 'Tico', joinedAt: 2 },
+      { uid: 'rafa', displayName: 'Rafa', joinedAt: 3 },
+    ]);
+    const el = render().nativeElement as HTMLElement;
+    expect(el.querySelector('.hero-people-label')?.textContent?.trim()).toBe('you + 2 friends');
+  });
 });
+

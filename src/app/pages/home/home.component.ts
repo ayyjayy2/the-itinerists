@@ -229,7 +229,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   readonly heroMembers = computed(() => this.members().slice(0, 5));
 
   readonly friendsLabel = computed(() => {
-    const n = (this.activeTrip()?.memberCount ?? this.members().length) - 1;
+    // Count the same live member list the avatars show; the stored counter is
+    // only a stand-in until that list has loaded (it can drift from the list).
+    const listed = this.members().length;
+    const n = (listed || (this.activeTrip()?.memberCount ?? 1)) - 1;
     return n > 0 ? `you + ${n} friend${n !== 1 ? 's' : ''}` : 'just you';
   });
 
