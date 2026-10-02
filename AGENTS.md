@@ -17,7 +17,7 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 3. **[docs/design/design-system.md](docs/design/design-system.md)** before any UI work (tokens: `src/styles.scss`, `docs/design/tokens.json`).
 4. **[docs/product/prd.md](docs/product/prd.md)** for what 1.0 must do and each requirement's status.
 5. **The code you will touch:** `src/app/models/trip.models.ts` for document shapes, `firestore.rules` for who may read and write what, and the service that owns the data.
-6. **Where things stand:** `git status`, `git log --oneline -10`, open pull requests (`gh pr list`). Another session may be working in the same checkout: check before you assume the tree is yours (see 2.3).
+6. **Where things stand:** `git status`, `git log --oneline -10`, open pull requests (`gh pr list`), and the [Trip Planner board](https://github.com/users/ayyjayy2/projects/9) (GitHub project #9). Another session may be working in the same checkout: check before you assume the tree is yours (see 2.3).
 
 ## 2. General rules
 
@@ -36,6 +36,7 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 - **Merging to master deploys staging automatically** (https://the-itinerists-staging.web.app). **Production (theitinerists.com) is deployed by hand,** from an up-to-date master, when the owner wants the change live.
 - **The iPhone app** only changes when a new build is installed: `npm run ios:sync`, then Xcode Run (simulator) or an `xcodebuild` + `devicectl` install (a phone). Commit the version stamp `ios:sync` writes to `ios/App/App.xcodeproj/project.pbxproj` through a pull request.
 - **One change per pull request,** described in plain words: what changed, why, and how it was tested.
+- **Every action item is an issue on the [Trip Planner board](https://github.com/users/ayyjayy2/projects/9)** (GitHub project #9) and moves through it as the work does: **Backlog** when it's found, **In Progress** when work starts, **In Review** when its pull request opens, **Done** when that merges. The pull request says `Closes #N` so the issue and the card close with it. New findings go on the board as Backlog issues (no real names: the repo is public). `TODO.md` keeps the owner's non-code items (survey, marketing, purchases).
 - **Commit early.** Uncommitted work can be lost to another session's checkout or stash; for feature work use a git worktree (`git worktree add .worktrees/<name> -b <branch> origin/master`).
 
 ### 2.3 Standing product decisions
@@ -118,7 +119,7 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 
 ## 6. Need help?
 
-- **Where to look first:** `docs/README.md` (map), `docs/architecture.md`, `docs/apis.md` (every tool and script), `docs/HANDOFF.md` (history), `TODO.md`, and recent pull requests (`gh pr list --state merged --limit 20`).
+- **Where to look first:** `docs/README.md` (map), `docs/architecture.md`, `docs/apis.md` (every tool and script), `docs/HANDOFF.md` (history), the [Trip Planner board](https://github.com/users/ayyjayy2/projects/9) (engineering work), `TODO.md` (the owner's items and the launch phases), and recent pull requests (`gh pr list --state merged --limit 20`).
 - **Decisions belong to the owner** (Alayna): product changes, anything involving money, accounts, real users' data, or production. When in doubt, ask rather than guess.
 - **Common snags**
 

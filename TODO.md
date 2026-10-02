@@ -1,10 +1,13 @@
 # The Itinerists — to-do
 
-The one live list, organised by launch phase. The plan itself (goals, who does what, when
-each phase ends, storage and costs) is the "Itinerists Launch Plan" artifact:
-https://claude.ai/artifact/S2rZKkQ3SgoejHD8Z7f4GP. `ROADMAP.md` is the long-range idea list
+The live list, organised by launch phase. The plan itself (goals, who does what, when
+each phase ends, storage and costs) is in Itinerists HQ → Launch plan (private artifact):
+https://claude.ai/artifact/4KXwSQgFrugzPq9ZfocA9d. Engineering work is tracked as issues on the
+Trip Planner board, https://github.com/users/ayyjayy2/projects/9 (Backlog → In Progress → In
+Review → Done, each linked to its PR); this file keeps the owner's items and the phase checklist.
+`ROADMAP.md` is the long-range idea list
 and `docs/HANDOFF.md` the orientation doc; neither tracks status. When something ships, tick
-it here with its PR number. Last updated: 2026-09-30 (late evening).
+it here with its PR number. Last updated: 2026-10-02.
 
 **The alpha is still wrapping up** (Berlin home Oct 9, survey after). Phase 1 runs alongside it.
 A marketing phase now sits between prep and beta, so the app has an audience before it has
@@ -186,6 +189,19 @@ staging, and a PR with a failing test cannot merge.
 - [ ] PDF export (Pass/Plus feature); calendar .ics export (small job, Pass/Plus or free hook).
 - [ ] Optional: live invite on My Trips cards.
 - [ ] Optional: custom avatar images instead of emoji (issue #198); not required for the store.
+
+## Done Oct 2, 2026
+
+- [x] Markdown mirrors of the project documents for agents, and AGENTS.md as the one home for
+      project rules — #316, #317.
+- [x] API console on staging (Swagger), for owner-approved accounts only; request list kept out of
+      the public repo — #318. Faster loading, cached Swagger, tool docs brought up to date — #319.
+- [x] Pulse shows when its data last updated, under "Collected since" — #320.
+- [x] API console lookups: airports and time zones by name and city (#321), time zones by code
+      such as EST or CST (#322).
+- [x] Itinerists HQ → Technical docs: API guide, Security guide, Code style guide, Database guide
+      (private artifact, no PR).
+- [x] Trip Planner board cleaned up and the backlog moved onto it (#323–#334, #198).
 
 ## Done recently (Sep 25–29, 2026)
 
