@@ -28,7 +28,7 @@ How The Itinerists is put together and how its parts talk to each other. One Ang
 
 the same web build runs in all three ↓
 
-**The app · Angular 19**
+**The app · Angular 20**
 
 - Pages — 23 routes, loaded on demand
 

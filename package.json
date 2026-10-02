@@ -28,18 +28,18 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^19.1.0",
-    "@angular/cdk": "^19.2.19",
-    "@angular/common": "^19.1.0",
-    "@angular/compiler": "^19.1.0",
-    "@angular/core": "^19.1.0",
-    "@angular/fire": "^19.2.0",
-    "@angular/forms": "^19.1.0",
-    "@angular/platform-browser": "^19.1.0",
-    "@angular/platform-browser-dynamic": "^19.1.0",
-    "@angular/pwa": "^19.2.27",
-    "@angular/router": "^19.1.0",
-    "@angular/service-worker": "^19.2.25",
+    "@angular/animations": "^20.3.33",
+    "@angular/cdk": "^20.2.0",
+    "@angular/common": "^20.3.33",
+    "@angular/compiler": "^20.3.33",
+    "@angular/core": "^20.3.33",
+    "@angular/fire": "^20.1.0",
+    "@angular/forms": "^20.3.33",
+    "@angular/platform-browser": "^20.3.33",
+    "@angular/platform-browser-dynamic": "^20.3.33",
+    "@angular/pwa": "^20.3.0",
+    "@angular/router": "^20.3.33",
+    "@angular/service-worker": "^20.3.33",
     "@capacitor-firebase/crashlytics": "^8.5.2",
     "@capacitor/core": "^8.5.2",
     "@capacitor/filesystem": "^8.1.4",
@@ -56,10 +56,13 @@
     "tz-lookup": "^6.1.25",
     "zone.js": "~0.15.0"
   },
+  "overrides": {
+    "rxfire": "6.1.0"
+  },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^19.1.4",
-    "@angular/cli": "^19.1.4",
-    "@angular/compiler-cli": "^19.1.0",
+    "@angular-devkit/build-angular": "^20.3.0",
+    "@angular/cli": "^20.3.0",
+    "@angular/compiler-cli": "^20.3.33",
     "@capacitor/cli": "^8.5.2",
     "@firebase/rules-unit-testing": "^5.0.1",
     "@playwright/test": "^1.63.0",
@@ -74,6 +77,6 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "sharp": "^0.35.5",
     "swagger-ui-dist": "5.33.1",
-    "typescript": "~5.7.2"
+    "typescript": "~5.8.3"
   }
 }
