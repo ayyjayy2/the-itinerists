@@ -34,7 +34,8 @@ import { flightMomentsForUid } from '../../utils/flight-events';
 import { pickFirstUp } from '../../utils/first-up';
 import { normalizeTime } from '../../utils/time-format';
 import { weatherLabel } from '../../utils/weather-label';
-import { needsRecoveryEmail } from '../../utils/email';
+import { needsRecoveryEmail, maskEmail } from '../../utils/email';
+import { EmailConfirmService } from '../../services/email-confirm.service';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
 /** One "At a glance" card. Slots 0–1 render wide, 2–3 as half-width minis. */
@@ -127,6 +128,28 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.nudgeDismissed.set(true);
   }
   readonly isLayoutA = computed(() => this.layout() === 'A');
+
+  // ── Gentle email confirmation: a reminder until the link is tapped. Dismissing
+  //    hides it for this visit only; it never blocks anything. ──
+  private emailConfirm = inject(EmailConfirmService);
+  private confirmDismissed = signal(false);
+  readonly confirmSending = signal(false);
+  readonly showConfirmNudge = computed(() => {
+    if (!this.emailConfirm.waiting() || this.confirmDismissed() || this.showRecoveryNudge()) return false;
+    try { return sessionStorage.getItem('confirmNudgeDismissed') !== '1'; } catch { return true; }
+  });
+  readonly confirmEmailMasked = computed(() => maskEmail(this.emailConfirm.waiting()));
+  /** A link went out in the last 10 minutes (at sign-up or from Send link). */
+  readonly confirmJustSent = computed(() => Date.now() - this.emailConfirm.sentAt() < 10 * 60_000);
+  async resendConfirm(): Promise<void> {
+    this.confirmSending.set(true);
+    await this.emailConfirm.send();
+    this.confirmSending.set(false);
+  }
+  dismissConfirmNudge(): void {
+    try { sessionStorage.setItem('confirmNudgeDismissed', '1'); } catch { /* private mode */ }
+    this.confirmDismissed.set(true);
+  }
 
 
   // ── Pinned quick-shortcuts (stored on the account — follows the user) ──────

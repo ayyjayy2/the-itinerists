@@ -78,3 +78,12 @@ export function recoveryEmailErrorMessage(err: unknown): string {
       return 'Could not send the verification link. Please try again.';
   }
 }
+
+/**
+ * Whether to remind someone to confirm their sign-in email: a real address
+ * nobody has confirmed yet. Placeholder addresses can't receive mail (those
+ * accounts get the "add a recovery email" prompt instead).
+ */
+export function needsEmailConfirmation(email: string | null | undefined, verified: boolean | undefined): boolean {
+  return !!email && !isPlaceholderEmail(email) && !verified;
+}
