@@ -552,3 +552,8 @@
 }
 
 .focus-missing { margin: 0 0 0.75rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; }
+
+// ── Add to my calendar ──
+.cal-export { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 0.75rem; margin: -0.25rem 0 0.75rem; }
+.cal-export .btn { display: inline-flex; align-items: center; gap: 0.35rem; }
+.cal-export-note { font-size: 0.82rem; color: var(--text-muted); }

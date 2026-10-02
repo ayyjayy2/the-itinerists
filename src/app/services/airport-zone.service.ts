@@ -24,6 +24,9 @@ export class AirportZoneService {
     return z;
   }
 
+  /** Resolves once the airport table has loaded (or failed to). */
+  whenLoaded(): Promise<void> { return this.load(); }
+
   /** The airport's coordinates, once the table has loaded (awaits it). */
   async coordsFor(iata: string | undefined): Promise<{ lat: number; lng: number } | null> {
     if (!iata) return null;

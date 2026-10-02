@@ -15,6 +15,14 @@
   }
   </div>
 
+  <!-- ── Add to my calendar: an .ics of my part of the trip ── -->
+  <div class="cal-export">
+    <button class="btn btn-sm btn-ghost" type="button" (click)="addToCalendar()" [disabled]="calExporting()">
+      <app-icon name="itinerary" [size]="15" /> {{ calExporting() ? 'Preparing…' : 'Add to my calendar' }}
+    </button>
+    @if (calExportNote()) { <span class="cal-export-note" role="status">{{ calExportNote() }}</span> }
+  </div>
+
   <!-- ── Scope tabs ── -->
   <div class="scope-tabs">
     <button [class.active]="!showAll()" (click)="showAll.set(false)">My Trip</button>
