@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  dayKey, hourIn, startOfDay, onlineNow, windowMoved, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, peopleStats, tripStats,
+  dayKey, hourIn, startOfDay, stampText, onlineNow, windowMoved, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, peopleStats, tripStats,
 } from '../public/pulse/stats.mjs';
 
 const H = 3_600_000;
@@ -276,4 +276,14 @@ test('the window re-queries when its start crosses an hour, not every minute', (
 test('rows outside the sliding window are left out', () => {
   const rows = [{ at: 100 }, { at: 200 }, { at: 300 }];
   assert.deepEqual(inWindow(rows, 200).map(r => r.at), [200, 300]);
+});
+
+test('stampText: a moment on the dashboard\'s clock, with or without seconds', () => {
+  // 2026-09-30 19:06:05 UTC = 9:06 PM in Berlin (CEST), 2:06 PM in Chicago (CDT).
+  const t = Date.UTC(2026, 8, 30, 19, 6, 5);
+  assert.equal(stampText(t, 'Europe/Berlin'), 'Sep 30, 2026 at 9:06 PM');
+  assert.equal(stampText(t, 'Europe/Berlin', { seconds: true }), 'Sep 30, 2026 at 9:06:05 PM');
+  assert.equal(stampText(t, 'America/Chicago'), 'Sep 30, 2026 at 2:06 PM');
+  // The date follows the zone, not UTC: 23:30 UTC is already Oct 1 in Berlin.
+  assert.equal(stampText(Date.UTC(2026, 8, 30, 23, 30), 'Europe/Berlin'), 'Oct 1, 2026 at 1:30 AM');
 });

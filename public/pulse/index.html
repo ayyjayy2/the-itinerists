@@ -126,6 +126,7 @@
   .bar.pwa, .sw.pwa { background: var(--accent); }
   .bar.ios, .sw.ios { background: var(--primary-dark); }
   .hint.since { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .hint.since + .hint.since { margin-top: 0.25rem; padding-top: 0; border-top: 0; }
   .legend { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.6rem; }
   .legend .sw { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 2px; vertical-align: -0.05em; margin: 0 0.2em 0 0.6em; border: 1px solid var(--border); }
   .card h3 { font-size: 0.85rem; color: var(--text-muted); margin: 0 0 0.5rem; font-weight: 600; }
@@ -306,6 +307,7 @@
     </div>
 
     <p class="hint since" id="firstEvent">Collected since Sep 30, 2026</p>
+    <p class="hint since" id="updatedAt" aria-live="off"></p>
   </section>
 
   <div class="card error" id="err" hidden></div>
