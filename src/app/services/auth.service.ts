@@ -41,6 +41,11 @@ import { TripEventsService } from './trip-events.service';
 
 const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
 
+/** Every new account needs a real email: the form checks it, this backs it up, and so do the rules. */
+export function requireSignupEmail(email: string | null | undefined): void {
+  if (!isValidEmail((email ?? '').trim())) throw new Error('Enter a valid email address.');
+}
+
 function toEmail(username: string): string {
   return `${username.toLowerCase().trim()}${EMAIL_DOMAIN}`;
 }
@@ -228,6 +233,7 @@ export class AuthService {
     letterColor = '',
     email = '',
   ): Promise<void> {
+    requireSignupEmail(email);
     // Resolve & validate the invite (code → trip).
     const tripId = await this.validateInviteCode(inviteCode);
     if (!tripId) throw new Error('This invite code is invalid or has expired.');
@@ -245,7 +251,7 @@ export class AuthService {
     // The Auth account is created with the person's real email (unique across
     // accounts, and where password resets go). Legacy accounts used a synthetic
     // username address instead.
-    const authEmail = email.toLowerCase().trim() || toEmail(uname);
+    const authEmail = email.toLowerCase().trim();
     const cred = await this.createAuthAccount(authEmail, password);
     const uid  = cred.user.uid;
     const now  = Date.now();
@@ -306,6 +312,7 @@ export class AuthService {
     email: string,
     letterColor = '',
   ): Promise<void> {
+    requireSignupEmail(email);
     const uname = normalizeUsername(username);
     { const problem = usernameProblem(uname); if (problem) throw new Error(problem); }
     if (await this.lookupUsername(uname)) throw new Error('That username is already taken.');
