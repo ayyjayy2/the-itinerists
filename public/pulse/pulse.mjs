@@ -24,7 +24,7 @@ const db = getFirestore(app);
 // ── state ──────────────────────────────────────────────────────────────────
 const viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 const state = {
-  range: '24h', anchor: Date.now(), trip: 'all', zone: viewerZone, hourMode: 'local',
+  range: '24h', trip: 'all', zone: viewerZone, hourMode: 'local',
   rows: [], trips: new Map(), users: new Map(), members: new Map(), now: Date.now(),
   testTrips: new Set(),
   showTests: false,       // test trips stay out of the table unless the owner asks to see them
@@ -124,12 +124,17 @@ function stop() {
   memberSubs.clear();
   $('dot').classList.remove('on');
 }
+// The window always ends now: it slides with the clock, so a Pulse left open
+// overnight shows today's Today and the real last 24 hours.
 function queryStart() {
-  const a = state.anchor;
+  const a = state.now;
   return { today: S.startOfDay(a, state.zone), '24h': a - DAY, '7d': a - 7 * DAY, '30d': a - 30 * DAY, '60d': a - 60 * DAY, '180d': a - 180 * DAY, '1y': a - 365 * DAY }[state.range];
 }
-function subscribeRows() {
-  state.loading = true;   // until the first snapshot of the new range lands
+let subscribedStart = 0;
+/** `quiet`: a re-query because the window slid; keep showing the data meanwhile. */
+function subscribeRows(quiet = false) {
+  subscribedStart = queryStart();
+  if (!quiet) state.loading = true;   // until the first snapshot of the new range lands
   unsubWrites?.();
   const qw = query(collection(db, '_writes'), where('at', '>=', Timestamp.fromMillis(queryStart())), orderBy('at'));
   unsubWrites = onSnapshot(qw, snap => {
@@ -137,7 +142,7 @@ function subscribeRows() {
     scheduleRender();
   }, err => showError('Writes: ' + err.message));
   unsubRows?.();
-  $('dot').classList.remove('on');
+  if (!quiet) $('dot').classList.remove('on');
   const q = query(collection(db, '_activity'), where('at', '>=', Timestamp.fromMillis(queryStart())), orderBy('at'));
   unsubRows = onSnapshot(q, snap => {
     const rows = [];
@@ -171,13 +176,24 @@ setInterval(() => {
   if ($('dash').hidden) return;
   for (const el of document.querySelectorAll('[data-ago]')) el.textContent = ago(Number(el.dataset.ago));
   const clock = $('clock'); if (clock) clock.textContent = clockText();
-  if (state.now - lastFull > 60_000) { lastFull = state.now; render(); }
+  if (state.now - lastFull > 60_000) { lastFull = state.now; slideWindow(); render(); }
 }, 1000);
+
+function slideWindow() {
+  if (S.windowMoved(subscribedStart, queryStart())) subscribeRows(true);
+}
+// Back to a tab that slept (laptop lid, another tab): catch up at once, not within the minute.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || $('dash').hidden) return;
+  state.now = Date.now();
+  slideWindow();
+  render();
+});
 
 // ── controls ───────────────────────────────────────────────────────────────
 $('range').addEventListener('click', ev => {
   const b = ev.target.closest('button[data-range]'); if (!b) return;
-  state.range = b.dataset.range; state.anchor = Date.now();
+  state.range = b.dataset.range; state.now = Date.now();
   for (const x of $('range').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
   subscribeRows(); scheduleRender();
 });
@@ -350,11 +366,12 @@ function render() {
   const now = state.now;
   // Hide: the owner, test trips and throwaway accounts leave every number; events with no trip (sign-in screen) stay.
   const hiddenUids = new Set([...(state.hide.testUsers ? state.testUsers : []), ...(state.hide.me ? [OWNER_UID] : [])]);
-  const realRows = state.rows.filter(r => !hiddenUids.has(r.uid));
+  const start = queryStart();
+  const realRows = S.inWindow(state.rows, start).filter(r => !hiddenUids.has(r.uid));
   const all = state.hide.testTrips ? realRows.filter(r => !r.tripId || !state.testTrips.has(r.tripId)) : realRows;
   const rows = !state.tripSel ? all : all.filter(r => r.tripId && state.tripSel.has(r.tripId));
   // The write log under the same Hide and trip rules.
-  const writes = state.writes
+  const writes = S.inWindow(state.writes, start)
     .filter(w => !hiddenUids.has(w.uid) && (!state.hide.testTrips || !w.tripId || !state.testTrips.has(w.tripId)))
     .filter(w => !state.tripSel || (w.tripId && state.tripSel.has(w.tripId)));
   const realTrips = [...state.trips.values()].filter(t => !state.testTrips.has(t.id) || !state.hide.testTrips);

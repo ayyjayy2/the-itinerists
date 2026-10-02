@@ -49,6 +49,20 @@ export function hourIn(ms, zone) { return parts(ms, zone).hour; }
 export function hourLabel(ms, zone) { return `${String(hourIn(ms, zone)).padStart(2, '0')}:00`; }
 
 /** Midnight at the start of the calendar day containing `ms` in `zone`. */
+/**
+ * The live feed is queried from the window's start. The window slides with the
+ * clock; once its start crosses into a new hour (or a new day, for Today) the
+ * feed is re-queried so it neither grows forever nor misses a new day.
+ */
+export function windowMoved(subscribedStart, start) {
+  return Math.floor(start / HOUR) !== Math.floor(subscribedStart / HOUR);
+}
+
+/** Rows inside the window. Between re-queries the feed holds a few extra minutes at the start. */
+export function inWindow(rows, start) {
+  return rows.filter(r => r.at >= start);
+}
+
 export function startOfDay(ms, zone) {
   const day = dayKey(ms, zone);
   let t = ms;
