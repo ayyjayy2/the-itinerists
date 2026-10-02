@@ -50,6 +50,9 @@ service cloud.firestore {
     // signs in as this account; it is the only reader of usage events and
     // the only account that can see every trip's summary doc. Not "any
     // admin": the dashboard is personal.
+    // The app owner (Alayna) and nobody else: the only account that can read
+    // Pulse's data (_activity, _writes, _pulse). Being an admin does NOT grant
+    // it. Never add another account here without Alayna's explicit permission.
     function isAppOwner() {
       return isSignedIn() && uid() == 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';
     }

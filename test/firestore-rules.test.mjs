@@ -240,6 +240,9 @@ await t('write with client timestamp', 'deny', () => setDoc(doc(bob, '_writes', 
 await t('anon logs a write', 'deny', () => setDoc(doc(anon, '_writes', 'w1'), wr('bob')));
 await t('owner lists writes', 'allow', () => getDocs(collection(owner, '_writes')));
 await t('member lists writes', 'deny', () => getDocs(collection(bob, '_writes')));
+await t('admin (not the owner) lists writes', 'deny', () => getDocs(collection(admin, '_writes')));
+await t('anon lists writes', 'deny', () => getDocs(collection(anon, '_writes')));
+
 
 console.log('\nUsage events (_activity)');
 const ev = (uid, extra = {}) => ({ uid, tripId: 'T', type: 'page', page: '/itinerary', at: serverTimestamp(), localHour: 10, tz: 'Europe/Berlin', tzOffsetMin: 120, platform: 'web', sessionId: 's2', appVersion: '0.9.0', ...extra });
@@ -257,6 +260,7 @@ await t('admin reads an event', 'deny', () => getDoc(doc(admin, '_activity', 'e1
 await t('admin lists events', 'deny', () => getDocs(collection(admin, '_activity')));
 await t('member reads own event', 'deny', () => getDoc(doc(bob, '_activity', 'e1')));
 await t('member lists events', 'deny', () => getDocs(collection(bob, '_activity')));
+await t('anon lists events', 'deny', () => getDocs(collection(anon, '_activity')));
 await t('owner updates an event', 'deny', () => updateDoc(doc(owner, '_activity', 'e1'), { page: '/x' }));
 await t('owner deletes an event', 'deny', () => deleteDoc(doc(owner, '_activity', 'e1')));
 await t('owner deletes own event', 'deny', () => deleteDoc(doc(bob, '_activity', 'e1')));
@@ -267,6 +271,9 @@ await t('owner writes prefs', 'allow', () => setDoc(doc(owner, '_pulse', 'prefs'
 await t('admin reads prefs', 'deny', () => getDoc(doc(admin, '_pulse', 'prefs')));
 await t('member writes prefs', 'deny', () => setDoc(doc(bob, '_pulse', 'prefs'), { hiddenTrips: [] }));
 await t('anon reads prefs', 'deny', () => getDoc(doc(anon, '_pulse', 'prefs')));
+// Pulse is the owner's alone: an admin who is not the owner can't change it, nor can a member read it.
+await t('admin (not the owner) writes prefs', 'deny', () => setDoc(doc(admin, '_pulse', 'prefs'), { hiddenTrips: [] }));
+await t('member reads prefs', 'deny', () => getDoc(doc(bob, '_pulse', 'prefs')));
 
 await testEnv.cleanup();
 console.log(`\n${fail === 0 ? '✅' : '❌'} rules tests: ${pass} passed, ${fail} failed`);
