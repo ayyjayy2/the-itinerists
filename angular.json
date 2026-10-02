@@ -32,6 +32,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "swagger-ui@(-bundle.js|.css)",
+                "input": "node_modules/swagger-ui-dist",
+                "output": "api-console/vendor"
               }
             ],
             "styles": [
@@ -42,6 +47,15 @@
           },
           "configurations": {
             "production": {
+              "assets": [
+                {
+                  "glob": "**/*",
+                  "input": "public",
+                  "ignore": [
+                    "api-console/**"
+                  ]
+                }
+              ],
               "budgets": [
                 {
                   "type": "initial",
@@ -105,7 +119,8 @@
                   "glob": "**/*",
                   "input": "public",
                   "ignore": [
-                    "pulse/**"
+                    "pulse/**",
+                    "api-console/**"
                   ]
                 }
               ]

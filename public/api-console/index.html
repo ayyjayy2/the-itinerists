@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>API console</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Caprasimo&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/swagger-ui.css">
+<style>
+  /* The app's palette around Swagger UI, which keeps its own light look for the request list. */
+  :root {
+    color-scheme: light;
+    --bg: #F8F4EF; --surface: #FFFFFF; --surface-2: #F5EFE3;
+    --primary: #8BAF7C; --primary-dark: #6A8F5E; --primary-tint: #EAF1E3;
+    --accent-tint: #FBEED9; --accent-dark: #B97F35;
+    --danger: #C0564A; --danger-tint: #F7E4E1;
+    --text: #3A3328; --text-muted: #8A7E6A; --border: #EDE5D8;
+    --radius: 16px;
+    --font: 'Nunito', system-ui, sans-serif; --display: 'Caprasimo', 'Nunito', serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #1F1B16; --surface: #2A241D; --surface-2: #332C24;
+      --primary: #9DBF8E; --primary-dark: #B5D3A6; --primary-tint: #2F3A2A;
+      --accent-tint: #3E3324; --accent-dark: #E9B86F;
+      --danger: #E07A6E; --danger-tint: #3F2925;
+      --text: #F1EAE0; --text-muted: #A99C86; --border: #3D352C;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 16px; line-height: 1.45; padding-block: 1rem 3rem; padding-inline: 16px; }
+  main { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
+  h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 2rem; }
+  p { margin: 0; }
+  .muted { color: var(--text-muted); }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; flex-wrap: wrap; }
+  .who { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-weight: 700; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; display: grid; gap: 0.9rem; max-width: 26rem; }
+  label { display: grid; gap: 0.3rem; font-weight: 700; font-size: 0.85rem; color: var(--text-muted); }
+  input { font: inherit; font-size: 16px; color: var(--text); background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
+  .btn { font: inherit; font-weight: 800; min-height: 44px; padding: 0.6rem 1.3rem; border-radius: 999px; border: none; cursor: pointer; background: var(--primary-dark); color: #fff; }
+  .btn.ghost { background: transparent; color: var(--primary-dark); border: 1.5px solid var(--primary); }
+  .btn:focus-visible { outline: 2px solid var(--primary-dark); outline-offset: 2px; }
+  .btn[disabled] { opacity: 0.6; cursor: default; }
+  .note { background: var(--accent-tint); border-radius: 10px; padding: 0.7rem 0.9rem; font-size: 0.9rem; }
+  .error { background: var(--danger-tint); color: var(--danger); border-radius: 10px; padding: 0.7rem 0.9rem; font-size: 0.9rem; font-weight: 700; }
+  #swagger { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); overflow-x: auto; min-width: 0; }
+  #swagger .swagger-ui .information-container { padding-inline: 1rem; }
+  #swagger .swagger-ui .wrapper { padding-inline: 1rem; }
+  #swagger .swagger-ui .scheme-container { box-shadow: none; padding-inline: 1rem; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div>
+      <h1>API console</h1>
+      <p class="muted">Staging only · requests run against test data, as the account you sign in with</p>
+    </div>
+    <div class="who" id="who" hidden><span id="whoName"></span><button class="btn ghost" id="signOut" type="button">Sign out</button></div>
+  </div>
+
+  <p class="error" id="wrongHost" hidden>The API console only runs on staging: <a href="https://the-itinerists-staging.web.app/api-console/index.html">the-itinerists-staging.web.app/api-console</a>.</p>
+
+  <form class="card" id="signIn" hidden novalidate>
+    <p>Sign in with your staging account. Only accounts the owner has approved can open the console.</p>
+    <label for="user">Username or email<input id="user" name="user" autocomplete="username" required></label>
+    <label for="pass">Password<input id="pass" name="pass" type="password" autocomplete="current-password" required></label>
+    <p class="error" id="signInError" hidden></p>
+    <button class="btn" id="signInBtn" type="submit">Sign in</button>
+  </form>
+
+  <div class="card" id="denied" hidden>
+    <p class="error">This account isn't approved for the API console.</p>
+    <p>Ask the owner to approve it. They run <code>node scripts/api-console.js grant &lt;username&gt;</code>.</p>
+  </div>
+
+  <p class="note" id="loading" hidden>Loading the requests…</p>
+  <p class="error" id="loadError" hidden></p>
+
+  <section id="ready" hidden>
+    <p class="note">Your account and your current trip are already filled in. Open a request, press <b>Try it out</b>, then <b>Execute</b>. Firestore requests carry your sign-in automatically. Writes change the staging data for everyone testing.</p>
+  </section>
+  <div id="swagger" hidden></div>
+</main>
+<script src="vendor/swagger-ui-bundle.js"></script>
+<script type="module" src="console.mjs"></script>
+</body>
+</html>

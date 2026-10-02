@@ -49,6 +49,7 @@ host must be added there or the browser blocks it.
 |---|---|---|
 | **Event log** (`_activity`) | One row per app open, page view and 2-minute ping while visible: uid, trip, page, local hour, zone, platform, version. Written by the app, never edited | `src/app/services/usage.service.ts`, `src/app/utils/usage.ts` |
 | **Pulse** | Owner-only live dashboard at theitinerists.com/pulse/, outside the Angular app. Trips by phase, online now, people per hour / day, hour of day on each person's clock or a zone, pages, people, return rate, visits, around the trip, platform + versions. Filters: range (today → year), Hide (me / test trips / test accounts), multi-select trips, zone. Test lists live in `_pulse/prefs` | `public/pulse/` (`pulse.mjs`, `stats.mjs` + `npm run test:pulse`, `zones.mjs`), design: `docs/superpowers/specs/2026-09-30-usage-analytics-design.md` and `...-pulse-filters-and-cards-design.md` |
+| **API console** | Staging only, at the-itinerists-staging.web.app/api-console/index.html: Swagger UI with every Firestore path, the sign-in calls and the outside APIs, pre-filled with your account and trip. Opens only for staging accounts the owner approves (`_apiConsoleAccess/{uid}`); the request list lives in `_apiConsole/spec`, never in this public repo (its source and a Postman collection are in the owner's HQ artifact). Left out of the production and demo builds | `public/api-console/`, `swagger-ui-dist` (vendored at build), `scripts/api-console.js` |
 | **Write log** (`_writes`) | One row per change a person makes on a trip: uid, trip, kind, action, time. No content. Appended by `TripEventsService` beside each trip event; history before 2026-10-01 seeded by `scripts/backfill-writes.js`. Pulse charts "Things written" and "Sign-ups" (from users' creation dates) | `src/app/services/trip-events.service.ts`, `firestore.rules` |
 | **Error log** (`_appLogs`) | JS, HTTP and Firebase errors from the web app with a random session id | `src/app/services/error-logger.service.ts` |
 | **Trip event feed** (`trips/{id}/events`) | What changed on a trip; feeds the bell and Updates | `src/app/services/trip-events.service.ts`, spec `docs/superpowers/specs/2026-09-30-trip-events-and-push-design.md` |
@@ -67,6 +68,7 @@ host must be added there or the browser blocks it.
 | `fetch-ios-config.js` | Writes `ios/App/App/GoogleService-Info.plist` from the Firebase Management API (gitignored) |
 | `set-storage-cors.js`, `migrate-outfit-photos.js` | After Blaze: bucket CORS; move inline photos to Storage |
 | `seed-admin.js`, `sync-seed.js`, `create-test-member.js`, `mark-test-accounts.js` | Seeding and test data |
+| `api-console.js` | Staging API console: `grant` / `revoke <username|email>`, `list`, `publish <openapi.json>`. Refuses non-staging keys |
 | `reset-password.js`, `gen-reset-link.js`, `migrate-account-privacy.js` | Account admin |
 | `check-balances.js`, `compare-to-spreadsheet.js`, `fix-makaela-entries.js`, `apply-v6-fixes.js` | One-off finance checks and fixes |
 | `stats.js` *(gitignored)* | Read-only headcount of real users and trips; feeds the private Headcount artifact. Never commit its output |
