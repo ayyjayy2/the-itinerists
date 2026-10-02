@@ -1,4 +1,4 @@
-import { tripSummary, tripDestinations, activeLeg, buildEditedDestinations, legIsCurrent, localTodayISO } from './trip-destinations';
+import { isOutsideTripDates, tripSummary, tripDestinations, activeLeg, buildEditedDestinations, legIsCurrent, localTodayISO } from './trip-destinations';
 import { TripDestination, TripDoc } from '../models/trip.models';
 
 const leg = (over: Partial<TripDestination> = {}): TripDestination => ({
@@ -147,5 +147,16 @@ describe('localTodayISO', () => {
     // 23:30 local on Aug 5 — UTC may already be Aug 6, local date must win.
     expect(localTodayISO(new Date(2026, 7, 5, 23, 30))).toBe('2026-08-05');
     expect(localTodayISO(new Date(2026, 0, 1, 0, 5))).toBe('2026-01-01');
+  });
+});
+
+describe('isOutsideTripDates', () => {
+  const trip = { startDate: '2026-10-01', endDate: '2026-10-15' };
+  it('flags dates before or after the trip, never inside it or on a trip without dates', () => {
+    expect(isOutsideTripDates('2026-07-27', trip)).toBeTrue();
+    expect(isOutsideTripDates('2026-10-16', trip)).toBeTrue();
+    expect(isOutsideTripDates('2026-10-01', trip)).toBeFalse();
+    expect(isOutsideTripDates('2026-10-15', trip)).toBeFalse();
+    expect(isOutsideTripDates('2026-07-27', {})).toBeFalse();
   });
 });

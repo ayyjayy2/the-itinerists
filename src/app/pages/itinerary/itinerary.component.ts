@@ -1,3 +1,5 @@
+import { isOutsideTripDates } from '../../utils/trip-destinations';
+import { stopDateRange } from '../../utils/stop-dates';
 import { CalendarExportService, CalendarExportResult } from '../../services/calendar-export.service';
 import { Component, OnInit, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -124,6 +126,8 @@ export class ItineraryComponent implements OnInit {
     if (custom) return custom;
     const startStr = this.tripService.activeTrip()?.startDate;
     if (!startStr) return date;
+    // A day outside the trip has no day number ("Day -107"): show its date instead.
+    if (isOutsideTripDates(date, this.tripService.activeTrip())) return stopDateRange(date, date);
     const start = new Date(startStr + 'T00:00');
     const d     = new Date(date + 'T00:00');
     const diff  = Math.round((d.getTime() - start.getTime()) / 86_400_000);
@@ -220,6 +224,25 @@ export class ItineraryComponent implements OnInit {
   }
 
   readonly tripUsers = this.usersService.tripUsers;
+
+  // ── Items outside the trip's dates ────────────────────────────────────────
+  readonly outsideItems = computed(() => {
+    const t = this.tripService.activeTrip();
+    return this.allItems().filter(i => isOutsideTripDates(i.date, t)).sort((a, b) => a.date.localeCompare(b.date));
+  });
+  isOutside(item: ItineraryItemDoc): boolean { return isOutsideTripDates(item.date, this.tripService.activeTrip()); }
+  readonly tripRangeLabel = computed(() => {
+    const t = this.tripService.activeTrip();
+    return t?.startDate && t?.endDate ? stopDateRange(t.startDate, t.endDate) : '';
+  });
+  /** Show everyone's items on the first outside date, where the flagged ones are. */
+  reviewOutside(): void {
+    const first = this.outsideItems()[0];
+    if (!first) return;
+    this.showAll.set(true);
+    this.selectedDate.set(first.date);
+    if (this.view() !== 'list') this.setView('list');
+  }
 
   // ── Add to my calendar ────────────────────────────────────────────────────
   private calendarExport = inject(CalendarExportService);
