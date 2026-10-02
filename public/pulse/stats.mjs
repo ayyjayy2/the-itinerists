@@ -48,6 +48,14 @@ export function hourIn(ms, zone) { return parts(ms, zone).hour; }
 /** Hour label like "14:00" for a bucket start in a zone. */
 export function hourLabel(ms, zone) { return `${String(hourIn(ms, zone)).padStart(2, '0')}:00`; }
 
+/** A moment as "Sep 30, 2026 at 9:06 PM" in a zone; `seconds` adds ":05". The zone code is added by the caller. */
+export function stampText(ms, zone, { seconds = false } = {}) {
+  const d = new Date(ms);
+  const day = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: zone });
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', ...(seconds ? { second: '2-digit' } : {}), timeZone: zone });
+  return `${day} at ${time}`;
+}
+
 /** Midnight at the start of the calendar day containing `ms` in `zone`. */
 /**
  * The live feed is queried from the window's start. The window slides with the

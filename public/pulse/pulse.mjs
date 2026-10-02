@@ -32,6 +32,8 @@ const state = {
   writes: [],             // `_writes` rows in range: who wrote what kind of thing on which trip, when
   hide: { me: false, testTrips: true, testUsers: true },   // the Hide checkboxes, saved to prefs
   tripSel: null,          // Set of trip ids, or null for all
+  firstAt: null,          // the oldest _activity row: when collection began
+  updatedAt: null,        // when live data last arrived (any listener), shown as "Updated …"
 };
 let unsubRows = null, unsubWrites = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null;
 const memberSubs = new Map(); // tripId → unsubscribe
@@ -75,11 +77,13 @@ function start() {
   $('whoName').textContent = 'Signed in as the app owner';
   unsubTrips = onSnapshot(collection(db, 'trips'), snap => {
     state.trips = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
+    dataArrived();
     syncMemberSubs();
     scheduleRender();
   }, err => showError('Trips: ' + err.message));
   unsubUsers = onSnapshot(collection(db, 'users'), snap => {
     state.users = new Map(snap.docs.map(d => [d.id, d.data()]));
+    dataArrived();
     scheduleRender();
   }, err => showError('People: ' + err.message));
   unsubPrefs = onSnapshot(prefsRef(), snap => {
@@ -87,6 +91,7 @@ function start() {
     // `hiddenTrips` is the earlier name for the same list.
     state.testTrips = new Set(p.testTrips ?? p.hiddenTrips ?? []);
     state.testUsers = new Set(p.testUsers ?? []);
+    dataArrived();
     state.hide = { me: false, testTrips: true, testUsers: true, ...(p.hide ?? {}) };
     for (const [k, v] of Object.entries(state.hide)) { const el = document.querySelector(`#hide input[name="${k}"]`); if (el) el.checked = !!v; }
     if (p.zone && p.zone !== state.zone) { state.zone = p.zone; if (state.range === 'today') subscribeRows(); }
@@ -99,13 +104,17 @@ function start() {
 async function showFirstEvent() {
   try {
     const snap = await getDocs(query(collection(db, '_activity'), orderBy('at'), limit(1)));
-    const at = snap.docs[0]?.data().at?.toMillis?.();
-    if (!at) return;
-    const d = new Date(at);
-    const day = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: state.zone });
-    const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: state.zone });
-    $('firstEvent').textContent = `Collected since ${day} at ${time} (${zoneAbbr(state.zone)})`;
+    state.firstAt = snap.docs[0]?.data().at?.toMillis?.() ?? null;
+    renderStamps();
   } catch { /* cosmetic */ }
+}
+/** New data from any listener: what "Updated …" at the foot of the page reports. */
+function dataArrived() { state.updatedAt = Date.now(); }
+/** The two lines at the foot of the page, in the dashboard's zone (so they follow the zone picker). */
+function renderStamps() {
+  const z = state.zone;
+  if (state.firstAt) $('firstEvent').textContent = `Collected since ${S.stampText(state.firstAt, z)} (${zoneAbbr(z, state.firstAt)})`;
+  $('updatedAt').textContent = state.updatedAt ? `Updated ${S.stampText(state.updatedAt, z, { seconds: true })} (${zoneAbbr(z, state.updatedAt)})` : '';
 }
 /** One members listener per trip, following the trip list. */
 function syncMemberSubs() {
@@ -114,6 +123,7 @@ function syncMemberSubs() {
     if (memberSubs.has(id)) continue;
     memberSubs.set(id, onSnapshot(collection(db, 'trips', id, 'members'), snap => {
       state.members.set(id, snap.docs.map(d => ({ uid: d.id, ...d.data() })).sort((a, b) => (a.joinedAt ?? 0) - (b.joinedAt ?? 0)));
+      dataArrived();
       scheduleRender();
     }, err => showError('Members: ' + err.message)));
   }
@@ -139,6 +149,7 @@ function subscribeRows(quiet = false) {
   const qw = query(collection(db, '_writes'), where('at', '>=', Timestamp.fromMillis(queryStart())), orderBy('at'));
   unsubWrites = onSnapshot(qw, snap => {
     state.writes = snap.docs.map(d => { const w = d.data(); return { ...w, at: w.at?.toMillis?.() ?? 0 }; }).filter(w => w.at);
+    dataArrived();
     scheduleRender();
   }, err => showError('Writes: ' + err.message));
   unsubRows?.();
@@ -154,6 +165,7 @@ function subscribeRows(quiet = false) {
     }
     state.rows = rows;
     state.loading = false;
+    dataArrived();
     $('dot').classList.add('on');
     showError('');
     scheduleRender();
@@ -361,6 +373,7 @@ function allZones() {
 // ── render ─────────────────────────────────────────────────────────────────
 function render() {
   lastFull = state.now;
+  renderStamps();
   $('loading').hidden = !state.loading;
   $('dash').classList.toggle('is-loading', !!state.loading);
   const now = state.now;
