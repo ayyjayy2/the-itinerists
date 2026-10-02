@@ -38,6 +38,8 @@ this file whenever a service is added or removed (the privacy policy at
 | **OpenStreetMap tiles** | Map imagery under Leaflet | Free | `map.component.ts` |
 | **Frankfurter** | Currency conversion rates for Finance | Free, no key | `src/app/services/exchange-rate.service.ts` |
 | **Google Fonts** | Nunito and Caprasimo | Free | `src/index.html`, `public/pulse/index.html` |
+| **timeapi.io** | API console only (the app doesn't call it): every IANA zone, and one zone's local time, offset and daylight saving | Free, no key | staging CSP in `firebase.json`; request list in the owner's HQ artifact |
+| **Open-Meteo geocoding** | API console only: a city's time zone, country and coordinates ("Port_Moresby" is sent as "Port Moresby" by `public/api-console/normalize.mjs`) | Free, no key | staging CSP in `firebase.json` |
 | **Google reCAPTCHA v3** | Behind App Check on the web | Free | `app.config.ts` |
 
 All of these are listed in the hosting Content-Security-Policy in `firebase.json`; a new

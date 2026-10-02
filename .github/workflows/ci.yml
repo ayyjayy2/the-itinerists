@@ -27,6 +27,8 @@ jobs:
         run: npm run test:ci
       - name: Pulse tests
         run: npm run test:pulse
+      - name: API console tests
+        run: npm run test:console
       - name: Production build
         run: npx ng build
       - name: Firebase CLI (emulators for the rules tests)

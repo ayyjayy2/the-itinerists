@@ -11,6 +11,7 @@
 // the browser.
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+import { cityQuery } from './normalize.mjs';
 
 // The staging project's web config, as committed in src/environments/environment.staging.ts.
 const firebaseConfig = {
@@ -23,6 +24,7 @@ const firebaseConfig = {
 };
 const STAGING_HOSTS = ['the-itinerists-staging.web.app', 'the-itinerists-staging.firebaseapp.com', 'localhost', '127.0.0.1'];
 const FIRESTORE_HOST = 'firestore.googleapis.com';
+const CITY_SEARCH_HOST = 'geocoding-api.open-meteo.com';   // the time-zone-by-city request
 const DB = `projects/${firebaseConfig.projectId}/databases/(default)/documents`;
 const REST = `https://${FIRESTORE_HOST}/v1/${DB}`;
 const CACHE_KEY = uid => `apiConsole.spec.${uid}`;
@@ -174,8 +176,14 @@ function render(text, values) {
     persistAuthorization: false,
     // Every Firestore request goes out as the signed-in account, with a fresh ID token.
     requestInterceptor: async req => {
-      if (new URL(req.url).host === FIRESTORE_HOST && auth.currentUser && !req.headers.Authorization) {
+      const url = new URL(req.url);
+      if (url.host === FIRESTORE_HOST && auth.currentUser && !req.headers.Authorization) {
         req.headers.Authorization = `Bearer ${await auth.currentUser.getIdToken()}`;
+      }
+      // The city search doesn't understand "Port_Moresby" or "Pacific/Port_Moresby"; send "Port Moresby".
+      if (url.host === CITY_SEARCH_HOST && url.searchParams.has('name')) {
+        url.searchParams.set('name', cityQuery(url.searchParams.get('name')));
+        req.url = url.toString();
       }
       return req;
     },
