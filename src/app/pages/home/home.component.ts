@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, computed, signal, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed, signal, effect, viewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../shared/icon/icon.component';
@@ -35,6 +35,7 @@ import { pickFirstUp } from '../../utils/first-up';
 import { normalizeTime } from '../../utils/time-format';
 import { weatherLabel } from '../../utils/weather-label';
 import { needsRecoveryEmail, maskEmail } from '../../utils/email';
+import { stopDateRange } from '../../utils/stop-dates';
 import { EmailConfirmService } from '../../services/email-confirm.service';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
@@ -232,9 +233,34 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   legDateRange(leg: TripDestination): string {
-    const fmt = (s: string) => new Date(s + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return `${fmt(leg.startDate)} – ${fmt(leg.endDate)}`;
+    return stopDateRange(leg.startDate, leg.endDate);
   }
+
+  // ── Stops strip: open on the current stop; fade the side that has more ──
+  private legsStrip = viewChild<ElementRef<HTMLElement>>('legsStrip');
+  readonly legsMoreLeft = signal(false);
+  readonly legsMoreRight = signal(false);
+  private legsScrolledFor = '';
+  updateLegEdges(): void {
+    const el = this.legsStrip()?.nativeElement;
+    if (!el) return;
+    this.legsMoreLeft.set(el.scrollLeft > 4);
+    this.legsMoreRight.set(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }
+  private legsEffect = effect(() => {
+    const el = this.legsStrip()?.nativeElement;
+    const key = this.legs().map(l => l.destination + l.startDate).join('|') + '#' + this.activeTrip()?.id;
+    if (!el) return;
+    setTimeout(() => {
+      // Once per trip: bring the current (or next) stop into view.
+      if (key !== this.legsScrolledFor) {
+        this.legsScrolledFor = key;
+        const cur = el.querySelector<HTMLElement>('.leg-chip.current');
+        if (cur) el.scrollLeft = Math.max(0, cur.offsetLeft - el.offsetLeft - 8);
+      }
+      this.updateLegEdges();
+    });
+  });
 
   /** "now" chip: only when today actually falls inside the leg's dates —
    *  before the trip starts, no leg is "now" (currentLeg() would return the

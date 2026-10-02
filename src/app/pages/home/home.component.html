@@ -69,15 +69,19 @@
 
     <!-- Destination legs (multi-destination trips) -->
     @if (isMultiDest()) {
-      <div class="legs-strip">
+      <!-- Each card is as wide as its name and dates; swipe sideways for more. The
+           strip opens with the current stop in view, and fades at an edge with more. -->
+      <div class="legs-strip" #legsStrip (scroll)="updateLegEdges()"
+           [class.more-left]="legsMoreLeft()" [class.more-right]="legsMoreRight()"
+           role="list" aria-label="Stops on this trip">
         @for (leg of legs(); track $index) {
-          <div class="leg-chip" [class.current]="isCurrentLeg(leg)">
+          <div class="leg-chip" role="listitem" [class.current]="isCurrentLeg(leg)">
             <app-icon name="pin" [size]="15" />
             <div class="leg-chip-text">
+              @if (isCurrentLeg(leg)) { <span class="leg-now">Now</span> }
               <span class="leg-name">{{ legShort(leg) }}</span>
               <span class="leg-dates">{{ legDateRange(leg) }}</span>
             </div>
-            @if (isCurrentLeg(leg)) { <span class="leg-now">now</span> }
           </div>
         }
       </div>
