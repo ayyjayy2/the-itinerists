@@ -1,6 +1,6 @@
 # Tools & services
 
-Everything the app, the dashboards and the build depend on, as of 2026-09-30. One
+Everything the app, the dashboards and the build depend on, as of 2026-10-02. One
 row per tool: what it does for us, what it costs, and where it is wired in. Update
 this file whenever a service is added or removed (the privacy policy at
 `src/app/pages/privacy/privacy.component.ts` must say the same things).
@@ -21,7 +21,7 @@ this file whenever a service is added or removed (the privacy policy at
 | Service | What it does | Cost | Where |
 |---|---|---|---|
 | **Authentication** | Email + password sign-in (username → synthetic email), password reset, email change. Sender: `noreply@theitinerists.com` | Free, unlimited | `src/app/services/auth.service.ts`, `user.service.ts` |
-| **Firestore** | Every document: users, trips and their subcollections, invites, geocache, the `_activity` event log, the `_appLogs` error log, `_pulse` prefs | Free tier; see Launch Plan → Storage & costs | `src/app/services/*.service.ts`, rules in `firestore.rules` (tests: `npm run test:rules`) |
+| **Firestore** | Every document: users, trips and their subcollections, invites, geocache, the `_activity` event log, the `_appLogs` error log, `_pulse` prefs, and on staging the API console's `_apiConsoleAccess` / `_apiConsole` | Free tier; see Launch Plan → Storage & costs | `src/app/services/*.service.ts`, rules in `firestore.rules` (tests: `npm run test:rules`) |
 | **Cloud Storage** | Outfit photos (1,600 px + 300 px thumbnail), owner-only. **Code done, switched off** (`OUTFIT_PHOTO_STORAGE_ENABLED = false`): the bucket only exists on Blaze | Free tier | `src/app/services/outfit-photo.service.ts`, `storage.rules`, `scripts/set-storage-cors.js`, `scripts/migrate-outfit-photos.js` |
 | **Hosting** | theitinerists.com (+ the-itinerists.web.app), the demo site, and `/pulse/` | Free tier | `firebase.json` (headers, CSP), `public/` |
 | **App Check** | Proves requests come from the real app; **enforced** on Firestore and Storage. reCAPTCHA v3 on the web, a debug token on the iOS shell (App Attest later) | Free | `src/app/app.config.ts`, `.env` keys |
@@ -49,7 +49,7 @@ host must be added there or the browser blocks it.
 |---|---|---|
 | **Event log** (`_activity`) | One row per app open, page view and 2-minute ping while visible: uid, trip, page, local hour, zone, platform, version. Written by the app, never edited | `src/app/services/usage.service.ts`, `src/app/utils/usage.ts` |
 | **Pulse** | Owner-only live dashboard at theitinerists.com/pulse/, outside the Angular app. Trips by phase, online now, people per hour / day, hour of day on each person's clock or a zone, pages, people, return rate, visits, around the trip, platform + versions. Filters: range (today → year), Hide (me / test trips / test accounts), multi-select trips, zone. Test lists live in `_pulse/prefs` | `public/pulse/` (`pulse.mjs`, `stats.mjs` + `npm run test:pulse`, `zones.mjs`), design: `docs/superpowers/specs/2026-09-30-usage-analytics-design.md` and `...-pulse-filters-and-cards-design.md` |
-| **API console** | Staging only, at the-itinerists-staging.web.app/api-console/index.html: Swagger UI with every Firestore path, the sign-in calls and the outside APIs, pre-filled with your account and trip. Opens only for staging accounts the owner approves (`_apiConsoleAccess/{uid}`); the request list lives in `_apiConsole/spec`, never in this public repo (its source and a Postman collection are in the owner's HQ artifact). Left out of the production and demo builds | `public/api-console/`, `swagger-ui-dist` (vendored at build), `scripts/api-console.js` |
+| **API console** | Staging only, at the-itinerists-staging.web.app/api-console/index.html: Swagger UI with every Firestore path, the sign-in calls and the outside APIs, pre-filled with your account and trip. Opens only for staging accounts the owner approves (`_apiConsoleAccess/{uid}`); the request list lives in `_apiConsole/spec`, never in this public repo (its source, an OpenAPI file and a Postman collection are in the owner's HQ artifact). The page reads Firestore over REST (no Firestore SDK), keeps the last request list in the browser for instant return visits (cleared if access is revoked), and Swagger UI is cached for a day. Left out of the production and demo builds | `public/api-console/`, `swagger-ui-dist` (vendored at build), `scripts/api-console.js` |
 | **Write log** (`_writes`) | One row per change a person makes on a trip: uid, trip, kind, action, time. No content. Appended by `TripEventsService` beside each trip event; history before 2026-10-01 seeded by `scripts/backfill-writes.js`. Pulse charts "Things written" and "Sign-ups" (from users' creation dates) | `src/app/services/trip-events.service.ts`, `firestore.rules` |
 | **Error log** (`_appLogs`) | JS, HTTP and Firebase errors from the web app with a random session id | `src/app/services/error-logger.service.ts` |
 | **Trip event feed** (`trips/{id}/events`) | What changed on a trip; feeds the bell and Updates | `src/app/services/trip-events.service.ts`, spec `docs/superpowers/specs/2026-09-30-trip-events-and-push-design.md` |
@@ -83,13 +83,14 @@ project is `trip-planner-ayyjayy2` before doing anything.
 |---|---|---|
 | **Node** 25 / npm | Everything above | `npm install` |
 | **Angular CLI** | Build, dev server (`:4200`), demo (`:4400`) | `npm run build`, `npm start` |
-| **Karma + Jasmine** | Unit tests (309 specs) | `npm test`, `npm run test:ci` |
-| **Node test runner** | Pulse aggregations (12 tests) | `npm run test:pulse` |
-| **@firebase/rules-unit-testing** | Firestore and Storage rules | `npm run test:rules` |
+| **Karma + Jasmine** | Unit tests (about 400 specs) | `npm test`, `npm run test:ci` |
+| **Node test runner** | Pulse aggregations (18 tests) | `npm run test:pulse` |
+| **@firebase/rules-unit-testing** | Firestore and Storage rules (174 + 12 checks) | `npm run test:rules` |
 | **Playwright** (`@playwright/test`) | End-to-end tests of the beta flows on the demo build (sign-up, create trip, expense, itinerary event, invite), phone viewport in Chromium | `npm run test:e2e` (`e2e/`, `playwright.config.ts`; `e2e/serve.mjs` serves the demo build in CI) |
 | **Firebase CLI** | Deploys: `firebase deploy --only hosting:the-itinerists`, `--only firestore:rules`, `--only storage` | authenticated as the owner |
 | **firebase-admin**, **google-auth-library** | Admin scripts | with the service-account key |
 | **sharp** | Photo resizing in the migration script | dev dependency |
+| **Swagger UI** (`swagger-ui-dist` 5.33.1) | The API console's request runner, copied into `api-console/vendor/` at build time (no CDN, so the CSP stays as it is) | dev dependency; `angular.json` assets |
 | **@vvo/tzdb** | Zone names table for Pulse | dev dependency |
 | **Xcode** 26 | iOS build, simulator, archive for TestFlight | `npm run ios:open` |
 | **GitHub** (`ayyjayy2/the-itinerists`) | Code, pull requests | `gh` CLI |
@@ -101,7 +102,9 @@ project is `trip-planner-ayyjayy2` before doing anything.
 
 | Tool | What for |
 |---|---|
-| **Claude artifacts** (private) | Launch Plan (phases, storage & costs, Making money), Headcount (users, costs, timeline, poll), User Flow |
+| **Itinerists HQ** (private Claude artifact) | One place for Launch plan (phases, storage & costs, making money, PRD), Headcount (users, usage, timeline, poll), a copy of User flow, and Technical docs: Design System, Architecture, API guide (with the OpenAPI file and Postman collection for the API console) and Security guide |
+| **User Flow** and **Design System** (private Claude artifacts) | The flow diagram and wireframes; the design system built from the code. HQ keeps copies |
+| **Postman, Insomnia, Bruno** (optional, free) | Run the API console's requests outside the browser: copy the collection from HQ → API guide |
 | **Google Forms** | Berlin alpha feedback survey (laynajay2 account) |
 | **Instagram** | The story poll; marketing reels in phase 2 |
 | **Firebase console** | Needs the alaynajohnston12 account |
@@ -111,6 +114,5 @@ project is `trip-planner-ayyjayy2` before doing anything.
 RevenueCat + Apple in-app purchase (+ Stripe on the web) for Trip Pass / Keep / Plus;
 Cloud Functions (entitlements, trip deletion job, push fan-out); Firebase Cloud Messaging
 for push; a Capacitor App Check plugin for App Attest; Firebase Analytics plugin for the
-iOS shell; a staging Firebase project; Brevo or Mailchimp for the updates list;
-Booking.com / Expedia / GetYourGuide / Viator / Kiwi partner links; GitHub Actions CI.
-See the Launch Plan artifact and `TODO.md`.
+iOS shell; Brevo or Mailchimp for the updates list; Booking.com / Expedia / GetYourGuide /
+Viator / Kiwi partner links. See Itinerists HQ → Launch plan and `TODO.md`.
