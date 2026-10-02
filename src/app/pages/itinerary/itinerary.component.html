@@ -15,13 +15,6 @@
   }
   </div>
 
-  <!-- ── Add to my calendar: an .ics of my part of the trip ── -->
-  <div class="cal-export">
-    <button class="btn btn-sm btn-ghost" type="button" (click)="addToCalendar()" [disabled]="calExporting()">
-      <app-icon name="itinerary" [size]="15" /> {{ calExporting() ? 'Preparing…' : 'Add to my calendar' }}
-    </button>
-    @if (calExportNote()) { <span class="cal-export-note" role="status">{{ calExportNote() }}</span> }
-  </div>
 
   <!-- ── Scope tabs ── -->
   <div class="scope-tabs">
@@ -316,6 +309,13 @@
       }
     </div>
   }
+
+  <!-- ── Add to my calendar: a quiet link at the end; the itinerary stays the main place ── -->
+  <p class="cal-export">
+    Want it in your phone's calendar too?
+    <button class="link-btn" type="button" (click)="addToCalendar()" [disabled]="calExporting()">{{ calExporting() ? 'Preparing…' : 'Add to my calendar' }}</button>
+    @if (calExportNote()) { <span class="cal-export-note" role="status">{{ calExportNote() }}</span> }
+  </p>
 
 </div>
 } @else {

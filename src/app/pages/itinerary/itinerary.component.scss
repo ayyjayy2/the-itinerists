@@ -553,10 +553,15 @@
 
 .focus-missing { margin: 0 0 0.75rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 700; }
 
-// ── Add to my calendar ──
-.cal-export { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 0.75rem; margin: -0.25rem 0 0.75rem; }
-.cal-export .btn { display: inline-flex; align-items: center; gap: 0.35rem; }
-.cal-export-note { font-size: 0.82rem; color: var(--text-muted); }
+// ── Add to my calendar: a quiet text link at the end of the page ──
+.cal-export { margin: 1.5rem 0 0.5rem; text-align: center; font-size: 0.8rem; color: var(--text-muted); }
+.cal-export .link-btn {
+  background: none; border: 0; padding: 0; font: inherit; color: inherit;
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+.cal-export .link-btn:hover { color: var(--text); }
+.cal-export .link-btn:disabled { cursor: default; text-decoration: none; }
+.cal-export-note { display: block; margin-top: 0.25rem; }
 
 // ── Items outside the trip's dates ──
 .outside-banner { background: var(--accent-tint); border-color: var(--accent); }
