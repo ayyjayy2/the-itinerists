@@ -1,3 +1,4 @@
+import { CalendarExportService } from '../../services/calendar-export.service';
 import { Component, OnInit, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -219,6 +220,28 @@ export class ItineraryComponent implements OnInit {
   }
 
   readonly tripUsers = this.usersService.tripUsers;
+
+  // ── Add to my calendar ────────────────────────────────────────────────────
+  private calendarExport = inject(CalendarExportService);
+  readonly calExporting = signal(false);
+  readonly calExportNote = signal('');
+  async addToCalendar(): Promise<void> {
+    this.calExporting.set(true);
+    this.calExportNote.set('');
+    try {
+      const r = await this.calendarExport.export();
+      this.calExportNote.set({
+        downloaded: 'Downloaded. Open the file to add your trip to Calendar.',
+        opened: 'Tap “Add All” to put your trip in Calendar.',
+        shared: 'Choose where to save your trip’s calendar file.',
+        empty: 'Nothing on your trip to add yet.',
+      }[r]);
+    } catch {
+      this.calExportNote.set('Couldn’t make the calendar file. Try again.');
+    } finally {
+      this.calExporting.set(false);
+    }
+  }
 
   // ── User flight range for "My Trip" ───────────────────────────────────────
   readonly userFlightRange = computed((): { start: string; end: string } | null => {
