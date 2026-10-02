@@ -74,6 +74,8 @@ owner-only tools read the same database ↑
 
 - Admin scripts — Node + a service-account key
 
+- API console — Swagger request runner on staging, owner-approved accounts only
+
 ## How the code is organized
 
 | Layer | What lives there | Rule of thumb |
@@ -99,6 +101,7 @@ owner-only tools read the same database ↑
 - `userExpenses/{uid}` private expenses
 - `geocache` place lookups, shared
 - `_activity`, `_writes`, `_appLogs`, `_pulse` usage, edit and error logs; Pulse settings. Owner-only reads
+- `_apiConsoleAccess`, `_apiConsole` who may open the staging API console, and its request list. Written only by the owner's script
 
 ### Inside each trip
 
