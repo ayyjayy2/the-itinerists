@@ -36,6 +36,7 @@ import { normalizeTime } from '../../utils/time-format';
 import { weatherLabel } from '../../utils/weather-label';
 import { needsRecoveryEmail, maskEmail } from '../../utils/email';
 import { stopDateRange } from '../../utils/stop-dates';
+import { heroLine } from '../../utils/hero-line';
 import { EmailConfirmService } from '../../services/email-confirm.service';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
@@ -274,6 +275,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     const t = this.activeTrip();
     return t ? (t.destination || t.name || '').split(',')[0].trim() : '';
   });
+
+  /** "Ready for Panama?" before, "Enjoy Costa Rica" during (follows the current stop), "Back from Panama" after. */
+  readonly heroKicker = computed(() =>
+    heroLine(this.activeTrip(), this.legs(), localTodayISO(new Date(this.now()), this.tripZone())));
 
   readonly heroMembers = computed(() => this.members().slice(0, 5));
 
