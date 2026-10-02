@@ -1,0 +1,12 @@
+{
+  "code": "EASST",
+  "zones": [
+    {
+      "zone": "Pacific/Easter",
+      "city": "Easter",
+      "country": "Chile",
+      "offset": "UTC−5",
+      "when": "around January"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "TOT",
+  "zones": [
+    {
+      "zone": "Pacific/Tongatapu",
+      "city": "Nuku‘alofa",
+      "country": "Tonga",
+      "offset": "UTC+13",
+      "when": "all year"
+    }
+  ]
+}

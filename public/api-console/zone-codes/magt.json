@@ -1,0 +1,26 @@
+{
+  "code": "MAGT",
+  "zones": [
+    {
+      "zone": "Asia/Magadan",
+      "city": "Magadan",
+      "country": "Russia",
+      "offset": "UTC+11",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Sakhalin",
+      "city": "Yuzhno-Sakhalinsk",
+      "country": "Russia",
+      "offset": "UTC+11",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Srednekolymsk",
+      "city": "Srednekolymsk",
+      "country": "Russia",
+      "offset": "UTC+11",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+{
+  "code": "AST",
+  "zones": [
+    {
+      "zone": "America/Anguilla",
+      "city": "The Valley",
+      "country": "Anguilla",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Antigua",
+      "city": "Antigua",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Aruba",
+      "city": "Aruba",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Barbados",
+      "city": "Bridgetown",
+      "country": "Barbados",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Blanc-Sablon",
+      "city": "Blanc-Sablon",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Curacao",
+      "city": "Willemstad",
+      "country": "Curacao",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Dominica",
+      "city": "Dominica",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Glace_Bay",
+      "city": "Glace Bay",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Goose_Bay",
+      "city": "Goose Bay",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Grenada",
+      "city": "Grenada",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Guadeloupe",
+      "city": "Guadeloupe",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Halifax",
+      "city": "Halifax",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Kralendijk",
+      "city": "Kralendijk",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Lower_Princes",
+      "city": "Lower Princes",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Marigot",
+      "city": "Marigot",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Martinique",
+      "city": "Fort-de-France",
+      "country": "Martinique",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Moncton",
+      "city": "Moncton",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Montserrat",
+      "city": "Montserrat",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Port_of_Spain",
+      "city": "Port of Spain",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Puerto_Rico",
+      "city": "San Juan",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Santo_Domingo",
+      "city": "Santo Domingo",
+      "country": "Dominican Republic",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/St_Barthelemy",
+      "city": "St Barthelemy",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/St_Kitts",
+      "city": "St Kitts",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/St_Lucia",
+      "city": "St Lucia",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/St_Thomas",
+      "city": "St Thomas",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/St_Vincent",
+      "city": "St Vincent",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Thule",
+      "city": "Thule",
+      "country": "Greenland",
+      "offset": "UTC−4",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Tortola",
+      "city": "Tortola",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Virgin",
+      "city": "Virgin",
+      "country": "Puerto Rico",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Aden",
+      "city": "Sanaa",
+      "country": "Yemen",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Amman",
+      "city": "Amman",
+      "country": "Jordan",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Baghdad",
+      "city": "Baghdad",
+      "country": "Iraq",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Bahrain",
+      "city": "Bahrain",
+      "country": "Qatar",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Damascus",
+      "city": "Aleppo",
+      "country": "Syria",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Kuwait",
+      "city": "Kuwait",
+      "country": "Saudi Arabia",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Qatar",
+      "city": "Doha",
+      "country": "Qatar",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Riyadh",
+      "city": "Jeddah",
+      "country": "Saudi Arabia",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Atlantic/Bermuda",
+      "city": "Hamilton",
+      "country": "Bermuda",
+      "offset": "UTC−4",
+      "when": "around January"
+    }
+  ]
+}

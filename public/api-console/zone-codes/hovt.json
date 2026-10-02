@@ -1,0 +1,12 @@
+{
+  "code": "HOVT",
+  "zones": [
+    {
+      "zone": "Asia/Hovd",
+      "city": "Ulaangom",
+      "country": "Mongolia",
+      "offset": "UTC+7",
+      "when": "all year"
+    }
+  ]
+}

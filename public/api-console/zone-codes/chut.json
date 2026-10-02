@@ -1,0 +1,26 @@
+{
+  "code": "CHUT",
+  "zones": [
+    {
+      "zone": "Pacific/Chuuk",
+      "city": "Chuuk",
+      "country": "Papua New Guinea",
+      "offset": "UTC+10",
+      "when": "all year"
+    },
+    {
+      "zone": "Pacific/Truk",
+      "city": "Truk",
+      "country": "Papua New Guinea",
+      "offset": "UTC+10",
+      "when": "all year"
+    },
+    {
+      "zone": "Pacific/Yap",
+      "city": "Yap",
+      "country": "Papua New Guinea",
+      "offset": "UTC+10",
+      "when": "all year"
+    }
+  ]
+}

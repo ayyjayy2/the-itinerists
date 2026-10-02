@@ -1,0 +1,40 @@
+{
+  "code": "WEST",
+  "zones": [
+    {
+      "zone": "Atlantic/Canary",
+      "city": "Las Palmas de Gran Canaria",
+      "country": "Spain",
+      "offset": "UTC+1",
+      "when": "around July"
+    },
+    {
+      "zone": "Atlantic/Faeroe",
+      "city": "Faeroe",
+      "country": "Faroe Islands",
+      "offset": "UTC+1",
+      "when": "around July"
+    },
+    {
+      "zone": "Atlantic/Faroe",
+      "city": "Tórshavn",
+      "country": "Faroe Islands",
+      "offset": "UTC+1",
+      "when": "around July"
+    },
+    {
+      "zone": "Atlantic/Madeira",
+      "city": "Madeira",
+      "country": "Portugal",
+      "offset": "UTC+1",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Lisbon",
+      "city": "Lisbon",
+      "country": "Portugal",
+      "offset": "UTC+1",
+      "when": "around July"
+    }
+  ]
+}

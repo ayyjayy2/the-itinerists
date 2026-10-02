@@ -1,0 +1,19 @@
+{
+  "code": "TMT",
+  "zones": [
+    {
+      "zone": "Asia/Ashgabat",
+      "city": "Ashgabat",
+      "country": "Turkmenistan",
+      "offset": "UTC+5",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Ashkhabad",
+      "city": "Ashkhabad",
+      "country": "Turkmenistan",
+      "offset": "UTC+5",
+      "when": "all year"
+    }
+  ]
+}

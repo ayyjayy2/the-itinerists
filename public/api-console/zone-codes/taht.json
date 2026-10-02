@@ -1,0 +1,12 @@
+{
+  "code": "TAHT",
+  "zones": [
+    {
+      "zone": "Pacific/Tahiti",
+      "city": "Faaa",
+      "country": "French Polynesia",
+      "offset": "UTC−10",
+      "when": "all year"
+    }
+  ]
+}

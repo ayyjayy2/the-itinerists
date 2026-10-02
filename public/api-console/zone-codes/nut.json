@@ -1,0 +1,12 @@
+{
+  "code": "NUT",
+  "zones": [
+    {
+      "zone": "Pacific/Niue",
+      "city": "Alofi",
+      "country": "Niue",
+      "offset": "UTC−11",
+      "when": "all year"
+    }
+  ]
+}

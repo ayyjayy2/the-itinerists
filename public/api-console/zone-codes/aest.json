@@ -1,0 +1,96 @@
+{
+  "code": "AEST",
+  "zones": [
+    {
+      "zone": "Antarctica/Macquarie",
+      "city": "Macquarie",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/ACT",
+      "city": "ACT",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Brisbane",
+      "city": "Brisbane",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "all year"
+    },
+    {
+      "zone": "Australia/Canberra",
+      "city": "Canberra",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Currie",
+      "city": "Currie",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Hobart",
+      "city": "Hobart",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Lindeman",
+      "city": "Lindeman",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "all year"
+    },
+    {
+      "zone": "Australia/Melbourne",
+      "city": "Melbourne",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/NSW",
+      "city": "NSW",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Queensland",
+      "city": "Queensland",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "all year"
+    },
+    {
+      "zone": "Australia/Sydney",
+      "city": "Sydney",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Tasmania",
+      "city": "Tasmania",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Victoria",
+      "city": "Victoria",
+      "country": "Australia",
+      "offset": "UTC+10",
+      "when": "around July"
+    }
+  ]
+}

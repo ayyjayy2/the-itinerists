@@ -1,0 +1,12 @@
+{
+  "code": "WFT",
+  "zones": [
+    {
+      "zone": "Pacific/Wallis",
+      "city": "Mata-Utu",
+      "country": "Wallis and Futuna",
+      "offset": "UTC+12",
+      "when": "all year"
+    }
+  ]
+}

@@ -11,7 +11,7 @@
 // the browser.
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
-import { cityQuery } from './normalize.mjs';
+import { cityQuery, zoneCodeFile } from './normalize.mjs';
 
 // The staging project's web config, as committed in src/environments/environment.staging.ts.
 const firebaseConfig = {
@@ -183,6 +183,12 @@ function render(text, values) {
       // The city search doesn't understand "Port_Moresby" or "Pacific/Port_Moresby"; send "Port Moresby".
       if (url.host === CITY_SEARCH_HOST && url.searchParams.has('name')) {
         url.searchParams.set('name', cityQuery(url.searchParams.get('name')));
+        req.url = url.toString();
+      }
+      // A time zone code is looked up as a file named in lower case: EST → zone-codes/est.json.
+      const code = url.pathname.match(/^(.*\/zone-codes\/)([^/]+?)(\.json)?$/);
+      if (code && url.origin === location.origin && code[2] !== 'index') {
+        url.pathname = `${code[1]}${zoneCodeFile(decodeURIComponent(code[2]))}.json`;
         req.url = url.toString();
       }
       return req;

@@ -1,0 +1,26 @@
+{
+  "code": "GST",
+  "zones": [
+    {
+      "zone": "Asia/Dubai",
+      "city": "Dubai",
+      "country": "UAE",
+      "offset": "UTC+4",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Muscat",
+      "city": "Muscat",
+      "country": "Oman",
+      "offset": "UTC+4",
+      "when": "all year"
+    },
+    {
+      "zone": "Atlantic/South_Georgia",
+      "city": "Grytviken",
+      "country": "South Georgia and the South Sandwich Islands",
+      "offset": "UTC−2",
+      "when": "all year"
+    }
+  ]
+}

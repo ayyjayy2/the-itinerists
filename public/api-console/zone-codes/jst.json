@@ -1,0 +1,12 @@
+{
+  "code": "JST",
+  "zones": [
+    {
+      "zone": "Asia/Tokyo",
+      "city": "Tokyo",
+      "country": "Japan",
+      "offset": "UTC+9",
+      "when": "all year"
+    }
+  ]
+}

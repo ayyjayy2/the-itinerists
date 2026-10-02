@@ -1,0 +1,12 @@
+{
+  "code": "IRKT",
+  "zones": [
+    {
+      "zone": "Asia/Irkutsk",
+      "city": "Irkutsk",
+      "country": "Russia",
+      "offset": "UTC+8",
+      "when": "all year"
+    }
+  ]
+}

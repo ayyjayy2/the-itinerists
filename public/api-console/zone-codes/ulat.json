@@ -1,0 +1,26 @@
+{
+  "code": "ULAT",
+  "zones": [
+    {
+      "zone": "Asia/Choibalsan",
+      "city": "Choibalsan",
+      "country": "Mongolia",
+      "offset": "UTC+8",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Ulaanbaatar",
+      "city": "Ulan Bator",
+      "country": "Mongolia",
+      "offset": "UTC+8",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Ulan_Bator",
+      "city": "Ulan Bator",
+      "country": "Mongolia",
+      "offset": "UTC+8",
+      "when": "all year"
+    }
+  ]
+}

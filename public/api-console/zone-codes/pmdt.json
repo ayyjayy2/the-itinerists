@@ -1,0 +1,12 @@
+{
+  "code": "PMDT",
+  "zones": [
+    {
+      "zone": "America/Miquelon",
+      "city": "Saint-Pierre",
+      "country": "Saint Pierre and Miquelon",
+      "offset": "UTC−2",
+      "when": "around July"
+    }
+  ]
+}

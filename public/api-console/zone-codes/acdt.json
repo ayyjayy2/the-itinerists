@@ -1,0 +1,33 @@
+{
+  "code": "ACDT",
+  "zones": [
+    {
+      "zone": "Australia/Adelaide",
+      "city": "Adelaide",
+      "country": "Australia",
+      "offset": "UTC+10:30",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/Broken_Hill",
+      "city": "Broken Hill",
+      "country": "Australia",
+      "offset": "UTC+10:30",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/South",
+      "city": "South",
+      "country": "Australia",
+      "offset": "UTC+10:30",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/Yancowinna",
+      "city": "Yancowinna",
+      "country": "Australia",
+      "offset": "UTC+10:30",
+      "when": "around January"
+    }
+  ]
+}

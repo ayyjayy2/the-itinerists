@@ -1,0 +1,12 @@
+{
+  "code": "WAKT",
+  "zones": [
+    {
+      "zone": "Pacific/Wake",
+      "city": "Wake",
+      "country": "United States Minor Outlying Islands",
+      "offset": "UTC+12",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "WIT",
+  "zones": [
+    {
+      "zone": "Asia/Jayapura",
+      "city": "Jayapura",
+      "country": "Indonesia",
+      "offset": "UTC+9",
+      "when": "all year"
+    }
+  ]
+}

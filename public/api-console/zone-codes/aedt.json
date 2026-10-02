@@ -1,0 +1,75 @@
+{
+  "code": "AEDT",
+  "zones": [
+    {
+      "zone": "Antarctica/Macquarie",
+      "city": "Macquarie",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/ACT",
+      "city": "ACT",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/Canberra",
+      "city": "Canberra",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/Currie",
+      "city": "Currie",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/Hobart",
+      "city": "Hobart",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/Melbourne",
+      "city": "Melbourne",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/NSW",
+      "city": "NSW",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/Sydney",
+      "city": "Sydney",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/Tasmania",
+      "city": "Tasmania",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/Victoria",
+      "city": "Victoria",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    }
+  ]
+}

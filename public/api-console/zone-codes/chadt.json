@@ -1,0 +1,12 @@
+{
+  "code": "CHADT",
+  "zones": [
+    {
+      "zone": "Pacific/Chatham",
+      "city": "Chatham",
+      "country": "New Zealand",
+      "offset": "UTC+13:45",
+      "when": "around January"
+    }
+  ]
+}

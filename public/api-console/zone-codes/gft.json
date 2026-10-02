@@ -1,0 +1,12 @@
+{
+  "code": "GFT",
+  "zones": [
+    {
+      "zone": "America/Cayenne",
+      "city": "Cayenne",
+      "country": "French Guiana",
+      "offset": "UTC−3",
+      "when": "all year"
+    }
+  ]
+}

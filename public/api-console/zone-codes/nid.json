@@ -1,0 +1,12 @@
+{
+  "code": "NID",
+  "zones": [
+    {
+      "zone": "Pacific/Norfolk",
+      "city": "Kingston",
+      "country": "Norfolk Island",
+      "offset": "UTC+12",
+      "when": "around January"
+    }
+  ]
+}

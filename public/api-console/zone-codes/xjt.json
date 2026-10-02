@@ -1,0 +1,12 @@
+{
+  "code": "XJT",
+  "zones": [
+    {
+      "zone": "Asia/Urumqi",
+      "city": "Ürümqi",
+      "country": "China",
+      "offset": "UTC+6",
+      "when": "all year"
+    }
+  ]
+}

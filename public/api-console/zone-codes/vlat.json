@@ -1,0 +1,19 @@
+{
+  "code": "VLAT",
+  "zones": [
+    {
+      "zone": "Asia/Ust-Nera",
+      "city": "Ust-Nera",
+      "country": "Russia",
+      "offset": "UTC+10",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Vladivostok",
+      "city": "Khabarovsk",
+      "country": "Russia",
+      "offset": "UTC+10",
+      "when": "all year"
+    }
+  ]
+}

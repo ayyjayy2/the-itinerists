@@ -1,0 +1,12 @@
+{
+  "code": "BOT",
+  "zones": [
+    {
+      "zone": "America/La_Paz",
+      "city": "La Paz",
+      "country": "Bolivia",
+      "offset": "UTC−4",
+      "when": "all year"
+    }
+  ]
+}

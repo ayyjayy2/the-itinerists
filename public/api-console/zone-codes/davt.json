@@ -1,0 +1,12 @@
+{
+  "code": "DAVT",
+  "zones": [
+    {
+      "zone": "Antarctica/Davis",
+      "city": "Davis",
+      "country": "Antarctica",
+      "offset": "UTC+7",
+      "when": "all year"
+    }
+  ]
+}

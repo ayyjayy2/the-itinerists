@@ -1,0 +1,33 @@
+{
+  "code": "SST",
+  "zones": [
+    {
+      "zone": "Pacific/Apia",
+      "city": "Apia",
+      "country": "Samoa",
+      "offset": "UTC+13",
+      "when": "all year"
+    },
+    {
+      "zone": "Pacific/Midway",
+      "city": "Midway",
+      "country": "American Samoa",
+      "offset": "UTC−11",
+      "when": "all year"
+    },
+    {
+      "zone": "Pacific/Pago_Pago",
+      "city": "Pago Pago",
+      "country": "American Samoa",
+      "offset": "UTC−11",
+      "when": "all year"
+    },
+    {
+      "zone": "Pacific/Samoa",
+      "city": "Samoa",
+      "country": "American Samoa",
+      "offset": "UTC−11",
+      "when": "all year"
+    }
+  ]
+}

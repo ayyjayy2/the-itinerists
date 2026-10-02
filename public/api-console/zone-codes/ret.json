@@ -1,0 +1,12 @@
+{
+  "code": "RET",
+  "zones": [
+    {
+      "zone": "Indian/Reunion",
+      "city": "Saint-Denis",
+      "country": "Reunion",
+      "offset": "UTC+4",
+      "when": "all year"
+    }
+  ]
+}

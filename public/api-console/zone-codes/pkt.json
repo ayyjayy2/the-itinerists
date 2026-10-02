@@ -1,0 +1,12 @@
+{
+  "code": "PKT",
+  "zones": [
+    {
+      "zone": "Asia/Karachi",
+      "city": "Lahore",
+      "country": "Pakistan",
+      "offset": "UTC+5",
+      "when": "all year"
+    }
+  ]
+}

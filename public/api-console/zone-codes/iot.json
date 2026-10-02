@@ -1,0 +1,12 @@
+{
+  "code": "IOT",
+  "zones": [
+    {
+      "zone": "Indian/Chagos",
+      "city": "Chagos",
+      "country": "British Indian Ocean Territory",
+      "offset": "UTC+6",
+      "when": "all year"
+    }
+  ]
+}

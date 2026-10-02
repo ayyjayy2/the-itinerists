@@ -1,0 +1,12 @@
+{
+  "code": "TJT",
+  "zones": [
+    {
+      "zone": "Asia/Dushanbe",
+      "city": "Dushanbe",
+      "country": "Tajikistan",
+      "offset": "UTC+5",
+      "when": "all year"
+    }
+  ]
+}

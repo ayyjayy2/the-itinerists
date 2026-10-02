@@ -1,0 +1,47 @@
+{
+  "code": "AMT",
+  "zones": [
+    {
+      "zone": "America/Boa_Vista",
+      "city": "Boa Vista",
+      "country": "Brazil",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Campo_Grande",
+      "city": "Campo Grande",
+      "country": "Brazil",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Cuiaba",
+      "city": "Cuiaba",
+      "country": "Brazil",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Manaus",
+      "city": "Manaus",
+      "country": "Brazil",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Porto_Velho",
+      "city": "Porto Velho",
+      "country": "Brazil",
+      "offset": "UTC−4",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Yerevan",
+      "city": "Yerevan",
+      "country": "Armenia",
+      "offset": "UTC+4",
+      "when": "all year"
+    }
+  ]
+}

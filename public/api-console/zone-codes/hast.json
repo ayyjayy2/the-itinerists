@@ -1,0 +1,20 @@
+{
+  "code": "HAST",
+  "zones": [
+    {
+      "zone": "America/Adak",
+      "city": "Adak",
+      "region": "Alaska",
+      "country": "USA",
+      "offset": "UTC−10",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Atka",
+      "city": "Atka",
+      "country": "USA",
+      "offset": "UTC−10",
+      "when": "around January"
+    }
+  ]
+}

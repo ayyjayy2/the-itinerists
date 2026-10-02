@@ -1,0 +1,19 @@
+{
+  "code": "MHT",
+  "zones": [
+    {
+      "zone": "Pacific/Kwajalein",
+      "city": "Kwajalein",
+      "country": "Marshall Islands",
+      "offset": "UTC+12",
+      "when": "all year"
+    },
+    {
+      "zone": "Pacific/Majuro",
+      "city": "Majuro",
+      "country": "Marshall Islands",
+      "offset": "UTC+12",
+      "when": "all year"
+    }
+  ]
+}

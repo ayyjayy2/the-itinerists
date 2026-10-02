@@ -1,0 +1,12 @@
+{
+  "code": "VUT",
+  "zones": [
+    {
+      "zone": "Pacific/Efate",
+      "city": "Port-Vila",
+      "country": "Vanuatu",
+      "offset": "UTC+11",
+      "when": "all year"
+    }
+  ]
+}

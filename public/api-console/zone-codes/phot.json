@@ -1,0 +1,19 @@
+{
+  "code": "PHOT",
+  "zones": [
+    {
+      "zone": "Pacific/Enderbury",
+      "city": "Enderbury",
+      "country": "Kiribati",
+      "offset": "UTC+13",
+      "when": "all year"
+    },
+    {
+      "zone": "Pacific/Kanton",
+      "city": "Kanton",
+      "country": "Kiribati",
+      "offset": "UTC+13",
+      "when": "all year"
+    }
+  ]
+}

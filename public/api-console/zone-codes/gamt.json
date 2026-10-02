@@ -1,0 +1,12 @@
+{
+  "code": "GAMT",
+  "zones": [
+    {
+      "zone": "Pacific/Gambier",
+      "city": "Gambier",
+      "country": "French Polynesia",
+      "offset": "UTC−9",
+      "when": "all year"
+    }
+  ]
+}

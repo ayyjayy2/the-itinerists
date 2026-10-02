@@ -1,0 +1,19 @@
+{
+  "code": "PETT",
+  "zones": [
+    {
+      "zone": "Asia/Anadyr",
+      "city": "Anadyr",
+      "country": "Russia",
+      "offset": "UTC+12",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Kamchatka",
+      "city": "Petropavlovsk-Kamchatsky",
+      "country": "Russia",
+      "offset": "UTC+12",
+      "when": "all year"
+    }
+  ]
+}

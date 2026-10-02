@@ -1,0 +1,12 @@
+{
+  "code": "SRT",
+  "zones": [
+    {
+      "zone": "America/Paramaribo",
+      "city": "Paramaribo",
+      "country": "Suriname",
+      "offset": "UTC−3",
+      "when": "all year"
+    }
+  ]
+}

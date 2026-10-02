@@ -1,0 +1,12 @@
+{
+  "code": "NST",
+  "zones": [
+    {
+      "zone": "America/St_Johns",
+      "city": "St. John's",
+      "country": "Canada",
+      "offset": "UTC−3:30",
+      "when": "around January"
+    }
+  ]
+}

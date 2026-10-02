@@ -1,0 +1,47 @@
+{
+  "code": "ADT",
+  "zones": [
+    {
+      "zone": "America/Glace_Bay",
+      "city": "Glace Bay",
+      "country": "Canada",
+      "offset": "UTC−3",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Goose_Bay",
+      "city": "Goose Bay",
+      "country": "Canada",
+      "offset": "UTC−3",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Halifax",
+      "city": "Halifax",
+      "country": "Canada",
+      "offset": "UTC−3",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Moncton",
+      "city": "Moncton",
+      "country": "Canada",
+      "offset": "UTC−3",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Thule",
+      "city": "Thule",
+      "country": "Greenland",
+      "offset": "UTC−3",
+      "when": "around July"
+    },
+    {
+      "zone": "Atlantic/Bermuda",
+      "city": "Hamilton",
+      "country": "Bermuda",
+      "offset": "UTC−3",
+      "when": "around July"
+    }
+  ]
+}

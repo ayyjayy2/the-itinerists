@@ -1,0 +1,33 @@
+{
+  "code": "CLST",
+  "zones": [
+    {
+      "zone": "America/Coyhaique",
+      "city": "Coyhaique",
+      "country": "Chile",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Punta_Arenas",
+      "city": "Punta Arenas",
+      "country": "Chile",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Santiago",
+      "city": "Santiago",
+      "country": "Chile",
+      "offset": "UTC−3",
+      "when": "around January"
+    },
+    {
+      "zone": "Antarctica/Palmer",
+      "city": "Palmer",
+      "country": "Antarctica",
+      "offset": "UTC−3",
+      "when": "all year"
+    }
+  ]
+}

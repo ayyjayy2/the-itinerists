@@ -1,0 +1,12 @@
+{
+  "code": "NDT",
+  "zones": [
+    {
+      "zone": "America/St_Johns",
+      "city": "St. John's",
+      "country": "Canada",
+      "offset": "UTC−2:30",
+      "when": "around July"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "code": "NPT",
+  "zones": [
+    {
+      "zone": "Asia/Kathmandu",
+      "city": "Kathmandu",
+      "country": "Nepal",
+      "offset": "UTC+5:45",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Katmandu",
+      "city": "Katmandu",
+      "country": "Nepal",
+      "offset": "UTC+5:45",
+      "when": "all year"
+    }
+  ]
+}

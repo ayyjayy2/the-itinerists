@@ -1,0 +1,19 @@
+{
+  "code": "BTT",
+  "zones": [
+    {
+      "zone": "Asia/Thimbu",
+      "city": "Thimbu",
+      "country": "Bhutan",
+      "offset": "UTC+6",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Thimphu",
+      "city": "Thimphu",
+      "country": "Bhutan",
+      "offset": "UTC+6",
+      "when": "all year"
+    }
+  ]
+}

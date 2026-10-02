@@ -1,0 +1,61 @@
+{
+  "code": "BST",
+  "zones": [
+    {
+      "zone": "Asia/Dacca",
+      "city": "Dacca",
+      "country": "Bangladesh",
+      "offset": "UTC+6",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Dhaka",
+      "city": "Dhaka",
+      "country": "Bangladesh",
+      "offset": "UTC+6",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Belfast",
+      "city": "Belfast",
+      "country": "UK",
+      "offset": "UTC+1",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Guernsey",
+      "city": "Saint Peter Port",
+      "country": "Guernsey",
+      "offset": "UTC+1",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Isle_of_Man",
+      "city": "Isle of Man",
+      "country": "UK",
+      "offset": "UTC+1",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Jersey",
+      "city": "Saint Helier",
+      "country": "Jersey",
+      "offset": "UTC+1",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/London",
+      "city": "London",
+      "country": "UK",
+      "offset": "UTC+1",
+      "when": "around July"
+    },
+    {
+      "zone": "Pacific/Bougainville",
+      "city": "Arawa",
+      "country": "Papua New Guinea",
+      "offset": "UTC+11",
+      "when": "all year"
+    }
+  ]
+}

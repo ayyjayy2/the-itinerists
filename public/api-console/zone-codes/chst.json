@@ -1,0 +1,19 @@
+{
+  "code": "ChST",
+  "zones": [
+    {
+      "zone": "Pacific/Guam",
+      "city": "Dededo Village",
+      "country": "Guam",
+      "offset": "UTC+10",
+      "when": "all year"
+    },
+    {
+      "zone": "Pacific/Saipan",
+      "city": "Saipan",
+      "country": "Northern Mariana Islands",
+      "offset": "UTC+10",
+      "when": "all year"
+    }
+  ]
+}

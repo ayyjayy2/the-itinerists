@@ -1,0 +1,12 @@
+{
+  "code": "AFT",
+  "zones": [
+    {
+      "zone": "Asia/Kabul",
+      "city": "Kabul",
+      "country": "Afghanistan",
+      "offset": "UTC+4:30",
+      "when": "all year"
+    }
+  ]
+}

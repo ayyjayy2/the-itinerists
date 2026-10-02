@@ -1,0 +1,19 @@
+{
+  "code": "WIB",
+  "zones": [
+    {
+      "zone": "Asia/Jakarta",
+      "city": "Jakarta",
+      "country": "Indonesia",
+      "offset": "UTC+7",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Pontianak",
+      "city": "Pontianak",
+      "country": "Indonesia",
+      "offset": "UTC+7",
+      "when": "all year"
+    }
+  ]
+}

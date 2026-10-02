@@ -1,0 +1,12 @@
+{
+  "code": "PWT",
+  "zones": [
+    {
+      "zone": "Pacific/Palau",
+      "city": "Ngerulmud",
+      "country": "Palau",
+      "offset": "UTC+9",
+      "when": "all year"
+    }
+  ]
+}

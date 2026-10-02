@@ -1,0 +1,12 @@
+{
+  "code": "CVT",
+  "zones": [
+    {
+      "zone": "Atlantic/Cape_Verde",
+      "city": "Praia",
+      "country": "Cabo Verde",
+      "offset": "UTC−1",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "code": "SAMT",
+  "zones": [
+    {
+      "zone": "Europe/Astrakhan",
+      "city": "Astrakhan",
+      "country": "Russia",
+      "offset": "UTC+4",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Samara",
+      "city": "Samara",
+      "country": "Russia",
+      "offset": "UTC+4",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Saratov",
+      "city": "Saratov",
+      "country": "Russia",
+      "offset": "UTC+4",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Ulyanovsk",
+      "city": "Ulyanovsk",
+      "country": "Russia",
+      "offset": "UTC+4",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "code": "EDT",
+  "zones": [
+    {
+      "zone": "America/Detroit",
+      "city": "Detroit",
+      "region": "Michigan",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Fort_Wayne",
+      "city": "Fort Wayne",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Grand_Turk",
+      "city": "Providenciales",
+      "country": "Turks and Caicos Islands",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Indiana/Indianapolis",
+      "city": "Indianapolis",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Indiana/Marengo",
+      "city": "Marengo",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Indiana/Petersburg",
+      "city": "Petersburg",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Indiana/Vevay",
+      "city": "Vevay",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Indiana/Vincennes",
+      "city": "Vincennes",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Indiana/Winamac",
+      "city": "Winamac",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Indianapolis",
+      "city": "Indianapolis",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Iqaluit",
+      "city": "Iqaluit",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Kentucky/Louisville",
+      "city": "Louisville",
+      "region": "Kentucky",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Kentucky/Monticello",
+      "city": "Monticello",
+      "region": "Kentucky",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Louisville",
+      "city": "Louisville",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Montreal",
+      "city": "Montreal",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Nassau",
+      "city": "Nassau",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/New_York",
+      "city": "New York City",
+      "region": "New York",
+      "country": "USA",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Nipigon",
+      "city": "Nipigon",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Pangnirtung",
+      "city": "Pangnirtung",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Port-au-Prince",
+      "city": "Port-au-Prince",
+      "country": "Haiti",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Thunder_Bay",
+      "city": "Thunder Bay",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Toronto",
+      "city": "Toronto",
+      "country": "Canada",
+      "offset": "UTC−4",
+      "when": "around July"
+    }
+  ]
+}

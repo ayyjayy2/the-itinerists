@@ -7,3 +7,8 @@ export function cityQuery(text) {
   const last = String(text ?? '').trim().split('/').pop();
   return last.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim();
 }
+
+/** The lookup file a time zone code lives in (zone-codes/<name>.json): "EST" → "est", "est.json" → "est". */
+export function zoneCodeFile(code) {
+  return String(code ?? '').trim().toLowerCase().replace(/\.json$/, '').replace(/[^a-z0-9+]/g, '-');
+}

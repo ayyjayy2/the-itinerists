@@ -1,0 +1,166 @@
+{
+  "code": "EET",
+  "zones": [
+    {
+      "zone": "Africa/Cairo",
+      "city": "Cairo",
+      "country": "Egypt",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Africa/Tripoli",
+      "city": "Tripoli",
+      "country": "Libya",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Beirut",
+      "city": "Beirut",
+      "country": "Lebanon",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Asia/Famagusta",
+      "city": "Famagusta",
+      "country": "Cyprus",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Asia/Gaza",
+      "city": "Gaza",
+      "country": "Palestinian Territory",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Asia/Hebron",
+      "city": "East Jerusalem",
+      "country": "Palestinian Territory",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Asia/Nicosia",
+      "city": "Nicosia",
+      "country": "Cyprus",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Athens",
+      "city": "Athens",
+      "country": "Greece",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Bucharest",
+      "city": "Bucharest",
+      "country": "Romania",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Chisinau",
+      "city": "Chisinau",
+      "country": "Moldova",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Helsinki",
+      "city": "Helsinki",
+      "country": "Finland",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Kaliningrad",
+      "city": "Kaliningrad",
+      "country": "Russia",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Kiev",
+      "city": "Kiev",
+      "country": "Ukraine",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Kyiv",
+      "city": "Kyiv",
+      "country": "Ukraine",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Mariehamn",
+      "city": "Mariehamn",
+      "country": "Aland Islands",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Nicosia",
+      "city": "Nicosia",
+      "country": "Cyprus",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Riga",
+      "city": "Riga",
+      "country": "Latvia",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Sofia",
+      "city": "Sofia",
+      "country": "Bulgaria",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Tallinn",
+      "city": "Tallinn",
+      "country": "Estonia",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Tiraspol",
+      "city": "Tiraspol",
+      "country": "Moldova",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Uzhgorod",
+      "city": "Uzhgorod",
+      "country": "Ukraine",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Vilnius",
+      "city": "Vilnius",
+      "country": "Lithuania",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Zaporozhye",
+      "city": "Zaporozhye",
+      "country": "Ukraine",
+      "offset": "UTC+2",
+      "when": "around January"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "PMST",
+  "zones": [
+    {
+      "zone": "America/Miquelon",
+      "city": "Saint-Pierre",
+      "country": "Saint Pierre and Miquelon",
+      "offset": "UTC−3",
+      "when": "around January"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "NRT",
+  "zones": [
+    {
+      "zone": "Pacific/Nauru",
+      "city": "Yaren",
+      "country": "Nauru",
+      "offset": "UTC+12",
+      "when": "all year"
+    }
+  ]
+}

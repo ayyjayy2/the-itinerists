@@ -1,0 +1,264 @@
+{
+  "code": "CET",
+  "zones": [
+    {
+      "zone": "Africa/Algiers",
+      "city": "Algiers",
+      "country": "Algeria",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Ceuta",
+      "city": "Ceuta",
+      "country": "Spain",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Africa/Tunis",
+      "city": "Tunis",
+      "country": "Tunisia",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Antarctica/Troll",
+      "city": "Troll",
+      "country": "Antarctica",
+      "offset": "UTC+0",
+      "when": "around January"
+    },
+    {
+      "zone": "Arctic/Longyearbyen",
+      "city": "Longyearbyen",
+      "country": "Svalbard and Jan Mayen",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Atlantic/Jan_Mayen",
+      "city": "Jan Mayen",
+      "country": "Germany",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Amsterdam",
+      "city": "Rotterdam",
+      "country": "The Netherlands",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Andorra",
+      "city": "Andorra la Vella",
+      "country": "Andorra",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Belgrade",
+      "city": "Belgrade",
+      "country": "Serbia",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Berlin",
+      "city": "Berlin",
+      "country": "Germany",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Bratislava",
+      "city": "Bratislava",
+      "country": "Czechia",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Brussels",
+      "city": "Brussels",
+      "country": "Belgium",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Budapest",
+      "city": "Budapest",
+      "country": "Hungary",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Busingen",
+      "city": "Busingen",
+      "country": "Switzerland",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Copenhagen",
+      "city": "Copenhagen",
+      "country": "Denmark",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Gibraltar",
+      "city": "Gibraltar",
+      "country": "Gibraltar",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Ljubljana",
+      "city": "Ljubljana",
+      "country": "Slovenia",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Luxembourg",
+      "city": "Luxembourg",
+      "country": "Luxembourg",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Madrid",
+      "city": "Madrid",
+      "country": "Spain",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Malta",
+      "city": "San Pawl il-Baħar",
+      "country": "Malta",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Monaco",
+      "city": "Monaco",
+      "country": "France",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Oslo",
+      "city": "Oslo",
+      "country": "Norway",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Paris",
+      "city": "Paris",
+      "country": "France",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Podgorica",
+      "city": "Podgorica",
+      "country": "Montenegro",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Prague",
+      "city": "Prague",
+      "country": "Czechia",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Rome",
+      "city": "Rome",
+      "country": "Italy",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/San_Marino",
+      "city": "San Marino",
+      "country": "San Marino",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Sarajevo",
+      "city": "Sarajevo",
+      "country": "Bosnia and Herzegovina",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Skopje",
+      "city": "Skopje",
+      "country": "North Macedonia",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Stockholm",
+      "city": "Stockholm",
+      "country": "Sweden",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Tirane",
+      "city": "Tirana",
+      "country": "Albania",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Vaduz",
+      "city": "Vaduz",
+      "country": "Switzerland",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Vatican",
+      "city": "Vatican City",
+      "country": "Vatican",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Vienna",
+      "city": "Vienna",
+      "country": "Austria",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Warsaw",
+      "city": "Warsaw",
+      "country": "Poland",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Zagreb",
+      "city": "Zagreb",
+      "country": "Croatia",
+      "offset": "UTC+1",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Zurich",
+      "city": "Zürich",
+      "country": "Switzerland",
+      "offset": "UTC+1",
+      "when": "around January"
+    }
+  ]
+}
