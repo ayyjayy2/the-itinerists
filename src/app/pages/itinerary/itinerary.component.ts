@@ -1,4 +1,4 @@
-import { CalendarExportService } from '../../services/calendar-export.service';
+import { CalendarExportService, CalendarExportResult } from '../../services/calendar-export.service';
 import { Component, OnInit, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -229,13 +229,7 @@ export class ItineraryComponent implements OnInit {
     this.calExporting.set(true);
     this.calExportNote.set('');
     try {
-      const r = await this.calendarExport.export();
-      this.calExportNote.set({
-        downloaded: 'Downloaded. Open the file to add your trip to Calendar.',
-        opened: 'Tap “Add All” to put your trip in Calendar.',
-        shared: 'Choose where to save your trip’s calendar file.',
-        empty: 'Nothing on your trip to add yet.',
-      }[r]);
+      this.calExportNote.set(calendarNote(await this.calendarExport.export()));
     } catch {
       this.calExportNote.set('Couldn’t make the calendar file. Try again.');
     } finally {
@@ -473,3 +467,19 @@ export class ItineraryComponent implements OnInit {
     return map[cat] ?? '#E2EDE8';
   }
 }
+
+/** One line under the button saying what happened. */
+export function calendarNote(r: CalendarExportResult): string {
+  switch (r.kind) {
+    case 'downloaded': return 'Downloaded. Open the file to add your trip to Calendar.';
+    case 'opened':     return 'Tap “Add All” to put your trip in Calendar.';
+    case 'shared':     return 'Choose where to save your trip’s calendar file.';
+    case 'empty':      return 'Nothing on your trip to add yet.';
+    case 'no-access':  return 'Calendar access is off, so here is the file instead. Turn it on in Settings › Privacy › Calendars.';
+    case 'synced': {
+      const parts = [r.added && `added ${r.added}`, r.updated && `updated ${r.updated}`, r.removed && `removed ${r.removed}`].filter(Boolean);
+      return parts.length ? `In Calendar: ${parts.join(', ')}.` : 'Calendar is already up to date.';
+    }
+  }
+}
+
