@@ -283,6 +283,20 @@ await t('anon reads prefs', 'deny', () => getDoc(doc(anon, '_pulse', 'prefs')));
 await t('admin (not the owner) writes prefs', 'deny', () => setDoc(doc(admin, '_pulse', 'prefs'), { hiddenTrips: [] }));
 await t('member reads prefs', 'deny', () => getDoc(doc(bob, '_pulse', 'prefs')));
 
+console.log('\nAPI console (_apiConsoleAccess, _apiConsole)');
+const approve = (uid) => testEnv.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), '_apiConsoleAccess', uid), { grantedAt: 1 }));
+const spec = () => testEnv.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), '_apiConsole', 'spec'), { openapi: '{}' }));
+await t('approved account reads its own access doc', 'allow', async () => { await approve('bob'); return getDoc(doc(bob, '_apiConsoleAccess', 'bob')); });
+await t('signed-in account checks its own (missing) access doc', 'allow', () => getDoc(doc(carol, '_apiConsoleAccess', 'carol')));
+await t("reads someone else's access doc", 'deny', async () => { await approve('bob'); return getDoc(doc(carol, '_apiConsoleAccess', 'bob')); });
+await t('lists who is approved', 'deny', () => getDocs(collection(alice, '_apiConsoleAccess')));
+await t('approves themselves', 'deny', () => setDoc(doc(carol, '_apiConsoleAccess', 'carol'), { grantedAt: 1 }));
+await t('admin approves someone', 'deny', () => setDoc(doc(admin, '_apiConsoleAccess', 'carol'), { grantedAt: 1 }));
+await t('approved account reads the spec', 'allow', async () => { await approve('bob'); await spec(); return getDoc(doc(bob, '_apiConsole', 'spec')); });
+await t('unapproved account reads the spec', 'deny', async () => { await spec(); return getDoc(doc(carol, '_apiConsole', 'spec')); });
+await t('logged out reads the spec', 'deny', async () => { await spec(); return getDoc(doc(anon, '_apiConsole', 'spec')); });
+await t('approved account writes the spec', 'deny', async () => { await approve('bob'); return setDoc(doc(bob, '_apiConsole', 'spec'), { openapi: 'x' }); });
+
 await testEnv.cleanup();
 console.log(`\n${fail === 0 ? '✅' : '❌'} rules tests: ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

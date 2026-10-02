@@ -102,6 +102,7 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 | `PATH="/opt/homebrew/opt/openjdk/bin:$PATH" npm run test:rules` | Security-rules tests on the emulators (needs a JDK; the PERMISSION_DENIED lines are expected) |
 | `npm run test:e2e` | Playwright end-to-end tests (builds and serves the demo) |
 | `npm run deploy:staging` | Build and deploy staging by hand (CI does it after every merge) |
+| `node scripts/api-console.js grant <username>` | Approve a staging account for the API console (`/api-console/index.html` on staging); also `revoke`, `list`, `publish <openapi.json>`. Only with the owner's say-so |
 | `firebase deploy --only hosting:the-itinerists --project trip-planner-ayyjayy2` | Deploy production hosting (after `npm run build`) |
 | `firebase deploy --only firestore:rules --project trip-planner-ayyjayy2` | Deploy production rules |
 | `npm run ios:sync` | Build and copy the web app into the iPhone project, stamping the version |

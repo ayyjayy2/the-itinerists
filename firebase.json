@@ -15,7 +15,8 @@
       "ignore": [
         "firebase.json",
         "**/.*",
-        "**/node_modules/**"
+        "**/node_modules/**",
+        "api-console/**"
       ],
       "rewrites": [
         {
@@ -83,7 +84,8 @@
       "ignore": [
         "firebase.json",
         "**/.*",
-        "**/node_modules/**"
+        "**/node_modules/**",
+        "api-console/**"
       ],
       "rewrites": [
         {

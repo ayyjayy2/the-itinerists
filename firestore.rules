@@ -108,6 +108,20 @@ service cloud.firestore {
       allow read, write: if isAppOwner();
     }
 
+    // ── API console (staging only, /api-console/): who may use it, and its spec ─
+    // An account is approved when _apiConsoleAccess/{uid} exists. Only the owner
+    // grants it, with scripts/api-console.js (Admin SDK); the app can never write
+    // either collection. The spec is readable by approved accounts alone.
+    match /_apiConsoleAccess/{userId} {
+      allow get: if isSignedIn() && userId == uid();
+      allow list, write: if false;
+    }
+    match /_apiConsole/{docId} {
+      allow read: if isSignedIn()
+        && exists(/databases/$(database)/documents/_apiConsoleAccess/$(uid()));
+      allow write: if false;
+    }
+
     // ── User profiles ──────────────────────────────────────────────────────
     // Profile fields only (name, username, avatar, preferences) — never an
     // email address; those live in users/{uid}/private. Only the person and
