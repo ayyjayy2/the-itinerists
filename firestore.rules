@@ -115,6 +115,17 @@ service cloud.firestore {
     // What members see of each other (name, avatar) is copied onto the trip's
     // own member records, so no one ever needs another person's profile.
     // You may write only your own doc; admins may also edit (disable).
+    // A real, deliverable address: email-shaped and not the old placeholder
+    // domain (username@the-itinerists.local), which can't receive mail.
+    function isRealEmail(e) {
+      return e is string
+        && e.matches('^[^@\\s]+@[^@\\s]+[.][^@\\s]+$')
+        && !e.lower().matches('.*@the-itinerists[.]local$');
+    }
+    // Every new account signs up with a real email: the signed-in account itself carries one.
+    function signedUpWithEmail() {
+      return isRealEmail(request.auth.token.get('email', ''));
+    }
     function hasNoEmailFields(data) {
       return !('authEmail' in data) && !('pendingEmail' in data);
     }
@@ -123,6 +134,7 @@ service cloud.firestore {
       allow list: if isAdmin();
       // You may create only your own doc, and NOT pre-set privileged fields.
       allow create: if isSignedIn() && userId == uid()
+                 && signedUpWithEmail()
                  && hasNoEmailFields(request.resource.data)
                  && request.resource.data.get('isAdmin', false) == false
                  && request.resource.data.get('isDisabled', false) == false;
@@ -152,7 +164,12 @@ service cloud.firestore {
     match /usernames/{username} {
       allow get:    if true;
       allow list:   if false;
-      allow create: if isSignedIn() && request.resource.data.uid == uid();
+      // A brand-new account (no profile yet) claims its first username with its
+      // own real sign-in email. Existing accounts may claim a new one (rename).
+      allow create: if isSignedIn() && request.resource.data.uid == uid()
+                 && (exists(/databases/$(database)/documents/users/$(uid()))
+                     || (signedUpWithEmail()
+                         && request.resource.data.get('authEmail', '').lower() == request.auth.token.email.lower()));
       allow update: if isAdmin()
                  || (isSignedIn() && resource.data.uid == uid() && request.resource.data.uid == uid());
       allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == uid());
