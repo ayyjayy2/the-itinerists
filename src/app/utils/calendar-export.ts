@@ -10,7 +10,7 @@
 import { AccommodationDoc, FlightDoc, ItineraryItemDoc, RentalCar, TripDoc, TripDestination } from '../models/trip.models';
 import { parseTimeString, looksLikeFlight } from './first-up';
 import { wallToUtcMs } from './zones';
-import { tripDestinations } from './trip-destinations';
+import { tripDestinations, isOutsideTripDates } from './trip-destinations';
 
 export type CalTime = { allDay: true; date: string } | { allDay: false; ms: number };
 export interface CalEvent {
@@ -71,9 +71,12 @@ export function tripCalendarEvents(x: ExportInput): CalEvent[] {
   const myFlights = x.flights.filter(f => f.uid === x.me.uid);
   const flightDays = new Set(myFlights.flatMap(f => [f.departureDate, f.arrivalDate]).filter(Boolean));
 
-  // Itinerary: mine, minus hand-typed copies of a real flight on that day.
+  // Itinerary: mine, within the trip's dates, minus hand-typed copies of a real
+  // flight on that day. (Items left outside the dates when a trip moves are
+  // flagged on the Itinerary page and never sent to the calendar.)
   for (const it of x.items) {
     if (!isForMe(it.forWho, x.me.name)) continue;
+    if (isOutsideTripDates(it.date, x.trip)) continue;
     if (flightDays.has(it.date) && looksLikeFlight({ activity: it.activity, category: it.category } as any)) continue;
     const zone = zoneOnDate(x.trip, it.date);
     const start = moment(it.date, it.time, zone);

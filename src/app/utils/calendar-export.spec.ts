@@ -72,3 +72,18 @@ describe('calendar export', () => {
     expect(icsFileName('🎉')).toBe('trip.ics');
   });
 });
+
+describe('calendar export · trip dates', () => {
+  it('leaves out itinerary items dated outside the trip, but keeps flights', () => {
+    const t: any = { id: 't', name: 'CA', startDate: '2026-10-01', endDate: '2026-10-15', timeZone: 'America/Panama' };
+    const ev = tripCalendarEvents({
+      trip: t, me: { uid: 'me', name: 'Alayna' }, stays: [], transport: [], airportZone: () => 'America/Chicago',
+      items: [
+        { id: 'old', date: '2026-07-27', time: '8:04 AM', endTime: '', activity: 'Breakfast', location: 'Waldorf', category: 'Food', notes: '', forWho: 'All' },
+        { id: 'hike', date: '2026-10-04', time: '7:00 AM', endTime: '', activity: 'Sunrise hike', location: '', category: 'Activity', notes: '', forWho: 'All' },
+      ] as any,
+      flights: [{ id: 'f', uid: 'me', from: 'ORD', to: 'PTY', departureDate: '2026-09-30', departureTime: '9:00 PM', arrivalDate: '2026-10-01', arrivalTime: '2:00 AM', flightNumber: '', airline: '', notes: '' } as any],
+    });
+    expect(ev.map(e => e.title)).toEqual(['✈ ORD → PTY', 'Sunrise hike']);   // the day-before flight stays in
+  });
+});

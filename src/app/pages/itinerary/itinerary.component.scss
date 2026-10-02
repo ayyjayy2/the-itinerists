@@ -557,3 +557,12 @@
 .cal-export { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 0.75rem; margin: -0.25rem 0 0.75rem; }
 .cal-export .btn { display: inline-flex; align-items: center; gap: 0.35rem; }
 .cal-export-note { font-size: 0.82rem; color: var(--text-muted); }
+
+// ── Items outside the trip's dates ──
+.outside-banner { background: var(--accent-tint); border-color: var(--accent); }
+.outside-tag {
+  display: inline-block; margin-top: 0.2rem;
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--accent-dark); background: var(--accent-tint);
+  border-radius: 999px; padding: 0.1rem 0.5rem;
+}

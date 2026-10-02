@@ -134,3 +134,12 @@ export function tripDestinations(trip: TripDoc): TripDestination[] {
   if (trip.timeZone)           leg.timeZone           = trip.timeZone;
   return [leg];
 }
+
+/**
+ * True when a date falls outside the trip's dates, e.g. an item left behind
+ * when the trip's dates moved. A trip without both dates has no "outside".
+ */
+export function isOutsideTripDates(dateISO: string, trip: { startDate?: string; endDate?: string } | null | undefined): boolean {
+  if (!trip?.startDate || !trip?.endDate || !dateISO) return false;
+  return dateISO < trip.startDate || dateISO > trip.endDate;
+}

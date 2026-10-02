@@ -29,6 +29,15 @@
     <button [class.active]="showAll()"  (click)="showAll.set(true)">All</button>
   </div>
 
+  @if (outsideItems().length) {
+    <!-- Items left outside the trip's dates (e.g. after the dates moved): easy to find, never sent to Calendar -->
+    <div class="dates-banner outside-banner" role="status">
+      <span><app-icon name="itinerary" [size]="16" />
+        {{ outsideItems().length }} {{ outsideItems().length === 1 ? 'item is' : 'items are' }} dated outside this trip ({{ tripRangeLabel() }}), so {{ outsideItems().length === 1 ? 'it isn’t' : 'they aren’t' }} added to your calendar.</span>
+      <button class="btn btn-sm btn-ghost" type="button" (click)="reviewOutside()">Review</button>
+    </div>
+  }
+
   @if (hasActiveTrip() && !hasTripDates()) {
     <div class="dates-banner">
       <span><app-icon name="itinerary" [size]="16" /> Trip dates aren't set yet — showing the week ahead.</span>
@@ -125,6 +134,7 @@
 
                   <div class="item-body">
                     <div class="item-title">{{ item.activity }}</div>
+                    @if (isOutside(item)) { <span class="outside-tag">Outside trip dates</span> }
                     @if (item.location) {
                       <div class="item-location"><app-icon name="pin" [size]="14" /> {{ item.location }}</div>
                     }
