@@ -1,4 +1,4 @@
-import { maskEmail, isValidEmail, isPlaceholderEmail, needsRecoveryEmail, authEmailPatch, recoveryEmailErrorMessage } from './email';
+import { needsEmailConfirmation, maskEmail, isValidEmail, isPlaceholderEmail, needsRecoveryEmail, authEmailPatch, recoveryEmailErrorMessage } from './email';
 
 describe('maskEmail', () => {
   it('keeps the first letter and the domain', () => {
@@ -98,3 +98,13 @@ describe('recoveryEmailErrorMessage', () => {
     expect(msg()).toBe('Could not send the verification link. Please try again.');
   });
 });
+
+describe('needsEmailConfirmation', () => {
+  it('asks only for a real address nobody has confirmed', () => {
+    expect(needsEmailConfirmation('makaela@gmail.com', false)).toBeTrue();
+    expect(needsEmailConfirmation('makaela@gmail.com', true)).toBeFalse();
+    expect(needsEmailConfirmation('nick@the-itinerists.local', false)).toBeFalse();   // placeholder: can't receive mail
+    expect(needsEmailConfirmation(null, false)).toBeFalse();
+  });
+});
+

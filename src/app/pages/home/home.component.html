@@ -15,6 +15,20 @@
     </div>
   }
 
+  <!-- Gentle email confirmation: never blocks anything, shows until the link is tapped -->
+  @if (showConfirmNudge()) {
+    <div class="recovery-nudge confirm-nudge" role="status">
+      <span class="rn-ic"><app-icon name="profile" [size]="16" /></span>
+      @if (confirmJustSent()) {
+        <span class="rn-text"><strong>Check your inbox:</strong> we sent a confirmation link to {{ confirmEmailMasked() }} (and check spam). Tap it and you're set.</span>
+      } @else {
+        <span class="rn-text"><strong>Confirm your email</strong> ({{ confirmEmailMasked() }}) so password resets always reach you.</span>
+        <button class="btn btn-sm btn-ghost" type="button" (click)="resendConfirm()" [disabled]="confirmSending()">{{ confirmSending() ? 'Sending…' : 'Send link' }}</button>
+      }
+      <button class="rn-close" type="button" (click)="dismissConfirmNudge()" aria-label="Not now">✕</button>
+    </div>
+  }
+
   @if (loading()) {
     <app-loading [immediate]="true" />
   } @else if (hasActiveTrip()) {

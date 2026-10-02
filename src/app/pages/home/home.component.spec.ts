@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Component, signal, WritableSignal } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { EmailConfirmService } from '../../services/email-confirm.service';
 import { HomeComponent } from './home.component';
 import { DayMapCardComponent } from '../../shared/day-map-card/day-map-card.component';
 import { UserService } from '../../services/user.service';
@@ -30,11 +31,14 @@ describe('HomeComponent (hidden pages)', () => {
   let hidden: WritableSignal<string[]>;
   let firestoreUser: WritableSignal<any>;
   let activeMembers: ReturnType<typeof signal<any[]>>;
+  let confirmStub: { waiting: ReturnType<typeof signal<string>>; sentAt: ReturnType<typeof signal<number>>; send: jasmine.Spy };
 
   beforeEach(async () => {
     hidden = signal<string[]>([]);
     // homeLayout is honoured only for picker accounts; username 'alayna' is one.
     activeMembers = signal<any[]>([]);
+    confirmStub = { waiting: signal(''), sentAt: signal(0), send: jasmine.createSpy('send').and.resolveTo(true) };
+    try { sessionStorage.removeItem('confirmNudgeDismissed'); } catch { /* none */ }
     firestoreUser = signal<any>({ uid: 'me', username: 'alayna', homeLayout: 'C', homePins: ['/finance', '/packing'] });
 
     await TestBed.configureTestingModule({
@@ -61,6 +65,7 @@ describe('HomeComponent (hidden pages)', () => {
         { provide: RecsService,      useValue: { recs: signal([]) } },
         { provide: ExpensesService,  useValue: { expenses: signal([]) } },
         { provide: DataService,      useValue: { data: signal(null) } },
+        { provide: EmailConfirmService, useValue: confirmStub },
       ],
     })
     .overrideComponent(HomeComponent, {
@@ -147,6 +152,25 @@ describe('HomeComponent (hidden pages)', () => {
     ]);
     const el = render().nativeElement as HTMLElement;
     expect(el.querySelector('.hero-people-label')?.textContent?.trim()).toBe('you + 2 friends');
+  });
+
+  it('reminds a person to confirm their email, offers the link, and never blocks the page', () => {
+    // A new account: a real email on file (so no recovery prompt), not yet confirmed.
+    firestoreUser.update((u: any) => ({ ...u, authEmail: 'makaela@gmail.com' }));
+    confirmStub.waiting.set('makaela@gmail.com');
+    const fixture = render();
+    const el = fixture.nativeElement as HTMLElement;
+    const nudge = el.querySelector('.confirm-nudge');
+    expect(nudge?.textContent).toContain('Confirm your email');
+    expect(nudge?.textContent).toContain('m•••@gmail.com');
+    expect(el.querySelector('.hero-people-label, .welcome-card, [data-widget]')).not.toBeNull();   // the page is all there
+    (nudge!.querySelector('button.btn') as HTMLButtonElement).click();
+    expect(confirmStub.send).toHaveBeenCalled();
+  });
+
+  it('shows no confirmation reminder once the email is confirmed', () => {
+    const el = render().nativeElement as HTMLElement;
+    expect(el.querySelector('.confirm-nudge')).toBeNull();
   });
 });
 

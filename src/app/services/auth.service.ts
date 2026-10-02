@@ -1,4 +1,5 @@
 import { Injectable, inject, Injector } from '@angular/core';
+import { EmailConfirmService } from './email-confirm.service';
 import {
   Auth,
   signInWithEmailAndPassword,
@@ -167,7 +168,10 @@ export class AuthService {
    *  is never reported to the screen (see EmailInUseError). */
   private async createAuthAccount(email: string, password: string) {
     try {
-      return await createUserWithEmailAndPassword(this.auth, email, password);
+      const cred = await createUserWithEmailAndPassword(this.auth, email, password);
+      // Gentle confirmation: the link goes out, but sign-up never waits on it or fails over it.
+      void this.injector.get(EmailConfirmService).send();
+      return cred;
     } catch (err) {
       if ((err as { code?: string })?.code === 'auth/email-already-in-use') {
         await sendPasswordResetEmail(this.auth, email).catch(() => {/* best effort */});
