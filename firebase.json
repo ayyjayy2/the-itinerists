@@ -145,7 +145,11 @@
       ],
       "rewrites": [
         {
-          "source": "**",
+          "source": "/!(api-console)",
+          "destination": "/index.html"
+        },
+        {
+          "source": "/!(api-console)/**",
           "destination": "/index.html"
         }
       ],
