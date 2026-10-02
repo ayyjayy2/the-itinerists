@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  dayKey, hourIn, startOfDay, onlineNow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, peopleStats, tripStats,
+  dayKey, hourIn, startOfDay, onlineNow, windowMoved, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, peopleStats, tripStats,
 } from '../public/pulse/stats.mjs';
 
 const H = 3_600_000;
@@ -264,4 +264,16 @@ test('activityTimeline merges visits and writes per day with the hover details',
   // a day known only from the write log still counts its writer as active
   assert.deepEqual(t[0].writes, { total: 2, byKind: { rec: 2 }, byPerson: { c: { rec: 2 } }, uids: ['c'] });
   assert.deepEqual(t[0].pages, []);
+});
+
+test('the window re-queries when its start crosses an hour, not every minute', () => {
+  const t = Date.UTC(2026, 9, 2, 14, 10);
+  assert.equal(windowMoved(t, t + 30 * 60_000), false);   // 14:10 → 14:40, same hour
+  assert.equal(windowMoved(t, t + 55 * 60_000), true);    // 14:10 → 15:05, next hour
+  assert.equal(windowMoved(t, t + 24 * H), true);         // a new day for Today
+});
+
+test('rows outside the sliding window are left out', () => {
+  const rows = [{ at: 100 }, { at: 200 }, { at: 300 }];
+  assert.deepEqual(inWindow(rows, 200).map(r => r.at), [200, 300]);
 });
