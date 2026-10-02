@@ -1,3 +1,4 @@
+import { ThenEndDateDirective } from '../../shared/then-end-date.directive';
 import { Component, inject, signal } from '@angular/core';
 import { dateRangeProblem } from '../../utils/date-range';
 import { CommonModule } from '@angular/common';
@@ -22,7 +23,7 @@ interface DestForm {
 
 @Component({
   selector: 'app-create-trip',
-  imports: [IconComponent, CurrencySelectComponent, CommonModule, FormsModule, EmptyDateHintDirective],
+  imports: [IconComponent, CurrencySelectComponent, CommonModule, FormsModule, EmptyDateHintDirective, ThenEndDateDirective],
   templateUrl: './create-trip.component.html',
   styleUrl: './create-trip.component.scss',
 })

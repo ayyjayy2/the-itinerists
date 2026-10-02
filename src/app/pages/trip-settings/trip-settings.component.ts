@@ -1,3 +1,4 @@
+import { ThenEndDateDirective } from '../../shared/then-end-date.directive';
 import { Component, inject, signal, computed, effect } from '@angular/core';
 import { dateRangeProblem } from '../../utils/date-range';
 import { CommonModule } from '@angular/common';
@@ -31,7 +32,7 @@ interface DestRow {
 
 @Component({
   selector: 'app-trip-settings',
-  imports: [IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule, AvatarGlyphComponent, EmptyDateHintDirective, InvitePanelComponent],
+  imports: [IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule, AvatarGlyphComponent, EmptyDateHintDirective, InvitePanelComponent, ThenEndDateDirective],
   templateUrl: './trip-settings.component.html',
   styleUrl: './trip-settings.component.scss',
 })
