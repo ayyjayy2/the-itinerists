@@ -46,6 +46,7 @@
     "@capacitor/share": "^8.0.3",
     "@capacitor/splash-screen": "^8.0.2",
     "@capawesome-team/capacitor-file-opener": "^8.0.5",
+    "@ebarooni/capacitor-calendar": "^8.7.1",
     "@types/leaflet": "^1.9.21",
     "firebase": "^12.9.0",
     "leaflet": "^1.9.4",

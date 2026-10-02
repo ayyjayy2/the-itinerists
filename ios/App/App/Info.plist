@@ -66,5 +66,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Add to my calendar puts your trip in Calendar and keeps it up to date when you add it again, without making copies.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Add to my calendar puts your trip in Calendar and keeps it up to date when you add it again, without making copies.</string>
 </dict>
 </plist>
