@@ -1,6 +1,6 @@
 # Docs for people and agents
 
-Start here. These files describe what The Itinerists is, how it is built and how it should look, so
+Start here, after [AGENTS.md](../AGENTS.md) (the rules for every change). These files describe what The Itinerists is, how it is built and how it should look, so
 any agent (or person) can work on it consistently. Several are generated mirrors of private Claude
 artifacts; the artifact is the source of truth and the file says so in its first lines.
 

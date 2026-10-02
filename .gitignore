@@ -96,3 +96,6 @@ playwright/.cache/
 
 # Service account keys (production and staging)
 scripts/serviceAccountKey*.json
+
+# Git worktrees for parallel work (see AGENTS.md 2.2)
+.worktrees/
