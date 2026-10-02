@@ -1,0 +1,12 @@
+{
+  "code": "AZOT",
+  "zones": [
+    {
+      "zone": "Atlantic/Azores",
+      "city": "Ponta Delgada",
+      "country": "Portugal",
+      "offset": "UTC−1",
+      "when": "around January"
+    }
+  ]
+}

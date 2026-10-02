@@ -1,0 +1,12 @@
+{
+  "code": "MAWT",
+  "zones": [
+    {
+      "zone": "Antarctica/Mawson",
+      "city": "Mawson",
+      "country": "Antarctica",
+      "offset": "UTC+5",
+      "when": "all year"
+    }
+  ]
+}

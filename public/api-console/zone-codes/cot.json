@@ -1,0 +1,12 @@
+{
+  "code": "COT",
+  "zones": [
+    {
+      "zone": "America/Bogota",
+      "city": "Bogotá",
+      "country": "Colombia",
+      "offset": "UTC−5",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "code": "ACST",
+  "zones": [
+    {
+      "zone": "Australia/Adelaide",
+      "city": "Adelaide",
+      "country": "Australia",
+      "offset": "UTC+9:30",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Broken_Hill",
+      "city": "Broken Hill",
+      "country": "Australia",
+      "offset": "UTC+9:30",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Darwin",
+      "city": "Darwin",
+      "country": "Australia",
+      "offset": "UTC+9:30",
+      "when": "all year"
+    },
+    {
+      "zone": "Australia/North",
+      "city": "North",
+      "country": "Australia",
+      "offset": "UTC+9:30",
+      "when": "all year"
+    },
+    {
+      "zone": "Australia/South",
+      "city": "South",
+      "country": "Australia",
+      "offset": "UTC+9:30",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Yancowinna",
+      "city": "Yancowinna",
+      "country": "Australia",
+      "offset": "UTC+9:30",
+      "when": "around July"
+    }
+  ]
+}

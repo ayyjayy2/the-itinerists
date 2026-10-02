@@ -1,0 +1,82 @@
+{
+  "code": "CAT",
+  "zones": [
+    {
+      "zone": "Africa/Blantyre",
+      "city": "Blantyre",
+      "country": "Mozambique",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Bujumbura",
+      "city": "Bujumbura",
+      "country": "Mozambique",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Gaborone",
+      "city": "Gaborone",
+      "country": "Mozambique",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Harare",
+      "city": "Harare",
+      "country": "Mozambique",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Juba",
+      "city": "Juba",
+      "country": "South Sudan",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Khartoum",
+      "city": "Khartoum",
+      "country": "Sudan",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Kigali",
+      "city": "Kigali",
+      "country": "Mozambique",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Lubumbashi",
+      "city": "Lubumbashi",
+      "country": "Mozambique",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Lusaka",
+      "city": "Lusaka",
+      "country": "Mozambique",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Maputo",
+      "city": "Maputo",
+      "country": "Mozambique",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Windhoek",
+      "city": "Windhoek",
+      "country": "Namibia",
+      "offset": "UTC+2",
+      "when": "all year"
+    }
+  ]
+}

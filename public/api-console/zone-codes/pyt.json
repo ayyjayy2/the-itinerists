@@ -1,0 +1,12 @@
+{
+  "code": "PYT",
+  "zones": [
+    {
+      "zone": "America/Asuncion",
+      "city": "Asunción",
+      "country": "Paraguay",
+      "offset": "UTC−3",
+      "when": "all year"
+    }
+  ]
+}

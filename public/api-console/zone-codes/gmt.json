@@ -1,0 +1,166 @@
+{
+  "code": "GMT",
+  "zones": [
+    {
+      "zone": "Africa/Abidjan",
+      "city": "Abidjan",
+      "country": "Ivory Coast",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Accra",
+      "city": "Kumasi",
+      "country": "Ghana",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Bamako",
+      "city": "Bamako",
+      "country": "Mali",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Banjul",
+      "city": "Serekunda",
+      "country": "Gambia",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Bissau",
+      "city": "Bissau",
+      "country": "Guinea-Bissau",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Conakry",
+      "city": "Conakry",
+      "country": "Guinea",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Dakar",
+      "city": "Dakar",
+      "country": "Senegal",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Freetown",
+      "city": "Freetown",
+      "country": "Sierra Leone",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Lome",
+      "city": "Lomé",
+      "country": "Togo",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Monrovia",
+      "city": "Monrovia",
+      "country": "Liberia",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Nouakchott",
+      "city": "Nouakchott",
+      "country": "Mauritania",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Ouagadougou",
+      "city": "Ouagadougou",
+      "country": "Burkina Faso",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Sao_Tome",
+      "city": "São Tomé",
+      "country": "Sao Tome and Principe",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Timbuktu",
+      "city": "Timbuktu",
+      "country": "Ivory Coast",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Danmarkshavn",
+      "city": "Danmarkshavn",
+      "country": "Greenland",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Atlantic/Reykjavik",
+      "city": "Reykjavík",
+      "country": "Iceland",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Atlantic/St_Helena",
+      "city": "Jamestown",
+      "country": "Saint Helena",
+      "offset": "UTC+0",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Belfast",
+      "city": "Belfast",
+      "country": "UK",
+      "offset": "UTC+0",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Dublin",
+      "city": "Dublin",
+      "country": "Ireland",
+      "offset": "UTC+0",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Guernsey",
+      "city": "Saint Peter Port",
+      "country": "Guernsey",
+      "offset": "UTC+0",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Isle_of_Man",
+      "city": "Isle of Man",
+      "country": "UK",
+      "offset": "UTC+0",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Jersey",
+      "city": "Saint Helier",
+      "country": "Jersey",
+      "offset": "UTC+0",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/London",
+      "city": "London",
+      "country": "UK",
+      "offset": "UTC+0",
+      "when": "around January"
+    }
+  ]
+}

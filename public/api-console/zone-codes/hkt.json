@@ -1,0 +1,12 @@
+{
+  "code": "HKT",
+  "zones": [
+    {
+      "zone": "Asia/Hong_Kong",
+      "city": "Hong Kong",
+      "country": "Hong Kong",
+      "offset": "UTC+8",
+      "when": "all year"
+    }
+  ]
+}

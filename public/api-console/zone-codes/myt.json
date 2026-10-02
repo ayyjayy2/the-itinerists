@@ -1,0 +1,19 @@
+{
+  "code": "MYT",
+  "zones": [
+    {
+      "zone": "Asia/Kuala_Lumpur",
+      "city": "Kuala Lumpur",
+      "country": "Singapore",
+      "offset": "UTC+8",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Kuching",
+      "city": "Kuching",
+      "country": "Malaysia",
+      "offset": "UTC+8",
+      "when": "all year"
+    }
+  ]
+}

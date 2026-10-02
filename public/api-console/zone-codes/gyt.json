@@ -1,0 +1,12 @@
+{
+  "code": "GYT",
+  "zones": [
+    {
+      "zone": "America/Guyana",
+      "city": "Georgetown",
+      "country": "Guyana",
+      "offset": "UTC−4",
+      "when": "all year"
+    }
+  ]
+}

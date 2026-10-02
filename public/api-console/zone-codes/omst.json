@@ -1,0 +1,12 @@
+{
+  "code": "OMST",
+  "zones": [
+    {
+      "zone": "Asia/Omsk",
+      "city": "Omsk",
+      "country": "Russia",
+      "offset": "UTC+6",
+      "when": "all year"
+    }
+  ]
+}

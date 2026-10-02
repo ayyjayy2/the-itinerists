@@ -1,0 +1,19 @@
+{
+  "code": "TRT",
+  "zones": [
+    {
+      "zone": "Asia/Istanbul",
+      "city": "Istanbul",
+      "country": "Turkey",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Istanbul",
+      "city": "Istanbul",
+      "country": "Turkey",
+      "offset": "UTC+3",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "code": "AKDT",
+  "zones": [
+    {
+      "zone": "America/Anchorage",
+      "city": "Anchorage",
+      "region": "Alaska",
+      "country": "USA",
+      "offset": "UTC−8",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Juneau",
+      "city": "Juneau",
+      "region": "Alaska",
+      "country": "USA",
+      "offset": "UTC−8",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Metlakatla",
+      "city": "Metlakatla",
+      "region": "Alaska",
+      "country": "USA",
+      "offset": "UTC−8",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Nome",
+      "city": "Nome",
+      "region": "Alaska",
+      "country": "USA",
+      "offset": "UTC−8",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Sitka",
+      "city": "Sitka",
+      "region": "Alaska",
+      "country": "USA",
+      "offset": "UTC−8",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Yakutat",
+      "city": "Yakutat",
+      "region": "Alaska",
+      "country": "USA",
+      "offset": "UTC−8",
+      "when": "around July"
+    }
+  ]
+}

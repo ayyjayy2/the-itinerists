@@ -1,0 +1,12 @@
+{
+  "code": "PGT",
+  "zones": [
+    {
+      "zone": "Pacific/Port_Moresby",
+      "city": "Port Moresby",
+      "country": "Papua New Guinea",
+      "offset": "UTC+10",
+      "when": "all year"
+    }
+  ]
+}

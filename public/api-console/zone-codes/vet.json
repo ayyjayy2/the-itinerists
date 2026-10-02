@@ -1,0 +1,12 @@
+{
+  "code": "VET",
+  "zones": [
+    {
+      "zone": "America/Caracas",
+      "city": "Caracas",
+      "country": "Venezuela",
+      "offset": "UTC−4",
+      "when": "all year"
+    }
+  ]
+}

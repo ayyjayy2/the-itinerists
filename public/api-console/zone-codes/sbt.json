@@ -1,0 +1,12 @@
+{
+  "code": "SBT",
+  "zones": [
+    {
+      "zone": "Pacific/Guadalcanal",
+      "city": "Honiara",
+      "country": "Solomon Islands",
+      "offset": "UTC+11",
+      "when": "all year"
+    }
+  ]
+}

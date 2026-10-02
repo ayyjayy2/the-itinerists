@@ -1,0 +1,138 @@
+{
+  "code": "ART",
+  "zones": [
+    {
+      "zone": "America/Argentina/Buenos_Aires",
+      "city": "Buenos Aires",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/Catamarca",
+      "city": "Catamarca",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/ComodRivadavia",
+      "city": "ComodRivadavia",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/Cordoba",
+      "city": "Cordoba",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/Jujuy",
+      "city": "Jujuy",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/La_Rioja",
+      "city": "La Rioja",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/Mendoza",
+      "city": "Mendoza",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/Rio_Gallegos",
+      "city": "Rio Gallegos",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/Salta",
+      "city": "Salta",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/San_Juan",
+      "city": "San Juan",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/San_Luis",
+      "city": "San Luis",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/Tucuman",
+      "city": "Tucuman",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Argentina/Ushuaia",
+      "city": "Ushuaia",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Buenos_Aires",
+      "city": "Buenos Aires",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Catamarca",
+      "city": "Catamarca",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Cordoba",
+      "city": "Cordoba",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Jujuy",
+      "city": "Jujuy",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Mendoza",
+      "city": "Mendoza",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Rosario",
+      "city": "Rosario",
+      "country": "Argentina",
+      "offset": "UTC−3",
+      "when": "all year"
+    }
+  ]
+}

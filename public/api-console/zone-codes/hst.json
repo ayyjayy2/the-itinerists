@@ -1,0 +1,20 @@
+{
+  "code": "HST",
+  "zones": [
+    {
+      "zone": "Pacific/Honolulu",
+      "city": "Honolulu",
+      "region": "Hawaii",
+      "country": "USA",
+      "offset": "UTC−10",
+      "when": "all year"
+    },
+    {
+      "zone": "Pacific/Johnston",
+      "city": "Johnston",
+      "country": "USA",
+      "offset": "UTC−10",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "KGT",
+  "zones": [
+    {
+      "zone": "Asia/Bishkek",
+      "city": "Bishkek",
+      "country": "Kyrgyzstan",
+      "offset": "UTC+6",
+      "when": "all year"
+    }
+  ]
+}

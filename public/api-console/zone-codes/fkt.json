@@ -1,0 +1,12 @@
+{
+  "code": "FKT",
+  "zones": [
+    {
+      "zone": "Atlantic/Stanley",
+      "city": "Stanley",
+      "country": "Falkland Islands",
+      "offset": "UTC−3",
+      "when": "all year"
+    }
+  ]
+}

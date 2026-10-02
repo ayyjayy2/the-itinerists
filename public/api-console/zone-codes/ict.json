@@ -1,0 +1,40 @@
+{
+  "code": "ICT",
+  "zones": [
+    {
+      "zone": "Asia/Bangkok",
+      "city": "Bangkok",
+      "country": "Thailand",
+      "offset": "UTC+7",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Ho_Chi_Minh",
+      "city": "Ho Chi Minh City",
+      "country": "Vietnam",
+      "offset": "UTC+7",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Phnom_Penh",
+      "city": "Phnom Penh",
+      "country": "Cambodia",
+      "offset": "UTC+7",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Saigon",
+      "city": "Saigon",
+      "country": "Vietnam",
+      "offset": "UTC+7",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Vientiane",
+      "city": "Vientiane",
+      "country": "Laos",
+      "offset": "UTC+7",
+      "when": "all year"
+    }
+  ]
+}

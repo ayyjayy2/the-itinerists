@@ -1,0 +1,54 @@
+{
+  "code": "ALMT",
+  "zones": [
+    {
+      "zone": "Asia/Almaty",
+      "city": "Almaty",
+      "country": "Kazakhstan",
+      "offset": "UTC+5",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Aqtau",
+      "city": "Aqtau",
+      "country": "Kazakhstan",
+      "offset": "UTC+5",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Aqtobe",
+      "city": "Aqtobe",
+      "country": "Kazakhstan",
+      "offset": "UTC+5",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Atyrau",
+      "city": "Atyrau",
+      "country": "Kazakhstan",
+      "offset": "UTC+5",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Oral",
+      "city": "Oral",
+      "country": "Kazakhstan",
+      "offset": "UTC+5",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Qostanay",
+      "city": "Qostanay",
+      "country": "Kazakhstan",
+      "offset": "UTC+5",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Qyzylorda",
+      "city": "Qyzylorda",
+      "country": "Kazakhstan",
+      "offset": "UTC+5",
+      "when": "all year"
+    }
+  ]
+}

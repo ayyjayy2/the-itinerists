@@ -1,0 +1,82 @@
+{
+  "code": "EAT",
+  "zones": [
+    {
+      "zone": "Africa/Addis_Ababa",
+      "city": "Addis Ababa",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Asmara",
+      "city": "Asmara",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Asmera",
+      "city": "Asmera",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Dar_es_Salaam",
+      "city": "Dar es Salaam",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Djibouti",
+      "city": "Djibouti",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Kampala",
+      "city": "Kampala",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Mogadishu",
+      "city": "Mogadishu",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Nairobi",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Indian/Antananarivo",
+      "city": "Antananarivo",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Indian/Comoro",
+      "city": "Comoro",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Indian/Mayotte",
+      "city": "Mayotte",
+      "country": "Kenya",
+      "offset": "UTC+3",
+      "when": "all year"
+    }
+  ]
+}

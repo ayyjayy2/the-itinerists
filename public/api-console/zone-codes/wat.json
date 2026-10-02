@@ -1,0 +1,82 @@
+{
+  "code": "WAT",
+  "zones": [
+    {
+      "zone": "Africa/Bangui",
+      "city": "Bangui",
+      "country": "Nigeria",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Brazzaville",
+      "city": "Brazzaville",
+      "country": "Nigeria",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Douala",
+      "city": "Douala",
+      "country": "Nigeria",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Kinshasa",
+      "city": "Kinshasa",
+      "country": "Nigeria",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Lagos",
+      "city": "Lagos",
+      "country": "Nigeria",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Libreville",
+      "city": "Libreville",
+      "country": "Gabon",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Luanda",
+      "city": "Luanda",
+      "country": "Angola",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Malabo",
+      "city": "Malabo",
+      "country": "Nigeria",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Ndjamena",
+      "city": "N'Djamena",
+      "country": "Chad",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Niamey",
+      "city": "Niamey",
+      "country": "Niger",
+      "offset": "UTC+1",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Porto-Novo",
+      "city": "Porto-Novo",
+      "country": "Nigeria",
+      "offset": "UTC+1",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "CLT",
+  "zones": [
+    {
+      "zone": "America/Santiago",
+      "city": "Santiago",
+      "country": "Chile",
+      "offset": "UTC−4",
+      "when": "around July"
+    }
+  ]
+}

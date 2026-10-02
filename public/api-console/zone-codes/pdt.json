@@ -1,0 +1,41 @@
+{
+  "code": "PDT",
+  "zones": [
+    {
+      "zone": "America/Ensenada",
+      "city": "Ensenada",
+      "country": "Mexico",
+      "offset": "UTC−7",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Los_Angeles",
+      "city": "Los Angeles",
+      "region": "California",
+      "country": "USA",
+      "offset": "UTC−7",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Santa_Isabel",
+      "city": "Santa Isabel",
+      "country": "Mexico",
+      "offset": "UTC−7",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Tijuana",
+      "city": "Tijuana",
+      "country": "Mexico",
+      "offset": "UTC−7",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Vancouver",
+      "city": "Vancouver",
+      "country": "Canada",
+      "offset": "UTC−7",
+      "when": "around July"
+    }
+  ]
+}

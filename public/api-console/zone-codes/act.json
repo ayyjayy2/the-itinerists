@@ -1,0 +1,26 @@
+{
+  "code": "ACT",
+  "zones": [
+    {
+      "zone": "America/Eirunepe",
+      "city": "Eirunepe",
+      "country": "Brazil",
+      "offset": "UTC−5",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Porto_Acre",
+      "city": "Porto Acre",
+      "country": "Brazil",
+      "offset": "UTC−5",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Rio_Branco",
+      "city": "Rio Branco",
+      "country": "Brazil",
+      "offset": "UTC−5",
+      "when": "all year"
+    }
+  ]
+}

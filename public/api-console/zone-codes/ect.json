@@ -1,0 +1,12 @@
+{
+  "code": "ECT",
+  "zones": [
+    {
+      "zone": "America/Guayaquil",
+      "city": "Quito",
+      "country": "Ecuador",
+      "offset": "UTC−5",
+      "when": "all year"
+    }
+  ]
+}

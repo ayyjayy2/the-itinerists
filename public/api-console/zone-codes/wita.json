@@ -1,0 +1,19 @@
+{
+  "code": "WITA",
+  "zones": [
+    {
+      "zone": "Asia/Makassar",
+      "city": "Makassar",
+      "country": "Indonesia",
+      "offset": "UTC+8",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Ujung_Pandang",
+      "city": "Ujung Pandang",
+      "country": "Indonesia",
+      "offset": "UTC+8",
+      "when": "all year"
+    }
+  ]
+}

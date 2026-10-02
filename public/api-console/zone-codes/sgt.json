@@ -1,0 +1,12 @@
+{
+  "code": "SGT",
+  "zones": [
+    {
+      "zone": "Asia/Singapore",
+      "city": "Singapore",
+      "country": "Singapore",
+      "offset": "UTC+8",
+      "when": "all year"
+    }
+  ]
+}

@@ -65,6 +65,7 @@ host must be added there or the browser blocks it.
 | `gen-env.js` | `.env` → `src/environments/*.ts` and `public/pulse/config.mjs` (all gitignored) |
 | `set-version.js` | Writes `src/version.ts`; `--ios` also stamps the Xcode project |
 | `gen-zones.js` | Regenerates `public/pulse/zones.mjs` (zone → city, US state, country) from `@vvo/tzdb` |
+| `gen-zone-codes.mjs` | Regenerates `public/api-console/zone-codes/` (each time zone code → the zones that show it, from the app's own code rules, checked in January and July) for the API console's "Time zones by code" lookup. Run after changing a code table, or once a year |
 | `gen-airports.js` | Regenerates `public/data/airports.json` (IATA → zone, 5,500 airports from OpenFlights + overrides such as BER); the app loads it lazily so each flight time is read in its airport's zone |
 | `backfill-trip-zones.js` | One-off: gives existing trip legs a `timeZone` (and coordinates) via Nominatim + tz-lookup; dry run by default, `--run` writes |
 | `fetch-ios-config.js` | Writes `ios/App/App/GoogleService-Info.plist` from the Firebase Management API (gitignored) |

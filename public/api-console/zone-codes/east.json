@@ -1,0 +1,12 @@
+{
+  "code": "EAST",
+  "zones": [
+    {
+      "zone": "Pacific/Easter",
+      "city": "Easter",
+      "country": "Chile",
+      "offset": "UTC−6",
+      "when": "around July"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "SCT",
+  "zones": [
+    {
+      "zone": "Indian/Mahe",
+      "city": "Victoria",
+      "country": "Seychelles",
+      "offset": "UTC+4",
+      "when": "all year"
+    }
+  ]
+}

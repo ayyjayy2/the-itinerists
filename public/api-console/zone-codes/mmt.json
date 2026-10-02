@@ -1,0 +1,19 @@
+{
+  "code": "MMT",
+  "zones": [
+    {
+      "zone": "Asia/Rangoon",
+      "city": "Rangoon",
+      "country": "Myanmar",
+      "offset": "UTC+6:30",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Yangon",
+      "city": "Yangon",
+      "country": "Myanmar",
+      "offset": "UTC+6:30",
+      "when": "all year"
+    }
+  ]
+}

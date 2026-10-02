@@ -1,0 +1,40 @@
+{
+  "code": "MSK",
+  "zones": [
+    {
+      "zone": "Europe/Kirov",
+      "city": "Kirov",
+      "country": "Russia",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Minsk",
+      "city": "Minsk",
+      "country": "Belarus",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Moscow",
+      "city": "Moscow",
+      "country": "Russia",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Simferopol",
+      "city": "Sevastopol",
+      "country": "Ukraine",
+      "offset": "UTC+3",
+      "when": "all year"
+    },
+    {
+      "zone": "Europe/Volgograd",
+      "city": "Volgograd",
+      "country": "Russia",
+      "offset": "UTC+3",
+      "when": "all year"
+    }
+  ]
+}

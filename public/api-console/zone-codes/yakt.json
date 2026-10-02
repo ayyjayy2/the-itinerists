@@ -1,0 +1,26 @@
+{
+  "code": "YAKT",
+  "zones": [
+    {
+      "zone": "Asia/Chita",
+      "city": "Chita",
+      "country": "Russia",
+      "offset": "UTC+9",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Khandyga",
+      "city": "Khandyga",
+      "country": "Russia",
+      "offset": "UTC+9",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Yakutsk",
+      "city": "Yakutsk",
+      "country": "Russia",
+      "offset": "UTC+9",
+      "when": "all year"
+    }
+  ]
+}

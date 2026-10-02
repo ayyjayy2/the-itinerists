@@ -1,0 +1,26 @@
+{
+  "code": "NZST",
+  "zones": [
+    {
+      "zone": "Antarctica/McMurdo",
+      "city": "McMurdo",
+      "country": "Antarctica",
+      "offset": "UTC+12",
+      "when": "around July"
+    },
+    {
+      "zone": "Antarctica/South_Pole",
+      "city": "South Pole",
+      "country": "New Zealand",
+      "offset": "UTC+12",
+      "when": "around July"
+    },
+    {
+      "zone": "Pacific/Auckland",
+      "city": "Auckland",
+      "country": "New Zealand",
+      "offset": "UTC+12",
+      "when": "around July"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "ACWST",
+  "zones": [
+    {
+      "zone": "Australia/Eucla",
+      "city": "Eucla",
+      "country": "Australia",
+      "offset": "UTC+8:45",
+      "when": "all year"
+    }
+  ]
+}

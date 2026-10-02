@@ -1,0 +1,12 @@
+{
+  "code": "NFT",
+  "zones": [
+    {
+      "zone": "Pacific/Norfolk",
+      "city": "Kingston",
+      "country": "Norfolk Island",
+      "offset": "UTC+11",
+      "when": "around July"
+    }
+  ]
+}

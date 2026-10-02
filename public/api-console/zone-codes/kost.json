@@ -1,0 +1,12 @@
+{
+  "code": "KOST",
+  "zones": [
+    {
+      "zone": "Pacific/Kosrae",
+      "city": "Kosrae",
+      "country": "Micronesia",
+      "offset": "UTC+11",
+      "when": "all year"
+    }
+  ]
+}

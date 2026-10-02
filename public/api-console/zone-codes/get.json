@@ -1,0 +1,12 @@
+{
+  "code": "GET",
+  "zones": [
+    {
+      "zone": "Asia/Tbilisi",
+      "city": "Tbilisi",
+      "country": "Georgia",
+      "offset": "UTC+4",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "ROTT",
+  "zones": [
+    {
+      "zone": "Antarctica/Rothera",
+      "city": "Rothera",
+      "country": "Antarctica",
+      "offset": "UTC−3",
+      "when": "all year"
+    }
+  ]
+}

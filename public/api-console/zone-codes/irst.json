@@ -1,0 +1,12 @@
+{
+  "code": "IRST",
+  "zones": [
+    {
+      "zone": "Asia/Tehran",
+      "city": "Tehran",
+      "country": "Iran",
+      "offset": "UTC+3:30",
+      "when": "all year"
+    }
+  ]
+}

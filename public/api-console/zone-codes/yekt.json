@@ -1,0 +1,12 @@
+{
+  "code": "YEKT",
+  "zones": [
+    {
+      "zone": "Asia/Yekaterinburg",
+      "city": "Yekaterinburg",
+      "country": "Russia",
+      "offset": "UTC+5",
+      "when": "all year"
+    }
+  ]
+}

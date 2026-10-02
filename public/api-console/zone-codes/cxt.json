@@ -1,0 +1,12 @@
+{
+  "code": "CXT",
+  "zones": [
+    {
+      "zone": "Indian/Christmas",
+      "city": "Christmas",
+      "country": "Thailand",
+      "offset": "UTC+7",
+      "when": "all year"
+    }
+  ]
+}

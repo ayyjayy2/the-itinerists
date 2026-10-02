@@ -1,0 +1,47 @@
+{
+  "code": "IST",
+  "zones": [
+    {
+      "zone": "Asia/Calcutta",
+      "city": "Calcutta",
+      "country": "India",
+      "offset": "UTC+5:30",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Colombo",
+      "city": "Colombo",
+      "country": "Sri Lanka",
+      "offset": "UTC+5:30",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Jerusalem",
+      "city": "Jerusalem",
+      "country": "Israel",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Asia/Kolkata",
+      "city": "Mumbai",
+      "country": "India",
+      "offset": "UTC+5:30",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Tel_Aviv",
+      "city": "Tel Aviv",
+      "country": "Israel",
+      "offset": "UTC+2",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Dublin",
+      "city": "Dublin",
+      "country": "Ireland",
+      "offset": "UTC+1",
+      "when": "around July"
+    }
+  ]
+}

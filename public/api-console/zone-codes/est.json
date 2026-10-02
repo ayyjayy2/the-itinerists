@@ -1,0 +1,211 @@
+{
+  "code": "EST",
+  "zones": [
+    {
+      "zone": "America/Atikokan",
+      "city": "Atikokan",
+      "country": "Panama",
+      "offset": "UTC−5",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Cancun",
+      "city": "Cancún",
+      "country": "Mexico",
+      "offset": "UTC−5",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Cayman",
+      "city": "Cayman",
+      "country": "Panama",
+      "offset": "UTC−5",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Coral_Harbour",
+      "city": "Coral Harbour",
+      "country": "Panama",
+      "offset": "UTC−5",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Detroit",
+      "city": "Detroit",
+      "region": "Michigan",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Fort_Wayne",
+      "city": "Fort Wayne",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Grand_Turk",
+      "city": "Providenciales",
+      "country": "Turks and Caicos Islands",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Indiana/Indianapolis",
+      "city": "Indianapolis",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Indiana/Marengo",
+      "city": "Marengo",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Indiana/Petersburg",
+      "city": "Petersburg",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Indiana/Vevay",
+      "city": "Vevay",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Indiana/Vincennes",
+      "city": "Vincennes",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Indiana/Winamac",
+      "city": "Winamac",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Indianapolis",
+      "city": "Indianapolis",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Iqaluit",
+      "city": "Iqaluit",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Jamaica",
+      "city": "Kingston",
+      "country": "Jamaica",
+      "offset": "UTC−5",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Kentucky/Louisville",
+      "city": "Louisville",
+      "region": "Kentucky",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Kentucky/Monticello",
+      "city": "Monticello",
+      "region": "Kentucky",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Louisville",
+      "city": "Louisville",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Montreal",
+      "city": "Montreal",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Nassau",
+      "city": "Nassau",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/New_York",
+      "city": "New York City",
+      "region": "New York",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Nipigon",
+      "city": "Nipigon",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Panama",
+      "city": "Panamá",
+      "country": "Panama",
+      "offset": "UTC−5",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Pangnirtung",
+      "city": "Pangnirtung",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Port-au-Prince",
+      "city": "Port-au-Prince",
+      "country": "Haiti",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Thunder_Bay",
+      "city": "Thunder Bay",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Toronto",
+      "city": "Toronto",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around January"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "code": "IDT",
+  "zones": [
+    {
+      "zone": "Asia/Jerusalem",
+      "city": "Jerusalem",
+      "country": "Israel",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Asia/Tel_Aviv",
+      "city": "Tel Aviv",
+      "country": "Israel",
+      "offset": "UTC+3",
+      "when": "around July"
+    }
+  ]
+}

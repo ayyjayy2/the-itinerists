@@ -1,0 +1,40 @@
+{
+  "code": "WET",
+  "zones": [
+    {
+      "zone": "Atlantic/Canary",
+      "city": "Las Palmas de Gran Canaria",
+      "country": "Spain",
+      "offset": "UTC+0",
+      "when": "around January"
+    },
+    {
+      "zone": "Atlantic/Faeroe",
+      "city": "Faeroe",
+      "country": "Faroe Islands",
+      "offset": "UTC+0",
+      "when": "around January"
+    },
+    {
+      "zone": "Atlantic/Faroe",
+      "city": "Tórshavn",
+      "country": "Faroe Islands",
+      "offset": "UTC+0",
+      "when": "around January"
+    },
+    {
+      "zone": "Atlantic/Madeira",
+      "city": "Madeira",
+      "country": "Portugal",
+      "offset": "UTC+0",
+      "when": "around January"
+    },
+    {
+      "zone": "Europe/Lisbon",
+      "city": "Lisbon",
+      "country": "Portugal",
+      "offset": "UTC+0",
+      "when": "around January"
+    }
+  ]
+}

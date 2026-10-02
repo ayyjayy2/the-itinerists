@@ -1,0 +1,12 @@
+{
+  "code": "VOST",
+  "zones": [
+    {
+      "zone": "Antarctica/Vostok",
+      "city": "Vostok",
+      "country": "Antarctica",
+      "offset": "UTC+5",
+      "when": "all year"
+    }
+  ]
+}

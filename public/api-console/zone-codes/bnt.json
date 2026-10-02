@@ -1,0 +1,12 @@
+{
+  "code": "BNT",
+  "zones": [
+    {
+      "zone": "Asia/Brunei",
+      "city": "Brunei",
+      "country": "Malaysia",
+      "offset": "UTC+8",
+      "when": "all year"
+    }
+  ]
+}

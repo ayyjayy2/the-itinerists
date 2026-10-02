@@ -1,0 +1,12 @@
+{
+  "code": "UYT",
+  "zones": [
+    {
+      "zone": "America/Montevideo",
+      "city": "Montevideo",
+      "country": "Uruguay",
+      "offset": "UTC−3",
+      "when": "all year"
+    }
+  ]
+}

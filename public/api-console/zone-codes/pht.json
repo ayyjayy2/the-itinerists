@@ -1,0 +1,12 @@
+{
+  "code": "PHT",
+  "zones": [
+    {
+      "zone": "Asia/Manila",
+      "city": "Quezon City",
+      "country": "Philippines",
+      "offset": "UTC+8",
+      "when": "all year"
+    }
+  ]
+}

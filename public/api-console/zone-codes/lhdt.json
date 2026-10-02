@@ -1,0 +1,19 @@
+{
+  "code": "LHDT",
+  "zones": [
+    {
+      "zone": "Australia/LHI",
+      "city": "LHI",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    },
+    {
+      "zone": "Australia/Lord_Howe",
+      "city": "Lord Howe",
+      "country": "Australia",
+      "offset": "UTC+11",
+      "when": "around January"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "NCT",
+  "zones": [
+    {
+      "zone": "Pacific/Noumea",
+      "city": "Nouméa",
+      "country": "New Caledonia",
+      "offset": "UTC+11",
+      "when": "all year"
+    }
+  ]
+}

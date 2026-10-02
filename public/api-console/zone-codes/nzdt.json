@@ -1,0 +1,26 @@
+{
+  "code": "NZDT",
+  "zones": [
+    {
+      "zone": "Antarctica/McMurdo",
+      "city": "McMurdo",
+      "country": "Antarctica",
+      "offset": "UTC+13",
+      "when": "around January"
+    },
+    {
+      "zone": "Antarctica/South_Pole",
+      "city": "South Pole",
+      "country": "New Zealand",
+      "offset": "UTC+13",
+      "when": "around January"
+    },
+    {
+      "zone": "Pacific/Auckland",
+      "city": "Auckland",
+      "country": "New Zealand",
+      "offset": "UTC+13",
+      "when": "around January"
+    }
+  ]
+}

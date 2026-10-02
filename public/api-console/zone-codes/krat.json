@@ -1,0 +1,40 @@
+{
+  "code": "KRAT",
+  "zones": [
+    {
+      "zone": "Asia/Barnaul",
+      "city": "Barnaul",
+      "country": "Russia",
+      "offset": "UTC+7",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Krasnoyarsk",
+      "city": "Krasnoyarsk",
+      "country": "Russia",
+      "offset": "UTC+7",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Novokuznetsk",
+      "city": "Novokuznetsk",
+      "country": "Russia",
+      "offset": "UTC+7",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Novosibirsk",
+      "city": "Novosibirsk",
+      "country": "Russia",
+      "offset": "UTC+7",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Tomsk",
+      "city": "Tomsk",
+      "country": "Russia",
+      "offset": "UTC+7",
+      "when": "all year"
+    }
+  ]
+}

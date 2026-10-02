@@ -1,0 +1,12 @@
+{
+  "code": "FJT",
+  "zones": [
+    {
+      "zone": "Pacific/Fiji",
+      "city": "Nasinu",
+      "country": "Fiji",
+      "offset": "UTC+12",
+      "when": "all year"
+    }
+  ]
+}

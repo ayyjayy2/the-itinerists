@@ -1,0 +1,12 @@
+{
+  "code": "GALT",
+  "zones": [
+    {
+      "zone": "Pacific/Galapagos",
+      "city": "Galapagos",
+      "country": "Ecuador",
+      "offset": "UTC−6",
+      "when": "all year"
+    }
+  ]
+}

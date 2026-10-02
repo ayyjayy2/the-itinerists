@@ -1,0 +1,12 @@
+{
+  "code": "AZT",
+  "zones": [
+    {
+      "zone": "Asia/Baku",
+      "city": "Baku",
+      "country": "Azerbaijan",
+      "offset": "UTC+4",
+      "when": "all year"
+    }
+  ]
+}

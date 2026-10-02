@@ -1,0 +1,12 @@
+{
+  "code": "DDUT",
+  "zones": [
+    {
+      "zone": "Antarctica/DumontDUrville",
+      "city": "DumontDUrville",
+      "country": "Papua New Guinea",
+      "offset": "UTC+10",
+      "when": "all year"
+    }
+  ]
+}

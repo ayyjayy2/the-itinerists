@@ -1,0 +1,26 @@
+{
+  "code": "AWST",
+  "zones": [
+    {
+      "zone": "Antarctica/Casey",
+      "city": "Casey",
+      "country": "Antarctica",
+      "offset": "UTC+8",
+      "when": "all year"
+    },
+    {
+      "zone": "Australia/Perth",
+      "city": "Perth",
+      "country": "Australia",
+      "offset": "UTC+8",
+      "when": "all year"
+    },
+    {
+      "zone": "Australia/West",
+      "city": "West",
+      "country": "Australia",
+      "offset": "UTC+8",
+      "when": "all year"
+    }
+  ]
+}

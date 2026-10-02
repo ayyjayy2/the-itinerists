@@ -1,0 +1,12 @@
+{
+  "code": "CKT",
+  "zones": [
+    {
+      "zone": "Pacific/Rarotonga",
+      "city": "Avarua",
+      "country": "Cook Islands",
+      "offset": "UTC−10",
+      "when": "all year"
+    }
+  ]
+}

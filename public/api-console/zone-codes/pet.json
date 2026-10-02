@@ -1,0 +1,12 @@
+{
+  "code": "PET",
+  "zones": [
+    {
+      "zone": "America/Lima",
+      "city": "Lima",
+      "country": "Peru",
+      "offset": "UTC−5",
+      "when": "all year"
+    }
+  ]
+}

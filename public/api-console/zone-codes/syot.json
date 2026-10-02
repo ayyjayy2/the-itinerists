@@ -1,0 +1,12 @@
+{
+  "code": "SYOT",
+  "zones": [
+    {
+      "zone": "Antarctica/Syowa",
+      "city": "Syowa",
+      "country": "Antarctica",
+      "offset": "UTC+3",
+      "when": "all year"
+    }
+  ]
+}

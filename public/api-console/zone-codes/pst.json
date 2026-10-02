@@ -1,0 +1,48 @@
+{
+  "code": "PST",
+  "zones": [
+    {
+      "zone": "America/Ensenada",
+      "city": "Ensenada",
+      "country": "Mexico",
+      "offset": "UTC−8",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Los_Angeles",
+      "city": "Los Angeles",
+      "region": "California",
+      "country": "USA",
+      "offset": "UTC−8",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Santa_Isabel",
+      "city": "Santa Isabel",
+      "country": "Mexico",
+      "offset": "UTC−8",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Tijuana",
+      "city": "Tijuana",
+      "country": "Mexico",
+      "offset": "UTC−8",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Vancouver",
+      "city": "Vancouver",
+      "country": "Canada",
+      "offset": "UTC−8",
+      "when": "around January"
+    },
+    {
+      "zone": "Pacific/Pitcairn",
+      "city": "Adamstown",
+      "country": "Pitcairn",
+      "offset": "UTC−8",
+      "when": "all year"
+    }
+  ]
+}

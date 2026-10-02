@@ -1,0 +1,12 @@
+{
+  "code": "LINT",
+  "zones": [
+    {
+      "zone": "Pacific/Kiritimati",
+      "city": "Kiritimati",
+      "country": "Kiribati",
+      "offset": "UTC+14",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "code": "LHST",
+  "zones": [
+    {
+      "zone": "Australia/LHI",
+      "city": "LHI",
+      "country": "Australia",
+      "offset": "UTC+10:30",
+      "when": "around July"
+    },
+    {
+      "zone": "Australia/Lord_Howe",
+      "city": "Lord Howe",
+      "country": "Australia",
+      "offset": "UTC+10:30",
+      "when": "around July"
+    }
+  ]
+}

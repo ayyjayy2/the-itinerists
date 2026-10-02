@@ -1,0 +1,26 @@
+{
+  "code": "WGT",
+  "zones": [
+    {
+      "zone": "America/Godthab",
+      "city": "Godthab",
+      "country": "Greenland",
+      "offset": "UTC−2",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Nuuk",
+      "city": "Nuuk",
+      "country": "Greenland",
+      "offset": "UTC−2",
+      "when": "around January"
+    },
+    {
+      "zone": "America/Scoresbysund",
+      "city": "Scoresbysund",
+      "country": "Greenland",
+      "offset": "UTC−2",
+      "when": "around January"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "FNT",
+  "zones": [
+    {
+      "zone": "America/Noronha",
+      "city": "Noronha",
+      "country": "Brazil",
+      "offset": "UTC−2",
+      "when": "all year"
+    }
+  ]
+}

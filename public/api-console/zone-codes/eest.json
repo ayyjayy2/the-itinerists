@@ -1,0 +1,152 @@
+{
+  "code": "EEST",
+  "zones": [
+    {
+      "zone": "Africa/Cairo",
+      "city": "Cairo",
+      "country": "Egypt",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Asia/Beirut",
+      "city": "Beirut",
+      "country": "Lebanon",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Asia/Famagusta",
+      "city": "Famagusta",
+      "country": "Cyprus",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Asia/Gaza",
+      "city": "Gaza",
+      "country": "Palestinian Territory",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Asia/Hebron",
+      "city": "East Jerusalem",
+      "country": "Palestinian Territory",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Asia/Nicosia",
+      "city": "Nicosia",
+      "country": "Cyprus",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Athens",
+      "city": "Athens",
+      "country": "Greece",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Bucharest",
+      "city": "Bucharest",
+      "country": "Romania",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Chisinau",
+      "city": "Chisinau",
+      "country": "Moldova",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Helsinki",
+      "city": "Helsinki",
+      "country": "Finland",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Kiev",
+      "city": "Kiev",
+      "country": "Ukraine",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Kyiv",
+      "city": "Kyiv",
+      "country": "Ukraine",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Mariehamn",
+      "city": "Mariehamn",
+      "country": "Aland Islands",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Nicosia",
+      "city": "Nicosia",
+      "country": "Cyprus",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Riga",
+      "city": "Riga",
+      "country": "Latvia",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Sofia",
+      "city": "Sofia",
+      "country": "Bulgaria",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Tallinn",
+      "city": "Tallinn",
+      "country": "Estonia",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Tiraspol",
+      "city": "Tiraspol",
+      "country": "Moldova",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Uzhgorod",
+      "city": "Uzhgorod",
+      "country": "Ukraine",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Vilnius",
+      "city": "Vilnius",
+      "country": "Lithuania",
+      "offset": "UTC+3",
+      "when": "around July"
+    },
+    {
+      "zone": "Europe/Zaporozhye",
+      "city": "Zaporozhye",
+      "country": "Ukraine",
+      "offset": "UTC+3",
+      "when": "around July"
+    }
+  ]
+}

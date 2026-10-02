@@ -1,0 +1,12 @@
+{
+  "code": "CCT",
+  "zones": [
+    {
+      "zone": "Indian/Cocos",
+      "city": "Cocos",
+      "country": "Myanmar",
+      "offset": "UTC+6:30",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "code": "CHAST",
+  "zones": [
+    {
+      "zone": "Pacific/Chatham",
+      "city": "Chatham",
+      "country": "New Zealand",
+      "offset": "UTC+12:45",
+      "when": "around July"
+    }
+  ]
+}

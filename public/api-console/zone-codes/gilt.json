@@ -1,0 +1,12 @@
+{
+  "code": "GILT",
+  "zones": [
+    {
+      "zone": "Pacific/Tarawa",
+      "city": "Tarawa",
+      "country": "Kiribati",
+      "offset": "UTC+12",
+      "when": "all year"
+    }
+  ]
+}

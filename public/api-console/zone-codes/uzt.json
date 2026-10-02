@@ -1,0 +1,19 @@
+{
+  "code": "UZT",
+  "zones": [
+    {
+      "zone": "Asia/Samarkand",
+      "city": "Samarkand",
+      "country": "Uzbekistan",
+      "offset": "UTC+5",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Tashkent",
+      "city": "Tashkent",
+      "country": "Uzbekistan",
+      "offset": "UTC+5",
+      "when": "all year"
+    }
+  ]
+}

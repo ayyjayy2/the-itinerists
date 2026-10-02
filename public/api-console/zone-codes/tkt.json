@@ -1,0 +1,12 @@
+{
+  "code": "TKT",
+  "zones": [
+    {
+      "zone": "Pacific/Fakaofo",
+      "city": "Fakaofo",
+      "country": "Tokelau",
+      "offset": "UTC+13",
+      "when": "all year"
+    }
+  ]
+}

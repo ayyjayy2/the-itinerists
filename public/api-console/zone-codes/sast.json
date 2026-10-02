@@ -1,0 +1,26 @@
+{
+  "code": "SAST",
+  "zones": [
+    {
+      "zone": "Africa/Johannesburg",
+      "city": "Johannesburg",
+      "country": "South Africa",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Maseru",
+      "city": "Maseru",
+      "country": "Lesotho",
+      "offset": "UTC+2",
+      "when": "all year"
+    },
+    {
+      "zone": "Africa/Mbabane",
+      "city": "Manzini",
+      "country": "Eswatini",
+      "offset": "UTC+2",
+      "when": "all year"
+    }
+  ]
+}

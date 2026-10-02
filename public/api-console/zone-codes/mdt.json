@@ -1,0 +1,63 @@
+{
+  "code": "MDT",
+  "zones": [
+    {
+      "zone": "America/Boise",
+      "city": "Boise",
+      "region": "Idaho",
+      "country": "USA",
+      "offset": "UTC−6",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Cambridge_Bay",
+      "city": "Cambridge Bay",
+      "country": "Canada",
+      "offset": "UTC−6",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Ciudad_Juarez",
+      "city": "Ciudad Juárez",
+      "country": "Mexico",
+      "offset": "UTC−6",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Denver",
+      "city": "Denver",
+      "region": "Colorado",
+      "country": "USA",
+      "offset": "UTC−6",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Edmonton",
+      "city": "Calgary",
+      "country": "Canada",
+      "offset": "UTC−6",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Inuvik",
+      "city": "Inuvik",
+      "country": "Canada",
+      "offset": "UTC−6",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Shiprock",
+      "city": "Shiprock",
+      "country": "USA",
+      "offset": "UTC−6",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Yellowknife",
+      "city": "Yellowknife",
+      "country": "Canada",
+      "offset": "UTC−6",
+      "when": "around July"
+    }
+  ]
+}

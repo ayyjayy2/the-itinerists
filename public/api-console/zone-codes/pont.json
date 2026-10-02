@@ -1,0 +1,19 @@
+{
+  "code": "PONT",
+  "zones": [
+    {
+      "zone": "Pacific/Pohnpei",
+      "city": "Pohnpei",
+      "country": "Solomon Islands",
+      "offset": "UTC+11",
+      "when": "all year"
+    },
+    {
+      "zone": "Pacific/Ponape",
+      "city": "Ponape",
+      "country": "Solomon Islands",
+      "offset": "UTC+11",
+      "when": "all year"
+    }
+  ]
+}

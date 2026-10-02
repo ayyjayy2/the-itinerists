@@ -1,0 +1,61 @@
+{
+  "code": "BRT",
+  "zones": [
+    {
+      "zone": "America/Araguaina",
+      "city": "Araguaina",
+      "country": "Brazil",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Bahia",
+      "city": "Bahia",
+      "country": "Brazil",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Belem",
+      "city": "Belem",
+      "country": "Brazil",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Fortaleza",
+      "city": "Fortaleza",
+      "country": "Brazil",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Maceio",
+      "city": "Maceio",
+      "country": "Brazil",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Recife",
+      "city": "Recife",
+      "country": "Brazil",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Santarem",
+      "city": "Santarem",
+      "country": "Brazil",
+      "offset": "UTC−3",
+      "when": "all year"
+    },
+    {
+      "zone": "America/Sao_Paulo",
+      "city": "São Paulo",
+      "country": "Brazil",
+      "offset": "UTC−3",
+      "when": "all year"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "code": "CDT",
+  "zones": [
+    {
+      "zone": "America/Chicago",
+      "city": "Chicago",
+      "region": "Illinois",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Havana",
+      "city": "Havana",
+      "country": "Cuba",
+      "offset": "UTC−4",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Indiana/Knox",
+      "city": "Knox",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Indiana/Tell_City",
+      "city": "Tell City",
+      "region": "Indiana",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Knox_IN",
+      "city": "Knox IN",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Matamoros",
+      "city": "Reynosa",
+      "country": "Mexico",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Menominee",
+      "city": "Menominee",
+      "region": "Michigan",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/North_Dakota/Beulah",
+      "city": "Beulah",
+      "region": "North Dakota",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/North_Dakota/Center",
+      "city": "Center",
+      "region": "North Dakota",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/North_Dakota/New_Salem",
+      "city": "New Salem",
+      "region": "North Dakota",
+      "country": "USA",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Ojinaga",
+      "city": "Ojinaga",
+      "country": "Mexico",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Rainy_River",
+      "city": "Rainy River",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Rankin_Inlet",
+      "city": "Rankin Inlet",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Resolute",
+      "city": "Resolute",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Winnipeg",
+      "city": "Winnipeg",
+      "country": "Canada",
+      "offset": "UTC−5",
+      "when": "around July"
+    }
+  ]
+}

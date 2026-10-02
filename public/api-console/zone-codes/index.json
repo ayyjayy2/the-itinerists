@@ -1,0 +1,767 @@
+[
+  {
+    "code": "ACDT",
+    "zones": 4,
+    "file": "acdt.json"
+  },
+  {
+    "code": "ACST",
+    "zones": 6,
+    "file": "acst.json"
+  },
+  {
+    "code": "ACT",
+    "zones": 3,
+    "file": "act.json"
+  },
+  {
+    "code": "ACWST",
+    "zones": 1,
+    "file": "acwst.json"
+  },
+  {
+    "code": "ADT",
+    "zones": 6,
+    "file": "adt.json"
+  },
+  {
+    "code": "AEDT",
+    "zones": 10,
+    "file": "aedt.json"
+  },
+  {
+    "code": "AEST",
+    "zones": 13,
+    "file": "aest.json"
+  },
+  {
+    "code": "AFT",
+    "zones": 1,
+    "file": "aft.json"
+  },
+  {
+    "code": "AKDT",
+    "zones": 6,
+    "file": "akdt.json"
+  },
+  {
+    "code": "AKST",
+    "zones": 6,
+    "file": "akst.json"
+  },
+  {
+    "code": "ALMT",
+    "zones": 7,
+    "file": "almt.json"
+  },
+  {
+    "code": "AMT",
+    "zones": 6,
+    "file": "amt.json"
+  },
+  {
+    "code": "ART",
+    "zones": 19,
+    "file": "art.json"
+  },
+  {
+    "code": "AST",
+    "zones": 38,
+    "file": "ast.json"
+  },
+  {
+    "code": "AWST",
+    "zones": 3,
+    "file": "awst.json"
+  },
+  {
+    "code": "AZOST",
+    "zones": 1,
+    "file": "azost.json"
+  },
+  {
+    "code": "AZOT",
+    "zones": 1,
+    "file": "azot.json"
+  },
+  {
+    "code": "AZT",
+    "zones": 1,
+    "file": "azt.json"
+  },
+  {
+    "code": "BNT",
+    "zones": 1,
+    "file": "bnt.json"
+  },
+  {
+    "code": "BOT",
+    "zones": 1,
+    "file": "bot.json"
+  },
+  {
+    "code": "BRT",
+    "zones": 8,
+    "file": "brt.json"
+  },
+  {
+    "code": "BST",
+    "zones": 8,
+    "file": "bst.json"
+  },
+  {
+    "code": "BTT",
+    "zones": 2,
+    "file": "btt.json"
+  },
+  {
+    "code": "CAT",
+    "zones": 11,
+    "file": "cat.json"
+  },
+  {
+    "code": "CCT",
+    "zones": 1,
+    "file": "cct.json"
+  },
+  {
+    "code": "CDT",
+    "zones": 15,
+    "file": "cdt.json"
+  },
+  {
+    "code": "CEST",
+    "zones": 35,
+    "file": "cest.json"
+  },
+  {
+    "code": "CET",
+    "zones": 37,
+    "file": "cet.json"
+  },
+  {
+    "code": "CHADT",
+    "zones": 1,
+    "file": "chadt.json"
+  },
+  {
+    "code": "CHAST",
+    "zones": 1,
+    "file": "chast.json"
+  },
+  {
+    "code": "ChST",
+    "zones": 2,
+    "file": "chst.json"
+  },
+  {
+    "code": "CHUT",
+    "zones": 3,
+    "file": "chut.json"
+  },
+  {
+    "code": "CKT",
+    "zones": 1,
+    "file": "ckt.json"
+  },
+  {
+    "code": "CLST",
+    "zones": 4,
+    "file": "clst.json"
+  },
+  {
+    "code": "CLT",
+    "zones": 1,
+    "file": "clt.json"
+  },
+  {
+    "code": "COT",
+    "zones": 1,
+    "file": "cot.json"
+  },
+  {
+    "code": "CST",
+    "zones": 35,
+    "file": "cst.json"
+  },
+  {
+    "code": "CVT",
+    "zones": 1,
+    "file": "cvt.json"
+  },
+  {
+    "code": "CXT",
+    "zones": 1,
+    "file": "cxt.json"
+  },
+  {
+    "code": "DAVT",
+    "zones": 1,
+    "file": "davt.json"
+  },
+  {
+    "code": "DDUT",
+    "zones": 1,
+    "file": "ddut.json"
+  },
+  {
+    "code": "EASST",
+    "zones": 1,
+    "file": "easst.json"
+  },
+  {
+    "code": "EAST",
+    "zones": 1,
+    "file": "east.json"
+  },
+  {
+    "code": "EAT",
+    "zones": 11,
+    "file": "eat.json"
+  },
+  {
+    "code": "ECT",
+    "zones": 1,
+    "file": "ect.json"
+  },
+  {
+    "code": "EDT",
+    "zones": 22,
+    "file": "edt.json"
+  },
+  {
+    "code": "EEST",
+    "zones": 21,
+    "file": "eest.json"
+  },
+  {
+    "code": "EET",
+    "zones": 23,
+    "file": "eet.json"
+  },
+  {
+    "code": "EST",
+    "zones": 28,
+    "file": "est.json"
+  },
+  {
+    "code": "FJT",
+    "zones": 1,
+    "file": "fjt.json"
+  },
+  {
+    "code": "FKT",
+    "zones": 1,
+    "file": "fkt.json"
+  },
+  {
+    "code": "FNT",
+    "zones": 1,
+    "file": "fnt.json"
+  },
+  {
+    "code": "GALT",
+    "zones": 1,
+    "file": "galt.json"
+  },
+  {
+    "code": "GAMT",
+    "zones": 1,
+    "file": "gamt.json"
+  },
+  {
+    "code": "GET",
+    "zones": 1,
+    "file": "get.json"
+  },
+  {
+    "code": "GFT",
+    "zones": 1,
+    "file": "gft.json"
+  },
+  {
+    "code": "GILT",
+    "zones": 1,
+    "file": "gilt.json"
+  },
+  {
+    "code": "GMT",
+    "zones": 23,
+    "file": "gmt.json"
+  },
+  {
+    "code": "GST",
+    "zones": 3,
+    "file": "gst.json"
+  },
+  {
+    "code": "GYT",
+    "zones": 1,
+    "file": "gyt.json"
+  },
+  {
+    "code": "HADT",
+    "zones": 2,
+    "file": "hadt.json"
+  },
+  {
+    "code": "HAST",
+    "zones": 2,
+    "file": "hast.json"
+  },
+  {
+    "code": "HKT",
+    "zones": 1,
+    "file": "hkt.json"
+  },
+  {
+    "code": "HOVT",
+    "zones": 1,
+    "file": "hovt.json"
+  },
+  {
+    "code": "HST",
+    "zones": 2,
+    "file": "hst.json"
+  },
+  {
+    "code": "ICT",
+    "zones": 5,
+    "file": "ict.json"
+  },
+  {
+    "code": "IDT",
+    "zones": 2,
+    "file": "idt.json"
+  },
+  {
+    "code": "IOT",
+    "zones": 1,
+    "file": "iot.json"
+  },
+  {
+    "code": "IRKT",
+    "zones": 1,
+    "file": "irkt.json"
+  },
+  {
+    "code": "IRST",
+    "zones": 1,
+    "file": "irst.json"
+  },
+  {
+    "code": "IST",
+    "zones": 6,
+    "file": "ist.json"
+  },
+  {
+    "code": "JST",
+    "zones": 1,
+    "file": "jst.json"
+  },
+  {
+    "code": "KGT",
+    "zones": 1,
+    "file": "kgt.json"
+  },
+  {
+    "code": "KOST",
+    "zones": 1,
+    "file": "kost.json"
+  },
+  {
+    "code": "KRAT",
+    "zones": 5,
+    "file": "krat.json"
+  },
+  {
+    "code": "KST",
+    "zones": 2,
+    "file": "kst.json"
+  },
+  {
+    "code": "LHDT",
+    "zones": 2,
+    "file": "lhdt.json"
+  },
+  {
+    "code": "LHST",
+    "zones": 2,
+    "file": "lhst.json"
+  },
+  {
+    "code": "LINT",
+    "zones": 1,
+    "file": "lint.json"
+  },
+  {
+    "code": "MAGT",
+    "zones": 3,
+    "file": "magt.json"
+  },
+  {
+    "code": "MART",
+    "zones": 1,
+    "file": "mart.json"
+  },
+  {
+    "code": "MAWT",
+    "zones": 1,
+    "file": "mawt.json"
+  },
+  {
+    "code": "MDT",
+    "zones": 8,
+    "file": "mdt.json"
+  },
+  {
+    "code": "MHT",
+    "zones": 2,
+    "file": "mht.json"
+  },
+  {
+    "code": "MMT",
+    "zones": 2,
+    "file": "mmt.json"
+  },
+  {
+    "code": "MSK",
+    "zones": 5,
+    "file": "msk.json"
+  },
+  {
+    "code": "MST",
+    "zones": 16,
+    "file": "mst.json"
+  },
+  {
+    "code": "MUT",
+    "zones": 1,
+    "file": "mut.json"
+  },
+  {
+    "code": "MVT",
+    "zones": 1,
+    "file": "mvt.json"
+  },
+  {
+    "code": "MYT",
+    "zones": 2,
+    "file": "myt.json"
+  },
+  {
+    "code": "NCT",
+    "zones": 1,
+    "file": "nct.json"
+  },
+  {
+    "code": "NDT",
+    "zones": 1,
+    "file": "ndt.json"
+  },
+  {
+    "code": "NFT",
+    "zones": 1,
+    "file": "nft.json"
+  },
+  {
+    "code": "NID",
+    "zones": 1,
+    "file": "nid.json"
+  },
+  {
+    "code": "NPT",
+    "zones": 2,
+    "file": "npt.json"
+  },
+  {
+    "code": "NRT",
+    "zones": 1,
+    "file": "nrt.json"
+  },
+  {
+    "code": "NST",
+    "zones": 1,
+    "file": "nst.json"
+  },
+  {
+    "code": "NUT",
+    "zones": 1,
+    "file": "nut.json"
+  },
+  {
+    "code": "NZDT",
+    "zones": 3,
+    "file": "nzdt.json"
+  },
+  {
+    "code": "NZST",
+    "zones": 3,
+    "file": "nzst.json"
+  },
+  {
+    "code": "OMST",
+    "zones": 1,
+    "file": "omst.json"
+  },
+  {
+    "code": "PDT",
+    "zones": 5,
+    "file": "pdt.json"
+  },
+  {
+    "code": "PET",
+    "zones": 1,
+    "file": "pet.json"
+  },
+  {
+    "code": "PETT",
+    "zones": 2,
+    "file": "pett.json"
+  },
+  {
+    "code": "PGT",
+    "zones": 1,
+    "file": "pgt.json"
+  },
+  {
+    "code": "PHOT",
+    "zones": 2,
+    "file": "phot.json"
+  },
+  {
+    "code": "PHT",
+    "zones": 1,
+    "file": "pht.json"
+  },
+  {
+    "code": "PKT",
+    "zones": 1,
+    "file": "pkt.json"
+  },
+  {
+    "code": "PMDT",
+    "zones": 1,
+    "file": "pmdt.json"
+  },
+  {
+    "code": "PMST",
+    "zones": 1,
+    "file": "pmst.json"
+  },
+  {
+    "code": "PONT",
+    "zones": 2,
+    "file": "pont.json"
+  },
+  {
+    "code": "PST",
+    "zones": 6,
+    "file": "pst.json"
+  },
+  {
+    "code": "PWT",
+    "zones": 1,
+    "file": "pwt.json"
+  },
+  {
+    "code": "PYT",
+    "zones": 1,
+    "file": "pyt.json"
+  },
+  {
+    "code": "RET",
+    "zones": 1,
+    "file": "ret.json"
+  },
+  {
+    "code": "ROTT",
+    "zones": 1,
+    "file": "rott.json"
+  },
+  {
+    "code": "SAMT",
+    "zones": 4,
+    "file": "samt.json"
+  },
+  {
+    "code": "SAST",
+    "zones": 3,
+    "file": "sast.json"
+  },
+  {
+    "code": "SBT",
+    "zones": 1,
+    "file": "sbt.json"
+  },
+  {
+    "code": "SCT",
+    "zones": 1,
+    "file": "sct.json"
+  },
+  {
+    "code": "SGT",
+    "zones": 1,
+    "file": "sgt.json"
+  },
+  {
+    "code": "SRT",
+    "zones": 1,
+    "file": "srt.json"
+  },
+  {
+    "code": "SST",
+    "zones": 4,
+    "file": "sst.json"
+  },
+  {
+    "code": "SYOT",
+    "zones": 1,
+    "file": "syot.json"
+  },
+  {
+    "code": "TAHT",
+    "zones": 1,
+    "file": "taht.json"
+  },
+  {
+    "code": "TFT",
+    "zones": 1,
+    "file": "tft.json"
+  },
+  {
+    "code": "TJT",
+    "zones": 1,
+    "file": "tjt.json"
+  },
+  {
+    "code": "TKT",
+    "zones": 1,
+    "file": "tkt.json"
+  },
+  {
+    "code": "TLT",
+    "zones": 1,
+    "file": "tlt.json"
+  },
+  {
+    "code": "TMT",
+    "zones": 2,
+    "file": "tmt.json"
+  },
+  {
+    "code": "TOT",
+    "zones": 1,
+    "file": "tot.json"
+  },
+  {
+    "code": "TRT",
+    "zones": 2,
+    "file": "trt.json"
+  },
+  {
+    "code": "TVT",
+    "zones": 1,
+    "file": "tvt.json"
+  },
+  {
+    "code": "ULAT",
+    "zones": 3,
+    "file": "ulat.json"
+  },
+  {
+    "code": "UYT",
+    "zones": 1,
+    "file": "uyt.json"
+  },
+  {
+    "code": "UZT",
+    "zones": 2,
+    "file": "uzt.json"
+  },
+  {
+    "code": "VET",
+    "zones": 1,
+    "file": "vet.json"
+  },
+  {
+    "code": "VLAT",
+    "zones": 2,
+    "file": "vlat.json"
+  },
+  {
+    "code": "VOST",
+    "zones": 1,
+    "file": "vost.json"
+  },
+  {
+    "code": "VUT",
+    "zones": 1,
+    "file": "vut.json"
+  },
+  {
+    "code": "WAKT",
+    "zones": 1,
+    "file": "wakt.json"
+  },
+  {
+    "code": "WAT",
+    "zones": 11,
+    "file": "wat.json"
+  },
+  {
+    "code": "WEST",
+    "zones": 5,
+    "file": "west.json"
+  },
+  {
+    "code": "WET",
+    "zones": 5,
+    "file": "wet.json"
+  },
+  {
+    "code": "WFT",
+    "zones": 1,
+    "file": "wft.json"
+  },
+  {
+    "code": "WGST",
+    "zones": 3,
+    "file": "wgst.json"
+  },
+  {
+    "code": "WGT",
+    "zones": 3,
+    "file": "wgt.json"
+  },
+  {
+    "code": "WIB",
+    "zones": 2,
+    "file": "wib.json"
+  },
+  {
+    "code": "WIT",
+    "zones": 1,
+    "file": "wit.json"
+  },
+  {
+    "code": "WITA",
+    "zones": 2,
+    "file": "wita.json"
+  },
+  {
+    "code": "XJT",
+    "zones": 1,
+    "file": "xjt.json"
+  },
+  {
+    "code": "YAKT",
+    "zones": 3,
+    "file": "yakt.json"
+  },
+  {
+    "code": "YEKT",
+    "zones": 1,
+    "file": "yekt.json"
+  }
+]

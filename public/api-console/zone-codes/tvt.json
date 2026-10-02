@@ -1,0 +1,12 @@
+{
+  "code": "TVT",
+  "zones": [
+    {
+      "zone": "Pacific/Funafuti",
+      "city": "Funafuti",
+      "country": "Tuvalu",
+      "offset": "UTC+12",
+      "when": "all year"
+    }
+  ]
+}

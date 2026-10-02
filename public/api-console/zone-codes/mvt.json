@@ -1,0 +1,12 @@
+{
+  "code": "MVT",
+  "zones": [
+    {
+      "zone": "Indian/Maldives",
+      "city": "Male",
+      "country": "Maldives",
+      "offset": "UTC+5",
+      "when": "all year"
+    }
+  ]
+}

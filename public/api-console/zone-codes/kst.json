@@ -1,0 +1,19 @@
+{
+  "code": "KST",
+  "zones": [
+    {
+      "zone": "Asia/Pyongyang",
+      "city": "Pyongyang",
+      "country": "North Korea",
+      "offset": "UTC+9",
+      "when": "all year"
+    },
+    {
+      "zone": "Asia/Seoul",
+      "city": "Seoul",
+      "country": "South Korea",
+      "offset": "UTC+9",
+      "when": "all year"
+    }
+  ]
+}

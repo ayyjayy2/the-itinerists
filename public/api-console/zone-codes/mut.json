@@ -1,0 +1,12 @@
+{
+  "code": "MUT",
+  "zones": [
+    {
+      "zone": "Indian/Mauritius",
+      "city": "Port Louis",
+      "country": "Mauritius",
+      "offset": "UTC+4",
+      "when": "all year"
+    }
+  ]
+}

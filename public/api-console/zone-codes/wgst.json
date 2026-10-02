@@ -1,0 +1,26 @@
+{
+  "code": "WGST",
+  "zones": [
+    {
+      "zone": "America/Godthab",
+      "city": "Godthab",
+      "country": "Greenland",
+      "offset": "UTC−1",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Nuuk",
+      "city": "Nuuk",
+      "country": "Greenland",
+      "offset": "UTC−1",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Scoresbysund",
+      "city": "Scoresbysund",
+      "country": "Greenland",
+      "offset": "UTC−1",
+      "when": "around July"
+    }
+  ]
+}

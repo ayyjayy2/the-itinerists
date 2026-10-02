@@ -1,0 +1,20 @@
+{
+  "code": "HADT",
+  "zones": [
+    {
+      "zone": "America/Adak",
+      "city": "Adak",
+      "region": "Alaska",
+      "country": "USA",
+      "offset": "UTC−9",
+      "when": "around July"
+    },
+    {
+      "zone": "America/Atka",
+      "city": "Atka",
+      "country": "USA",
+      "offset": "UTC−9",
+      "when": "around July"
+    }
+  ]
+}

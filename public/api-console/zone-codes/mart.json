@@ -1,0 +1,12 @@
+{
+  "code": "MART",
+  "zones": [
+    {
+      "zone": "Pacific/Marquesas",
+      "city": "Marquesas",
+      "country": "French Polynesia",
+      "offset": "UTC−9:30",
+      "when": "all year"
+    }
+  ]
+}

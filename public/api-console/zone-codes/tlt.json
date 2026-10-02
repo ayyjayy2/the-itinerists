@@ -1,0 +1,12 @@
+{
+  "code": "TLT",
+  "zones": [
+    {
+      "zone": "Asia/Dili",
+      "city": "Dili",
+      "country": "Timor Leste",
+      "offset": "UTC+9",
+      "when": "all year"
+    }
+  ]
+}
