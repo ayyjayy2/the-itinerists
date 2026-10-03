@@ -99,3 +99,6 @@ scripts/serviceAccountKey*.json
 
 # Git worktrees for parallel work (see AGENTS.md 2.2)
 .worktrees/
+
+# Saved staging test sessions (live tokens)
+e2e-staging/.auth/

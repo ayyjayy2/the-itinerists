@@ -22,6 +22,7 @@
     "ios:open": "npx cap open ios",
     "test:rules:storage": "firebase emulators:exec --only storage \"node test/storage-rules.test.mjs\"",
     "test:e2e": "playwright test",
+    "test:staging": "playwright test --config playwright.staging.config.ts",
     "test:e2e:ui": "playwright test --ui",
     "build:staging": "node scripts/set-version.js && ng build --configuration staging",
     "deploy:staging": "npm run build:staging && firebase deploy --project staging --only hosting:the-itinerists-staging,firestore:rules,firestore:indexes"

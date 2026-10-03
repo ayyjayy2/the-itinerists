@@ -91,6 +91,7 @@ project is `trip-planner-ayyjayy2` before doing anything.
 | **Node test runner** | Pulse aggregations (18 tests) | `npm run test:pulse` |
 | **@firebase/rules-unit-testing** | Firestore and Storage rules (174 + 12 checks) | `npm run test:rules` |
 | **Playwright** (`@playwright/test`) | End-to-end tests of the beta flows on the demo build (sign-up, create trip, expense, itinerary event, invite), phone viewport in Chromium | `npm run test:e2e` (`e2e/`, `playwright.config.ts`; `e2e/serve.mjs` serves the demo build in CI) |
+| **Staging checks** (`e2e-staging/`, Playwright) | The after-deploy checklist against the real staging site, as two seeded test accounts: sign-in, live updates between them, every page, an expense, invites, offline sync, browser caching, the API console, 16px fields. Signs each account in once (`auth.setup.ts`, sessions in git-ignored `e2e-staging/.auth/`); `cleanup.ts` removes anything tagged `[check]` | `npm run test:staging` (`playwright.staging.config.ts`; `STAGING_URL=` for a preview channel). Not in CI: it needs the staging passwords |
 | **Firebase CLI** | Deploys: `firebase deploy --only hosting:the-itinerists`, `--only firestore:rules`, `--only storage` | authenticated as the owner |
 | **firebase-admin**, **google-auth-library** | Admin scripts | with the service-account key |
 | **sharp** | Photo resizing in the migration script | dev dependency |
