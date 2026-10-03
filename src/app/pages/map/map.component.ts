@@ -1,6 +1,6 @@
 import {
-  Component, AfterViewInit, OnDestroy,
-  inject, signal, computed, effect, NgZone
+  Component, ElementRef, OnDestroy,
+  inject, signal, computed, effect, untracked, viewChild, NgZone
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -179,7 +179,7 @@ import { FocusService } from '../../services/focus.service';
   templateUrl: './map.component.html',
   styleUrl: './map.component.scss',
 })
-export class MapComponent implements AfterViewInit, OnDestroy {
+export class MapComponent implements OnDestroy {
   private dataService = inject(DataService);
   private userService = inject(UserService);
   private tripService = inject(TripService);
@@ -266,6 +266,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private markerByKey = new Map<string, L.Marker>();
 
   private map: L.Map | null = null;
+  /** The map's element. It only renders once the trip has loaded, which on a
+   *  direct load (refresh or link to /map) is after the view first settles. */
+  private mapEl = viewChild<ElementRef<HTMLElement>>('tripMap');
   private destLayer      = L.layerGroup();
   private destPinsRendered = false;
   /** True once anything has moved the view off the neutral world zoom, so the
@@ -285,6 +288,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private geocodingBusy = false;
 
   constructor() {
+    // Start Leaflet as soon as the map's element exists, however late that is.
+    effect(() => {
+      const el = this.mapEl()?.nativeElement;
+      if (!el || this.map) return;
+      untracked(() => this.ngZone.runOutsideAngular(() => this.boot(el)));
+    });
+
     effect(() => {
       if (!this.mapReady()) return;
       this.dataService.data();
@@ -303,10 +313,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       if (showDest && !onMap) this.destLayer.addTo(this.map);
       else if (!showDest && onMap) this.map.removeLayer(this.destLayer);
     });
-  }
-
-  ngAfterViewInit(): void {
-    this.ngZone.runOutsideAngular(() => this.boot());
   }
 
   ngOnDestroy(): void {
@@ -359,9 +365,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   // ── Boot ─────────────────────────────────────────────────────────────────────
 
-  private async boot(): Promise<void> {
-    const el = document.getElementById('trip-map');
-    if (!el) return;
+  private async boot(el: HTMLElement): Promise<void> {
     // Neutral starting view; the map fits to the trip's markers once they resolve.
     this.map = L.map(el, { zoomControl: true }).setView([25, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

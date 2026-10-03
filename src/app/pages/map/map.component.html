@@ -41,7 +41,7 @@
   }
 
   <div class="map-wrap">
-    <div class="map-container" id="trip-map"></div>
+    <div class="map-container" id="trip-map" #tripMap></div>
     @if (!mapReady() || updating()) {
       <div class="map-loading" [class.map-loading--overlay]="mapReady()">
         <div class="map-spinner"></div>

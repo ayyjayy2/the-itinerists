@@ -88,7 +88,6 @@ test.describe('3. Every page', () => {
   });
 
   test('Map draws its tiles when reached from another page', async ({ page }) => {
-    test.fixme(true, 'Known bug #343: Map can stay on "Loading data…". Remove this line once it is fixed.');
     await page.goto('/home');
     await page.getByRole('navigation').getByRole('button', { name: 'More' }).click();
     await page.getByRole('link', { name: /^Map$|Trip Map/ }).first().click();
@@ -96,7 +95,6 @@ test.describe('3. Every page', () => {
   });
 
   test('Map draws its tiles when opened directly (refresh or link)', async ({ page }) => {
-    test.fixme(true, 'Known bug #343: Map can stay on "Loading data…". Remove this line once it is fixed.');
     await page.goto('/home');
     await page.goto('/map');
     await expect(page.locator('img.leaflet-tile-loaded').first()).toBeVisible({ timeout: 30_000 });
