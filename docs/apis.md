@@ -9,11 +9,12 @@ this file whenever a service is added or removed (the privacy policy at
 
 | Tool | Version | What it does | Where |
 |---|---|---|---|
-| **Angular** | 19 | The web app: standalone components, signals, lazy routes | `src/app/` |
-| **Angular service worker** (PWA) | 19 | Installable web app, offline shell, cached assets | `ngsw-config.json`, `public/manifest.webmanifest` |
+| **Angular** | 20 | The web app: standalone components, signals, lazy routes. Moved from 19 (out of support) on 2026-10-02; 21 waits for AngularFire | `src/app/` |
+| **Angular service worker** (PWA) | 20 | Installable web app, offline shell, cached assets | `ngsw-config.json`, `public/manifest.webmanifest` |
 | **Capacitor** | 8 (Swift Package Manager, no CocoaPods) | Native iOS shell around the same web build | `ios/`, `capacitor.config.ts`, `npm run ios:run` |
 | **Leaflet** | 1.9 | The trip map | `src/app/pages/map/`, `src/app/shared/day-map-card/` |
 | **RxJS** | 7 | Streams from Firebase into signals | throughout |
+| **AngularFire** (`@angular/fire`) | 20.1 | Firebase for Angular; every Firebase call in the app goes through it. It brings its own Firebase JS SDK 11.10; `overrides` pins `rxfire` to 6.1.0 so rxfire uses that same copy, not the top-level `firebase` 12 (used by the rules tests). No release supports Angular 21 yet | `src/app/app.config.ts`, the services |
 | **tz-lookup** | 6 | Coordinates → IANA time zone, for a trip leg's zone when it is saved | `src/app/services/geocode.service.ts`, `src/app/utils/zones.ts` (Intl-only zone math) |
 
 ## Firebase (project `trip-planner-ayyjayy2`, Spark plan until Blaze)

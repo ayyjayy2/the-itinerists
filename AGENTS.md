@@ -4,7 +4,7 @@ How AI coding agents (and people) understand and work on The Itinerists. Follow 
 is the one place the project's rules live. `CLAUDE.md` imports this file, so Claude Code loads it
 automatically; other agents read it by name.
 
-**The project:** a group trip planner. One Angular 19 codebase runs as a website, an installable web
+**The project:** a group trip planner. One Angular 20 codebase runs as a website, an installable web
 app (PWA) and a Capacitor 8 iPhone app, on Firebase (Auth, Firestore, App Check, Hosting, Analytics on
 the web, Crashlytics on iPhone). Owner: Alayna.
 
