@@ -33,7 +33,7 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 
 - **Branch, then pull request.** Never commit to `master` directly; it is protected and needs the CI `test` job green.
 - **CI must pass:** unit tests, Pulse tests, the production build, security-rules tests and Playwright end-to-end tests.
-- **Merging to master deploys staging automatically** (https://the-itinerists-staging.web.app). **Production (theitinerists.com) is deployed by hand,** from an up-to-date master, when the owner wants the change live.
+- **Merging to master deploys staging automatically** (https://the-itinerists-staging.web.app); run `npm run test:staging` once it's up. **Production (theitinerists.com) is deployed by hand,** from an up-to-date master, when the owner wants the change live.
 - **The iPhone app** only changes when a new build is installed: `npm run ios:sync`, then Xcode Run (simulator) or an `xcodebuild` + `devicectl` install (a phone). Commit the version stamp `ios:sync` writes to `ios/App/App.xcodeproj/project.pbxproj` through a pull request.
 - **One change per pull request,** described in plain words: what changed, why, and how it was tested.
 - **Every action item is an issue on the [Trip Planner board](https://github.com/users/ayyjayy2/projects/9)** (GitHub project #9) and moves through it as the work does: **Backlog** when it's found, **In Progress** when work starts, **In Review** when its pull request opens, **Done** when that merges. The pull request says `Closes #N` so the issue and the card close with it. New findings go on the board as Backlog issues (no real names: the repo is public). `TODO.md` keeps the owner's non-code items (survey, marketing, purchases).
@@ -102,6 +102,7 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 | `npm run test:pulse` | Pulse dashboard tests |
 | `PATH="/opt/homebrew/opt/openjdk/bin:$PATH" npm run test:rules` | Security-rules tests on the emulators (needs a JDK; the PERMISSION_DENIED lines are expected) |
 | `npm run test:e2e` | Playwright end-to-end tests (builds and serves the demo) |
+| `npm run test:staging` | After a merge has deployed staging: the after-deploy checks against the real staging site (sign-in, live updates between two test accounts, every page, invites, offline, caching, the API console, phone layout). Needs `scripts/staging-accounts.local.json`; cleans up what it adds. `STAGING_URL=…` points it at a preview channel |
 | `npm run deploy:staging` | Build and deploy staging by hand (CI does it after every merge) |
 | `node scripts/api-console.js grant <username>` | Approve a staging account for the API console (`/api-console/index.html` on staging); also `revoke`, `list`, `publish <openapi.json>`. Only with the owner's say-so |
 | `firebase deploy --only hosting:the-itinerists --project trip-planner-ayyjayy2` | Deploy production hosting (after `npm run build`) |
