@@ -21,17 +21,22 @@ const testEnv = await initializeTestEnvironment({
   firestore: { rules: readFileSync('firestore.rules', 'utf8') },
 });
 
-// Actors
-const alice = testEnv.authenticatedContext('alice').firestore(); // trip owner
-const bob   = testEnv.authenticatedContext('bob').firestore();   // trip member
-const carol = testEnv.authenticatedContext('carol').firestore(); // signed in, NOT a member
-const dave  = testEnv.authenticatedContext('dave', { email: 'dave@example.com' }).firestore();  // signed in, brand new
-const noMail = testEnv.authenticatedContext('nomail').firestore();                              // brand new, no email on the account
-const placeholder = testEnv.authenticatedContext('ph', { email: 'ph@the-itinerists.local' }).firestore(); // brand new, old placeholder address
-const admin = testEnv.authenticatedContext('admin').firestore(); // app admin (isAdmin), not a member
+// Actors. Every token carries auth_time (when the person last entered their
+// password): sessions older than 90 days are refused (see isSignedIn()).
+const NOW_S = Math.floor(Date.now() / 1000);
+const FRESH = { auth_time: NOW_S - 60 };
+const STALE = { auth_time: NOW_S - 91 * 24 * 60 * 60 };
+const alice = testEnv.authenticatedContext('alice', FRESH).firestore(); // trip owner
+const bob   = testEnv.authenticatedContext('bob', FRESH).firestore();   // trip member
+const carol = testEnv.authenticatedContext('carol', FRESH).firestore(); // signed in, NOT a member
+const dave  = testEnv.authenticatedContext('dave', { ...FRESH, email: 'dave@example.com' }).firestore();  // signed in, brand new
+const noMail = testEnv.authenticatedContext('nomail', FRESH).firestore();                              // brand new, no email on the account
+const placeholder = testEnv.authenticatedContext('ph', { ...FRESH, email: 'ph@the-itinerists.local' }).firestore(); // brand new, old placeholder address
+const admin = testEnv.authenticatedContext('admin', FRESH).firestore(); // app admin (isAdmin), not a member
 const OWNER_UID = 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';                           // the app owner's account (Alayna)
-const owner = testEnv.authenticatedContext(OWNER_UID).firestore(); // app owner, not a member of T
+const owner = testEnv.authenticatedContext(OWNER_UID, FRESH).firestore(); // app owner, not a member of T
 const anon  = testEnv.unauthenticatedContext().firestore();      // logged out
+const bobStale = testEnv.authenticatedContext('bob', STALE).firestore();  // bob, last signed in 91 days ago
 
 async function seed() {
   await testEnv.withSecurityRulesDisabled(async (ctx) => {
@@ -384,6 +389,14 @@ await t('delete a counter whose window has passed', 'allow', async () => {
 console.log('\nLog sizes');
 await t('usage event with a huge page', 'deny', () => setDoc(doc(bob, '_activity', 'e2'), { uid: 'bob', tripId: 'T', type: 'page', page: '/'.repeat(500), at: serverTimestamp() }));
 await t('write log with a huge action', 'deny', () => setDoc(doc(bob, '_writes', 'w2'), { uid: 'bob', tripId: 'T', kind: 'trip', action: 'x'.repeat(100), at: serverTimestamp() }));
+
+console.log('\nSession age (90 days from the last password sign-in)');
+await t('member with a fresh session reads the trip', 'allow', () => getDoc(doc(bob, 'trips', 'T')));
+await t('member whose session is 91 days old reads the trip', 'deny', () => getDoc(doc(bobStale, 'trips', 'T')));
+await t('stale session reads own trip index', 'deny', () => getDoc(doc(bobStale, 'userTrips', 'bob')));
+await t('stale session reads own private account doc', 'deny', () => getDoc(doc(bobStale, 'users', 'bob', 'private', 'account')));
+await t('stale session writes own expenses', 'deny', () => setDoc(doc(bobStale, 'userExpenses', 'bob'), { items: [] }));
+await t('stale session leaves the trip (deletes own member doc)', 'deny', () => deleteDoc(doc(bobStale, 'trips', 'T', 'members', 'bob')));
 
 await testEnv.cleanup();
 console.log(`\n${fail === 0 ? '✅' : '❌'} rules tests: ${pass} passed, ${fail} failed`);

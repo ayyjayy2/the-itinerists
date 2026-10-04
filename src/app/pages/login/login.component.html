@@ -6,6 +6,9 @@
     </div>
 
     <form class="auth-form" (ngSubmit)="submit()" #f="ngForm">
+      @if (notice()) {
+        <p class="auth-notice" role="status">{{ notice() }}</p>
+      }
       <div class="form-group">
         <label for="email">Email</label>
         <input

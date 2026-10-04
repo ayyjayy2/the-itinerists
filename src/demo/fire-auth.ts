@@ -15,6 +15,8 @@ export interface User {
   uid: string;
   email: string | null;
   emailVerified?: boolean;
+  /** Absent in the demo, so its session never counts as expired (utils/session.ts). */
+  metadata?: { lastSignInTime?: string };
 }
 
 export interface UserCredential {
