@@ -20,7 +20,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <header class="policy-head">
           <app-brand [mark]="40" [showWordmark]="false" />
           <h1>Privacy Policy</h1>
-          <p class="effective">Effective September 30, 2026</p>
+          <p class="effective">Effective October 4, 2026</p>
           <p class="lede">The Itinerists is a group trip planner. This page says exactly what the app stores, who can see it, and which outside services it talks to. Short version: your trip data is shared only with the people on your trip, your email is private, we don't sell or advertise with anything, and you can delete your account yourself at any time.</p>
         </header>
 
@@ -41,8 +41,8 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <h3>Technical information</h3>
         <ul>
           <li><strong>Error reports.</strong> If something breaks, the app records the error message, where in the app it happened, the time, and a random session id that is not linked to your account. No personal data is included. In the iOS app, crashes and those same errors also go to Firebase Crashlytics together with your device model, iOS version, app version and your account id, so we can tell how many people a bug affects. Never your name, email or trip content.</li>
-          <li><strong>Usage analytics.</strong> To see how the app is used, we record which screens you open and when, the app version, your device's time zone and whether you're on the web, the installed web app or the iOS app. We keep this in our own database, and the same screen views go to Google Analytics, which also estimates your country and device type from your connection. It is used only to improve the app, never for advertising, and it is not sold or shared beyond that.</li>
-          <li><strong>App integrity checks.</strong> Firebase App Check confirms requests come from the genuine app. On the web this uses Google reCAPTCHA, which analyses browser signals; on iOS it uses Apple's device attestation. Neither tells us who you are.</li>
+          <li><strong>Usage analytics.</strong> To see how the app is used, we record which screens you open and when, a short "still open" signal every two minutes while the app is on screen, the app version, your device's time zone and whether you're on the web, the installed web app or the iOS app. We also note that you changed something on a trip (which kind of thing and when, never what you wrote). We keep this in our own database, tied to your account and trip. On the website and installed web app, screen views also go to Google Analytics with your account id and the open trip's id, plus a note when a trip is created, joined or shared; Google also estimates your country and device type from your connection. Analytics are used only to improve the app, never for advertising, and are not sold or shared beyond that.</li>
+          <li><strong>App integrity checks.</strong> Firebase App Check confirms requests come from the genuine app. On the web this uses Google reCAPTCHA, which analyses browser signals; the iOS app uses a check built into the app. Neither tells us who you are.</li>
         </ul>
         <p>The app does <strong>not</strong> use your device's location, read your contacts, run advertising trackers, or sell any data.</p>
 
@@ -61,13 +61,18 @@ import { BrandComponent } from '../../shared/brand/brand.component';
           <tbody>
             <tr><td>Google Firebase</td><td>Sign-in, database, hosting, integrity checks</td><td>Everything listed above; stored in Google's data centers in the United States</td></tr>
             <tr><td>Firebase Crashlytics (iOS app only)</td><td>Crash reports</td><td>The error, device model, iOS version, app version and your account id. Not your name, email or trip content</td></tr>
-            <tr><td>Google Analytics</td><td>Usage statistics</td><td>Screens opened, app version, time zone, platform, a random device id. Not your name, email or trip content</td></tr>
+            <tr><td>Google Analytics (web only)</td><td>Usage statistics</td><td>Screens opened, app version, time zone, platform, your account id, the open trip's id, a random device id, and when a trip is created, joined or shared. Not your name, email or trip content</td></tr>
+            <tr><td>Google reCAPTCHA (web only)</td><td>Integrity checks</td><td>Browser and interaction signals, under Google's own privacy policy</td></tr>
             <tr><td>Open-Meteo</td><td>Weather on the home screen</td><td>Your trip destination's coordinates. Never your own location</td></tr>
-            <tr><td>OpenStreetMap Nominatim</td><td>Turns place names into map pins</td><td>The place name you typed</td></tr>
+            <tr><td>OpenStreetMap Nominatim</td><td>Turns place names into map pins</td><td>The place name you typed. Results are kept in our database so each place is looked up once</td></tr>
+            <tr><td>OpenStreetMap tiles</td><td>The map pictures on Map and day cards</td><td>A request from your device for the area of the map on screen</td></tr>
             <tr><td>Frankfurter</td><td>Currency conversion rates</td><td>Currency codes only</td></tr>
             <tr><td>Google Fonts</td><td>The app's typefaces</td><td>A font request from your device</td></tr>
           </tbody>
         </table>
+
+        <h2>Cookies and storage on your device</h2>
+        <p>The app keeps a copy of your trips on your device so it opens quickly and works offline, and remembers small settings such as your theme, the last currency you used and which reminders you've dismissed. Firebase keeps you signed in the same way. On the website, Google Analytics sets its own cookies to count visits. We use no advertising cookies. Signing out or clearing your browser's site data removes these copies; your trips stay safe on our servers.</p>
 
         <h2>Your choices</h2>
         <ul>
@@ -75,6 +80,17 @@ import { BrandComponent } from '../../shared/brand/brand.component';
           <li><strong>Leave a trip</strong> from Trip Settings. Your personal lists and photos for that trip go with you.</li>
           <li><strong>Delete your account</strong> from the Profile page. This removes your profile, email, personal lists and photos, takes you off every trip, and deletes your sign-in. A trip you owned passes to its longest-standing member; a trip you were the only member of is deleted. This cannot be undone.</li>
         </ul>
+
+        <h2>Your rights</h2>
+        <p>Wherever you live, you can see, correct and delete your information using the app, and you can email us to ask for a copy of everything we hold about you or for anything the app doesn't let you do yourself. We answer within 30 days.</p>
+        <h3>In the European Economic Area and the United Kingdom</h3>
+        <ul>
+          <li>We use your account and trip content to provide the app you signed up for (performance of a contract). We use error reports, usage analytics and integrity checks because we have a legitimate interest in keeping the app secure, working and improving. You may object to that use by emailing us.</li>
+          <li>You have the right to access, correct, delete, restrict and move your data, and to complain to your local data protection authority.</li>
+          <li>Your data is stored by Google in the United States. Google transfers it under the EU-US Data Privacy Framework and the European Commission's Standard Contractual Clauses.</li>
+        </ul>
+        <h3>In the United States</h3>
+        <p>We don't sell your personal information or share it for targeted advertising, and we don't collect sensitive personal information. If your state gives you privacy rights (such as California, Colorado, Virginia or Illinois), you can use them by emailing us, and we won't treat you differently for doing so.</p>
 
         <h2>How long we keep data</h2>
         <p>Until you delete it. Trip content stays as long as the trip has members. Error reports are kept for troubleshooting and contain no personal data.</p>
@@ -86,39 +102,18 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <p>The Itinerists is not directed at children under 13, and we do not knowingly collect information from them.</p>
 
         <h2>Changes to this policy</h2>
-        <p>If what the app collects or shares changes, this page and the effective date change with it.</p>
+        <p>If what the app collects or shares changes, this page and the effective date change with it. If a change is significant, we'll tell you in the app.</p>
 
         <h2>Contact</h2>
         <p>Questions or requests about your data: <a href="mailto:hello&#64;theitinerists.com">hello&#64;theitinerists.com</a>.</p>
 
         <footer class="policy-foot">
+          <a routerLink="/terms">Terms of service</a>
           <a routerLink="/login">Back to sign in</a>
         </footer>
       </article>
     </div>
   `,
-  styles: `
-    .policy-screen {
-      height: 100dvh; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
-      background: var(--bg); padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px));
-      padding-top: calc(1.5rem + env(safe-area-inset-top, 0px));
-    }
-    .policy { max-width: 42rem; margin: 0 auto; line-height: 1.55; color: var(--text); }
-    .policy-head { text-align: center; margin-bottom: 1.5rem; }
-    h1 { margin: 0.6rem 0 0.2rem; font-size: 1.6rem; }
-    .effective { margin: 0 0 0.8rem; font-size: 0.85rem; color: var(--text-muted); }
-    .lede { margin: 0 auto; max-width: 36rem; text-align: left; }
-    h2 { font-size: 1.15rem; margin: 1.6rem 0 0.4rem; color: var(--primary-dark); }
-    h3 { font-size: 0.95rem; margin: 0.9rem 0 0.25rem; }
-    ul { margin: 0.2rem 0 0.4rem; padding-left: 1.2rem; }
-    li { margin: 0.25rem 0; }
-    p { margin: 0.3rem 0; }
-    table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.9rem; }
-    th, td { text-align: left; vertical-align: top; padding: 0.45rem 0.5rem; border-top: 1px solid var(--border); }
-    thead th { border-top: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
-    a { color: var(--primary-dark); font-weight: 700; }
-    .policy-foot { margin-top: 2rem; text-align: center; }
-    @media (max-width: 480px) { table { display: block; overflow-x: auto; } }
-  `,
+  styleUrl: '../../shared/legal-page.scss',
 })
 export class PrivacyComponent {}

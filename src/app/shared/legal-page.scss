@@ -1,0 +1,26 @@
+// Shared by the privacy policy and the terms of service: a full-screen,
+// scrolling reading page outside the app chrome.
+.policy-screen {
+  height: 100dvh; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  background: var(--bg); padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px));
+  padding-top: calc(1.5rem + env(safe-area-inset-top, 0px));
+}
+.policy { max-width: 42rem; margin: 0 auto; line-height: 1.55; color: var(--text); }
+.policy-head { text-align: center; margin-bottom: 1.5rem; }
+h1 { margin: 0.6rem 0 0.2rem; font-size: 1.6rem; }
+.effective { margin: 0 0 0.8rem; font-size: 0.85rem; color: var(--text-muted); }
+.lede { margin: 0 auto; max-width: 36rem; text-align: left; }
+h2 { font-size: 1.15rem; margin: 1.6rem 0 0.4rem; color: var(--primary-dark); }
+h3 { font-size: 0.95rem; margin: 0.9rem 0 0.25rem; }
+ul { margin: 0.2rem 0 0.4rem; padding-left: 1.2rem; }
+li { margin: 0.25rem 0; }
+p { margin: 0.3rem 0; }
+table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.9rem; }
+th, td { text-align: left; vertical-align: top; padding: 0.45rem 0.5rem; border-top: 1px solid var(--border); }
+thead th { border-top: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+a { color: var(--primary-dark); font-weight: 700; }
+.policy-foot {
+  margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 1.25rem;
+  a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+@media (max-width: 480px) { table { display: block; overflow-x: auto; } }
