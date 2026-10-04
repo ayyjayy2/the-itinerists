@@ -38,27 +38,6 @@
       </div>
 
       <div class="form-group">
-        <label>Username</label>
-        <input
-          type="text"
-          [(ngModel)]="username"
-          name="username"
-          placeholder="3–20 letters, numbers, . _ -"
-          maxlength="20"
-          autocapitalize="none"
-          autocomplete="username"
-          required
-          (blur)="onBlur('username')"
-          [class.invalid]="!!fieldError('username')"
-          [attr.aria-invalid]="fieldError('username') ? true : null"
-          [attr.aria-describedby]="fieldError('username') ? 'signup-err-username' : null"
-        />
-      @if (fieldError('username'); as err) {
-        <p class="field-error" id="signup-err-username">{{ err }}</p>
-      }
-      </div>
-
-      <div class="form-group">
         <label>Email</label>
         <input
           type="email"
@@ -75,7 +54,7 @@
       @if (fieldError('email'); as err) {
         <p class="field-error" id="signup-err-email">{{ err }}</p>
       }
-        <p class="hint">Where password resets go. Kept separate from your username.</p>
+        <p class="hint">You sign in with it, and it's where password resets go. Only you can see it.</p>
       </div>
 
       <div class="form-group">
@@ -103,7 +82,7 @@
         }
       </div>
 
-      <app-avatar-picker [(emoji)]="avatarEmoji" [(color)]="color" [(letterColor)]="avatarLetterColor" [name]="displayName" [preview]="true" [previewUsername]="username" />
+      <app-avatar-picker [(emoji)]="avatarEmoji" [(color)]="color" [(letterColor)]="avatarLetterColor" [name]="displayName" [preview]="true" />
 
       <div class="form-group">
         <label>Password</label>

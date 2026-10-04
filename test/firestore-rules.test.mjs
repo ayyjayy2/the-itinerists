@@ -43,8 +43,8 @@ async function seed() {
       setDoc(doc(db, 'users', 'admin'), { uid: 'admin', username: 'admin', isAdmin: true }),
       setDoc(doc(db, 'users', OWNER_UID), { uid: OWNER_UID, username: 'alayna', isAdmin: true }),
       setDoc(doc(db, 'users', 'bob', 'private', 'account'), { authEmail: 'bob@example.com' }),
-      setDoc(doc(db, 'usernames', 'alice'), { uid: 'alice', authEmail: 'alice@example.com' }),
-      setDoc(doc(db, 'usernames', 'bob'),   { uid: 'bob',   authEmail: 'bob@example.com' }),
+      setDoc(doc(db, 'usernames', 'alice'), { uid: 'alice' }),                                  // signs in with email
+      setDoc(doc(db, 'usernames', 'bob'),   { uid: 'bob',   authEmail: 'bob@the-itinerists.local' }), // old username-only account
       setDoc(doc(db, 'trips', 'T'), { name: 'Trip', createdBy: 'alice', memberCount: 2 }),
       setDoc(doc(db, 'trips', 'T', 'members', 'alice'), { uid: 'alice', role: 'owner' }),
       setDoc(doc(db, 'trips', 'T', 'members', 'bob'),   { uid: 'bob',   role: 'member' }),
@@ -194,26 +194,25 @@ await t('another user writes private account', 'deny', () => setDoc(doc(alice, '
 await t('anon reads private account', 'deny', () => getDoc(doc(anon, 'users', 'bob', 'private', 'account')));
 await t('admin reads private account', 'allow', () => getDoc(doc(admin, 'users', 'bob', 'private', 'account')));
 
-console.log('\nusernames (single GET public, never listable, owner-claimed)');
+console.log('\nusernames (single GET public, never listable, no new names, never a real email)');
 await t('anon gets a username entry (sign-in lookup)', 'allow', () => getDoc(doc(anon, 'usernames', 'alice')));
 await t('anon lists usernames', 'deny', () => getDocs(collection(anon, 'usernames')));
 await t('signed-in lists usernames', 'deny', () => getDocs(collection(bob, 'usernames')));
 await t('admin lists usernames', 'deny', () => getDocs(collection(admin, 'usernames')));
-await t('claim a free username for self', 'allow', () => setDoc(doc(dave, 'usernames', 'dave'), { uid: 'dave', authEmail: 'dave@example.com' }));
-await t('claim a username for someone else', 'deny', () => setDoc(doc(dave, 'usernames', 'erin'), { uid: 'erin', authEmail: 'e@x' }));
-await t('anon claims a username', 'deny', () => setDoc(doc(anon, 'usernames', 'zed'), { uid: 'zed', authEmail: 'z@x' }));
-await t('new account claims a username without an email on the account', 'deny', () => setDoc(doc(noMail, 'usernames', 'nomail'), { uid: 'nomail', authEmail: '' }));
-await t('new account claims a username with a placeholder email', 'deny', () => setDoc(doc(placeholder, 'usernames', 'ph'), { uid: 'ph', authEmail: 'ph@the-itinerists.local' }));
-await t("new account's username entry names a different email", 'deny', () => setDoc(doc(dave, 'usernames', 'dave2'), { uid: 'dave', authEmail: 'someone@else.com' }));
-await t('existing account claims a new username (rename)', 'allow', () => setDoc(doc(bob, 'usernames', 'bobby'), { uid: 'bob', authEmail: 'bob@the-itinerists.local' }));
-await t('take over an existing username', 'deny', () => setDoc(doc(dave, 'usernames', 'alice'), { uid: 'dave', authEmail: 'dave@example.com' }));
-await t('owner updates own username entry', 'allow', () => updateDoc(doc(bob, 'usernames', 'bob'), { pendingEmail: 'bob2@example.com' }));
+await t('new account claims a username (sign-up has none now)', 'deny', () => setDoc(doc(dave, 'usernames', 'dave'), { uid: 'dave' }));
+await t('existing account claims a new username', 'deny', () => setDoc(doc(bob, 'usernames', 'bobby'), { uid: 'bob', authEmail: 'bob@the-itinerists.local' }));
+await t('anon claims a username', 'deny', () => setDoc(doc(anon, 'usernames', 'zed'), { uid: 'zed' }));
+await t('take over an existing username', 'deny', () => setDoc(doc(dave, 'usernames', 'alice'), { uid: 'dave' }));
+await t('owner drops the placeholder address from own entry', 'allow', () => setDoc(doc(bob, 'usernames', 'bob'), { uid: 'bob' }));
+await t('owner puts a real email in own entry', 'deny', () => updateDoc(doc(bob, 'usernames', 'bob'), { authEmail: 'bob@example.com' }));
+await t('owner adds a pending email to own entry', 'deny', () => updateDoc(doc(bob, 'usernames', 'bob'), { pendingEmail: 'bob2@example.com' }));
 await t('owner reassigns own entry to another uid', 'deny', () => updateDoc(doc(bob, 'usernames', 'bob'), { uid: 'alice' }));
-await t('another user updates username entry', 'deny', () => updateDoc(doc(alice, 'usernames', 'bob'), { authEmail: 'x' }));
+await t('another user updates username entry', 'deny', () => setDoc(doc(alice, 'usernames', 'bob'), { uid: 'bob' }));
+await t('admin strips a real email from an entry', 'allow', () => setDoc(doc(admin, 'usernames', 'alice'), { uid: 'alice' }));
 await t('owner releases own username', 'allow', () => deleteDoc(doc(bob, 'usernames', 'bob')));
 await t('another user releases a username', 'deny', () => deleteDoc(doc(alice, 'usernames', 'bob')));
 await t('admin releases a username', 'allow', () => deleteDoc(doc(admin, 'usernames', 'bob')));
-await t('create own user doc', 'allow', () => setDoc(doc(dave, 'users', 'dave'), { uid: 'dave', username: 'dave', isAdmin: false }));
+await t('create own user doc (no username)', 'allow', () => setDoc(doc(dave, 'users', 'dave'), { uid: 'dave', displayName: 'Dave', isAdmin: false }));
 await t('create own user doc with no email on the account', 'deny', () => setDoc(doc(noMail, 'users', 'nomail'), { uid: 'nomail', username: 'nomail', isAdmin: false }));
 await t('create own user doc on a placeholder address', 'deny', () => setDoc(doc(placeholder, 'users', 'ph'), { uid: 'ph', username: 'ph', isAdmin: false }));
 await t('create a user doc for someone else', 'deny', () => setDoc(doc(dave, 'users', 'erin'), { uid: 'erin', username: 'erin' }));

@@ -43,11 +43,12 @@ const accounts = fs.existsSync(accountsFile) ? JSON.parse(fs.readFileSync(accoun
     try { await auth.updateUser(u.uid, { email, password, displayName: u.displayName }); }
     catch { await auth.createUser({ uid: u.uid, email, password, displayName: u.displayName }); }
     accounts[u.username] = { uid: u.uid, username: u.username, password };
-    // The app keeps emails out of the profile doc: they live in users/{uid}/private/account and the username index.
+    // The app keeps emails out of the profile doc: they live in users/{uid}/private/account.
+    // The public username index holds only placeholder addresses, never a real one (#352).
     const { authEmail, ...profile } = u;
     docs.set(p, profile);
     docs.set(`users/${u.uid}/private/account`, { authEmail });
-    docs.set(`usernames/${u.username}`, { uid: u.uid, authEmail });
+    docs.set(`usernames/${u.username}`, authEmail.endsWith('@the-itinerists.local') ? { uid: u.uid, authEmail } : { uid: u.uid });
   }
   let batch = db.batch(), n = 0;
   for (const [p, data] of docs) {

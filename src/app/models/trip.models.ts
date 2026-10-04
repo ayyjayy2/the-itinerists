@@ -15,18 +15,21 @@ export interface PrivateAccount {
   pendingEmail?: string;
 }
 
-/** usernames/{username} — resolves a username to its sign-in address before
- *  auth. Fetchable one at a time by anyone who knows the username; never listable. */
+/** usernames/{username} — only for accounts from before sign-up asked for an
+ *  email: maps the username they sign in with to its placeholder address
+ *  (username@the-itinerists.local). Fetchable one at a time by anyone who knows
+ *  the username, never listable, and never holds a real email (#352). An entry
+ *  without authEmail means "this person signs in with their email now". */
 export interface UsernameEntry {
   uid: string;
-  authEmail: string;
-  pendingEmail?: string;
+  authEmail?: string;
 }
 
 export interface FirestoreUser {
   uid: string;
   displayName: string;
-  username: string;
+  /** Only on accounts made before #352; new accounts sign in with their email. */
+  username?: string;
   avatarEmoji: string; // emoji, or a single A–Z letter
   color: string;
   avatarLetterColor?: string; // letter avatars only: hex color of the letter

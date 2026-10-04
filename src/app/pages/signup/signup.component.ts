@@ -36,7 +36,6 @@ export class SignupComponent implements OnInit {
   displayName = '';
   avatarEmoji = '🌸';
   avatarLetterColor = '';
-  username    = '';
   password    = '';
   confirmPass = '';
   email = '';
@@ -73,20 +72,17 @@ export class SignupComponent implements OnInit {
 
   showPassword = signal(false);
 
-  /** Per-field validation + server uniqueness checks (see utils/signup-form). */
-  readonly form = new SignupFormState({
-    usernameExists: u => this.authService.usernameExists(u),
-  });
+  /** Per-field validation (see utils/signup-form). */
+  readonly form = new SignupFormState();
   /** Set when registration found the email already on an account: the form is
    *  replaced by a neutral "check your inbox" step (see EmailInUseError). */
   readonly checkInbox = signal('');
 
   values(): SignupValues {
-    return { name: this.displayName, username: this.username, email: this.email,
-             password: this.password, confirm: this.confirmPass };
+    return { name: this.displayName, email: this.email, password: this.password, confirm: this.confirmPass };
   }
   fieldError(field: SignupField): string { return this.form.error(field, this.values()); }
-  onBlur(field: SignupField): void { void this.form.blur(field, this.values()); }
+  onBlur(field: SignupField): void { this.form.blur(field); }
   get canSubmit(): boolean { return this.form.isValid(this.values()) && !this.inviteError() && !this.inviteChecking(); }
 
   /** Set once the user has tried to submit; from then on the red box above the
@@ -118,7 +114,7 @@ export class SignupComponent implements OnInit {
       if (code) {
         // Joins the invited trip as part of registration → straight to Home.
         await this.authService.register(
-          code, this.displayName.trim(), this.avatarEmoji, this.username.trim(),
+          code, this.displayName.trim(), this.avatarEmoji,
           this.password, this.color, this.avatarLetterColor, this.email.trim(),
         );
         await this.userService.waitForUser();
@@ -127,7 +123,6 @@ export class SignupComponent implements OnInit {
         await this.authService.registerStandalone(
           this.displayName.trim(),
           this.avatarEmoji,
-          this.username.trim(),
           this.password,
           this.color,
           this.email.trim(),

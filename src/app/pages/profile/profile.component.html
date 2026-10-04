@@ -10,7 +10,6 @@
       <div class="avatar-preview" [style.background]="color"><app-avatar-glyph [emoji]="avatarEmoji" [letterColor]="avatarLetterColor" /></div>
       <div class="preview-text">
         <div class="preview-name">{{ displayName || user.displayName }}</div>
-        <div class="preview-username">&#64;{{ user.username }}</div>
         @if (currentRecoveryEmail) {
           <div class="preview-email">{{ currentRecoveryEmail }}</div>
         } @else if (pendingRecoveryEmail) {
@@ -49,10 +48,9 @@
     <div class="card section-card">
       <h2>Account</h2>
       <div class="account-actions">
-        <button class="btn btn-ghost" (click)="openUsernameModal()">Change Username</button>
         <button class="btn btn-ghost" (click)="openPasswordModal()">Change Password</button>
         <button class="btn btn-ghost" (click)="openRecoveryModal()">
-          {{ pendingRecoveryEmail ? 'Confirm Recovery Email' : (currentRecoveryEmail ? 'Change Recovery Email' : 'Add Recovery Email') }}
+          {{ pendingRecoveryEmail ? 'Confirm Email' : (currentRecoveryEmail ? 'Change Email' : 'Add Email') }}
         </button>
       </div>
       <div class="account-exit">
@@ -127,35 +125,6 @@
   </div>
 }
 
-<!-- Username modal -->
-@if (showUsernameModal()) {
-  <div class="modal-backdrop" (click)="closeUsernameModal()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <h2>Change Username</h2>
-      <p class="modal-hint">This is how you log in. Changing it takes effect immediately. 3–20 characters: letters, numbers, dots, underscores or hyphens.</p>
-
-      <div class="form-group">
-        <label for="modal-username">New Username</label>
-        <input id="modal-username" type="text" [(ngModel)]="username" autocapitalize="none" placeholder="e.g. makaela" maxlength="20" (keydown.enter)="saveUsername()" />
-      </div>
-
-      @if (usernameError()) {
-        <div class="alert alert-error">{{ usernameError() }}</div>
-      }
-      @if (usernameSuccess()) {
-        <div class="alert alert-success">Username updated!</div>
-      }
-
-      <div class="modal-actions">
-        <button class="btn btn-ghost" (click)="closeUsernameModal()" [disabled]="usernameSaving()">Cancel</button>
-        <button class="btn btn-primary" (click)="saveUsername()" [disabled]="usernameSaving()">
-          {{ usernameSaving() ? 'Saving…' : 'Save' }}
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
 <!-- Password modal -->
 @if (showPasswordModal()) {
   <div class="modal-backdrop" (click)="closePasswordModal()">
@@ -203,7 +172,7 @@
 @if (showRecoveryModal()) {
   <div class="modal-backdrop" (click)="closeRecoveryModal()">
     <div class="modal-box" (click)="$event.stopPropagation()">
-      <h2>Recovery Email</h2>
+      <h2>Email</h2>
 
       @if (recoveryMode() === 'resend') {
         <p class="modal-hint">Waiting on <strong>{{ pendingRecoveryEmail }}</strong> — open the email from The Itinerists (check spam) and tap "Verify email". Didn't get it? Enter your password to send it again.</p>
@@ -235,9 +204,9 @@
       @if (pendingRecoveryEmail) {
         <p class="modal-hint">Waiting on <strong>{{ pendingRecoveryEmail }}</strong>. Entering another address sends a new link there instead.</p>
       } @else if (currentRecoveryEmail) {
-        <p class="modal-hint">Current: <strong>{{ currentRecoveryEmail }}</strong>. Saving a new one replaces it.</p>
+        <p class="modal-hint">You sign in with <strong>{{ currentRecoveryEmail }}</strong>. A new address replaces it once you confirm it.</p>
       } @else {
-        <p class="modal-hint">Add a real email so you can reset a forgotten password yourself. We'll email a link to confirm it.</p>
+        <p class="modal-hint">Add your email: you'll sign in with it, and it's where password resets go. We'll email a link to confirm it.</p>
       }
 
       <div class="form-group">
@@ -253,7 +222,7 @@
         <div class="alert alert-error">{{ recoveryError() }}</div>
       }
       @if (recoverySuccess()) {
-        <div class="alert alert-success">We sent a link to <strong>{{ recoverySentTo }}</strong> from The Itinerists. It may land in <strong>spam or promotions</strong>, so check there too. Your recovery email switches over once you tap "Verify email".</div>
+        <div class="alert alert-success">We sent a link to <strong>{{ recoverySentTo }}</strong> from The Itinerists. It may land in <strong>spam or promotions</strong>, so check there too. You'll sign in with it once you tap "Verify email".</div>
       }
 
       <div class="modal-actions">

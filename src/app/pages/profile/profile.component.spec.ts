@@ -161,35 +161,28 @@ describe('ProfileComponent delete-account modal', () => {
   });
 });
 
-describe('ProfileComponent change-username modal', () => {
-  let auth: { updateUsername: jasmine.Spy };
-  const user = signal<any>({ uid: 'u1', displayName: 'Alayna', username: 'alayna', avatarEmoji: '🌸', color: '#fff' });
+describe('ProfileComponent without usernames', () => {
+  const user = signal<any>({ uid: 'u1', displayName: 'Maya', username: 'maya', avatarEmoji: '🌸', color: '#fff', authEmail: 'maya@example.com' });
 
   beforeEach(() => {
-    auth = { updateUsername: jasmine.createSpy('updateUsername').and.resolveTo() };
     TestBed.configureTestingModule({
       imports: [ProfileComponent],
       providers: [
         { provide: UserService,  useValue: { firestoreUser: user } },
         { provide: TripService, useValue: { activeMembers: signal([]) } },
-        { provide: AuthService,  useValue: auth },
+        { provide: AuthService,  useValue: {} },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
     });
   });
 
-  it('applies the username policy before asking the service', async () => {
+  it('shows the sign-in email, no @username, and no Change Username', () => {
     const fixture = TestBed.createComponent(ProfileComponent);
     fixture.detectChanges();
-    const c = fixture.componentInstance;
-    c.openUsernameModal();
-    c.username = 'a!';
-    await c.saveUsername();
-    expect(c.usernameError()).toBe('Username must be 3–20 characters.');
-    expect(auth.updateUsername).not.toHaveBeenCalled();
-
-    c.username = 'New.Name';
-    await c.saveUsername();
-    expect(auth.updateUsername).toHaveBeenCalledWith('u1', 'new.name');
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('maya@example.com');
+    expect(text).not.toContain('@maya');
+    expect(text).not.toContain('Change Username');
+    expect(text).toContain('Change Email');
   });
 });

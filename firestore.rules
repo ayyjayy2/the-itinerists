@@ -13,9 +13,9 @@ rules_version = '2';
 // runs *before* the Firebase Auth account exists (see AuthService.register):
 //   • inviteIndex/{code}            — resolve an invite code → tripId
 //   • trips/{tripId}/invites/{code} — validate the invite before joining
-//   • usernames/{username}          — username → sign-in email, single-doc GET only
-// These expose only low-sensitivity data (codes you must already know, and the
-// sign-in address behind a username you must already know). Each is a
+//   • usernames/{username}          — username → placeholder sign-in address, single-doc GET only
+// These expose only low-sensitivity data (codes you must already know, and an
+// old account's placeholder address; never a real email). Each is a
 // single-document GET: none of them can be listed by an outsider, and user profiles can never be listed except by
 // an app admin. Credentials live in Firebase Auth, never Firestore.
 //
@@ -228,23 +228,28 @@ service cloud.firestore {
     }
 
     // ── Username index ─────────────────────────────────────────────────────
-    // usernames/{username} → { uid, authEmail, pendingEmail? }. Sign-in and
-    // password reset resolve a username to its address before the user is
-    // authenticated, so a single document may be fetched by anyone who already
-    // knows the username; the collection can never be listed. A document is
-    // claimed on registration (create fails if the name is taken) and only its
-    // owner or an admin may change or release it.
+    // usernames/{username} → { uid, authEmail? }, only for accounts made before
+    // sign-up asked for an email: they sign in with their username, which maps
+    // to a placeholder address (username@the-itinerists.local). Sign-in reads a
+    // single document before the user is authenticated, so anyone who knows a
+    // username may fetch it; the collection can never be listed. It must never
+    // hold a real address (#352): everyone else signs in with their email, and
+    // their entry (if any) carries only the uid, so sign-in can say so.
+    // No new names are claimed; an entry's owner may only drop its address.
+    function isPlaceholderAddress(e) {
+      return e is string && e.lower().matches('.*@the-itinerists[.]local$');
+    }
+    function isUsernameEntry(data) {
+      return data.keys().hasOnly(['uid', 'authEmail'])
+        && (!('authEmail' in data) || isPlaceholderAddress(data.authEmail));
+    }
     match /usernames/{username} {
       allow get:    if true;
       allow list:   if false;
-      // A brand-new account (no profile yet) claims its first username with its
-      // own real sign-in email. Existing accounts may claim a new one (rename).
-      allow create: if isSignedIn() && request.resource.data.uid == uid()
-                 && (exists(/databases/$(database)/documents/users/$(uid()))
-                     || (signedUpWithEmail()
-                         && request.resource.data.get('authEmail', '').lower() == request.auth.token.email.lower()));
-      allow update: if isAdmin()
-                 || (isSignedIn() && resource.data.uid == uid() && request.resource.data.uid == uid());
+      allow create: if false;
+      allow update: if isSignedIn() && (isAdmin() || resource.data.uid == uid())
+                 && request.resource.data.uid == resource.data.uid
+                 && isUsernameEntry(request.resource.data);
       allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == uid());
     }
 

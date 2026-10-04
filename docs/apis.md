@@ -21,7 +21,7 @@ this file whenever a service is added or removed (the privacy policy at
 
 | Service | What it does | Cost | Where |
 |---|---|---|---|
-| **Authentication** | Email + password sign-in (username → synthetic email), password reset, email change. Sender: `noreply@theitinerists.com` | Free, unlimited | `src/app/services/auth.service.ts`, `user.service.ts` |
+| **Authentication** | Email + password sign-in (old accounts: username → placeholder address), password reset, email change. Passwords hashed by Firebase (scrypt); password policy enforced server-side; email-enumeration protection on. Sender: `noreply@theitinerists.com` | Free, unlimited | `src/app/services/auth.service.ts`, `user.service.ts` |
 | **Firestore** | Every document: users, trips and their subcollections, invites, geocache, the `_activity` event log, the `_appLogs` error log, `_pulse` prefs, the per-account daily limit counters `_quotas/{uid}/kinds/{photos|trips}` (`src/app/utils/quota.ts`; 50 outfit photos and 20 new trips per 24 hours), and on staging the API console's `_apiConsoleAccess` / `_apiConsole` | Free tier; see Launch Plan → Storage & costs | `src/app/services/*.service.ts`, rules in `firestore.rules` (tests: `npm run test:rules`) |
 | **Cloud Storage** | Outfit photos (1,600 px + 300 px thumbnail), owner-only. **Code done, switched off** (`OUTFIT_PHOTO_STORAGE_ENABLED = false`): the bucket only exists on Blaze | Free tier | `src/app/services/outfit-photo.service.ts`, `storage.rules`, `scripts/set-storage-cors.js`, `scripts/migrate-outfit-photos.js` |
 | **Hosting** | theitinerists.com (+ the-itinerists.web.app), the demo site, and `/pulse/` | Free tier | `firebase.json` (headers, CSP), `public/` |
@@ -72,6 +72,7 @@ host must be added there or the browser blocks it.
 | `fetch-ios-config.js` | Writes `ios/App/App/GoogleService-Info.plist` from the Firebase Management API (gitignored) |
 | `set-storage-cors.js`, `migrate-outfit-photos.js` | After Blaze: bucket CORS; move inline photos to Storage |
 | `seed-admin.js`, `sync-seed.js`, `create-test-member.js`, `mark-test-accounts.js` | Seeding and test data |
+| `strip-username-emails.js` | One-off (#352): removes real emails from the public `usernames` index, keeping uids and placeholder addresses. Dry run by default, `--run` writes, `--staging` for staging; prints counts only |
 | `api-console.js` | Staging API console: `grant` / `revoke <username|email>`, `list`, `publish <openapi.json>`. Refuses non-staging keys |
 | `reset-password.js`, `gen-reset-link.js`, `migrate-account-privacy.js` | Account admin |
 | `check-balances.js`, `compare-to-spreadsheet.js`, `fix-makaela-entries.js`, `apply-v6-fixes.js` | One-off finance checks and fixes |

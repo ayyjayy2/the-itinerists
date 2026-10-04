@@ -26,7 +26,7 @@ export function apiKey(): string {
 
 export async function signIn(page: Page, user: 'alayna' | 'maya', as: 'username' | 'email' = 'username') {   // 'email' = a recovery email
   await page.goto('/login');
-  await page.getByPlaceholder('Username or recovery email').fill(as === 'email' ? `${user}@the-itinerists.local` : user);
+  await page.getByPlaceholder('you@example.com').fill(as === 'email' ? `${user}@the-itinerists.local` : user);
   await page.getByPlaceholder('Enter your password').fill(password(user));
   await page.locator('form button[type=submit]').click();
   await expect(page).not.toHaveURL(/\/login/, { timeout: 30_000 });

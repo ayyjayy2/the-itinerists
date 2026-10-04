@@ -96,11 +96,15 @@ async function batchGet(paths, token) {
   return out;
 }
 
-/** A username is looked up in usernames/{username} (readable by anyone), as the app does. */
+/** As the app does (#352): an email as typed; a username only for old accounts,
+ *  whose usernames/{username} entry holds a placeholder address. */
 async function emailFor(user) {
   if (user.includes('@')) return user;
   const doc = await rest(`/usernames/${encodeURIComponent(user.toLowerCase())}`).catch(() => null);
-  return doc ? fieldsOf(doc).authEmail : `${user.toLowerCase()}@the-itinerists.local`;
+  if (!doc) return `${user.toLowerCase()}@the-itinerists.local`;
+  const authEmail = fieldsOf(doc).authEmail;
+  if (!authEmail || !authEmail.endsWith('@the-itinerists.local')) throw new Error('Sign in with your email address.');
+  return authEmail;
 }
 
 // ── page states ────────────────────────────────────────────────────────────

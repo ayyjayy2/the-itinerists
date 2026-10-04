@@ -2,7 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, UseEmailToSignInError } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
@@ -27,21 +27,24 @@ export class LoginComponent {
   readonly version   = APP_VERSION;
   readonly buildDate = APP_BUILD_DATE;
 
-  username     = '';
+  email        = '';
   password     = '';
   showPassword = signal(false);
   loading      = signal(false);
   error        = signal('');
 
   async submit(): Promise<void> {
-    if (!this.username.trim() || !this.password) return;
+    if (!this.email.trim() || !this.password) return;
     this.loading.set(true);
     this.error.set('');
     try {
-      await this.authService.login(this.username.trim(), this.password);
+      await this.authService.login(this.email.trim(), this.password);
     } catch (err) {
       if (this.localCache.recoverIfBroken(err)) return;
-      this.error.set(isBrokenLocalCacheError(err) ? userMessage(err, '') : 'Invalid username, email, or password.');
+      this.error.set(
+        err instanceof UseEmailToSignInError ? err.message
+        : isBrokenLocalCacheError(err) ? userMessage(err, '')
+        : 'Wrong email or password. Check them and try again.');
       this.loading.set(false);
       return;
     }
@@ -51,10 +54,5 @@ export class LoginComponent {
     // is never a moment where it looks like nothing happened.
     const ok = await this.router.navigate(['/home']).catch(() => false);
     if (!ok) this.loading.set(false);
-  }
-
-  /** Look the username up as soon as the person moves on to the password. */
-  prefetch(): void {
-    this.authService.prefetchSignInEmail(this.username);
   }
 }

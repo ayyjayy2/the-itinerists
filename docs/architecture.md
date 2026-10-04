@@ -94,7 +94,7 @@ owner-only tools read the same database ↑
 ### Top level
 
 - `users/{uid}` profile; `…/private/account` sign-in email, readable only by its owner
-- `usernames/{name}` username → sign-in email (one public lookup at a time, never listable)
+- `usernames/{name}` only for accounts from before sign-up asked for an email: username → placeholder sign-in address (one public lookup at a time, never listable, never a real email; #352)
 - `userTrips/{uid}` the person's trip list and last open trip
 - `trips/{id}` name, stops (each with dates, coordinates and time zone), currency
 - `invites`, `inviteIndex` invite codes, valid 7 days
@@ -131,7 +131,7 @@ Maya adds "Sunset at the Miradouro" to Day 2 on her phone. What happens:
 
 1. **Launch:** the iPhone app holds its logo splash until it knows who is signed in; the web shows a small spinner only if loading passes 300ms.
 2. **App Check** gets its token up front (reCAPTCHA on the web, a debug token in the iPhone app for now), so the first database request doesn't wait.
-3. **Username → email:** looked up in `usernames` as soon as the person moves to the password field.
+3. **Email:** people sign in with their email. A username still works only for old accounts whose `usernames` entry holds a placeholder address; anyone else who types one is asked for their email.
 4. **Sign in** with Firebase Authentication; the route guard waits for the profile in `users/{uid}`.
 5. **The open trip** comes from the device, or the person's last trip in `userTrips`; its listeners start and Home appears. Measured: 1.3 s median from tap to Home on 4G.
 

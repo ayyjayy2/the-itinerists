@@ -27,7 +27,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <h2>What the app stores</h2>
         <h3>Your account</h3>
         <ul>
-          <li><strong>Display name, username, and avatar</strong> (an emoji or letter and a color). Members of your trips can see these.</li>
+          <li><strong>Display name and avatar</strong> (an emoji or letter and a color). Members of your trips can see these. Accounts made before sign-up asked for an email also keep the username they sign in with.</li>
           <li><strong>Email address.</strong> Used to sign in, to reset a forgotten password, and to verify a recovery email. It is never shown to other members.</li>
           <li><strong>Password.</strong> Stored by Firebase Authentication in hashed form. We never see it.</li>
           <li><strong>Preferences</strong> such as your home layout and pinned shortcuts.</li>
@@ -76,7 +76,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
 
         <h2>Your choices</h2>
         <ul>
-          <li><strong>Edit</strong> your name, avatar, username, email and password on the Profile page.</li>
+          <li><strong>Edit</strong> your name, avatar, email and password on the Profile page.</li>
           <li><strong>Leave a trip</strong> from Trip Settings. Your personal lists and photos for that trip go with you.</li>
           <li><strong>Delete your account</strong> from the Profile page. This removes your profile, email, personal lists and photos, takes you off every trip, and deletes your sign-in. A trip you owned passes to its longest-standing member; a trip you were the only member of is deleted. This cannot be undone.</li>
         </ul>
