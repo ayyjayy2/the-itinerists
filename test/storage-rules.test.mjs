@@ -13,8 +13,11 @@ const testEnv = await initializeTestEnvironment({
   storage: { rules: readFileSync('storage.rules', 'utf8') },
 });
 
-const alice = testEnv.authenticatedContext('alice').storage();
-const bob   = testEnv.authenticatedContext('bob').storage();
+const FRESH = { auth_time: Math.floor(Date.now() / 1000) - 60 };
+const STALE = { auth_time: Math.floor(Date.now() / 1000) - 91 * 24 * 60 * 60 };
+const alice = testEnv.authenticatedContext('alice', FRESH).storage();
+const aliceStale = testEnv.authenticatedContext('alice', STALE).storage();
+const bob   = testEnv.authenticatedContext('bob', FRESH).storage();
 const anon  = testEnv.unauthenticatedContext().storage();
 
 const jpeg = (kb) => new Uint8Array(kb * 1024);
@@ -53,6 +56,10 @@ await t('files over 4 MB are rejected', () =>
   assertFails(uploadBytes(ref(alice, 'outfitPhotos/alice/tripT/big.jpg'), jpeg(4097), JPEG)));
 await t('paths outside outfitPhotos are closed even to signed-in users', () =>
   assertFails(uploadBytes(ref(alice, 'misc/alice/anything.jpg'), jpeg(1), JPEG)));
+await t('owner whose session is 91 days old cannot read it', () =>
+  assertFails(getBytes(ref(aliceStale, ALICE_PHOTO))));
+await t('owner whose session is 91 days old cannot upload', () =>
+  assertFails(uploadBytes(ref(aliceStale, 'outfitPhotos/alice/tripT/late.jpg'), jpeg(1), JPEG)));
 await t('owner can delete her own photo', () =>
   assertSucceeds(deleteObject(ref(alice, ALICE_PHOTO))));
 

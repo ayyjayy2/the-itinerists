@@ -1,10 +1,12 @@
 import { Injectable, signal, inject, computed, Injector, runInInjectionContext } from '@angular/core';
-import { Auth, authState } from '@angular/fire/auth';
+import { Auth, User, authState, signOut } from '@angular/fire/auth';
+import { Router } from '@angular/router';
 import { Firestore, doc, onSnapshot, updateDoc, setDoc, Unsubscribe } from '@angular/fire/firestore';
 import { TripUser, FirestoreUser, PrivateAccount } from '../models/trip.models';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, firstValueFrom, map, merge } from 'rxjs';
 import { authEmailPatch, isPlaceholderEmail } from '../utils/email';
+import { sessionExpired } from '../utils/session';
 import { TripContextService } from './trip-context.service';
 import { CrashReporterService } from './crash-reporter.service';
 
@@ -23,6 +25,20 @@ export class UserService {
 
   readonly firestoreUser   = this._firestoreUser.asReadonly();
   readonly authInitialized = this._authInitialized.asReadonly();
+
+  /** Set when the app signed the person out because their session passed
+   *  90 days (utils/session.ts); the sign-in page says so, then clears it. */
+  readonly sessionEnded = signal(false);
+
+  /** Sign out a session older than the limit, before the rules start refusing
+   *  it. Returns true when it did. Checked at sign-in and whenever the app returns
+   *  to the screen, since a phone can keep the app open for weeks. */
+  private endIfExpired(user: User | null): boolean {
+    if (!user || !sessionExpired(user.metadata?.lastSignInTime, Date.now())) return false;
+    this.sessionEnded.set(true);
+    void signOut(this.auth).then(() => this.injector.get(Router).navigate(['/login']));
+    return true;
+  }
 
   readonly currentUser = computed<TripUser | null>(() => {
     const u = this._firestoreUser();
@@ -90,8 +106,15 @@ export class UserService {
     this.authReadyPromise = new Promise(res => (resolveReady = res));
     let initialized = false;
 
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') this.endIfExpired(this.auth.currentUser);
+      });
+    }
+
     runInInjectionContext(this.injector, () => {
       authState(this.auth).subscribe(firebaseUser => {
+        if (this.endIfExpired(firebaseUser)) return;   // the signed-out emission follows
         void this.crash.setUser(firebaseUser?.uid ?? null);
         this.tripContext.bindUser(firebaseUser?.uid ?? null);
         if (!firebaseUser) {
