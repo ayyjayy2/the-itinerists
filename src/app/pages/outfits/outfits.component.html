@@ -218,6 +218,9 @@
       } @else {
         <span class="photo-limit">Up to {{ maxPhotos }} photos per day.</span>
       }
+      @if (photoError()) {
+        <div class="alert alert-error" role="alert">{{ photoError() }}</div>
+      }
     </div>
     <div class="items-label">Outfit Items</div>
     <div class="item-input-row">

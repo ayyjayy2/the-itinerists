@@ -13,7 +13,7 @@ import {
   initializeTestEnvironment, assertSucceeds, assertFails,
 } from '@firebase/rules-unit-testing';
 import {
-  doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, serverTimestamp,
+  doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, serverTimestamp, writeBatch, arrayUnion, increment,
 } from 'firebase/firestore';
 
 const testEnv = await initializeTestEnvironment({
@@ -61,13 +61,29 @@ async function seed() {
       // A trip carol created but hasn't added her member doc to yet (for the
       // legit "trip creator self-adds as owner" case).
       setDoc(doc(db, 'trips', 'TC'), { name: 'Carol Trip', createdBy: 'carol', memberCount: 0 }),
-      setDoc(doc(db, 'geocache', 'g1'), { x: 1 }),
+      setDoc(doc(db, 'geocache', 'g1'), { entries: { 'berlin|alex': { lat: 52.52, lng: 13.41 } } }),
       setDoc(doc(db, '_appLogs', 'l1'), { m: 'hi' }),
       setDoc(doc(db, '_pulse', 'prefs'), { hiddenTrips: ['TC'] }),
       setDoc(doc(db, '_activity', 'e1'), { uid: 'bob', tripId: 'T', type: 'page', page: '/home', at: new Date(), localHour: 9, tz: 'Europe/Berlin', tzOffsetMin: 120, platform: 'web', sessionId: 's1', appVersion: '0.9.0' }),
     ]);
   });
 }
+
+// Per-account limits: a limited write goes in one batch with its counter.
+const DAY = 24 * 60 * 60 * 1000;
+const quotaStart = (db, who, kind) => [doc(db, '_quotas', who, 'kinds', kind), { windowStart: serverTimestamp(), count: 1, at: serverTimestamp() }];
+const quotaAdd   = (db, who, kind) => [doc(db, '_quotas', who, 'kinds', kind), { count: increment(1), at: serverTimestamp() }, { merge: true }];
+function counted(db, quota, ref, data) {
+  const b = writeBatch(db);
+  b.set(ref, data);
+  b.set(...quota);
+  return b.commit();
+}
+async function seedCounter(who, kind, count, windowStart) {
+  await testEnv.withSecurityRulesDisabled(ctx =>
+    setDoc(doc(ctx.firestore(), '_quotas', who, 'kinds', kind), { windowStart, count, at: windowStart }));
+}
+const JPEG = 'data:image/jpeg;base64,/9j/4AAQ';
 
 let pass = 0, fail = 0;
 async function t(name, expect, op) {
@@ -95,9 +111,26 @@ await t('owner reads itinerary of a trip they are not on', 'deny', () => getDoc(
 await t('anon reads trip', 'deny', () => getDoc(doc(anon, 'trips', 'T')));
 await t('member updates trip', 'allow', () => updateDoc(doc(bob, 'trips', 'T'), { memberCount: 3 }));
 await t('non-member updates trip', 'deny', () => updateDoc(doc(carol, 'trips', 'T'), { memberCount: 3 }));
-await t('create trip with own createdBy', 'allow', () => setDoc(doc(carol, 'trips', 'T2'), { name: 'n', createdBy: 'carol' }));
-await t('create trip with foreign createdBy', 'deny', () => setDoc(doc(carol, 'trips', 'T3'), { name: 'n', createdBy: 'alice' }));
-await t('member deletes trip (last-out purge)', 'allow', () => deleteDoc(doc(bob, 'trips', 'T')));
+await t('create trip with own createdBy, counted', 'allow', () => counted(carol, quotaStart(carol, 'carol', 'trips'), doc(carol, 'trips', 'T2'), { name: 'n', createdBy: 'carol' }));
+await t('create trip without counting it', 'deny', () => setDoc(doc(carol, 'trips', 'T2'), { name: 'n', createdBy: 'carol' }));
+await t('create trip, adding to a counter under the limit', 'allow', async () => {
+  await seedCounter('carol', 'trips', 19, new Date());
+  return counted(carol, quotaAdd(carol, 'carol', 'trips'), doc(carol, 'trips', 'T2'), { name: 'n', createdBy: 'carol' });
+});
+await t('create trip past the daily limit (20)', 'deny', async () => {
+  await seedCounter('carol', 'trips', 20, new Date());
+  return counted(carol, quotaAdd(carol, 'carol', 'trips'), doc(carol, 'trips', 'T2'), { name: 'n', createdBy: 'carol' });
+});
+await t('create trip at the limit once the window has passed', 'allow', async () => {
+  await seedCounter('carol', 'trips', 20, new Date(Date.now() - 2 * DAY));
+  return counted(carol, quotaStart(carol, 'carol', 'trips'), doc(carol, 'trips', 'T2'), { name: 'n', createdBy: 'carol' });
+});
+await t('create trip with foreign createdBy', 'deny', () => counted(carol, quotaStart(carol, 'carol', 'trips'), doc(carol, 'trips', 'T3'), { name: 'n', createdBy: 'alice' }));
+await t('member sets the trip createdBy to themselves', 'deny', () => updateDoc(doc(bob, 'trips', 'T'), { createdBy: 'bob' }));
+await t('owner hands the trip over (createdBy)', 'allow', () => updateDoc(doc(alice, 'trips', 'T'), { createdBy: 'bob' }));
+await t('member renames the trip', 'allow', () => updateDoc(doc(bob, 'trips', 'T'), { name: 'Renamed' }));
+await t('owner deletes trip (last-out purge)', 'allow', () => deleteDoc(doc(alice, 'trips', 'T')));
+await t('plain member deletes the whole trip', 'deny', () => deleteDoc(doc(bob, 'trips', 'T')));
 await t('non-member deletes trip', 'deny', () => deleteDoc(doc(carol, 'trips', 'T')));
 
 console.log('\nMembers');
@@ -118,6 +151,11 @@ await t('admin removes a member', 'allow', () => deleteDoc(doc(admin, 'trips', '
 
 console.log('\nInvites (pre-auth join reads these)');
 await t('anon reads invite by code', 'allow', () => getDoc(doc(anon, 'trips', 'T', 'invites', 'CODE1')));
+await t('anon lists a trip\'s invites', 'deny', () => getDocs(collection(anon, 'trips', 'T', 'invites')));
+await t('member lists the trip\'s invites', 'allow', () => getDocs(collection(bob, 'trips', 'T', 'invites')));
+await t('member adds themselves to usedBy', 'allow', () => updateDoc(doc(bob, 'trips', 'T', 'invites', 'CODE1'), { usedBy: arrayUnion('bob') }));
+await t('member adds someone else to usedBy', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'invites', 'CODE1'), { usedBy: ['alice'] }));
+await t('member extends an invite\'s expiry', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'invites', 'OLD1'), { expiresAt: 9999999999999 }));
 await t('member creates an invite', 'allow', () => setDoc(doc(alice, 'trips', 'T', 'invites', 'CODE2'), { tripId: 'T', usedBy: [] }));
 await t('non-member creates an invite', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'invites', 'CODE3'), { tripId: 'T', usedBy: [] }));
 await t('owner closes (deletes) an invite', 'allow', () => deleteDoc(doc(alice, 'trips', 'T', 'invites', 'CODE1')));
@@ -126,7 +164,14 @@ await t('owner removes the invite index entry', 'allow', () => deleteDoc(doc(ali
 
 console.log('\ninviteIndex (global, pre-auth)');
 await t('anon reads inviteIndex', 'allow', () => getDoc(doc(anon, 'inviteIndex', 'CODE1')));
-await t('signed-in writes inviteIndex', 'allow', () => setDoc(doc(carol, 'inviteIndex', 'CODE9'), { tripId: 'T', expiresAt: 1 }));
+await t('anon lists inviteIndex', 'deny', () => getDocs(collection(anon, 'inviteIndex')));
+await t('signed-in lists inviteIndex', 'deny', () => getDocs(collection(carol, 'inviteIndex')));
+await t('owner publishes an existing invite to the index', 'allow', () => setDoc(doc(alice, 'inviteIndex', 'OLD1'), { tripId: 'T', expiresAt: 1 }));
+await t('owner publishes a code with no invite behind it', 'deny', () => setDoc(doc(alice, 'inviteIndex', 'CODE9'), { tripId: 'T', expiresAt: 1 }));
+await t('plain member publishes to the index', 'deny', () => setDoc(doc(bob, 'inviteIndex', 'OLD1'), { tripId: 'T', expiresAt: 1 }));
+await t('non-member writes inviteIndex', 'deny', () => setDoc(doc(carol, 'inviteIndex', 'CODE9'), { tripId: 'T', expiresAt: 1 }));
+await t('non-member repoints someone\'s code', 'deny', () => setDoc(doc(carol, 'inviteIndex', 'CODE1'), { tripId: 'TC', expiresAt: 9999999999999 }));
+await t('non-member deletes someone\'s code', 'deny', () => deleteDoc(doc(carol, 'inviteIndex', 'CODE1')));
 await t('anon writes inviteIndex', 'deny', () => setDoc(doc(anon, 'inviteIndex', 'CODE9'), { tripId: 'T' }));
 
 console.log('\\nUsers (profiles: self + admin only, never listable)');
@@ -208,8 +253,15 @@ await t('non-member writes packing', 'deny', () => setDoc(doc(carol, 'trips', 'T
 console.log('\nShared/misc collections');
 await t('signed-in reads geocache', 'allow', () => getDoc(doc(bob, 'geocache', 'g1')));
 await t('anon reads geocache', 'deny', () => getDoc(doc(anon, 'geocache', 'g1')));
-await t('signed-in writes geocache', 'allow', () => setDoc(doc(bob, 'geocache', 'g2'), { x: 2 }));
-await t('anon creates _appLogs', 'allow', () => setDoc(doc(anon, '_appLogs', 'l2'), { m: 'y' }));
+await t('signed-in adds a place to the geocache', 'allow', () => setDoc(doc(bob, 'geocache', 'g1'), { entries: { 'berlin|tv tower': { lat: 52.5, lng: 13.4 } } }, { merge: true }));
+await t('signed-in changes a cached place', 'deny', () => setDoc(doc(bob, 'geocache', 'g1'), { entries: { 'berlin|alex': { lat: 0, lng: 0 } } }, { merge: true }));
+await t('signed-in wipes the geocache', 'deny', () => setDoc(doc(bob, 'geocache', 'g1'), { entries: {} }));
+await t('signed-in writes arbitrary data to geocache', 'deny', () => setDoc(doc(bob, 'geocache', 'g2'), { x: 2 }));
+const appLog = (extra = {}) => ({ timestamp: new Date().toISOString(), type: 'js_error', message: 'boom', url: '/home', sessionId: 's1', ...extra });
+await t('anon creates _appLogs', 'allow', () => setDoc(doc(anon, '_appLogs', 'l2'), appLog({ stack: 'at x' })));
+await t('_appLogs with an extra field', 'deny', () => setDoc(doc(anon, '_appLogs', 'l2'), appLog({ data: 'x' })));
+await t('_appLogs with a huge message', 'deny', () => setDoc(doc(anon, '_appLogs', 'l2'), appLog({ message: 'x'.repeat(5000) })));
+await t('_appLogs in another shape', 'deny', () => setDoc(doc(anon, '_appLogs', 'l2'), { m: 'y' }));
 await t('anon reads _appLogs', 'deny', () => getDoc(doc(anon, '_appLogs', 'l1')));
 
 console.log('\nPrivilege-escalation locks');
@@ -230,10 +282,19 @@ await t('owner reads own outfit photo', 'allow', () => getDoc(doc(bob, 'trips', 
 await t('member reads another member photo', 'deny', () => getDoc(doc(alice, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
 await t('non-member reads a photo', 'deny', () => getDoc(doc(carol, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
 await t('anon reads a photo', 'deny', () => getDoc(doc(anon, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
-await t('owner creates own photo', 'allow', () => setDoc(doc(alice, 'trips', 'T', 'outfitPhotos', '2026-01-02_alice'), { dataUrl: 'data:y', ownerUid: 'alice', date: '2026-01-02' }));
+const photoRef = (db) => doc(db, 'trips', 'T', 'outfitPhotos', '2026-01-02_alice');
+await t('owner creates own photo, counted', 'allow', () => counted(alice, quotaStart(alice, 'alice', 'photos'), photoRef(alice), { dataUrl: JPEG, ownerUid: 'alice', date: '2026-01-02' }));
+await t('create photo without counting it', 'deny', () => setDoc(photoRef(alice), { dataUrl: JPEG, ownerUid: 'alice', date: '2026-01-02' }));
+await t('create photo past the daily limit (50)', 'deny', async () => {
+  await seedCounter('alice', 'photos', 50, new Date());
+  return counted(alice, quotaAdd(alice, 'alice', 'photos'), photoRef(alice), { dataUrl: JPEG, ownerUid: 'alice', date: '2026-01-02' });
+});
+await t('create photo that is not a JPEG', 'deny', () => counted(alice, quotaStart(alice, 'alice', 'photos'), photoRef(alice), { dataUrl: 'data:text/html;base64,PHNjcmlwdD4=', ownerUid: 'alice', date: '2026-01-02' }));
+await t('create photo with extra fields', 'deny', () => counted(alice, quotaStart(alice, 'alice', 'photos'), photoRef(alice), { dataUrl: JPEG, ownerUid: 'alice', date: '2026-01-02', note: 'x' }));
+await t('create a large (700 KB) photo, counted', 'allow', () => counted(alice, quotaStart(alice, 'alice', 'photos'), photoRef(alice), { dataUrl: JPEG + 'A'.repeat(700_000), ownerUid: 'alice', date: '2026-01-02' }));
 await t('create photo with spoofed ownerUid', 'deny', () => setDoc(doc(alice, 'trips', 'T', 'outfitPhotos', '2026-01-02_alice'), { dataUrl: 'data:y', ownerUid: 'bob', date: '2026-01-02' }));
 await t('non-member creates a photo', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'outfitPhotos', '2026-01-02_carol'), { dataUrl: 'data:z', ownerUid: 'carol', date: '2026-01-02' }));
-await t('owner updates own photo', 'allow', () => updateDoc(doc(bob, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob'), { dataUrl: 'data:new' }));
+await t('owner updates own photo', 'allow', () => updateDoc(doc(bob, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob'), { dataUrl: JPEG }));
 await t('member updates another member photo', 'deny', () => updateDoc(doc(alice, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob'), { dataUrl: 'data:hack' }));
 await t('owner deletes own photo', 'allow', () => deleteDoc(doc(bob, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
 await t('non-member deletes a photo', 'deny', () => deleteDoc(doc(carol, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
@@ -296,6 +357,34 @@ await t('approved account reads the spec', 'allow', async () => { await approve(
 await t('unapproved account reads the spec', 'deny', async () => { await spec(); return getDoc(doc(carol, '_apiConsole', 'spec')); });
 await t('logged out reads the spec', 'deny', async () => { await spec(); return getDoc(doc(anon, '_apiConsole', 'spec')); });
 await t('approved account writes the spec', 'deny', async () => { await approve('bob'); return setDoc(doc(bob, '_apiConsole', 'spec'), { openapi: 'x' }); });
+
+console.log('\nPer-account limits (_quotas)');
+await t('start your own counter', 'allow', () => setDoc(...quotaStart(carol, 'carol', 'photos')));
+await t('start a counter for someone else', 'deny', () => setDoc(...quotaStart(carol, 'bob', 'photos')));
+await t('start a counter of an unknown kind', 'deny', () => setDoc(...quotaStart(carol, 'carol', 'messages')));
+await t('start a counter at zero', 'deny', () => setDoc(doc(carol, '_quotas', 'carol', 'kinds', 'photos'), { windowStart: serverTimestamp(), count: 0, at: serverTimestamp() }));
+await t('reset your counter before the window ends', 'deny', async () => {
+  await seedCounter('carol', 'photos', 30, new Date());
+  return setDoc(...quotaStart(carol, 'carol', 'photos'));
+});
+await t('add two at once', 'deny', async () => {
+  await seedCounter('carol', 'photos', 3, new Date());
+  return setDoc(doc(carol, '_quotas', 'carol', 'kinds', 'photos'), { count: increment(2), at: serverTimestamp() }, { merge: true });
+});
+await t('read your own counter', 'allow', () => getDoc(doc(carol, '_quotas', 'carol', 'kinds', 'photos')));
+await t('read someone else\'s counter', 'deny', () => getDoc(doc(carol, '_quotas', 'bob', 'kinds', 'photos')));
+await t('delete a counter still in its window', 'deny', async () => {
+  await seedCounter('carol', 'photos', 3, new Date());
+  return deleteDoc(doc(carol, '_quotas', 'carol', 'kinds', 'photos'));
+});
+await t('delete a counter whose window has passed', 'allow', async () => {
+  await seedCounter('carol', 'photos', 3, new Date(Date.now() - 2 * DAY));
+  return deleteDoc(doc(carol, '_quotas', 'carol', 'kinds', 'photos'));
+});
+
+console.log('\nLog sizes');
+await t('usage event with a huge page', 'deny', () => setDoc(doc(bob, '_activity', 'e2'), { uid: 'bob', tripId: 'T', type: 'page', page: '/'.repeat(500), at: serverTimestamp() }));
+await t('write log with a huge action', 'deny', () => setDoc(doc(bob, '_writes', 'w2'), { uid: 'bob', tripId: 'T', kind: 'trip', action: 'x'.repeat(100), at: serverTimestamp() }));
 
 await testEnv.cleanup();
 console.log(`\n${fail === 0 ? '✅' : '❌'} rules tests: ${pass} passed, ${fail} failed`);

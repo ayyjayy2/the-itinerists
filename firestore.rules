@@ -15,8 +15,8 @@ rules_version = '2';
 //   • trips/{tripId}/invites/{code} — validate the invite before joining
 //   • usernames/{username}          — username → sign-in email, single-doc GET only
 // These expose only low-sensitivity data (codes you must already know, and the
-// sign-in address behind a username you must already know). Nothing here can
-// be listed while signed out, and user profiles can never be listed except by
+// sign-in address behind a username you must already know). Each is a
+// single-document GET: none of them can be listed by an outsider, and user profiles can never be listed except by
 // an app admin. Credentials live in Firebase Auth, never Firestore.
 //
 // Self-join is gated on a live invite: the member doc must name an invite code
@@ -66,9 +66,33 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/trips/$(tripId)/invites/$(data.inviteCode)).data.expiresAt > request.time.toMillis();
     }
 
-    // ── App logs: write-only from the client (unchanged) ───────────────────
+    // Per-account limits: how many of each kind one account may add in a
+    // rolling 24-hour window. Keep in step with QUOTA_LIMITS in
+    // src/app/utils/quota.ts (the app checks first so it can say so kindly).
+    function quotaLimits() {
+      return { 'photos': 50, 'trips': 20 };
+    }
+    // A limited write (an outfit photo, a new trip) must bump its counter in
+    // the same batch: the counter's `at` is this request's time.
+    function countsAgainstQuota(kind) {
+      return getAfter(/databases/$(database)/documents/_quotas/$(uid())/kinds/$(kind)).data.at == request.time;
+    }
+    function shortString(v, max) {
+      return v is string && v.size() <= max;
+    }
+
+    // ── App logs: write-only from the client ───────────────────────────────
+    // Errors can happen before sign-in, so anyone using the app (App Check)
+    // may write one, but only in the logger's shape and size: a log can't be
+    // used to store arbitrary data.
     match /_appLogs/{log} {
-      allow create: if true;
+      allow create: if request.resource.data.keys().hasOnly(['timestamp', 'type', 'message', 'stack', 'url', 'sessionId'])
+        && request.resource.data.type in ['js_error', 'http_error', 'firebase_error', 'write_spike']
+        && shortString(request.resource.data.message, 2000)
+        && shortString(request.resource.data.get('stack', ''), 600)
+        && shortString(request.resource.data.url, 500)
+        && shortString(request.resource.data.sessionId, 64)
+        && shortString(request.resource.data.timestamp, 40);
       allow read, update, delete: if false;
     }
 
@@ -83,7 +107,12 @@ service cloud.firestore {
              'uid', 'tripId', 'type', 'page', 'at', 'localHour', 'tz',
              'tzOffsetMin', 'platform', 'sessionId', 'appVersion'])
         && request.resource.data.type in ['session', 'page', 'ping']
-        && request.resource.data.page is string
+        && shortString(request.resource.data.page, 200)
+        && (request.resource.data.get('tripId', null) == null || shortString(request.resource.data.tripId, 64))
+        && shortString(request.resource.data.get('tz', ''), 64)
+        && shortString(request.resource.data.get('platform', ''), 20)
+        && shortString(request.resource.data.get('sessionId', ''), 64)
+        && shortString(request.resource.data.get('appVersion', ''), 40)
         && request.resource.data.at == request.time;
       allow read: if isAppOwner();
       allow update, delete: if false;
@@ -97,7 +126,8 @@ service cloud.firestore {
         && request.resource.data.uid == uid()
         && request.resource.data.keys().hasOnly(['uid', 'tripId', 'kind', 'action', 'at'])
         && request.resource.data.kind in ['itinerary', 'flight', 'stay', 'transport', 'finance', 'rec', 'pin', 'packing', 'member', 'trip']
-        && request.resource.data.action is string
+        && shortString(request.resource.data.action, 40)
+        && (request.resource.data.get('tripId', null) == null || shortString(request.resource.data.tripId, 64))
         && request.resource.data.at == request.time;
       allow read: if isAppOwner();
       allow update, delete: if false;
@@ -120,6 +150,35 @@ service cloud.firestore {
       allow read: if isSignedIn()
         && exists(/databases/$(database)/documents/_apiConsoleAccess/$(uid()));
       allow write: if false;
+    }
+
+    // ── Per-account limits: _quotas/{uid}/kinds/{kind} ───────────────────────
+    // { windowStart, count, at }: how many of a kind this account has added
+    // since windowStart. The counter only ever goes up by one, or starts over
+    // once 24 hours have passed, so it can't be reset early; writing it on
+    // its own just uses up the allowance. No content, only a count.
+    match /_quotas/{userId}/kinds/{kind} {
+      allow read: if isSignedIn() && userId == uid();
+      allow create: if isSignedIn() && userId == uid()
+        && kind in quotaLimits()
+        && request.resource.data.keys().hasOnly(['windowStart', 'count', 'at'])
+        && request.resource.data.windowStart == request.time
+        && request.resource.data.at == request.time
+        && request.resource.data.count == 1;
+      allow update: if isSignedIn() && userId == uid()
+        && kind in quotaLimits()
+        && request.resource.data.keys().hasOnly(['windowStart', 'count', 'at'])
+        && request.resource.data.at == request.time
+        && ((request.time >= resource.data.windowStart + duration.value(1, 'd')
+             && request.resource.data.windowStart == request.time
+             && request.resource.data.count == 1)
+          || (request.time < resource.data.windowStart + duration.value(1, 'd')
+             && request.resource.data.windowStart == resource.data.windowStart
+             && request.resource.data.count == resource.data.count + 1
+             && request.resource.data.count <= quotaLimits()[kind]));
+      // Deleting your account clears a counter whose window has passed.
+      allow delete: if isSignedIn() && userId == uid()
+        && request.time >= resource.data.windowStart + duration.value(1, 'd');
     }
 
     // ── User profiles ──────────────────────────────────────────────────────
@@ -198,16 +257,40 @@ service cloud.firestore {
     }
 
     // ── Global invite lookup ───────────────────────────────────────────────
-    // Public read so an invite code resolves to a trip before sign-in. Written
-    // by a signed-in member when generating/rescinding an invite.
+    // A single code resolves to its trip before sign-in (GET only: listing
+    // would hand out every live code). Only the trip's owner (or an app admin)
+    // may publish a code, and only for an invite that exists under that trip;
+    // only they may remove it. Entries are never edited.
     match /inviteIndex/{code} {
-      allow read:  if true;
-      allow write: if isSignedIn();
+      allow get:    if true;
+      allow list:   if false;
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['tripId', 'expiresAt'])
+        && request.resource.data.tripId is string
+        && (isOwner(request.resource.data.tripId) || isAdmin())
+        && exists(/databases/$(database)/documents/trips/$(request.resource.data.tripId)/invites/$(code));
+      allow update: if false;
+      allow delete: if isSignedIn()
+        && (resource == null || isOwner(resource.data.tripId) || isAdmin());
     }
 
-    // ── Shared geocode cache (non-sensitive, any signed-in user) ────────────
-    match /geocache/{doc} {
-      allow read, write: if isSignedIn();
+    // ── Shared geocode cache (place name → coordinates, any signed-in user) ─
+    // { entries: { [place]: { lat, lng } } }. Add-only: a write may add a few
+    // new places but never change or remove one someone else resolved, so the
+    // cache can't be wiped or redirected.
+    match /geocache/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['entries'])
+        && request.resource.data.entries is map
+        && request.resource.data.entries.size() <= 20;
+      allow update: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['entries'])
+        && request.resource.data.entries is map
+        && request.resource.data.entries.diff(resource.data.get('entries', {})).removedKeys().size() == 0
+        && request.resource.data.entries.diff(resource.data.get('entries', {})).changedKeys().size() == 0
+        && request.resource.data.entries.diff(resource.data.get('entries', {})).addedKeys().size() <= 20;
+      allow delete: if false;
     }
 
     // ── Per-user "My Expenses" — private to the owner ──────────────────────
@@ -223,10 +306,17 @@ service cloud.firestore {
       // trip's summary doc and its members for the usage dashboard — nothing
       // else under the trip, and no writes.
       allow read:   if isMember(tripId) || isAppOwner();
-      allow create: if isSignedIn() && request.resource.data.createdBy == uid();
-      // Members maintain shared trip fields (memberCount, dates, ownership
-      // transfer). Deletion happens when the last member leaves (purge).
-      allow update, delete: if isMember(tripId);
+      // A new trip counts against the creator's daily allowance.
+      allow create: if isSignedIn() && request.resource.data.createdBy == uid()
+                    && countsAgainstQuota('trips');
+      // Members maintain shared trip fields (memberCount, dates, name). Only
+      // the owner may change createdBy (ownership transfer): it is what lets
+      // someone seed themselves as owner, so a member must never set it.
+      allow update: if isOwner(tripId)
+                    || (isMember(tripId)
+                        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdBy', 'id']));
+      // Deletion is the purge when the last member (always the owner) leaves.
+      allow delete: if isOwner(tripId);
 
       // Members: owners manage roles/removal; you can add or remove *yourself*
       // (self-join via invite, self-leave).
@@ -250,24 +340,41 @@ service cloud.firestore {
         allow delete: if memberId == uid() || isOwner(tripId) || isAdmin();
       }
 
-      // Invites: public read (pre-auth join resolves the code); members manage.
+      // Invites: a single invite can be read before sign-in (the join page
+      // checks the code); only members can list them.
       match /invites/{code} {
-        allow read:   if true;
+        allow get:    if true;
+        allow list:   if isMember(tripId);
         // Only the trip's owner (or an app admin) can mint or revoke invites.
         allow create, delete: if isOwner(tripId) || isAdmin();
-        // A person who just joined stamps themselves onto usedBy.
-        allow update: if isMember(tripId);
+        // A person who just joined adds themselves to usedBy, and nothing
+        // else: a member can't extend an invite's expiry or change its trip.
+        allow update: if isMember(tripId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedBy'])
+          && request.resource.data.usedBy is list
+          && request.resource.data.usedBy.hasAll(resource.data.get('usedBy', []))
+          && request.resource.data.usedBy.removeAll(resource.data.get('usedBy', [])).hasOnly([uid()]);
       }
 
       // Outfit photos: PRIVATE to the uploader. A trip member can read/write
       // only their own photos (doc carries ownerUid); other members and
       // outsiders get nothing. Kept out of the shared {sub}/{doc} allowlist
       // below so this stricter rule is the only grant.
+      // Each new photo counts against the uploader's daily allowance, and a
+      // photo doc holds only the photo: an inline JPEG or its Storage paths.
+      function isPhotoDoc(data) {
+        return data.keys().hasOnly(['ownerUid', 'date', 'dataUrl', 'path', 'thumbPath', 'width', 'height'])
+          && shortString(data.date, 10)
+          && (!('dataUrl' in data) || (data.dataUrl is string && data.dataUrl.matches('^data:image/jpeg;base64,.*')));
+      }
       match /outfitPhotos/{photoId} {
         allow read:   if isMember(tripId) && resource.data.ownerUid == uid();
-        allow create: if isMember(tripId) && request.resource.data.ownerUid == uid();
+        allow create: if isMember(tripId) && request.resource.data.ownerUid == uid()
+                                          && isPhotoDoc(request.resource.data)
+                                          && countsAgainstQuota('photos');
         allow update: if isMember(tripId) && resource.data.ownerUid == uid()
-                                          && request.resource.data.ownerUid == uid();
+                                          && request.resource.data.ownerUid == uid()
+                                          && isPhotoDoc(request.resource.data);
         allow delete: if isMember(tripId) && resource.data.ownerUid == uid();
       }
 

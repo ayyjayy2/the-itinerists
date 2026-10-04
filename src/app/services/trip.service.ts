@@ -7,6 +7,7 @@ import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
 import { AuthService } from './auth.service';
 import { AnalyticsService } from './analytics.service';
+import { QuotaService } from './quota.service';
 import { TripEventsService } from './trip-events.service';
 import { memberEvent, tripChanged } from '../utils/event-text';
 import {
@@ -61,6 +62,7 @@ export class TripService {
   private authService = inject(AuthService);
   private analytics   = inject(AnalyticsService);
   private events = inject(TripEventsService);
+  private quota  = inject(QuotaService);
 
   /** Live document for the active trip (null when none is selected). */
   private _activeTrip = signal<TripDoc | null>(null);
@@ -220,7 +222,8 @@ export class TripService {
       if (input.destinationPlaceId) trip.destinationPlaceId = input.destinationPlaceId;
       if (input.destinationCoords)  trip.destinationCoords  = input.destinationCoords;
       if (input.coverPhotoUrl)      trip.coverPhotoUrl      = input.coverPhotoUrl;
-      await setDoc(tripRef, trip);
+      // A new trip counts against the creator's daily allowance (QuotaService).
+      await this.quota.commitCounted(user.uid, 'trips', batch => batch.set(tripRef, trip));
 
       await setDoc(this.memberRef(tripId, user.uid), this.memberSnapshot(user, 'owner', now));
       await this.indexTrip(user.uid, tripId);

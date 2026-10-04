@@ -14,6 +14,7 @@ import { PackingSync } from '../../utils/packing-match';
 import { outfitPhotoIds, MAX_OUTFIT_PHOTOS } from '../../utils/outfit-photos';
 import { tripDestinations } from '../../utils/trip-destinations';
 import { OutfitEntry } from '../../models/trip.models';
+import { userMessage } from '../../utils/user-message';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 
@@ -85,6 +86,8 @@ export class OutfitsComponent implements OnInit {
 
   currentUser = this.userService.currentUser;
   uploading   = this.photoService.uploading;
+  /** Why the last upload stopped (e.g. the daily photo limit), shown under the photo buttons. */
+  photoError  = signal('');
   isAdmin     = this.userService.isAdmin;
 
   /** Active-trip date state (TP-23). */
@@ -314,6 +317,7 @@ export class OutfitsComponent implements OnInit {
     const current = editing ? this.editForm.photoIds : this.photoIdsFor(date);
     const room    = Math.max(0, MAX_OUTFIT_PHOTOS - current.length);
     const added: string[] = [];
+    this.photoError.set('');
     try {
       for (const file of files.slice(0, room)) {
         const { id, url } = await this.photoService.upload(tripId, date, user.uid, file);
@@ -321,7 +325,10 @@ export class OutfitsComponent implements OnInit {
         this.ngZone.run(() => this.photoCache.update(c => ({ ...c, [id]: url })));
       }
     } catch (err) {
-      if ((err as Error)?.message !== 'cancelled') console.error('[uploadPhotos] failed:', err);
+      if ((err as Error)?.message !== 'cancelled') {
+        console.error('[uploadPhotos] failed:', err);
+        this.ngZone.run(() => this.photoError.set(userMessage(err, "Couldn't add that photo. Please try again.")));
+      }
     }
     if (!added.length) return;
     this.ngZone.run(() => {

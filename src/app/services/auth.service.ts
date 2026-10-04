@@ -37,6 +37,7 @@ import { BACKGROUND_COLORS } from '../utils/avatar-contrast';
 import { PLACEHOLDER_DOMAIN, isPlaceholderEmail, isValidEmail } from '../utils/email';
 import { usernameProblem, normalizeUsername } from '../utils/signup-form';
 import { UserService } from './user.service';
+import { randomCode } from '../utils/invite-code';
 import { TripEventsService } from './trip-events.service';
 
 const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
@@ -69,10 +70,6 @@ export class EmailInUseError extends Error {
   constructor(readonly email: string) { super('check-inbox'); }
 }
 
-function randomCode(length = 8): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-}
 
 const AVATAR_COLORS = BACKGROUND_COLORS;
 
@@ -241,8 +238,6 @@ export class AuthService {
     const inviteRef  = doc(this.firestore, 'trips', tripId, 'invites', inviteCode);
     const inviteSnap = await getDoc(inviteRef);
     if (!inviteSnap.exists()) throw new Error('Invalid invite code.');
-    const raw = inviteSnap.data() as Partial<InviteCode>;
-    const usedBy = Array.isArray(raw.usedBy) ? raw.usedBy : [];
 
     const uname = normalizeUsername(username);
     { const problem = usernameProblem(uname); if (problem) throw new Error(problem); }
@@ -283,7 +278,7 @@ export class AuthService {
       { merge: true },
     );
     await updateDoc(doc(this.firestore, 'trips', tripId), { memberCount: increment(1) });
-    await updateDoc(inviteRef, { usedBy: [...usedBy, uid] });
+    await updateDoc(inviteRef, { usedBy: arrayUnion(uid) });
 
     // Best-effort activity log: the new member joined (TP-18).
     const logRef = doc(collection(this.firestore, 'trips', tripId, 'activityLog'));
@@ -501,14 +496,14 @@ export class AuthService {
     const username = this.userService.firestoreUser()?.username;
     if (username) await deleteDoc(this.usernameRef(username)).catch(() => {/* may not exist */});
     await deleteDoc(this.accountRef(user.uid)).catch(() => {/* may not exist */});
+    // Daily-limit counters: the rules let a counter go once its window has passed.
+    for (const kind of ['photos', 'trips']) {
+      await deleteDoc(doc(this.firestore, '_quotas', user.uid, 'kinds', kind)).catch(() => {/* still counting, or none */});
+    }
     await deleteDoc(doc(this.firestore, 'users', user.uid));
 
     await deleteUser(user);
     this.tripContext.clearActiveTrip();
-  }
-
-  async disableUser(uid: string): Promise<void> {
-    await updateDoc(doc(this.firestore, 'users', uid), { isDisabled: true });
   }
 
   readonly avatarColors = AVATAR_COLORS;
