@@ -11,7 +11,6 @@ import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.
 import { canPickLayout, effectiveHomeLayout, HomeLayout } from '../../utils/layout';
 import { passwordRules, isPasswordValid, passwordProblems } from '../../utils/password';
 import { recoveryEmailErrorMessage } from '../../utils/email';
-import { usernameProblem } from '../../utils/signup-form';
 import { isDevMode } from '@angular/core';
 import { APP_VERSION, APP_BUILD, APP_BUILD_DATE } from '../../../version';
 import { userMessage } from '../../utils/user-message';
@@ -45,7 +44,6 @@ export class ProfileComponent implements OnInit {
   });
 
   displayName = '';
-  username    = '';
   avatarEmoji = '';
   color       = '';
   avatarLetterColor = '';
@@ -54,12 +52,8 @@ export class ProfileComponent implements OnInit {
   newPassword     = '';
   confirmPassword = '';
 
-  showUsernameModal = signal(false);
   showPasswordModal = signal(false);
 
-  usernameSaving  = signal(false);
-  usernameSuccess = signal(false);
-  usernameError   = signal('');
 
   profileSaving  = signal(false);
   profileSuccess = signal(false);
@@ -104,21 +98,11 @@ export class ProfileComponent implements OnInit {
     const u = this.firestoreUser();
     if (u) {
       this.displayName = u.displayName;
-      this.username    = u.username;
       this.avatarEmoji = u.avatarEmoji;
       this.color       = u.color;
       this.avatarLetterColor = u.avatarLetterColor ?? '';
     }
   }
-
-  openUsernameModal(): void {
-    this.username = this.firestoreUser()?.username ?? '';
-    this.usernameError.set('');
-    this.usernameSuccess.set(false);
-    this.showUsernameModal.set(true);
-  }
-
-  closeUsernameModal(): void { this.showUsernameModal.set(false); }
 
   openPasswordModal(): void {
     this.currentPassword = '';
@@ -185,27 +169,6 @@ export class ProfileComponent implements OnInit {
       this.recoveryError.set(recoveryEmailErrorMessage(err));
     } finally {
       this.recoverySaving.set(false);
-    }
-  }
-
-  async saveUsername(): Promise<void> {
-    const uid = this.firestoreUser()?.uid;
-    const normalized = this.username.toLowerCase().trim();
-    if (!uid) return;
-    if (normalized === this.firestoreUser()?.username) { this.closeUsernameModal(); return; }
-    const problem = usernameProblem(normalized);
-    if (problem) { this.usernameError.set(problem); return; }
-    this.usernameSaving.set(true);
-    this.usernameError.set('');
-    this.usernameSuccess.set(false);
-    try {
-      await this.authService.updateUsername(uid, normalized);
-      this.usernameSuccess.set(true);
-      setTimeout(() => { this.usernameSuccess.set(false); this.closeUsernameModal(); }, 1500);
-    } catch (err: any) {
-      this.usernameError.set(userMessage(err, 'Failed to update username.'));
-    } finally {
-      this.usernameSaving.set(false);
     }
   }
 

@@ -1,7 +1,7 @@
 import { Component, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, UseEmailToSignInError } from '../../services/auth.service';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { maskEmail } from '../../utils/email';
 
@@ -24,20 +24,19 @@ import { maskEmail } from '../../utils/email';
             Email <a href="mailto:support&#64;theitinerists.com">support&#64;theitinerists.com</a> from any address
             and we'll get you back in.</p>
         } @else {
-          <p class="reset-hint">Enter your username or recovery email. If a recovery
-            email is on file, we'll send a reset link there.</p>
+          <p class="reset-hint">Enter the email you sign in with and we'll send a reset link there.</p>
           <form class="auth-form" (ngSubmit)="submit()">
             <div class="form-group">
-              <label for="username">Username or email</label>
-              <input id="username" type="text" [(ngModel)]="username" name="username"
-                     placeholder="Username or recovery email" autocomplete="username"
-                     autocapitalize="none" required />
+              <label for="email">Email</label>
+              <input id="email" type="email" inputmode="email" [(ngModel)]="email" name="email"
+                     placeholder="you@example.com" autocomplete="username"
+                     autocapitalize="none" spellcheck="false" required />
             </div>
             @if (error()) {
               <div class="auth-error">{{ error() }}</div>
             }
             <button type="submit" class="btn btn-primary auth-btn"
-                    [disabled]="loading() || !username.trim()">
+                    [disabled]="loading() || !email.trim()">
               {{ loading() ? 'Sending…' : 'Send reset link' }}
             </button>
           </form>
@@ -58,23 +57,23 @@ import { maskEmail } from '../../utils/email';
 export class ForgotPasswordComponent {
   private authService = inject(AuthService);
 
-  username   = '';
+  email      = '';
   loading    = signal(false);
   error      = signal('');
   sentTo     = signal('');
   noRecovery = signal(false);
 
   async submit(): Promise<void> {
-    if (!this.username.trim()) return;
+    if (!this.email.trim()) return;
     this.loading.set(true);
     this.error.set('');
     try {
-      const email = await this.authService.sendPasswordReset(this.username);
-      if (email === null) this.noRecovery.set(true);
-      else this.sentTo.set(maskEmail(email));
+      const sentTo = await this.authService.sendPasswordReset(this.email);
+      if (sentTo === null) this.noRecovery.set(true);
+      else this.sentTo.set(maskEmail(sentTo));
     } catch (err: any) {
-      this.error.set(err?.code === 'auth/user-not-found'
-        ? 'No account uses that email.'
+      this.error.set(err instanceof UseEmailToSignInError ? err.message
+        : err?.code === 'auth/user-not-found' ? 'No account uses that email.'
         : 'Something went wrong. Please try again.');
     } finally {
       this.loading.set(false);

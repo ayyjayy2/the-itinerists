@@ -87,3 +87,16 @@ export function recoveryEmailErrorMessage(err: unknown): string {
 export function needsEmailConfirmation(email: string | null | undefined, verified: boolean | undefined): boolean {
   return !!email && !isPlaceholderEmail(email) && !verified;
 }
+
+/**
+ * The sign-in address for a username (#352). Only accounts from before sign-up
+ * asked for an email still sign in with a username; their index entry holds a
+ * placeholder address, which reveals nothing. An entry without one belongs to
+ * someone who signs in with their email: 'use-email'. No entry: the username's
+ * own placeholder, so Auth answers as it does for any wrong sign-in.
+ */
+export function usernameSignInAddress(username: string, entry: { authEmail?: string } | null): string | 'use-email' {
+  if (entry?.authEmail && isPlaceholderEmail(entry.authEmail)) return entry.authEmail;
+  if (entry) return 'use-email';
+  return `${username.trim().toLowerCase()}${PLACEHOLDER_DOMAIN}`;
+}

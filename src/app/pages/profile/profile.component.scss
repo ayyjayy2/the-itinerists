@@ -36,12 +36,6 @@
   color: var(--text);
 }
 
-.preview-username {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-top: 0.15rem;
-}
-
 .preview-text { min-width: 0; }   // let a long email wrap instead of widening the card
 
 .preview-email {

@@ -1,4 +1,4 @@
-import { needsEmailConfirmation, maskEmail, isValidEmail, isPlaceholderEmail, needsRecoveryEmail, authEmailPatch, recoveryEmailErrorMessage } from './email';
+import { needsEmailConfirmation, maskEmail, isValidEmail, isPlaceholderEmail, needsRecoveryEmail, authEmailPatch, recoveryEmailErrorMessage, usernameSignInAddress } from './email';
 
 describe('maskEmail', () => {
   it('keeps the first letter and the domain', () => {
@@ -108,3 +108,21 @@ describe('needsEmailConfirmation', () => {
   });
 });
 
+
+describe('usernameSignInAddress', () => {
+  it('signs an old username-only account in with its placeholder address', () => {
+    expect(usernameSignInAddress('maya', { authEmail: 'maya@the-itinerists.local' })).toBe('maya@the-itinerists.local');
+  });
+
+  it('asks for the email when the username belongs to an email account', () => {
+    expect(usernameSignInAddress('maya', {})).toBe('use-email');
+  });
+
+  it('never signs in with a real address found in the index (entries not yet cleaned up)', () => {
+    expect(usernameSignInAddress('maya', { authEmail: 'maya@example.com' })).toBe('use-email');
+  });
+
+  it('falls back to the placeholder for an unknown username, so Auth answers as for any wrong sign-in', () => {
+    expect(usernameSignInAddress(' Theo ', null)).toBe('theo@the-itinerists.local');
+  });
+});

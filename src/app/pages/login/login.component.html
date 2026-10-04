@@ -7,16 +7,17 @@
 
     <form class="auth-form" (ngSubmit)="submit()" #f="ngForm">
       <div class="form-group">
-        <label for="username">Username or email</label>
+        <label for="email">Email</label>
         <input
-          id="username"
-          type="text"
-          [(ngModel)]="username"
-          name="username"
-          placeholder="Username or recovery email"
+          id="email"
+          type="email"
+          inputmode="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="you@example.com"
           autocomplete="username"
           autocapitalize="none"
-          (blur)="prefetch()"
+          spellcheck="false"
           required
         />
       </div>
@@ -31,8 +32,6 @@
             name="password"
             placeholder="Enter your password"
             autocomplete="current-password"
-            (focus)="prefetch()"
-            (input)="prefetch()"
             required
           />
           <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"

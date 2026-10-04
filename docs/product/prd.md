@@ -72,8 +72,8 @@ A group trip is planned across a group chat, a shared spreadsheet, a notes app a
 | Requirement | Priority | Status |
 |---|---|---|
 | **Accounts and getting started** |
-| Sign up with name, username, email and password — the email is required and becomes the sign-in and password-reset address; every field checked as you type | Must | Built |
-| Sign in with username or email; reset the password by email | Must | Built |
+| Sign up with name, email and password — the email is the sign-in and password-reset address (no username since #352); every field checked as you type | Must | Built |
+| Sign in with email (old username-only accounts keep their username); reset the password by email | Must | Built |
 | Get started: set up a trip, or do it later — every page offers "Set up a trip" and "I have an invite code" until there is one | Must | Built |
 | Delete my account — Apple requires it for apps with sign-up | Must | Built |
 | Download my data | Must | Not started — phase 5 |
@@ -132,7 +132,7 @@ A group trip is planned across a group chat, a shared spreadsheet, a notes app a
 
 ### Joiner
 
-1. Taps the link; signs up with name, username, email and password, the code already filled in, or joins straight away if signed in.
+1. Taps the link; signs up with name, email and password, the code already filled in, or joins straight away if signed in.
 2. Lands on Home for that trip: countdown, who's going, first up.
 3. Adds their own flight and their expenses.
 4. After the trip, sees what they owe and marks it settled.

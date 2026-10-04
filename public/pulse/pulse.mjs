@@ -49,17 +49,13 @@ $('signin').addEventListener('submit', async ev => {
   const id = $('user').value.trim(), pass = $('pass').value;
   $('signinBtn').disabled = true; $('gateMsg').textContent = 'Signing in…';
   try {
-    let email = id;
-    if (!id.includes('@')) {
-      const u = await getDoc(doc(db, 'usernames', id.toLowerCase()));
-      if (!u.exists()) throw new Error('Invalid username, email, or password.');
-      email = u.data().authEmail;
-    }
-    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    // Email only: the public username index holds no real addresses (#352).
+    if (!id.includes('@')) throw new Error('Sign in with your email address.');
+    const cred = await signInWithEmailAndPassword(auth, id, pass);
     $('pass').value = '';
     $('gateMsg').textContent = cred.user.uid === OWNER_UID ? '' : 'That account is not the app owner. Signed out.';
   } catch (err) {
-    $('gateMsg').textContent = /invalid|credential|password|user-not-found/i.test(err.message) ? 'Invalid username, email, or password.' : err.message;
+    $('gateMsg').textContent = /invalid|credential|password|user-not-found/i.test(err.message) ? 'Wrong email or password.' : err.message;
   } finally { $('signinBtn').disabled = false; }
 });
 $('signOut').addEventListener('click', () => signOut(auth));

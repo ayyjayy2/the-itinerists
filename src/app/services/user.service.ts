@@ -4,7 +4,7 @@ import { Firestore, doc, onSnapshot, updateDoc, setDoc, Unsubscribe } from '@ang
 import { TripUser, FirestoreUser, PrivateAccount } from '../models/trip.models';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, firstValueFrom, map, merge } from 'rxjs';
-import { authEmailPatch } from '../utils/email';
+import { authEmailPatch, isPlaceholderEmail } from '../utils/email';
 import { TripContextService } from './trip-context.service';
 import { CrashReporterService } from './crash-reporter.service';
 
@@ -116,14 +116,18 @@ export class UserService {
           this.unsubs.push(onSnapshot(doc(this.firestore, 'users', uid, 'private', 'account'), snap => {
             account = snap.exists() ? (snap.data() as PrivateAccount) : {};
             if (profile) emit();
-            // A verified recovery email changes the Auth email outside the app;
-            // write it back so username sign-in keeps resolving correctly.
+            // A verified email changes the Auth email outside the app; record it
+            // privately. If this account used to sign in with a username, its
+            // public index entry drops the old placeholder address, so the sign-in
+            // page tells them to use their email (#352). It never holds the real one.
             const patch = authEmailPatch(firebaseUser.email, account);
             if (patch && profile) {
               setDoc(doc(this.firestore, 'users', uid, 'private', 'account'), patch, { merge: true })
                 .catch(err => console.error('[UserService] authEmail sync failed:', err));
-              updateDoc(doc(this.firestore, 'usernames', profile.username), patch)
-                .catch(err => console.error('[UserService] username index sync failed:', err));
+              if (profile.username && !isPlaceholderEmail(patch.authEmail)) {
+                setDoc(doc(this.firestore, 'usernames', profile.username), { uid })
+                  .catch(err => console.error('[UserService] username index sync failed:', err));
+              }
             }
           }, err => console.error(`[UserService] users/${uid}/private listener error:`, err)));
 

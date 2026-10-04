@@ -52,8 +52,6 @@ export class AvatarPickerComponent {
 
   /** Show a live "this is how you'll look" card above the grid (signup/join). */
   @Input() preview = false;
-  /** Username to show under the name in the preview card. */
-  @Input() previewUsername = '';
 
   readonly emojiOptions = EMOJI_OPTIONS;
   readonly colorOptions = COLOR_OPTIONS;
