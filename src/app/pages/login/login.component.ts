@@ -10,6 +10,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { userMessage, isBrokenLocalCacheError } from '../../utils/user-message';
 import { LocalCacheService } from '../../services/local-cache.service';
+import { SESSION_EXPIRED_MESSAGE } from '../../utils/session';
 
 @Component({
   selector: 'app-login',
@@ -32,6 +33,15 @@ export class LoginComponent {
   showPassword = signal(false);
   loading      = signal(false);
   error        = signal('');
+  /** Why the person is here, when the app signed them out after 90 days. */
+  readonly notice = signal('');
+
+  constructor() {
+    if (this.userService.sessionEnded()) {
+      this.notice.set(SESSION_EXPIRED_MESSAGE);
+      this.userService.sessionEnded.set(false);
+    }
+  }
 
   async submit(): Promise<void> {
     if (!this.email.trim() || !this.password) return;
