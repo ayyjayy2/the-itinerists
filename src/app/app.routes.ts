@@ -24,6 +24,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/privacy/privacy.component').then(m => m.PrivacyComponent)
   },
   {
+    path: 'terms',     // public: linked from sign-up, Profile and the privacy policy
+    loadComponent: () => import('./pages/terms/terms.component').then(m => m.TermsComponent)
+  },
+  {
     path: 'signup',
     loadComponent: () => import('./pages/signup/signup.component').then(m => m.SignupComponent)
   },

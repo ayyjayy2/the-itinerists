@@ -39,6 +39,17 @@ test('log out, then sign up with a username and password', async ({ page }) => {
   await expect(page).toHaveURL(/get-started|home/);
 });
 
+test('sign-up links to the terms and the privacy policy, and each links to the other', async ({ page }) => {
+  await signOut(page);
+  await page.goto('/signup');
+  await page.getByRole('link', { name: 'terms of service' }).click();
+  await expect(page.getByRole('heading', { name: 'Terms of Service' })).toBeVisible();
+  await page.getByRole('link', { name: 'Privacy policy' }).click();
+  await expect(page.getByRole('heading', { name: 'Privacy Policy' })).toBeVisible();
+  await page.getByRole('link', { name: 'Terms of service' }).click();
+  await expect(page).toHaveURL(/\/terms/);
+});
+
 test('create a trip and land on Home with it active', async ({ page }) => {
   await page.goto('/trips/new');
   await page.getByPlaceholder('e.g. Bali Girls Trip 2026').fill('Lisbon Long Weekend');
