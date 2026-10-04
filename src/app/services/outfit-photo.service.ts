@@ -1,7 +1,8 @@
 import { Injectable, inject, signal, NgZone, Injector, runInInjectionContext } from '@angular/core';
-import { Firestore, doc, setDoc, getDoc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, deleteDoc } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytes, getBlob, deleteObject } from '@angular/fire/storage';
 import { newOutfitPhotoId } from '../utils/outfit-photos';
+import { QuotaService } from './quota.service';
 import { resizeToJpeg } from '../utils/image-resize';
 import {
   outfitPhotoPaths, photoSource, PHOTO_MAX_PX, THUMB_MAX_PX, JPEG_QUALITY,
@@ -38,6 +39,7 @@ export class OutfitPhotoService {
   private storage   = inject(Storage);
   private ngZone    = inject(NgZone);
   private injector  = inject(Injector);
+  private quota     = inject(QuotaService);
   private cancelled = false;
   /** Best URL we have per `${tripId}/${id}`: the thumbnail until the full copy arrives. */
   private urls      = new Map<string, string>();
@@ -81,9 +83,9 @@ export class OutfitPhotoService {
       }
       if (this.cancelled) throw new Error('cancelled');
 
-      await runInInjectionContext(this.injector, () =>
-        setDoc(doc(this.firestore, 'trips', tripId, 'outfitPhotos', id), data)
-      );
+      // Each photo counts against the uploader's daily allowance (QuotaService).
+      const photoRef = runInInjectionContext(this.injector, () => doc(this.firestore, 'trips', tripId, 'outfitPhotos', id));
+      await this.quota.commitCounted(uid, 'photos', batch => batch.set(photoRef, data));
       const url = URL.createObjectURL(full.blob);
       const key = `${tripId}/${id}`;
       this.urls.set(key, url);
