@@ -44,9 +44,9 @@ test('sign-up links to the terms and the privacy policy, and each links to the o
   await page.goto('/signup');
   await page.getByRole('link', { name: 'terms of service' }).click();
   await expect(page.getByRole('heading', { name: 'Terms of Service' })).toBeVisible();
-  await page.getByRole('link', { name: 'Privacy policy' }).click();
+  await page.getByRole('link', { name: 'Privacy policy', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Privacy Policy' })).toBeVisible();
-  await page.getByRole('link', { name: 'Terms of service' }).click();
+  await page.getByRole('link', { name: 'Terms of service', exact: true }).click();
   await expect(page).toHaveURL(/\/terms/);
 });
 
