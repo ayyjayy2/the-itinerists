@@ -485,9 +485,9 @@ export interface SurveyConfig {
   id: string;          // a new id starts everyone over (a new survey)
   active: boolean;     // the off switch
   url: string;
-  title: string;       // the pop-up's heading
-  body: string;        // the pop-up's message
-  bannerText: string;  // the Home banner's line
+  title: string;       // the pop-up's heading       ┐ `{trip}` in any of these
+  body: string;        // the pop-up's message       │ becomes the person's own
+  bannerText: string;  // the Home banner's line, also the bell notice ┘ trip (fillSurveyText)
 }
 
 /** One person's progress with a survey invitation: users/{uid}.surveys[id]. */
@@ -495,4 +495,5 @@ export interface SurveyProgress {
   promptSeenAt?: number;     // the pop-up has been shown
   takenAt?: number;          // they tapped "Take the survey"
   bannerDismissals?: number; // times they closed the Home banner
+  noticeSeenAt?: number;     // they opened the bell after the survey notice arrived
 }

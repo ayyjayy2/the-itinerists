@@ -15,6 +15,10 @@
  * A new `id` starts everyone over (pop-up, then banner); keep it to tweak the
  * wording without asking people again.
  *
+ * `{trip}` in title, body or bannerText becomes each person's own trip: the
+ * city of their most recently finished one ("Tell me how Berlin went."), or
+ * "your trip" when they have none. bannerText is also the bell's notice.
+ *
  * Dry run (default):  node scripts/set-survey.js [--staging]
  * Apply:              node scripts/set-survey.js [--staging] --run
  * Switch off:         node scripts/set-survey.js [--staging] --off --run

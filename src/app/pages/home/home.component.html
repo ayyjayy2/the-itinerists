@@ -5,7 +5,7 @@
   @if (showSurveyNudge()) {
     <div class="recovery-nudge survey-nudge" role="status">
       <span class="rn-ic"><app-icon name="profile" [size]="16" /></span>
-      <span class="rn-text">{{ survey.config()!.bannerText }}</span>
+      <span class="rn-text">{{ survey.text()!.bannerText }}</span>
       <a class="btn btn-sm btn-primary" [href]="survey.config()!.url" target="_blank" rel="noopener" (click)="survey.take()">Take the survey</a>
       <button class="rn-close" type="button" (click)="survey.dismissBanner()" aria-label="Not now">✕</button>
     </div>

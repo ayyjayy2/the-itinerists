@@ -7,6 +7,8 @@ import { eventsForMe, unseenEvents, seenMarkFor } from '../../utils/trip-events'
 import { TripEventsService } from '../../services/trip-events.service';
 import { TripService } from '../../services/trip.service';
 import { TripEvent } from '../../models/trip.models';
+import { SurveyService } from '../../services/survey.service';
+import { isLiveSurvey } from '../../utils/survey';
 
 @Component({
   selector: 'app-notification-bell',
@@ -23,13 +25,22 @@ import { TripEvent } from '../../models/trip.models';
       @if (open()) {
         <div class="bell-scrim" (click)="open.set(false)"></div>
         <div class="bell-dropdown" [style.top.px]="dropTop()">
-          <div class="bell-head">{{ shown().length }} {{ shown().length === 1 ? 'update' : 'updates' }}</div>
+          <div class="bell-head">{{ shownCount() }} {{ shownCount() === 1 ? 'update' : 'updates' }}</div>
+          <!-- The survey stays here while it's on, for everyone, so it can be found again -->
+          @if (surveyOn() && survey.text(); as text) {
+            <a class="bell-item bell-link bell-survey" [href]="survey.config()!.url" target="_blank" rel="noopener"
+               (click)="survey.take(); open.set(false)">
+              <b>New survey</b> {{ text.bannerText }}
+            </a>
+          }
           @for (e of shown(); track e.id) {
             <a class="bell-item bell-link" [routerLink]="e.path" [queryParams]="e.itemId ? { focus: e.itemId } : null" (click)="open.set(false)">
               <b>{{ e.actorName }}</b> {{ e.summary }} <span class="bell-ago">· {{ ago(e.timestamp) }}</span>
             </a>
           } @empty {
-            <div class="bell-item bell-empty">No new updates</div>
+            @if (!surveyOn()) {
+              <div class="bell-item bell-empty">No new updates</div>
+            }
           }
           <a class="bell-all" routerLink="/updates" (click)="open.set(false)">See all</a>
         </div>
@@ -58,6 +69,7 @@ import { TripEvent } from '../../models/trip.models';
     .bell-link:hover { background: var(--surface-2, #f3f3f3); }
     .bell-ago { color: var(--muted, #8a8a8a); white-space: nowrap; }
     .bell-empty { color: var(--muted, #8a8a8a); }
+    .bell-survey { background: var(--accent-tint); }
     .bell-all { display: block; padding: 0.55rem 0.9rem; font-size: 0.85rem; font-weight: 700;
       color: var(--primary, #4a9c6d); text-decoration: none;
       border-top: 1px solid var(--border, #eee); }
@@ -67,6 +79,10 @@ export class NotificationBellComponent {
   private eventsService = inject(TripEventsService);
   private userService   = inject(UserService);
   private tripService   = inject(TripService);
+  readonly survey       = inject(SurveyService);
+
+  /** A survey is on: its notice is listed for everyone, tapped or not. */
+  readonly surveyOn = computed(() => isLiveSurvey(this.survey.config()));
 
   /** On a test trip, tester activity is part of what we're checking. */
   private showTest = computed(() => !!this.tripService.activeTrip()?.isTest);
@@ -79,7 +95,8 @@ export class NotificationBellComponent {
   private unseenList = computed(() => unseenEvents(
     this.eventsService.events(), this.me()?.uid ?? '', seenMarkFor(this.me(), this.tripService.activeTrip()?.id), this.showTest(),
   ));
-  readonly unseen = computed(() => this.unseenList().length);
+  /** Unseen trip updates, plus the survey notice until the bell is next opened. */
+  readonly unseen = computed(() => this.unseenList().length + (this.survey.noticeUnseen() ? 1 : 0));
   /** What the dropdown lists: the unseen ones, else the latest few for me. */
   readonly recent = computed<TripEvent[]>(() => {
     const unseen = this.unseenList();
@@ -90,6 +107,7 @@ export class NotificationBellComponent {
   /** Snapshot taken when the dropdown opens — opening marks everything seen
    *  (clears the badge), but the list stays readable. */
   readonly shown = signal<TripEvent[]>([]);
+  readonly shownCount = computed(() => this.shown().length + (this.surveyOn() ? 1 : 0));
 
   ago = (ts: number) => timeAgo(ts, this.now());
 
@@ -102,7 +120,8 @@ export class NotificationBellComponent {
       const btn = ev?.currentTarget as HTMLElement | undefined;
       if (btn) this.dropTop.set(btn.getBoundingClientRect().bottom + 6);
       this.shown.set(this.recent());
-      if (this.unseen() > 0) void this.userService.markActivitySeen(this.tripService.activeTrip()?.id);
+      if (this.unseenList().length > 0) void this.userService.markActivitySeen(this.tripService.activeTrip()?.id);
+      this.survey.markNoticeSeen();
     }
     this.open.update(v => !v);
   }

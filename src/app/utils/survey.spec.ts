@@ -1,4 +1,5 @@
-import { SURVEY_BANNER_MAX_DISMISSALS, SURVEY_NEW_VISIT_AFTER_MS, isLiveSurvey, isNewVisit, surveyView } from './survey';
+import { SURVEY_BANNER_MAX_DISMISSALS, SURVEY_NEW_VISIT_AFTER_MS, fillSurveyText, isLiveSurvey, isNewVisit, surveyPending, surveyTripPlace, surveyView } from './survey';
+import { TripDoc } from '../models/trip.models';
 import { SurveyConfig } from '../models/trip.models';
 
 const config: SurveyConfig = {
@@ -65,5 +66,51 @@ describe('isNewVisit', () => {
 
   it('is not a new visit when the app was never hidden', () => {
     expect(isNewVisit(null, 5_000)).toBeFalse();
+  });
+});
+
+describe('surveyPending', () => {
+  it('is pending from the start until they tap it or close the banner the maximum number of times', () => {
+    expect(surveyPending(config, undefined)).toBeTrue();
+    expect(surveyPending(config, { promptSeenAt: 1 })).toBeTrue();
+    expect(surveyPending(config, { promptSeenAt: 1, bannerDismissals: 2 })).toBeTrue();
+    expect(surveyPending(config, { promptSeenAt: 1, bannerDismissals: 3 })).toBeFalse();
+    expect(surveyPending(config, { promptSeenAt: 1, takenAt: 2 })).toBeFalse();
+  });
+
+  it('is never pending without a live survey', () => {
+    expect(surveyPending(null, undefined)).toBeFalse();
+    expect(surveyPending({ ...config, active: false }, undefined)).toBeFalse();
+  });
+});
+
+describe('surveyTripPlace', () => {
+  const trip = (o: Partial<TripDoc>) => ({ id: 't', name: 'Trip', destination: 'Lisbon, Portugal', startDate: '2026-05-01', endDate: '2026-05-05', ...o }) as TripDoc;
+
+  it("names the city of the person's most recently finished trip", () => {
+    const trips = [
+      trip({ id: 'a', destination: 'Lisbon, Portugal', endDate: '2026-05-05' }),
+      trip({ id: 'b', destination: 'Berlin, Germany', endDate: '2026-10-09' }),
+      trip({ id: 'c', destination: 'Tokyo, Japan', startDate: '2026-12-01', endDate: '2026-12-10' }),   // not finished
+    ];
+    expect(surveyTripPlace(trips, '2026-10-12')).toBe('Berlin');
+  });
+
+  it('counts a trip as finished once its last day has passed', () => {
+    expect(surveyTripPlace([trip({ destination: 'Berlin, Germany', endDate: '2026-10-12' })], '2026-10-12')).toBeNull();
+    expect(surveyTripPlace([trip({ destination: 'Berlin, Germany', endDate: '2026-10-11' })], '2026-10-12')).toBe('Berlin');
+  });
+
+  it('falls back to the trip name when there is no destination, and to nothing without a finished trip', () => {
+    expect(surveyTripPlace([trip({ destination: '', name: 'Girls weekend' })], '2026-10-12')).toBe('Girls weekend');
+    expect(surveyTripPlace([], '2026-10-12')).toBeNull();
+  });
+});
+
+describe('fillSurveyText', () => {
+  it('puts their trip in place of {trip}, or "your trip" when they have none', () => {
+    expect(fillSurveyText('Tell me how {trip} went.', 'Berlin')).toBe('Tell me how Berlin went.');
+    expect(fillSurveyText('How did {trip} go? Tell me how {trip} went.', null)).toBe('How did your trip go? Tell me how your trip went.');
+    expect(fillSurveyText('No placeholder here.', 'Berlin')).toBe('No placeholder here.');
   });
 });

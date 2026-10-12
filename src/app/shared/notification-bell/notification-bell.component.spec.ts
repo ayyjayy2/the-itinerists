@@ -6,6 +6,7 @@ import { TripEventsService } from '../../services/trip-events.service';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { TripEvent } from '../../models/trip.models';
+import { SurveyService } from '../../services/survey.service';
 
 const ev = (o: Partial<TripEvent>): TripEvent => ({
   id: 'e', kind: 'itinerary', action: 'added', actorUid: 'other', actorName: 'Pat', itemId: 'i1',
@@ -22,9 +23,14 @@ const events: TripEvent[] = [
 describe('NotificationBellComponent', () => {
   let userStub: { firestoreUser: any; markActivitySeen: jasmine.Spy };
   let tripStub: ReturnType<typeof signal<any>>;
+  let survey: { config: ReturnType<typeof signal<any>>; text: ReturnType<typeof signal<any>>; noticeUnseen: ReturnType<typeof signal<boolean>>; markNoticeSeen: jasmine.Spy; take: jasmine.Spy };
 
   beforeEach(() => {
     tripStub = signal<any>({ id: 't1', name: 'Berlin' });
+    survey = {
+      config: signal<any>(null), text: signal<any>(null), noticeUnseen: signal(false),
+      markNoticeSeen: jasmine.createSpy('markNoticeSeen'), take: jasmine.createSpy('take'),
+    };
     userStub = {
       firestoreUser: signal({ uid: 'me', lastSeenActivityAt: 1000 }),
       markActivitySeen: jasmine.createSpy(),
@@ -36,6 +42,7 @@ describe('NotificationBellComponent', () => {
         { provide: TripEventsService, useValue: { events: signal(events) } },
         { provide: UserService, useValue: userStub },
         { provide: TripService, useValue: { activeTrip: tripStub } },
+        { provide: SurveyService, useValue: survey },
       ],
     });
   });
@@ -89,5 +96,58 @@ describe('NotificationBellComponent', () => {
     (fixture.nativeElement.querySelector('.bell-btn') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('removed Tester 1');
+  });
+
+  describe('survey notice', () => {
+    const live = { id: 's1', active: true, url: 'https://example.com/form', title: 'Hi', body: 'b', bannerText: 'Got 5 minutes? Tell me how {trip} went.' };
+    function openBell() {
+      const fixture = TestBed.createComponent(NotificationBellComponent);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      return { fixture, el, click: () => { (el.querySelector('.bell-btn') as HTMLButtonElement).click(); fixture.detectChanges(); } };
+    }
+
+    beforeEach(() => {
+      survey.config.set(live);
+      survey.text.set({ title: 'Hi', body: 'b', bannerText: 'Got 5 minutes? Tell me how Berlin went.' });
+    });
+
+    it('badges a new survey once, and stops badging when the bell is opened', () => {
+      survey.noticeUnseen.set(true);
+      const { el, click } = openBell();
+      expect(el.querySelector('.bell-badge')?.textContent?.trim()).toBe('2');   // the survey + one trip update
+      click();
+      expect(survey.markNoticeSeen).toHaveBeenCalled();
+    });
+
+    it('lists the survey first, with their trip in the wording, linking to the survey', () => {
+      const { el, click } = openBell();
+      click();
+      const item = el.querySelector('.bell-survey') as HTMLAnchorElement;
+      expect(item).not.toBeNull();
+      expect(el.querySelector('.bell-dropdown a')).toBe(item);
+      expect(item.textContent).toContain('New survey');
+      expect(item.textContent).toContain('Tell me how Berlin went.');
+      expect(item.href).toBe('https://example.com/form');
+      expect(item.target).toBe('_blank');
+      item.addEventListener('click', e => e.preventDefault());
+      item.click();
+      expect(survey.take).toHaveBeenCalled();
+    });
+
+    it('stays in the list without a badge after it has been seen, even once they tapped it', () => {
+      survey.noticeUnseen.set(false);
+      const { el, click } = openBell();
+      expect(el.querySelector('.bell-badge')?.textContent?.trim()).toBe('1');   // trip update only
+      click();
+      expect(el.querySelector('.bell-survey')).not.toBeNull();
+    });
+
+    it('is not shown when no survey is on', () => {
+      survey.config.set({ ...live, active: false });
+      const { el, click } = openBell();
+      click();
+      expect(el.querySelector('.bell-survey')).toBeNull();
+    });
   });
 });

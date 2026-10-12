@@ -1,7 +1,9 @@
 import { Injectable, Injector, computed, effect, inject, runInInjectionContext, signal } from '@angular/core';
 import { DocumentData, Firestore, doc, increment, onSnapshot, updateDoc, Unsubscribe } from '@angular/fire/firestore';
 import { SurveyConfig } from '../models/trip.models';
-import { isLiveSurvey, isNewVisit, surveyView } from '../utils/survey';
+import { fillSurveyText, isLiveSurvey, isNewVisit, surveyPending, surveyTripPlace, surveyView } from '../utils/survey';
+import { localTodayISO } from '../utils/trip-destinations';
+import { TripService } from './trip.service';
 import { UserService } from './user.service';
 
 /**
@@ -18,6 +20,7 @@ export class SurveyService {
   private firestore   = inject(Firestore);
   private injector    = inject(Injector);
   private userService = inject(UserService);
+  private tripService = inject(TripService);
 
   private readonly _config = signal<SurveyConfig | null>(null);
   readonly config = this._config.asReadonly();
@@ -34,6 +37,30 @@ export class SurveyService {
     if (!isLiveSurvey(config)) return 'none';
     const progress = this.userService.firestoreUser()?.surveys?.[config.id];
     return surveyView(config, progress, this.isQuiet(config.id));
+  });
+
+  /** Where their most recently finished trip went (null: none), once their trips have loaded. */
+  private readonly tripPlace = signal<string | null>(null);
+  private readonly tripsLoaded = signal(false);
+
+  /** The wording with `{trip}` filled in for this person. */
+  readonly text = computed(() => {
+    const c = this._config();
+    if (!c) return null;
+    const place = this.tripPlace();
+    return { title: fillSurveyText(c.title, place), body: fillSurveyText(c.body, place), bannerText: fillSurveyText(c.bannerText, place) };
+  });
+
+  /** The bell's "New survey" notice badges once, until they next open the bell. */
+  readonly noticeUnseen = computed(() => {
+    const c = this._config();
+    return isLiveSurvey(c) && !this.userService.firestoreUser()?.surveys?.[c.id]?.noticeSeenAt;
+  });
+
+  /** The invitation isn't finished yet (see surveyPending): Home keeps its banner spot. */
+  readonly pending = computed(() => {
+    const config = this._config();
+    return surveyPending(config, config ? this.userService.firestoreUser()?.surveys?.[config.id] : undefined);
   });
 
   constructor() {
@@ -55,10 +82,23 @@ export class SurveyService {
       onCleanup(() => { unsub?.(); unsub = null; });
     });
 
+    // Their trips name the place in the wording. Loaded once per account,
+    // only while a survey is on.
+    let tripsFor: string | null = null;
+    effect(() => {
+      const uid = this.uid();
+      if (!uid || !isLiveSurvey(this._config()) || tripsFor === uid) return;
+      tripsFor = uid;
+      this.tripService.getUserTrips(uid)
+        .then(trips => this.tripPlace.set(surveyTripPlace(trips, localTodayISO())))
+        .catch(err => console.warn('[SurveyService] trips:', (err as Error).message))
+        .finally(() => this.tripsLoaded.set(true));
+    });
+
     // Open the pop-up once, and record it straight away so closing the app
     // without answering moves them on to the banner rather than the pop-up again.
     effect(() => {
-      if (this.view() !== 'popup' || this.popupOpen()) return;
+      if (this.view() !== 'popup' || this.popupOpen() || !this.tripsLoaded()) return;   // wording settled first
       const id = this._config()!.id;
       this.popupOpen.set(true);
       this.quiet(id);
@@ -71,6 +111,12 @@ export class SurveyService {
     const id = this._config()?.id;
     this.popupOpen.set(false);
     if (id) void this.record({ [`surveys.${id}.takenAt`]: Date.now() });
+  }
+
+  /** They opened the bell: the survey notice stops badging (it stays in the list). */
+  markNoticeSeen(): void {
+    const id = this._config()?.id;
+    if (id && this.noticeUnseen()) void this.record({ [`surveys.${id}.noticeSeenAt`]: Date.now() });
   }
 
   /** The pop-up's X: the banner takes over from their next visit. */

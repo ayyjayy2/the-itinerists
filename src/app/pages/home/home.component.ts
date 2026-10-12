@@ -116,8 +116,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   readonly quickAccessVisible = computed(() =>
     this.quickAccess.filter(l => !isPageHidden(l.path, this.hidden())));
 
-  // ── Survey invitation banner (SurveyService): while it shows, it goes first and
-  //    the email reminders below wait, so there's only ever one banner. ──
+  // ── Survey invitation banner (SurveyService). Until the invitation is finished
+  //    it holds the banner spot: the email reminders below wait, even on a visit
+  //    where the survey itself stays quiet, so closing it never swaps in another. ──
   readonly survey = inject(SurveyService);
   readonly showSurveyNudge = computed(() => this.survey.view() === 'banner');
 
@@ -126,7 +127,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private nudgeDismissed = signal(false);
   readonly showRecoveryNudge = computed(() => {
     const u = this.userService.firestoreUser();
-    if (!needsRecoveryEmail(u) || this.nudgeDismissed() || this.showSurveyNudge()) return false;
+    if (!needsRecoveryEmail(u) || this.nudgeDismissed() || this.survey.pending()) return false;
     try { return localStorage.getItem(`recoveryNudgeDismissed:${u!.uid}`) !== '1'; } catch { return true; }
   });
   readonly pendingRecoveryEmail = computed(() => this.userService.firestoreUser()?.pendingEmail ?? '');
@@ -143,7 +144,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private confirmDismissed = signal(false);
   readonly confirmSending = signal(false);
   readonly showConfirmNudge = computed(() => {
-    if (!this.emailConfirm.waiting() || this.confirmDismissed() || this.showRecoveryNudge() || this.showSurveyNudge()) return false;
+    if (!this.emailConfirm.waiting() || this.confirmDismissed() || this.showRecoveryNudge() || this.survey.pending()) return false;
     try { return sessionStorage.getItem('confirmNudgeDismissed') !== '1'; } catch { return true; }
   });
   readonly confirmEmailMasked = computed(() => maskEmail(this.emailConfirm.waiting()));
