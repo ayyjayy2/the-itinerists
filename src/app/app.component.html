@@ -13,6 +13,8 @@
   <!-- Full-screen auth/onboarding: no chrome -->
   <router-outlet />
 } @else {
+  <!-- The survey invitation greets signed-in people on whatever page they open -->
+  <app-survey-popup />
   <div class="app-shell">
 
     <!-- ── Sidebar (wide screens ≥769px, Type A only) ── -->

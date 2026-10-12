@@ -40,6 +40,15 @@ describe('MemoryStore', () => {
     expect(() => store.update('trips/missing', { name: 'x' })).toThrowError(/No document/);
   });
 
+  it('update treats a dotted key as a path into nested maps, like Firestore', () => {
+    store.set('users/u', { name: 'Maya', lastSeenByTrip: { t1: 1 } });
+    store.update('users/u', { 'lastSeenByTrip.t2': 2, 'surveys.s1.promptSeenAt': 5 });
+    expect(store.get('users/u')).toEqual({ name: 'Maya', lastSeenByTrip: { t1: 1, t2: 2 }, surveys: { s1: { promptSeenAt: 5 } } });
+    store.update('users/u', { 'surveys.s1.bannerDismissals': FieldTransform.increment(1) });
+    store.update('users/u', { 'surveys.s1.bannerDismissals': FieldTransform.increment(1) });
+    expect((store.get('users/u') as any).surveys.s1).toEqual({ promptSeenAt: 5, bannerDismissals: 2 });
+  });
+
   it('applies increment, arrayUnion and arrayRemove transforms', () => {
     store.set('trips/t1', { memberCount: 1, ids: ['a'] });
     store.update('trips/t1', {

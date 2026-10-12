@@ -24,3 +24,11 @@ export function surveyView(config: SurveyConfig | null, progress: SurveyProgress
   if ((progress.bannerDismissals ?? 0) >= SURVEY_BANNER_MAX_DISMISSALS) return 'none';
   return 'banner';
 }
+
+/** Coming back to the app after this long in the background counts as a new visit. */
+export const SURVEY_NEW_VISIT_AFTER_MS = 30 * 60_000;
+
+/** Was the app away (hidden since `hiddenAt`) long enough that returning `now` is a new visit? */
+export function isNewVisit(hiddenAt: number | null, now: number): boolean {
+  return hiddenAt !== null && now - hiddenAt >= SURVEY_NEW_VISIT_AFTER_MS;
+}

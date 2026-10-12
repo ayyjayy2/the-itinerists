@@ -187,8 +187,18 @@ export class MemoryStore {
   update(path: string, data: DocData): void {
     const current = this.docs.get(path);
     if (!current) throw new Error(`No document to update: ${path}`);
-    const next: DocData = { ...current };
-    for (const [k, v] of Object.entries(data)) next[k] = materialize(v, current[k]);
+    const next: DocData = clone(current);
+    // A dotted key is a path into nested maps ('a.b': 1 sets a.b), as in Firestore.
+    for (const [k, v] of Object.entries(data)) {
+      const keys = k.split('.');
+      let at: DocData = next;
+      for (const key of keys.slice(0, -1)) {
+        if (!isPlainObject(at[key])) at[key] = {};
+        at = at[key] as DocData;
+      }
+      const last = keys[keys.length - 1];
+      at[last] = materialize(v, at[last]);
+    }
     this.docs.set(path, clone(next));
     this.markDirty(path);
   }
