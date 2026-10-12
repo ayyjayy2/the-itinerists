@@ -1,4 +1,5 @@
 import { isOutsideTripDates } from '../../utils/trip-destinations';
+import { bookingsOn, DayBooking } from '../../utils/day-bookings';
 import { stopDateRange } from '../../utils/stop-dates';
 import { CalendarExportService, CalendarExportResult } from '../../services/calendar-export.service';
 import { Component, OnInit, inject, signal, computed, effect, untracked } from '@angular/core';
@@ -182,9 +183,6 @@ export class ItineraryComponent implements OnInit {
     return stayMomentsFor(stays, me);
   });
 
-  stayEventsForDate(date: string) {
-    return this.stayEvents().filter(e => e.date === date);
-  }
 
   /** Auto-generated transportation events (pick-up/drop-off or depart/arrive) — not editable here. */
   readonly transportEvents = computed(() => {
@@ -219,9 +217,6 @@ export class ItineraryComponent implements OnInit {
     }
   }
 
-  transportEventsForDate(date: string) {
-    return this.transportEvents().filter(e => e.date === date);
-  }
 
   readonly tripUsers = this.usersService.tripUsers;
 
@@ -332,16 +327,24 @@ export class ItineraryComponent implements OnInit {
   readonly calendarDays = computed(() => {
     const me  = this.currentUser()?.name ?? '';
     const all = this.showAll();
-    return this.visibleDates().map(date => ({
-      date,
-      label: this.effectiveDayLabel(date),
-      items: this.allItems().filter(i => {
+    return this.visibleDates().map(date => {
+      const items = this.allItems().filter(i => {
         if (i.date !== date) return false;
         if (all) return true;
         return i.forWho === 'All' || i.forWho.split(',').map(s => s.trim()).includes(me);
-      }),
-      isSelected: this.selectedDate() === date,
-    }));
+      });
+      const bookings = this.dayBookings(date);
+      return {
+        date,
+        label: this.effectiveDayLabel(date),
+        items,
+        bookings,
+        previewItems: items.slice(0, Math.max(0, 3 - bookings.length)),   // three in all, bookings first
+        // Bookings count too, so a day with a flight or a check-in never reads as free.
+        count: bookings.length + items.length,
+        isSelected: this.selectedDate() === date,
+      };
+    });
   });
 
   // ── Reset selectedDate when out of range ──────────────────────────────────
@@ -482,8 +485,10 @@ export class ItineraryComponent implements OnInit {
     return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
-  flightEventsForDate(date: string) {
-    return this.flightEvents().filter(e => e.date === date);
+
+  /** The day's flights, transport and stay moments in time order: what List and Calendar both show. */
+  dayBookings(date: string): DayBooking[] {
+    return bookingsOn(date, { flights: this.flightEvents(), transports: this.transportEvents(), stays: this.stayEvents() });
   }
 
   categoryColor(cat: string): string {
