@@ -8,7 +8,7 @@ import { DEMO_UID, DEMO_TRIP_ID } from './seed-constants';
 import type {
   FirestoreUser, TripDoc, TripMember, UserTripsDoc, ActivityLogEntry,
   ItineraryItemDoc, FlightDoc, AccommodationDoc, FinanceEntryDoc, RecDoc,
-  RentalCar, MapPin, PackingItem, PackingSuggestion, Expense,
+  RentalCar, MapPin, PackingItem, PackingSuggestion, Expense, OutfitEntry,
 } from '../app/models/trip.models';
 
 const T0 = Date.UTC(2026, 8, 1, 12, 0, 0); // a fixed "created at" baseline (1 Sep 2026)
@@ -194,6 +194,15 @@ export function seedDemo(store: MemoryStore): void {
     id: 'sug-1', from: MAYA.name, to: ALAYNA.name, item: 'Packable umbrella', sentAt: at(90), status: 'pending',
   };
   store.set(trip('packingSuggestions', suggestion.id), suggestion as unknown as DocData);
+
+  // ── Outfits (personal to the demo traveller, matched by name) ─────────────
+  const outfits: OutfitEntry[] = [
+    { date: '2026-11-13', user: ALAYNA.name, items: ['Linen shirt', 'Wide-leg trousers', 'Sandals'], notes: 'Light layers for the old city' },
+    { date: '2026-11-14', user: ALAYNA.name, items: ['Long skirt', 'Shoulder-covering top', 'Comfy flats'], notes: 'Temples: shoulders and knees covered' },
+    { date: '2026-11-15', user: ALAYNA.name, items: ['Breathable tee', 'Hiking shorts', 'Trail shoes', 'Light fleece'], notes: 'Sunrise at Doi Suthep is chilly' },
+    { date: '2026-11-16', user: ALAYNA.name, items: ['Swimsuit', 'Quick-dry shorts', 'Old sneakers'], notes: "Elephant park: you'll get muddy" },
+  ];
+  for (const o of outfits) store.set(trip('outfits', `${o.date}_${o.user}`), o as unknown as DocData);
 
   // ── Personal expenses ─────────────────────────────────────────────────────
   const expenses: Expense[] = [

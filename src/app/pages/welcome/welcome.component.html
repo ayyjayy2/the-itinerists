@@ -2,7 +2,7 @@
   <header class="welcome-head">
     <app-brand variant="stacked" [mark]="40" />
     <h1>Plan the trip together ✨</h1>
-    <p class="lede">One shared plan for flights, stays, money and packing, so nobody has to dig through the group chat.</p>
+    <p class="lede">One shared plan for flights, stays, money and packing, plus a place to plan your outfits for every day. No more digging through the group chat.</p>
   </header>
 
   <!-- A few seconds of each key screen (the demo's made-up trip) -->
@@ -10,9 +10,19 @@
     <div class="clip-strip" #strip (scroll)="onScroll(strip)">
       @for (clip of clips; track clip.src) {
         <figure class="clip">
-          <div class="phone">
-            <video [src]="clip.src" [poster]="clip.poster" [muted]="true" [autoplay]="!reducedMotion" loop playsinline preload="metadata"
-                   [attr.aria-label]="clip.label"></video>
+          <div class="phone-wrap">
+            <div class="phone">
+              <video [src]="clip.src" [poster]="clip.poster" [muted]="true" [autoplay]="!reducedMotion" loop playsinline preload="metadata"
+                     [attr.aria-label]="clip.label"></video>
+            </div>
+            <!-- Outfits live under More: a handwritten nudge pointing at the tab -->
+            <p class="outfit-note">
+              <span>Plan your outfits in here! 👗</span>
+              <svg class="arrow" viewBox="0 0 90 70" aria-hidden="true" focusable="false">
+                <path d="M78 6 C 84 26, 72 44, 50 52 C 38 56, 24 58, 12 60" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
+                <path d="M22 50 L 10 60 L 23 67" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </p>
           </div>
           <figcaption>{{ clip.label }}</figcaption>
         </figure>

@@ -40,6 +40,21 @@
   background: var(--text); box-shadow: var(--shadow-md);
   video { width: 100%; height: auto; aspect-ratio: 390 / 844; object-fit: cover; display: block; border-radius: 12px; background: var(--surface); }
 }
+// The handwritten nudge sits in the space right of the phone, its arrow
+// curling down to the phone's More tab (bottom-right of the screen).
+.phone-wrap { position: relative; width: 48%; max-width: 190px; }
+.phone-wrap .phone { width: 100%; max-width: none; }
+.outfit-note {
+  position: absolute; left: calc(100% - 14px); bottom: 2%;
+  width: clamp(92px, 26vw, 140px);
+  margin: 0; display: flex; flex-direction: column; align-items: flex-start;
+  font-family: 'Caveat', cursive; font-weight: 700; font-size: 1.2rem; line-height: 1.05;
+  color: var(--primary-dark); text-align: left;
+  transform: rotate(-4deg); transform-origin: left bottom;
+  span { padding-left: 1.35rem; }
+  .arrow { width: 62px; height: 48px; margin-top: 0.1rem; }
+}
+
 .dots { display: flex; gap: 0.15rem; }
 .dot {
   width: 44px; height: 44px;                // tap target; the visible dot is drawn inside

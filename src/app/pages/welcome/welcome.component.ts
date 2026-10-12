@@ -25,8 +25,8 @@ export class WelcomeComponent {
 
   readonly clips: Clip[] = [
     { src: '/welcome/home.mp4',      poster: '/welcome/home.jpg',      label: 'Your trip at a glance' },
-    { src: '/welcome/itinerary.mp4', poster: '/welcome/itinerary.jpg', label: 'One plan everyone can see' },
     { src: '/welcome/money.mp4',     poster: '/welcome/money.jpg',     label: 'Costs split, no awkward maths' },
+    { src: '/welcome/itinerary.mp4', poster: '/welcome/itinerary.jpg', label: 'One plan everyone can see' },
   ];
   readonly current = signal(0);
   /** Respect reduced motion: show each clip's still frame, no autoplay. */
