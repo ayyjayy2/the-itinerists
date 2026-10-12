@@ -165,6 +165,11 @@
   .gate form { display: flex; flex-direction: column; gap: 0.75rem; }
   .gate label { display: flex; flex-direction: column; gap: 0.25rem; font-weight: 700; font-size: 0.85rem; }
   .gate p { margin: 0; }
+  /* Password field with a show/hide eye: a 44px tap target over the field's right edge. */
+  .pw-wrap { position: relative; display: block; }
+  .pw-wrap input { width: 100%; padding-right: 2.9rem; }
+  .eye-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: none; border: none; padding: 0; cursor: pointer; color: var(--text-muted); }
+  .eye-btn:hover { color: var(--text); }
 </style>
 </head>
 <body>
@@ -187,7 +192,7 @@
       <p class="muted" style="margin-bottom:0.9rem">This page is for the app owner's account only.</p>
       <form id="signin">
         <label>Email <input id="user" name="email" type="email" autocomplete="username" autocapitalize="none" required></label>
-        <label>Password <input id="pass" name="password" type="password" autocomplete="current-password" required></label>
+        <label>Password <span class="pw-wrap"><input id="pass" name="password" type="password" autocomplete="current-password" required><button type="button" class="eye-btn" id="passEye" aria-label="Show password"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12zM12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6z"/></svg></button></span></label>
         <button class="btn primary" id="signinBtn" type="submit">Sign in</button>
       </form>
       <p class="hint" id="gateMsg"></p>
