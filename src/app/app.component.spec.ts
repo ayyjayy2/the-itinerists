@@ -18,6 +18,7 @@ import { FinanceService } from './services/finance.service';
 import { RecsService } from './services/recs.service';
 import { OutfitsService } from './services/outfits.service';
 import { UsageService } from './services/usage.service';
+import { SurveyService } from './services/survey.service';
 
 /**
  * AppComponent pulls in the full service graph (UserService → Firebase Auth,
@@ -65,6 +66,7 @@ describe('AppComponent', () => {
         { provide: OutfitsService, useValue: initStub() },
         { provide: SwUpdate, useValue: { isEnabled: false } },
         { provide: UsageService, useValue: { start: () => {} } },
+        { provide: SurveyService, useValue: { popupOpen: signal(false), config: signal(null) } },
       ],
     }).compileComponents();
   });

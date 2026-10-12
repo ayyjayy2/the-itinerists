@@ -31,6 +31,7 @@ import { applyNavOrder } from './utils/nav-order';
 import { NotificationBellComponent } from './shared/notification-bell/notification-bell.component';
 import { CdkDrag, CdkDropList, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AvatarGlyphComponent } from './shared/avatar-glyph/avatar-glyph.component';
+import { SurveyPopupComponent } from './shared/survey-popup/survey-popup.component';
 
 interface NavItem {
   path: string;
@@ -40,7 +41,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent, NotificationBellComponent, CdkDrag, CdkDropList, AvatarGlyphComponent, LoadingComponent, BusyBarComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent, NotificationBellComponent, CdkDrag, CdkDropList, AvatarGlyphComponent, LoadingComponent, BusyBarComponent, SurveyPopupComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

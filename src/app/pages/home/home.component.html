@@ -1,5 +1,16 @@
 <div class="page-container home">
 
+  <!-- Survey invitation banner: on later visits until they tap it or close it 3 times.
+       It goes first: the email reminders wait while it shows. -->
+  @if (showSurveyNudge()) {
+    <div class="recovery-nudge survey-nudge" role="status">
+      <span class="rn-ic"><app-icon name="profile" [size]="16" /></span>
+      <span class="rn-text">{{ survey.config()!.bannerText }}</span>
+      <a class="btn btn-sm btn-primary" [href]="survey.config()!.url" target="_blank" rel="noopener" (click)="survey.take()">Take the survey</a>
+      <button class="rn-close" type="button" (click)="survey.dismissBanner()" aria-label="Not now">✕</button>
+    </div>
+  }
+
   <!-- Recovery-email nudge (accounts without a real email can't reset their own password) -->
   @if (showRecoveryNudge()) {
     <div class="recovery-nudge" role="status">
@@ -26,16 +37,6 @@
         <button class="btn btn-sm btn-ghost" type="button" (click)="resendConfirm()" [disabled]="confirmSending()">{{ confirmSending() ? 'Sending…' : 'Send link' }}</button>
       }
       <button class="rn-close" type="button" (click)="dismissConfirmNudge()" aria-label="Not now">✕</button>
-    </div>
-  }
-
-  <!-- Survey invitation banner: on later visits until they tap it or close it 3 times -->
-  @if (showSurveyNudge()) {
-    <div class="recovery-nudge survey-nudge" role="status">
-      <span class="rn-ic"><app-icon name="profile" [size]="16" /></span>
-      <span class="rn-text">{{ survey.config()!.bannerText }}</span>
-      <a class="btn btn-sm btn-primary" [href]="survey.config()!.url" target="_blank" rel="noopener" (click)="survey.take()">Take the survey</a>
-      <button class="rn-close" type="button" (click)="survey.dismissBanner()" aria-label="Not now">✕</button>
     </div>
   }
 
@@ -231,15 +232,3 @@
   }
 
 </div>
-
-<!-- Survey invitation pop-up: shown once; closing it leaves the banner for later visits -->
-@if (survey.popupOpen() && survey.config(); as config) {
-  <div class="modal-backdrop" (click)="survey.closePopup()">
-    <div class="modal-box survey-popup" role="dialog" aria-modal="true" aria-labelledby="survey-title" (click)="$event.stopPropagation()">
-      <button class="survey-close" type="button" (click)="survey.closePopup()" aria-label="Close">✕</button>
-      <h2 id="survey-title">{{ config.title }}</h2>
-      <p class="survey-body">{{ config.body }}</p>
-      <a class="btn btn-primary" [href]="config.url" target="_blank" rel="noopener" (click)="survey.take()">Take the survey</a>
-    </div>
-  </div>
-}

@@ -116,12 +116,17 @@ export class HomeComponent implements OnInit, OnDestroy {
   readonly quickAccessVisible = computed(() =>
     this.quickAccess.filter(l => !isPageHidden(l.path, this.hidden())));
 
+  // ── Survey invitation banner (SurveyService): while it shows, it goes first and
+  //    the email reminders below wait, so there's only ever one banner. ──
+  readonly survey = inject(SurveyService);
+  readonly showSurveyNudge = computed(() => this.survey.view() === 'banner');
+
   // ── Recovery-email nudge: accounts still on the synthetic address can't reset
   //    their own password. Dismissal is per device (a convenience, not data). ──
   private nudgeDismissed = signal(false);
   readonly showRecoveryNudge = computed(() => {
     const u = this.userService.firestoreUser();
-    if (!needsRecoveryEmail(u) || this.nudgeDismissed()) return false;
+    if (!needsRecoveryEmail(u) || this.nudgeDismissed() || this.showSurveyNudge()) return false;
     try { return localStorage.getItem(`recoveryNudgeDismissed:${u!.uid}`) !== '1'; } catch { return true; }
   });
   readonly pendingRecoveryEmail = computed(() => this.userService.firestoreUser()?.pendingEmail ?? '');
@@ -138,7 +143,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private confirmDismissed = signal(false);
   readonly confirmSending = signal(false);
   readonly showConfirmNudge = computed(() => {
-    if (!this.emailConfirm.waiting() || this.confirmDismissed() || this.showRecoveryNudge()) return false;
+    if (!this.emailConfirm.waiting() || this.confirmDismissed() || this.showRecoveryNudge() || this.showSurveyNudge()) return false;
     try { return sessionStorage.getItem('confirmNudgeDismissed') !== '1'; } catch { return true; }
   });
   readonly confirmEmailMasked = computed(() => maskEmail(this.emailConfirm.waiting()));
@@ -154,11 +159,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.confirmDismissed.set(true);
   }
 
-  // ── Survey invitation: a pop-up once, then a banner on later visits (SurveyService).
-  //    The banner waits its turn behind the email reminders, so only one shows. ──
-  readonly survey = inject(SurveyService);
-  readonly showSurveyNudge = computed(() =>
-    this.survey.view() === 'banner' && !this.showRecoveryNudge() && !this.showConfirmNudge());
 
 
   // ── Pinned quick-shortcuts (stored on the account — follows the user) ──────

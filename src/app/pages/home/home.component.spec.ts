@@ -181,32 +181,8 @@ describe('HomeComponent (hidden pages)', () => {
     expect(el.querySelector('.confirm-nudge')).toBeNull();
   });
 
-  it('shows the survey pop-up with its wording, a link to the survey and a close button', () => {
-    survey.popupOpen.set(true);
-    const fixture = render();
-    const el = fixture.nativeElement as HTMLElement;
-    const pop = el.querySelector('.survey-popup')!;
-    expect(pop.getAttribute('role')).toBe('dialog');
-    expect(pop.textContent).toContain('Hi, I made this');
-    expect(pop.textContent).toContain('How did it go?');
-    const link = pop.querySelector<HTMLAnchorElement>('a.btn')!;
-    expect(link.href).toBe('https://example.com/form');
-    expect(link.target).toBe('_blank');
-    link.addEventListener('click', e => e.preventDefault());   // stay on the test page
-    link.click();
-    expect(survey.take).toHaveBeenCalled();
-  });
-
-  it('closing the survey pop-up hands over to the banner', () => {
-    survey.popupOpen.set(true);
-    const el = render().nativeElement as HTMLElement;
-    (el.querySelector('.survey-popup button[aria-label=Close]') as HTMLButtonElement).click();
-    expect(survey.closePopup).toHaveBeenCalled();
-  });
-
   it('shows the survey banner on a later visit, with the link and a close button', () => {
     survey.view.set('banner');
-    firestoreUser.update((u: any) => ({ ...u, authEmail: 'maya@example.com' }));   // no email reminder to wait behind
     const el = render().nativeElement as HTMLElement;
     const banner = el.querySelector('.survey-nudge')!;
     expect(banner.textContent).toContain('Got 5 minutes?');
@@ -215,18 +191,25 @@ describe('HomeComponent (hidden pages)', () => {
     expect(survey.dismissBanner).toHaveBeenCalled();
   });
 
-  it('never stacks the survey banner on top of an email reminder', () => {
+  it('puts the survey banner first: no email reminder while it shows', () => {
     survey.view.set('banner');
-    firestoreUser.update((u: any) => ({ ...u, authEmail: 'maya@example.com' }));
+    confirmStub.waiting.set('maya@example.com');                 // unconfirmed email
+    const el = render().nativeElement as HTMLElement;            // and no recovery email on file
+    expect(el.querySelector('.survey-nudge')).not.toBeNull();
+    expect(el.querySelector('.confirm-nudge')).toBeNull();
+    expect(el.querySelectorAll('.recovery-nudge').length).toBe(1);
+  });
+
+  it('brings the email reminders back once the survey banner is gone', () => {
     confirmStub.waiting.set('maya@example.com');
+    firestoreUser.update((u: any) => ({ ...u, authEmail: 'maya@example.com' }));
     const el = render().nativeElement as HTMLElement;
     expect(el.querySelector('.confirm-nudge')).not.toBeNull();
     expect(el.querySelector('.survey-nudge')).toBeNull();
   });
 
-  it('shows no survey pop-up or banner when there is nothing to show', () => {
+  it('shows no survey banner when there is nothing to show', () => {
     const el = render().nativeElement as HTMLElement;
-    expect(el.querySelector('.survey-popup')).toBeNull();
     expect(el.querySelector('.survey-nudge')).toBeNull();
   });
 });

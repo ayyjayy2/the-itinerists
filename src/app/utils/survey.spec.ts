@@ -1,4 +1,4 @@
-import { SURVEY_BANNER_MAX_DISMISSALS, isLiveSurvey, surveyView } from './survey';
+import { SURVEY_BANNER_MAX_DISMISSALS, SURVEY_NEW_VISIT_AFTER_MS, isLiveSurvey, isNewVisit, surveyView } from './survey';
 import { SurveyConfig } from '../models/trip.models';
 
 const config: SurveyConfig = {
@@ -48,5 +48,22 @@ describe('surveyView', () => {
   it('never shows again once they tapped the survey', () => {
     expect(surveyView(config, { takenAt: 1 }, false)).toBe('none');
     expect(surveyView(config, { promptSeenAt: 1, takenAt: 2 }, false)).toBe('none');
+  });
+});
+
+describe('isNewVisit', () => {
+  it('counts coming back to the app after 30 minutes away as a new visit', () => {
+    expect(SURVEY_NEW_VISIT_AFTER_MS).toBe(30 * 60_000);
+    expect(isNewVisit(1_000, 1_000 + 30 * 60_000)).toBeTrue();
+    expect(isNewVisit(1_000, 1_000 + 2 * 60 * 60_000)).toBeTrue();
+  });
+
+  it('treats a quick switch away and back as the same visit', () => {
+    expect(isNewVisit(1_000, 1_000 + 29 * 60_000)).toBeFalse();
+    expect(isNewVisit(1_000, 1_000 + 5_000)).toBeFalse();
+  });
+
+  it('is not a new visit when the app was never hidden', () => {
+    expect(isNewVisit(null, 5_000)).toBeFalse();
   });
 });

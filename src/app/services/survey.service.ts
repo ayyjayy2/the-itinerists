@@ -1,14 +1,17 @@
 import { Injectable, Injector, computed, effect, inject, runInInjectionContext, signal } from '@angular/core';
 import { DocumentData, Firestore, doc, increment, onSnapshot, updateDoc, Unsubscribe } from '@angular/fire/firestore';
 import { SurveyConfig } from '../models/trip.models';
-import { isLiveSurvey, surveyView } from '../utils/survey';
+import { isLiveSurvey, isNewVisit, surveyView } from '../utils/survey';
 import { UserService } from './user.service';
 
 /**
- * The survey invitation on Home: a pop-up once, then a banner on later visits
+ * The survey invitation: a pop-up once (SurveyPopupComponent, in the app
+ * shell), then a Home banner on later visits
  * (see utils/survey.ts). The wording and link come from `_config/survey`
  * (scripts/set-survey.js); each person's progress is kept on their account,
- * so it follows them across devices. A "visit" is one app session.
+ * so it follows them across devices. A "visit" is one app session, or a
+ * return to the app after SURVEY_NEW_VISIT_AFTER_MS in the background (an
+ * iPhone app can stay open for days).
  */
 @Injectable({ providedIn: 'root' })
 export class SurveyService {
@@ -34,6 +37,13 @@ export class SurveyService {
   });
 
   constructor() {
+    let hiddenAt: number | null = null;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+      if (isNewVisit(hiddenAt, Date.now())) this.newVisit();
+      hiddenAt = null;
+    });
+
     // Settings are readable only when signed in: listen while someone is.
     let unsub: Unsubscribe | null = null;
     effect(onCleanup => {
@@ -72,6 +82,13 @@ export class SurveyService {
     if (!id) return;
     this.quiet(id);
     void this.record({ [`surveys.${id}.bannerDismissals`]: increment(1) });
+  }
+
+  private newVisit(): void {
+    try {
+      for (const key of Object.keys(sessionStorage)) if (key.startsWith('surveyQuiet:')) sessionStorage.removeItem(key);
+    } catch { /* private mode */ }
+    this.quietIds.set(new Set());
   }
 
   private isQuiet(id: string): boolean {
