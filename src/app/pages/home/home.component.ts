@@ -38,6 +38,7 @@ import { needsRecoveryEmail, maskEmail } from '../../utils/email';
 import { stopDateRange } from '../../utils/stop-dates';
 import { heroLine } from '../../utils/hero-line';
 import { EmailConfirmService } from '../../services/email-confirm.service';
+import { SurveyService } from '../../services/survey.service';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
 /** One "At a glance" card. Slots 0–1 render wide, 2–3 as half-width minis. */
@@ -152,6 +153,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     try { sessionStorage.setItem('confirmNudgeDismissed', '1'); } catch { /* private mode */ }
     this.confirmDismissed.set(true);
   }
+
+  // ── Survey invitation: a pop-up once, then a banner on later visits (SurveyService).
+  //    The banner waits its turn behind the email reminders, so only one shows. ──
+  readonly survey = inject(SurveyService);
+  readonly showSurveyNudge = computed(() =>
+    this.survey.view() === 'banner' && !this.showRecoveryNudge() && !this.showConfirmNudge());
 
 
   // ── Pinned quick-shortcuts (stored on the account — follows the user) ──────

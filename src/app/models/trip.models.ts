@@ -53,6 +53,8 @@ export interface FirestoreUser {
   lastSeenActivityAt?: number;
   /** Per trip: when the person last opened that trip's bell or Updates page (falls back to lastSeenActivityAt). */
   lastSeenByTrip?: Record<string, number>;
+  /** Progress with each survey invitation, by survey id (see SurveyConfig). */
+  surveys?: Record<string, SurveyProgress>;
   /** Personal nav order (paths, Home/Admin excluded). Absent → default order. */
   navOrder?: string[];
 }
@@ -475,4 +477,22 @@ export interface OutfitEntry {
   photoIds?: string[];  // ordered outfitPhotos doc ids (several per day)
   photoUrl?: string;    // legacy: 'stored' = one photo at outfitPhotos/{date}_{uid}
   notes?: string;
+}
+
+/** The survey invitation at `_config/survey`. Set by scripts/set-survey.js from a
+ *  gitignored file, so the wording (which names real people) stays out of the repo. */
+export interface SurveyConfig {
+  id: string;          // a new id starts everyone over (a new survey)
+  active: boolean;     // the off switch
+  url: string;
+  title: string;       // the pop-up's heading
+  body: string;        // the pop-up's message
+  bannerText: string;  // the Home banner's line
+}
+
+/** One person's progress with a survey invitation: users/{uid}.surveys[id]. */
+export interface SurveyProgress {
+  promptSeenAt?: number;     // the pop-up has been shown
+  takenAt?: number;          // they tapped "Take the survey"
+  bannerDismissals?: number; // times they closed the Home banner
 }
