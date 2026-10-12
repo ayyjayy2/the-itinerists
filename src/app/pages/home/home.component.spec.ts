@@ -17,6 +17,7 @@ import { StaysService } from '../../services/stays.service';
 import { RecsService } from '../../services/recs.service';
 import { ExpensesService } from '../../services/expenses.service';
 import { DataService } from '../../services/data.service';
+import { SurveyService } from '../../services/survey.service';
 
 /** The real card boots a map; a stub with the same selector keeps the test cheap. */
 @Component({ selector: 'app-day-map-card', template: '<div data-stub="day-map"></div>' })
@@ -31,12 +32,18 @@ describe('HomeComponent (hidden pages)', () => {
   let hidden: WritableSignal<string[]>;
   let firestoreUser: WritableSignal<any>;
   let activeMembers: ReturnType<typeof signal<any[]>>;
+  let survey: { config: WritableSignal<any>; view: WritableSignal<string>; popupOpen: WritableSignal<boolean>; take: jasmine.Spy; closePopup: jasmine.Spy; dismissBanner: jasmine.Spy };
   let confirmStub: { waiting: ReturnType<typeof signal<string>>; sentAt: ReturnType<typeof signal<number>>; send: jasmine.Spy };
 
   beforeEach(async () => {
     hidden = signal<string[]>([]);
     // homeLayout is honoured only for picker accounts; username 'alayna' is one.
     activeMembers = signal<any[]>([]);
+    survey = {
+      config: signal({ id: 's1', active: true, url: 'https://example.com/form', title: 'Hi, I made this', body: 'How did it go?', bannerText: 'Got 5 minutes?' }),
+      view: signal('none'), popupOpen: signal(false),
+      take: jasmine.createSpy('take'), closePopup: jasmine.createSpy('closePopup'), dismissBanner: jasmine.createSpy('dismissBanner'),
+    };
     confirmStub = { waiting: signal(''), sentAt: signal(0), send: jasmine.createSpy('send').and.resolveTo(true) };
     try { sessionStorage.removeItem('confirmNudgeDismissed'); } catch { /* none */ }
     firestoreUser = signal<any>({ uid: 'me', username: 'alayna', homeLayout: 'C', homePins: ['/finance', '/packing'] });
@@ -66,6 +73,7 @@ describe('HomeComponent (hidden pages)', () => {
         { provide: ExpensesService,  useValue: { expenses: signal([]) } },
         { provide: DataService,      useValue: { data: signal(null) } },
         { provide: EmailConfirmService, useValue: confirmStub },
+        { provide: SurveyService, useValue: survey },
       ],
     })
     .overrideComponent(HomeComponent, {
@@ -172,5 +180,53 @@ describe('HomeComponent (hidden pages)', () => {
     const el = render().nativeElement as HTMLElement;
     expect(el.querySelector('.confirm-nudge')).toBeNull();
   });
-});
 
+  it('shows the survey pop-up with its wording, a link to the survey and a close button', () => {
+    survey.popupOpen.set(true);
+    const fixture = render();
+    const el = fixture.nativeElement as HTMLElement;
+    const pop = el.querySelector('.survey-popup')!;
+    expect(pop.getAttribute('role')).toBe('dialog');
+    expect(pop.textContent).toContain('Hi, I made this');
+    expect(pop.textContent).toContain('How did it go?');
+    const link = pop.querySelector<HTMLAnchorElement>('a.btn')!;
+    expect(link.href).toBe('https://example.com/form');
+    expect(link.target).toBe('_blank');
+    link.addEventListener('click', e => e.preventDefault());   // stay on the test page
+    link.click();
+    expect(survey.take).toHaveBeenCalled();
+  });
+
+  it('closing the survey pop-up hands over to the banner', () => {
+    survey.popupOpen.set(true);
+    const el = render().nativeElement as HTMLElement;
+    (el.querySelector('.survey-popup button[aria-label=Close]') as HTMLButtonElement).click();
+    expect(survey.closePopup).toHaveBeenCalled();
+  });
+
+  it('shows the survey banner on a later visit, with the link and a close button', () => {
+    survey.view.set('banner');
+    firestoreUser.update((u: any) => ({ ...u, authEmail: 'maya@example.com' }));   // no email reminder to wait behind
+    const el = render().nativeElement as HTMLElement;
+    const banner = el.querySelector('.survey-nudge')!;
+    expect(banner.textContent).toContain('Got 5 minutes?');
+    expect(banner.querySelector<HTMLAnchorElement>('a.btn')!.href).toBe('https://example.com/form');
+    (banner.querySelector('button[aria-label="Not now"]') as HTMLButtonElement).click();
+    expect(survey.dismissBanner).toHaveBeenCalled();
+  });
+
+  it('never stacks the survey banner on top of an email reminder', () => {
+    survey.view.set('banner');
+    firestoreUser.update((u: any) => ({ ...u, authEmail: 'maya@example.com' }));
+    confirmStub.waiting.set('maya@example.com');
+    const el = render().nativeElement as HTMLElement;
+    expect(el.querySelector('.confirm-nudge')).not.toBeNull();
+    expect(el.querySelector('.survey-nudge')).toBeNull();
+  });
+
+  it('shows no survey pop-up or banner when there is nothing to show', () => {
+    const el = render().nativeElement as HTMLElement;
+    expect(el.querySelector('.survey-popup')).toBeNull();
+    expect(el.querySelector('.survey-nudge')).toBeNull();
+  });
+});

@@ -64,6 +64,7 @@ async function seed() {
       setDoc(doc(db, 'geocache', 'g1'), { entries: { 'berlin|alex': { lat: 52.52, lng: 13.41 } } }),
       setDoc(doc(db, '_appLogs', 'l1'), { m: 'hi' }),
       setDoc(doc(db, '_pulse', 'prefs'), { hiddenTrips: ['TC'] }),
+      setDoc(doc(db, '_config', 'survey'), { id: 's1', active: true, url: 'https://example.com', title: 'Hi', body: 'b', bannerText: 't' }),
       setDoc(doc(db, '_activity', 'e1'), { uid: 'bob', tripId: 'T', type: 'page', page: '/home', at: new Date(), localHour: 9, tz: 'Europe/Berlin', tzOffsetMin: 120, platform: 'web', sessionId: 's1', appVersion: '0.9.0' }),
     ]);
   });
@@ -297,6 +298,15 @@ await t('owner updates own photo', 'allow', () => updateDoc(doc(bob, 'trips', 'T
 await t('member updates another member photo', 'deny', () => updateDoc(doc(alice, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob'), { dataUrl: 'data:hack' }));
 await t('owner deletes own photo', 'allow', () => deleteDoc(doc(bob, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
 await t('non-member deletes a photo', 'deny', () => deleteDoc(doc(carol, 'trips', 'T', 'outfitPhotos', '2026-01-01_bob')));
+
+console.log('\nApp settings (_config: the survey invitation)');
+await t('signed-in person reads the survey settings', 'allow', () => getDoc(doc(bob, '_config', 'survey')));
+await t('anon reads the survey settings', 'deny', () => getDoc(doc(anon, '_config', 'survey')));
+await t('signed-in person lists app settings', 'deny', () => getDocs(collection(bob, '_config')));
+await t('member changes the survey settings', 'deny', () => setDoc(doc(bob, '_config', 'survey'), { active: false }));
+await t('admin changes the survey settings', 'deny', () => updateDoc(doc(admin, '_config', 'survey'), { url: 'https://evil.example' }));
+await t('self records survey progress', 'allow', () => updateDoc(doc(bob, 'users', 'bob'), { 'surveys.s1.promptSeenAt': 1 }));
+await t('someone else records your survey progress', 'deny', () => updateDoc(doc(alice, 'users', 'bob'), { 'surveys.s1.takenAt': 1 }));
 
 console.log('\nWrite log (_writes)');
 const wr = (uid, extra = {}) => ({ uid, tripId: 'T', kind: 'itinerary', action: 'added', at: serverTimestamp(), ...extra });
