@@ -59,6 +59,6 @@ describe('ForgotPasswordComponent', () => {
     const { comp } = create();
     comp.email = 'maya';
     await comp.submit();
-    expect(comp.error()).toContain('Use your email address');
+    expect(comp.error()).toContain('signs in with its email address');
   });
 });

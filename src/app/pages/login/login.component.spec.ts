@@ -37,13 +37,21 @@ describe('LoginComponent', () => {
     expect(input.placeholder).toBe('you@example.com');
   });
 
+  it('says to use your email, and that older username-only accounts still can', () => {
+    const { fixture } = create();
+    const hint = (fixture.nativeElement as HTMLElement).querySelector('#email-hint')!;
+    expect(hint.textContent).toContain('Use the email on your account');
+    expect(hint.textContent).toContain('can still use their username');
+    expect((fixture.nativeElement as HTMLElement).querySelector('input#email')!.getAttribute('aria-describedby')).toBe('email-hint');
+  });
+
   it('tells someone who typed their username to use their email', async () => {
     auth.login.and.rejectWith(new UseEmailToSignInError());
     const { comp } = create();
     comp.email = 'maya';
     comp.password = 'Sunshine2026';
     await comp.submit();
-    expect(comp.error()).toContain('Use your email address');
+    expect(comp.error()).toBe('This account signs in with its email address, not its username.');
   });
 
   it('gives one message for a wrong email or password', async () => {

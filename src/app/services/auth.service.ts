@@ -73,7 +73,7 @@ export class EmailInUseError extends Error {
  * no longer holds anyone's real address, so it can't be turned into one.
  */
 export class UseEmailToSignInError extends Error {
-  constructor() { super("Use your email address. Usernames can't be used to sign in anymore."); }
+  constructor() { super("This account signs in with its email address, not its username."); }
 }
 
 const AVATAR_COLORS = BACKGROUND_COLORS;
