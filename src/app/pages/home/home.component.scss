@@ -1,16 +1,29 @@
-// ── Recovery-email nudge ─────────────────────────────────────────────────────
+// ── Home banners (survey, recovery email, confirm email) ─────────────────────
+// One layout for all of them: the ✕ in the top-right corner on its own row,
+// the message across the full width, then the action centred underneath.
 .recovery-nudge {
-  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
-  padding: 0.6rem 0.85rem; margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "close close"
+    "ic    text"
+    "act   act";
+  column-gap: 0.5rem; row-gap: 0.6rem;
+  padding: 0.35rem 0.85rem 0.85rem; margin-bottom: 1rem;   // even sides, so the action centres
   background: var(--accent-tint); border-left: 3px solid var(--accent);
   border-radius: var(--radius-sm); font-size: 0.85rem;
 
-  .rn-ic   { display: inline-flex; color: var(--accent-dark); }
-  .rn-text { flex: 1; min-width: 200px; }
   .rn-close {
+    grid-area: close; justify-self: end;
+    width: 44px; height: 44px;           // full tap target; the negative margins keep its row short
+    margin: -0.1rem -0.5rem -0.9rem 0;   // tucked into the corner
+    display: grid; place-items: center;
     background: none; border: none; cursor: pointer;
-    color: var(--text-muted); font-size: 0.9rem; padding: 0.2rem 0.4rem;
+    color: var(--text-muted); font-size: 0.95rem;
   }
+  .rn-ic   { grid-area: ic; display: inline-flex; padding-top: 0.1rem; color: var(--accent-dark); }
+  .rn-text { grid-area: text; padding-right: 0.5rem; line-height: 1.45; }
+  > .btn   { grid-area: act; justify-self: center; }
 }
 
 .home { max-width: 620px; }
