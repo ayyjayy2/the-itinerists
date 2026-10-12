@@ -186,3 +186,61 @@ describe('ProfileComponent without usernames', () => {
     expect(text).toContain('Change Email');
   });
 });
+
+describe('ProfileComponent show-password eye', () => {
+  const user = signal<any>({
+    uid: 'u1', displayName: 'Maya', username: 'maya', avatarEmoji: '🌸', color: '#fff',
+    authEmail: 'maya@the-itinerists.local', pendingEmail: '',
+  });
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [ProfileComponent],
+      providers: [
+        { provide: UserService,  useValue: { firestoreUser: user } },
+        { provide: TripService, useValue: { activeMembers: signal([]) } },
+        { provide: AuthService,  useValue: {} },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
+      ],
+    });
+  });
+
+  function open(which: 'openPasswordModal' | 'openDeleteModal' | 'openRecoveryModal') {
+    const fixture = TestBed.createComponent(ProfileComponent);
+    fixture.detectChanges();
+    fixture.componentInstance[which]();
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    const fields = () => [...el.querySelectorAll<HTMLInputElement>('.modal-box .input-wrap input')];
+    const eyes = () => [...el.querySelectorAll<HTMLButtonElement>('.modal-box .eye-btn')];
+    return { fixture, el, fields, eyes };
+  }
+
+  for (const [which, count] of [['openPasswordModal', 3], ['openDeleteModal', 1], ['openRecoveryModal', 1]] as const) {
+    it(`${which}: every password field has an eye that shows and hides it`, () => {
+      const { fixture, el, fields, eyes } = open(which);
+      expect(el.querySelectorAll('.modal-box input[type=password]').length).toBe(count);
+      expect(fields().length).toBe(count);
+      expect(eyes().length).toBe(count);
+      expect(eyes()[0].getAttribute('aria-label')).toBe('Show password');
+
+      eyes()[0].click();
+      fixture.detectChanges();
+      expect(fields().every(f => f.type === 'text')).toBeTrue();
+      expect(eyes()[0].getAttribute('aria-label')).toBe('Hide password');
+
+      eyes()[0].click();
+      fixture.detectChanges();
+      expect(fields().every(f => f.type === 'password')).toBeTrue();
+    });
+  }
+
+  it('hides the password again when a modal is reopened', () => {
+    const { fixture, eyes, fields } = open('openDeleteModal');
+    eyes()[0].click();
+    fixture.componentInstance.closeDeleteModal();
+    fixture.componentInstance.openDeleteModal();
+    fixture.detectChanges();
+    expect(fields()[0].type).toBe('password');
+  });
+});

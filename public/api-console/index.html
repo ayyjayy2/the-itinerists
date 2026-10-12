@@ -63,6 +63,11 @@
   #swagger .swagger-ui .information-container { padding-inline: 1rem; }
   #swagger .swagger-ui .wrapper { padding-inline: 1rem; }
   #swagger .swagger-ui .scheme-container { box-shadow: none; padding-inline: 1rem; }
+  /* Password field with a show/hide eye: a 44px tap target over the field's right edge. */
+  .pw-wrap { position: relative; display: block; }
+  .pw-wrap input { width: 100%; padding-right: 2.9rem; }
+  .eye-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: none; border: none; padding: 0; cursor: pointer; color: var(--text-muted); }
+  .eye-btn:hover { color: var(--text); }
 </style>
 </head>
 <body>
@@ -80,7 +85,7 @@
   <form class="card" id="signIn" hidden novalidate>
     <p>Sign in with your staging account. Only accounts the owner has approved can open the console.</p>
     <label for="user">Username or email<input id="user" name="user" autocomplete="username" required></label>
-    <label for="pass">Password<input id="pass" name="pass" type="password" autocomplete="current-password" required></label>
+    <label for="pass">Password<span class="pw-wrap"><input id="pass" name="pass" type="password" autocomplete="current-password" required><button type="button" class="eye-btn" id="passEye" aria-label="Show password"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12zM12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6z"/></svg></button></span></label>
     <p class="error" id="signInError" hidden></p>
     <button class="btn" id="signInBtn" type="submit">Sign in</button>
   </form>

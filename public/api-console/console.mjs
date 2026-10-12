@@ -44,6 +44,16 @@ const app = initializeApp(firebaseConfig, 'api-console');
 const auth = getAuth(app);
 let shownSpec = null;   // the spec text Swagger is showing, so an unchanged refresh doesn't re-render
 
+// The eye on the password field shows and hides what was typed.
+const EYE = 'M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12zM12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6z';
+const EYE_OFF = 'M3 3l18 18M10.6 10.7a2.8 2.8 0 0 0 3.8 3.8M9.9 5.7A9.7 9.7 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17.9 17.9 0 0 1-3 3.9M6.5 6.7C3.8 8.3 2 12 2 12s3.6 6.5 10 6.5a10 10 0 0 0 3-.5';
+$('passEye').addEventListener('click', () => {
+  const show = $('pass').type === 'password';
+  $('pass').type = show ? 'text' : 'password';
+  $('passEye').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  $('passEye').querySelector('path').setAttribute('d', show ? EYE_OFF : EYE);
+});
+
 $('signIn').addEventListener('submit', async e => {
   e.preventDefault();
   const user = $('user').value.trim(), pass = $('pass').value;

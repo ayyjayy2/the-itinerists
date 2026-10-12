@@ -53,6 +53,8 @@ export class ProfileComponent implements OnInit {
   confirmPassword = '';
 
   showPasswordModal = signal(false);
+  /** The eye on the password fields; every modal opens with passwords hidden. */
+  showPassword = signal(false);
 
 
   profileSaving  = signal(false);
@@ -105,6 +107,7 @@ export class ProfileComponent implements OnInit {
   }
 
   openPasswordModal(): void {
+    this.showPassword.set(false);
     this.currentPassword = '';
     this.newPassword     = '';
     this.confirmPassword = '';
@@ -116,6 +119,7 @@ export class ProfileComponent implements OnInit {
   closePasswordModal(): void { this.showPasswordModal.set(false); }
 
   openRecoveryModal(): void {
+    this.showPassword.set(false);
     this.recoveryEmail = '';
     this.recoveryPass  = '';
     this.recoveryError.set('');
@@ -203,6 +207,7 @@ export class ProfileComponent implements OnInit {
   deleteError     = signal('');
 
   openDeleteModal(): void {
+    this.showPassword.set(false);
     this.deletePass = '';
     this.deleteError.set('');
     this.showDeleteModal.set(true);

@@ -129,6 +129,10 @@
             [attr.aria-invalid]="fieldError('confirm') ? true : null"
             [attr.aria-describedby]="fieldError('confirm') ? 'signup-err-confirm' : null"
           />
+          <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"
+                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
+          </button>
         </div>
         @if (fieldError('confirm'); as err) {
           <p class="field-error" id="signup-err-confirm">{{ err }}</p>
