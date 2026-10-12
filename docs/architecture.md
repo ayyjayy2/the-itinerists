@@ -133,7 +133,8 @@ Maya adds "Sunset at the Miradouro" to Day 2 on her phone. What happens:
 2. **App Check** gets its token up front (reCAPTCHA on the web, a debug token in the iPhone app for now), so the first database request doesn't wait.
 3. **Email:** people sign in with their email. A username still works only for old accounts whose `usernames` entry holds a placeholder address; anyone else who types one is asked for their email.
 4. **Sign in** with Firebase Authentication; the route guard waits for the profile in `users/{uid}`.
-5. **The open trip** comes from the device, or the person's last trip in `userTrips`; its listeners start and Home appears. Measured: 1.3 s median from tap to Home on 4G.
+5. **Sessions last 90 days** from the last password sign-in: the rules refuse older ones (`auth_time`), and the app signs the person out first and says why (`utils/session.ts`), at launch and whenever it comes back to the screen.
+6. **The open trip** comes from the device, or the person's last trip in `userTrips`; its listeners start and Home appears. Measured: 1.3 s median from tap to Home on 4G.
 
 ## Time zones
 
