@@ -23,12 +23,12 @@ const events: TripEvent[] = [
 describe('NotificationBellComponent', () => {
   let userStub: { firestoreUser: any; markActivitySeen: jasmine.Spy };
   let tripStub: ReturnType<typeof signal<any>>;
-  let survey: { config: ReturnType<typeof signal<any>>; text: ReturnType<typeof signal<any>>; noticeUnseen: ReturnType<typeof signal<boolean>>; markNoticeSeen: jasmine.Spy; take: jasmine.Spy };
+  let survey: { config: ReturnType<typeof signal<any>>; available: ReturnType<typeof signal<boolean>>; text: ReturnType<typeof signal<any>>; noticeUnseen: ReturnType<typeof signal<boolean>>; markNoticeSeen: jasmine.Spy; take: jasmine.Spy };
 
   beforeEach(() => {
     tripStub = signal<any>({ id: 't1', name: 'Berlin' });
     survey = {
-      config: signal<any>(null), text: signal<any>(null), noticeUnseen: signal(false),
+      config: signal<any>(null), available: signal(false), text: signal<any>(null), noticeUnseen: signal(false),
       markNoticeSeen: jasmine.createSpy('markNoticeSeen'), take: jasmine.createSpy('take'),
     };
     userStub = {
@@ -109,6 +109,7 @@ describe('NotificationBellComponent', () => {
 
     beforeEach(() => {
       survey.config.set(live);
+      survey.available.set(true);
       survey.text.set({ title: 'Hi', body: 'b', bannerText: 'Got 5 minutes? Tell me how Berlin went.' });
     });
 
@@ -143,8 +144,8 @@ describe('NotificationBellComponent', () => {
       expect(el.querySelector('.bell-survey')).not.toBeNull();
     });
 
-    it('is not shown when no survey is on', () => {
-      survey.config.set({ ...live, active: false });
+    it('is not shown when the survey is not for them (switched off, or no finished trip)', () => {
+      survey.available.set(false);
       const { el, click } = openBell();
       click();
       expect(el.querySelector('.bell-survey')).toBeNull();
