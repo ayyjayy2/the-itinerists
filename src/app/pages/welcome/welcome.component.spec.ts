@@ -31,6 +31,17 @@ describe('WelcomeComponent', () => {
     }
   });
 
+  it('points out outfit planning with a handwritten note and an arrow to More', () => {
+    const { el } = render();
+    expect(el.querySelector('.lede')?.textContent).toContain('outfits');
+    const note = el.querySelector('.outfit-note')!;
+    expect(note.textContent).toMatch(/outfits/i);
+    expect(note.querySelector('svg.arrow')).not.toBeNull();
+    expect(note.getAttribute('aria-hidden')).toBeNull();   // read out: it's real information
+    const captions = [...el.querySelectorAll('figcaption')].map(c => c.textContent ?? '');
+    expect(captions.some(c => /cost|money/i.test(c))).toBeTrue();
+  });
+
   it('says the iPhone app is coming soon, and the browser link is the quiet option', () => {
     const { el } = render();
     expect(el.querySelector('.app-card')?.textContent).toContain('Coming soon');
