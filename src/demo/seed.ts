@@ -35,6 +35,7 @@ export function seedDemo(store: MemoryStore): void {
       uid: p.uid, displayName: p.name, username: p.username,
       avatarEmoji: p.emoji, color: p.color, isAdmin: false, isDisabled: false,
       createdAt: at(i), authEmail: `${p.username}@the-itinerists.local`,
+      ...(p.uid === DEMO_UID ? { layoutPicker: true } : {}),   // the demo traveller can try the home layouts
     };
     store.set(`users/${p.uid}`, user as unknown as DocData);
     const index: UserTripsDoc = { tripIds: [DEMO_TRIP_ID], lastActiveTrip: DEMO_TRIP_ID };

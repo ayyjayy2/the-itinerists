@@ -46,15 +46,13 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/users/$(uid()))
         && get(/databases/$(database)/documents/users/$(uid())).data.isAdmin == true;
     }
-    // The app owner's own account (Alayna). The usage dashboard (/pulse/)
-    // signs in as this account; it is the only reader of usage events and
-    // the only account that can see every trip's summary doc. Not "any
-    // admin": the dashboard is personal.
-    // The app owner (Alayna) and nobody else: the only account that can read
-    // Pulse's data (_activity, _writes, _pulse). Being an admin does NOT grant
-    // it. Never add another account here without Alayna's explicit permission.
+    // The app owner and nobody else: the only account that can read Pulse's
+    // data (_activity, _writes, _pulse) and every trip's summary doc. It is
+    // the `owner` custom claim, which only scripts/set-account-flags.js (admin
+    // SDK) can grant; being an admin does NOT grant it. Never give the claim
+    // to another account without the owner's explicit permission.
     function isAppOwner() {
-      return isSignedIn() && uid() == 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';
+      return isSignedIn() && request.auth.token.get('owner', false) == true;
     }
     // A self-join must carry the invite code it came from, and that invite
     // must exist under the trip and still be valid. This is what makes
@@ -218,14 +216,16 @@ service cloud.firestore {
                  && signedUpWithEmail()
                  && hasNoEmailFields(request.resource.data)
                  && request.resource.data.get('isAdmin', false) == false
-                 && request.resource.data.get('isDisabled', false) == false;
+                 && request.resource.data.get('isDisabled', false) == false
+                 && request.resource.data.get('layoutPicker', false) == false;
       // You may edit your own profile but NOT the privileged fields (isAdmin,
-      // isDisabled) — that would be self-escalation. Admins may edit anything.
+      // isDisabled, layoutPicker) — that would be self-escalation. Admins may edit anything.
       allow update: if isAdmin()
                  || (userId == uid()
                      && hasNoEmailFields(request.resource.data)
                      && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
-                     && request.resource.data.get('isDisabled', false) == resource.data.get('isDisabled', false));
+                     && request.resource.data.get('isDisabled', false) == resource.data.get('isDisabled', false)
+                     && request.resource.data.get('layoutPicker', false) == resource.data.get('layoutPicker', false));
       allow delete: if userId == uid() || isAdmin();
 
       // Private account data (sign-in email, pending recovery email): the

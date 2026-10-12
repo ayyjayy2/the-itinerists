@@ -49,6 +49,8 @@ export interface FirestoreUser {
   /** Home/nav layout. Absent → 'C' (group default: A's nav, minimal home,
    *  bell). 'A' = full legacy design; 'B' = drawer + quick-access grid. */
   homeLayout?: 'A' | 'B' | 'C';
+  /** May pick a home layout. Set by scripts/set-account-flags.js; you can't set it on yourself. */
+  layoutPicker?: boolean;
   /** High-water mark for the notification bell (unix ms). Absent → 0. */
   lastSeenActivityAt?: number;
   /** Per trip: when the person last opened that trip's bell or Updates page (falls back to lastSeenActivityAt). */

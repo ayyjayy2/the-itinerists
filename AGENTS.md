@@ -26,7 +26,8 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 - **Never commit real people's names, usernames, emails or social handles**: not in code, docs, tests, fixtures, commit messages or pull requests. Refer to people by role ("a beta tester", "the co-planner") or by count. Demo and test names (Maya, Theo, Jo, Rafa, Sam…) are fictional and fine.
 - **User data stays out of the repository.** The private Headcount artifact is never mirrored here; `scripts/stats.js` and anything matching `scripts/*.local.*` stay gitignored.
 - **Test accounts and test trips are never counted** in analytics, reports or dashboards.
-- **Pulse (the usage dashboard) and its data are the owner's alone.** Never widen `isAppOwner()` in the rules or `OWNER_UID` in `public/pulse/pulse.mjs` without the owner's explicit permission for a named person.
+- **Pulse (the usage dashboard) and its data are the owner's alone.** It is the `owner` sign-in claim, granted only by `scripts/set-account-flags.js`; never give it to anyone else, or widen `isAppOwner()` in the rules, without the owner's explicit permission for a named person.
+- **Real account ids stay out of the repository.** Accounts that need a privilege get a claim or a flag set by an admin script from a gitignored `scripts/*.local.*` file, never a hard-coded uid.
 - **Never delete or rewrite real users' data** to fix a bug. Correct values in place, and only with the owner's go-ahead.
 
 ### 2.2 How work ships
