@@ -37,7 +37,7 @@ describe('HomeComponent (hidden pages)', () => {
 
   beforeEach(async () => {
     hidden = signal<string[]>([]);
-    // homeLayout is honoured only for picker accounts; username 'alayna' is one.
+    // homeLayout is honoured only for picker accounts (layoutPicker).
     activeMembers = signal<any[]>([]);
     survey = {
       config: signal({ id: 's1', active: true, url: 'https://example.com/form', title: 'Hi, I made this', body: 'How did it go?', bannerText: 'Got 5 minutes?' }),
@@ -47,7 +47,7 @@ describe('HomeComponent (hidden pages)', () => {
     };
     confirmStub = { waiting: signal(''), sentAt: signal(0), send: jasmine.createSpy('send').and.resolveTo(true) };
     try { sessionStorage.removeItem('confirmNudgeDismissed'); } catch { /* none */ }
-    firestoreUser = signal<any>({ uid: 'me', username: 'alayna', homeLayout: 'C', homePins: ['/finance', '/packing'] });
+    firestoreUser = signal<any>({ uid: 'me', username: 'maya', layoutPicker: true, homeLayout: 'C', homePins: ['/finance', '/packing'] });
 
     await TestBed.configureTestingModule({
       imports: [HomeComponent],

@@ -29,8 +29,8 @@ const dave  = testEnv.authenticatedContext('dave', { email: 'dave@example.com' }
 const noMail = testEnv.authenticatedContext('nomail').firestore();                              // brand new, no email on the account
 const placeholder = testEnv.authenticatedContext('ph', { email: 'ph@the-itinerists.local' }).firestore(); // brand new, old placeholder address
 const admin = testEnv.authenticatedContext('admin').firestore(); // app admin (isAdmin), not a member
-const OWNER_UID = 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';                           // the app owner's account (Alayna)
-const owner = testEnv.authenticatedContext(OWNER_UID).firestore(); // app owner, not a member of T
+const owner = testEnv.authenticatedContext('appowner', { owner: true }).firestore(); // app owner (the `owner` claim), not a member of T
+const fakeOwner = testEnv.authenticatedContext('faker', { email: 'faker@example.com' }).firestore(); // signed in, no owner claim
 const anon  = testEnv.unauthenticatedContext().firestore();      // logged out
 
 async function seed() {
@@ -41,7 +41,7 @@ async function seed() {
       setDoc(doc(db, 'users', 'bob'),   { uid: 'bob',   username: 'bob',   isAdmin: false }),
       setDoc(doc(db, 'users', 'carol'), { uid: 'carol', username: 'carol', isAdmin: false }),
       setDoc(doc(db, 'users', 'admin'), { uid: 'admin', username: 'admin', isAdmin: true }),
-      setDoc(doc(db, 'users', OWNER_UID), { uid: OWNER_UID, username: 'alayna', isAdmin: true }),
+      setDoc(doc(db, 'users', 'appowner'), { uid: 'appowner', username: 'appowner', isAdmin: true }),
       setDoc(doc(db, 'users', 'bob', 'private', 'account'), { authEmail: 'bob@example.com' }),
       setDoc(doc(db, 'usernames', 'alice'), { uid: 'alice' }),                                  // signs in with email
       setDoc(doc(db, 'usernames', 'bob'),   { uid: 'bob',   authEmail: 'bob@the-itinerists.local' }), // old username-only account
@@ -271,6 +271,10 @@ await t('self cannot create own doc as admin', 'deny', () => setDoc(doc(dave, 'u
 await t('self can edit non-privileged profile fields', 'allow', () => updateDoc(doc(bob, 'users', 'bob'), { displayName: 'Bobby' }));
 await t('self cannot change own isDisabled', 'deny', () => updateDoc(doc(bob, 'users', 'bob'), { isDisabled: true }));
 await t('admin can set isAdmin on another user', 'allow', () => updateDoc(doc(admin, 'users', 'bob'), { isAdmin: true }));
+// layoutPicker (the home layout picker) is granted by an admin script, never by the person
+await t('self cannot set layoutPicker (update)', 'deny', () => updateDoc(doc(bob, 'users', 'bob'), { layoutPicker: true }));
+await t('self cannot create own doc with layoutPicker', 'deny', () => setDoc(doc(dave, 'users', 'dave'), { uid: 'dave', username: 'dave', isAdmin: false, layoutPicker: true }));
+await t('admin can set layoutPicker on another user', 'allow', () => updateDoc(doc(admin, 'users', 'bob'), { layoutPicker: true }));
 // members: a self-joining member must not be able to make themselves owner
 await t('self-join cannot self-assign owner role', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'owner', inviteCode: 'CODE1' }));
 await t('self-join creates as plain member', 'allow', () => setDoc(doc(carol, 'trips', 'T', 'members', 'carol'), { uid: 'carol', role: 'member', inviteCode: 'CODE1' }));
@@ -319,6 +323,7 @@ await t('anon logs a write', 'deny', () => setDoc(doc(anon, '_writes', 'w1'), wr
 await t('owner lists writes', 'allow', () => getDocs(collection(owner, '_writes')));
 await t('member lists writes', 'deny', () => getDocs(collection(bob, '_writes')));
 await t('admin (not the owner) lists writes', 'deny', () => getDocs(collection(admin, '_writes')));
+await t('account without the owner claim lists writes', 'deny', () => getDocs(collection(fakeOwner, '_writes')));
 await t('anon lists writes', 'deny', () => getDocs(collection(anon, '_writes')));
 
 

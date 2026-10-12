@@ -6,8 +6,7 @@ const base: FirestoreUser = {
   color: '#fff', isAdmin: false, createdAt: 0,
 };
 
-const alayna: FirestoreUser = { ...base, uid: 'u2', username: 'alayna' };
-const makaela: FirestoreUser = { ...base, uid: 'u3', username: 'makaelajohnston' };
+const picker: FirestoreUser = { ...base, uid: 'u2', username: 'maya', layoutPicker: true };
 
 describe('effectiveHomeLayout', () => {
   it('defaults to C with no user', () => {
@@ -25,11 +24,10 @@ describe('effectiveHomeLayout', () => {
   });
 
   it('honors an explicit choice on picker accounts', () => {
-    expect(effectiveHomeLayout({ ...alayna, homeLayout: 'A' })).toBe('A');
-    expect(effectiveHomeLayout({ ...alayna, homeLayout: 'B' })).toBe('B');
-    expect(effectiveHomeLayout({ ...alayna, homeLayout: 'C' })).toBe('C');
-    expect(effectiveHomeLayout({ ...makaela, homeLayout: 'B' })).toBe('B');
-    expect(effectiveHomeLayout(makaela)).toBe('C');
+    expect(effectiveHomeLayout({ ...picker, homeLayout: 'A' })).toBe('A');
+    expect(effectiveHomeLayout({ ...picker, homeLayout: 'B' })).toBe('B');
+    expect(effectiveHomeLayout({ ...picker, homeLayout: 'C' })).toBe('C');
+    expect(effectiveHomeLayout(picker)).toBe('C');
   });
 });
 
@@ -37,12 +35,14 @@ describe('canPickLayout', () => {
   it('is false for regular accounts and no user', () => {
     expect(canPickLayout(null)).toBe(false);
     expect(canPickLayout(base)).toBe(false);
+    expect(canPickLayout({ ...base, layoutPicker: false })).toBe(false);
   });
 
-  it('is true for the picker accounts', () => {
-    expect(canPickLayout(alayna)).toBe(true);
-    expect(canPickLayout({ ...base, uid: 'qdhJLMDxSdVdILg2CTCcIhZyBDz2' })).toBe(true);
-    expect(canPickLayout(makaela)).toBe(true);
-    expect(canPickLayout({ ...base, uid: 'SIXcW7K34VTOD8yZcHWSTg0yFS02' })).toBe(true);
+  it('does not depend on the username', () => {
+    expect(canPickLayout({ ...base, username: 'maya' })).toBe(false);
+  });
+
+  it('is true for accounts flagged layoutPicker', () => {
+    expect(canPickLayout(picker)).toBe(true);
   });
 });

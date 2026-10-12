@@ -7,7 +7,6 @@ import * as S from './stats.mjs';
 import { ZONES } from './zones.mjs';
 import { CODE_BY_LONG_NAME, CODE_BY_ZONE } from './zone-codes.mjs';
 
-const OWNER_UID = 'qdhJLMDxSdVdILg2CTCcIhZyBDz2';
 const HOUR = 3_600_000, DAY = 24 * HOUR, ONLINE = 3 * 60_000; // the app pings every 2 minutes while visible
 const $ = id => document.getElementById(id);
 
@@ -51,9 +50,8 @@ $('signin').addEventListener('submit', async ev => {
   try {
     // Email only: the public username index holds no real addresses (#352).
     if (!id.includes('@')) throw new Error('Sign in with your email address.');
-    const cred = await signInWithEmailAndPassword(auth, id, pass);
-    $('pass').value = '';
-    $('gateMsg').textContent = cred.user.uid === OWNER_UID ? '' : 'That account is not the app owner. Signed out.';
+    await signInWithEmailAndPassword(auth, id, pass);
+    $('pass').value = '';   // "Signing in…" stays until the owner check below settles it
   } catch (err) {
     $('gateMsg').textContent = /invalid|credential|password|user-not-found/i.test(err.message) ? 'Wrong email or password.' : err.message;
   } finally { $('signinBtn').disabled = false; }
@@ -70,12 +68,20 @@ $('passEye').addEventListener('click', () => {
   $('passEye').querySelector('path').setAttribute('d', show ? EYE_OFF : EYE);
 });
 
-onAuthStateChanged(auth, user => {
-  const owner = !!user && user.uid === OWNER_UID;
+/** The app owner is the account with the `owner` custom claim (scripts/set-account-flags.js).
+ *  Force-refresh the token so a newly granted claim counts straight away. */
+async function isOwner(user) {
+  return !!user && (await user.getIdTokenResult(true)).claims.owner === true;
+}
+
+onAuthStateChanged(auth, async user => {
+  const owner = await isOwner(user).catch(() => false);
+  if (user !== auth.currentUser) return;   // signed out or switched while the token was fetched
   $('gate').hidden = owner;
   $('dash').hidden = !owner;
   $('who').hidden = !owner;
-  if (user && !owner) signOut(auth);
+  if (owner) $('gateMsg').textContent = '';
+  if (user && !owner) { $('gateMsg').textContent = 'That account is not the app owner. Signed out.'; signOut(auth); }
   if (owner) start(); else stop();
 });
 // ── data ───────────────────────────────────────────────────────────────────
@@ -384,7 +390,7 @@ function render() {
   $('dash').classList.toggle('is-loading', !!state.loading);
   const now = state.now;
   // Hide: the owner, test trips and throwaway accounts leave every number; events with no trip (sign-in screen) stay.
-  const hiddenUids = new Set([...(state.hide.testUsers ? state.testUsers : []), ...(state.hide.me ? [OWNER_UID] : [])]);
+  const hiddenUids = new Set([...(state.hide.testUsers ? state.testUsers : []), ...(state.hide.me && auth.currentUser ? [auth.currentUser.uid] : [])]);
   const start = queryStart();
   const realRows = S.inWindow(state.rows, start).filter(r => !hiddenUids.has(r.uid));
   const all = state.hide.testTrips ? realRows.filter(r => !r.tripId || !state.testTrips.has(r.tripId)) : realRows;

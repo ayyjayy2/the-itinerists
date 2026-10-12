@@ -76,6 +76,7 @@ host must be added there or the browser blocks it.
 | `api-console.js` | Staging API console: `grant` / `revoke <username|email>`, `list`, `publish <openapi.json>`. Refuses non-staging keys |
 | `reset-password.js`, `gen-reset-link.js`, `migrate-account-privacy.js` | Account admin |
 | `set-survey.js` | The survey invitation on Home (`_config/survey`): wording, link, on/off. Reads the gitignored `scripts/survey.local.json` (the wording names real people). Dry run by default, `--run` writes, `--staging` for staging, `--off` switches it off. The survey itself is a Google Form: the app only links to it, sending nothing |
+| `set-account-flags.js` | Grants the `owner` claim (Pulse, `isAppOwner()` in the rules) and `layoutPicker` on users from the gitignored `scripts/account-flags.local.json`, so no real uid is in the code. Dry run by default, `--run` writes, `--staging` for staging |
 | `check-balances.js`, `compare-to-spreadsheet.js`, `fix-makaela-entries.js`, `apply-v6-fixes.js` | One-off finance checks and fixes |
 | `stats.js` *(gitignored)* | Read-only headcount of real users and trips; feeds the private Headcount artifact. Never commit its output |
 | `verify-outfit-storage.local.mjs` *(gitignored)* | Playwright check of the photo upload path, signed in as the `photoprobe` test account |
