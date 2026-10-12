@@ -8,7 +8,6 @@ import { TripEventsService } from '../../services/trip-events.service';
 import { TripService } from '../../services/trip.service';
 import { TripEvent } from '../../models/trip.models';
 import { SurveyService } from '../../services/survey.service';
-import { isLiveSurvey } from '../../utils/survey';
 
 @Component({
   selector: 'app-notification-bell',
@@ -81,8 +80,8 @@ export class NotificationBellComponent {
   private tripService   = inject(TripService);
   readonly survey       = inject(SurveyService);
 
-  /** A survey is on: its notice is listed for everyone, tapped or not. */
-  readonly surveyOn = computed(() => isLiveSurvey(this.survey.config()));
+  /** A survey is on and meant for them (a finished trip): its notice stays listed, tapped or not. */
+  readonly surveyOn = computed(() => this.survey.available());
 
   /** On a test trip, tester activity is part of what we're checking. */
   private showTest = computed(() => !!this.tripService.activeTrip()?.isTest);

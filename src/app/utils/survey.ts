@@ -46,10 +46,11 @@ export function isNewVisit(hiddenAt: number | null, now: number): boolean {
 /**
  * The place to name in the survey wording: the city of the person's most
  * recently finished trip ("Berlin, Germany" → "Berlin"), or the trip's name
- * when it has no destination. Null when they have no finished trip.
+ * when it has no destination. A trip counts from its last day on. Null when
+ * they have no such trip.
  */
 export function surveyTripPlace(trips: TripDoc[], todayISO: string): string | null {
-  const done = trips.filter(t => t.endDate && t.endDate < todayISO)
+  const done = trips.filter(t => t.endDate && t.endDate <= todayISO)
     .sort((a, b) => b.endDate.localeCompare(a.endDate));
   if (!done.length) return null;
   const city = (done[0].destination ?? '').split(',')[0].trim();
@@ -59,4 +60,13 @@ export function surveyTripPlace(trips: TripDoc[], todayISO: string): string | nu
 /** Fill the `{trip}` placeholder in the survey wording: their trip, or "your trip". */
 export function fillSurveyText(text: string, place: string | null): string {
   return text.split('{trip}').join(place ?? 'your trip');
+}
+
+/**
+ * Is the survey for this person? Only once their trips have loaded and they
+ * have a finished one (`place` from surveyTripPlace): people who haven't
+ * travelled with the app yet have nothing to tell us, so they never see it.
+ */
+export function surveyAvailable(config: SurveyConfig | null, tripsLoaded: boolean, place: string | null): boolean {
+  return isLiveSurvey(config) && tripsLoaded && place !== null;
 }

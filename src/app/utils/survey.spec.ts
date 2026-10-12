@@ -1,4 +1,4 @@
-import { SURVEY_BANNER_MAX_DISMISSALS, SURVEY_NEW_VISIT_AFTER_MS, fillSurveyText, isLiveSurvey, isNewVisit, surveyPending, surveyTripPlace, surveyView } from './survey';
+import { SURVEY_BANNER_MAX_DISMISSALS, SURVEY_NEW_VISIT_AFTER_MS, fillSurveyText, surveyAvailable, isLiveSurvey, isNewVisit, surveyPending, surveyTripPlace, surveyView } from './survey';
 import { TripDoc } from '../models/trip.models';
 import { SurveyConfig } from '../models/trip.models';
 
@@ -91,13 +91,14 @@ describe('surveyTripPlace', () => {
     const trips = [
       trip({ id: 'a', destination: 'Lisbon, Portugal', endDate: '2026-05-05' }),
       trip({ id: 'b', destination: 'Berlin, Germany', endDate: '2026-10-09' }),
-      trip({ id: 'c', destination: 'Tokyo, Japan', startDate: '2026-12-01', endDate: '2026-12-10' }),   // not finished
+      trip({ id: 'c', destination: 'Tokyo, Japan', startDate: '2026-12-01', endDate: '2026-12-10' }),   // not reached its last day
     ];
     expect(surveyTripPlace(trips, '2026-10-12')).toBe('Berlin');
   });
 
-  it('counts a trip as finished once its last day has passed', () => {
-    expect(surveyTripPlace([trip({ destination: 'Berlin, Germany', endDate: '2026-10-12' })], '2026-10-12')).toBeNull();
+  it('counts a trip from its last day on', () => {
+    expect(surveyTripPlace([trip({ destination: 'Berlin, Germany', endDate: '2026-10-13' })], '2026-10-12')).toBeNull();
+    expect(surveyTripPlace([trip({ destination: 'Berlin, Germany', endDate: '2026-10-12' })], '2026-10-12')).toBe('Berlin');   // the last day
     expect(surveyTripPlace([trip({ destination: 'Berlin, Germany', endDate: '2026-10-11' })], '2026-10-12')).toBe('Berlin');
   });
 
@@ -112,5 +113,18 @@ describe('fillSurveyText', () => {
     expect(fillSurveyText('Tell me how {trip} went.', 'Berlin')).toBe('Tell me how Berlin went.');
     expect(fillSurveyText('How did {trip} go? Tell me how {trip} went.', null)).toBe('How did your trip go? Tell me how your trip went.');
     expect(fillSurveyText('No placeholder here.', 'Berlin')).toBe('No placeholder here.');
+  });
+});
+
+describe('surveyAvailable', () => {
+  it('is only for people with a finished trip, once their trips have loaded', () => {
+    expect(surveyAvailable(config, true, 'Berlin')).toBeTrue();
+    expect(surveyAvailable(config, true, null)).toBeFalse();     // no finished trip yet
+    expect(surveyAvailable(config, false, null)).toBeFalse();    // still loading
+  });
+
+  it('needs a live survey', () => {
+    expect(surveyAvailable(null, true, 'Berlin')).toBeFalse();
+    expect(surveyAvailable({ ...config, active: false }, true, 'Berlin')).toBeFalse();
   });
 });
