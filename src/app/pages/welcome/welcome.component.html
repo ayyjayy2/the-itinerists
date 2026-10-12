@@ -1,0 +1,53 @@
+<div class="welcome">
+  <header class="welcome-head">
+    <app-brand variant="stacked" [mark]="40" />
+    <h1>Plan the trip together ✨</h1>
+    <p class="lede">One shared plan for flights, stays, money and packing, so nobody has to dig through the group chat.</p>
+  </header>
+
+  <!-- A few seconds of each key screen (the demo's made-up trip) -->
+  <section class="clips" aria-label="A look inside the app">
+    <div class="clip-strip" #strip (scroll)="onScroll(strip)">
+      @for (clip of clips; track clip.src) {
+        <figure class="clip">
+          <div class="phone">
+            <video [src]="clip.src" [poster]="clip.poster" [muted]="true" [autoplay]="!reducedMotion" loop playsinline preload="metadata"
+                   [attr.aria-label]="clip.label"></video>
+          </div>
+          <figcaption>{{ clip.label }}</figcaption>
+        </figure>
+      }
+    </div>
+    <div class="dots">
+      @for (clip of clips; track clip.src; let i = $index) {
+        <button type="button" class="dot" [class.on]="current() === i" (click)="goTo(strip, i)"
+                [attr.aria-label]="'Show: ' + clip.label" [attr.aria-current]="current() === i"></button>
+      }
+    </div>
+  </section>
+
+  <!-- The iPhone app is where we want people: it leads -->
+  <section class="app-card">
+    <p class="kicker">iPhone app</p>
+    <h2>Coming soon</h2>
+    @if (joined()) {
+      <p class="joined">You're on the list. We'll email you when the app is out. 🎉</p>
+    } @else {
+      <p class="app-sub">Leave your email and we'll tell you when it's in the App Store.</p>
+      <form (ngSubmit)="notifyMe()" novalidate>
+        <label class="sr-only" for="notify-email">Email</label>
+        <input id="notify-email" type="email" inputmode="email" name="email" [(ngModel)]="email"
+               placeholder="you@example.com" autocomplete="email" autocapitalize="none" spellcheck="false"
+               [attr.aria-invalid]="error() ? true : null" [attr.aria-describedby]="error() ? 'notify-error' : null" />
+        @if (error()) { <p class="field-error" id="notify-error">{{ error() }}</p> }
+        <button class="btn btn-primary" type="submit" [disabled]="sending()">{{ sending() ? 'Adding…' : 'Notify me' }}</button>
+      </form>
+    }
+  </section>
+
+  <!-- Quieter: the browser works today -->
+  <a class="continue-browser" routerLink="/signup">Continue in browser →</a>
+  <p class="have-account">Already have an account? <a class="sign-in" routerLink="/login">Sign in</a></p>
+
+  <footer class="legal"><a routerLink="/privacy">Privacy</a> · <a routerLink="/terms">Terms</a></footer>
+</div>

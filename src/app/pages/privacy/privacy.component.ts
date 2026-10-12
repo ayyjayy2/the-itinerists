@@ -20,7 +20,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <header class="policy-head">
           <app-brand [mark]="40" [showWordmark]="false" />
           <h1>Privacy Policy</h1>
-          <p class="effective">Effective October 4, 2026</p>
+          <p class="effective">Effective October 12, 2026</p>
           <p class="lede">The Itinerists is a group trip planner. This page says exactly what the app stores, who can see it, and which outside services it talks to. Short version: your trip data is shared only with the people on your trip, your email is private, we don't sell or advertise with anything, and you can delete your account yourself at any time.</p>
         </header>
 
@@ -37,6 +37,10 @@ import { BrandComponent } from '../../shared/brand/brand.component';
           <li>Trip names, destinations and dates, itinerary events, flights, stays, transportation, shared expenses and who paid, recommendations, map pins, and an activity log of changes. Everyone on that trip can see and edit this.</li>
           <li><strong>Personal lists</strong> — your packing list and your "My Expenses" log — are visible only to you.</li>
           <li><strong>Outfit photos</strong> you choose to add are visible only to you. The app never opens your camera or photo library on its own; you pick each photo.</li>
+        </ul>
+        <h3>If you ask to hear when the iPhone app launches</h3>
+        <ul>
+          <li>If you leave your email under "Notify me" on the welcome page, we keep that email and when you left it, and use it only to tell you once that the iPhone app is out. You don't need an account. Nobody else can see the list, and we delete it after that email goes out, or sooner if you ask.</li>
         </ul>
         <h3>Technical information</h3>
         <ul>
@@ -93,7 +97,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <p>We don't sell your personal information or share it for targeted advertising, and we don't collect sensitive personal information. If your state gives you privacy rights (such as California, Colorado, Virginia or Illinois), you can use them by emailing us, and we won't treat you differently for doing so.</p>
 
         <h2>How long we keep data</h2>
-        <p>Until you delete it. Trip content stays as long as the trip has members. Error reports are kept for troubleshooting and contain no personal data.</p>
+        <p>Until you delete it. Trip content stays as long as the trip has members. The iPhone app launch list is deleted once we've emailed everyone on it. Error reports are kept for troubleshooting and contain no personal data.</p>
 
         <h2>Security</h2>
         <p>All traffic is encrypted in transit. Database access is restricted by security rules that are tested with every change. Only the developer can administer the project.</p>
