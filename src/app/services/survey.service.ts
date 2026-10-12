@@ -1,7 +1,7 @@
 import { Injectable, Injector, computed, effect, inject, runInInjectionContext, signal } from '@angular/core';
 import { DocumentData, Firestore, doc, increment, onSnapshot, updateDoc, Unsubscribe } from '@angular/fire/firestore';
 import { SurveyConfig } from '../models/trip.models';
-import { fillSurveyText, isLiveSurvey, surveyAvailable, isNewVisit, surveyPending, surveyTripPlace, surveyView } from '../utils/survey';
+import { fillSurveyText, isLiveSurvey, shouldOpenSurveyPopup, surveyAvailable, isNewVisit, surveyPending, surveyTripPlace, surveyView } from '../utils/survey';
 import { localTodayISO } from '../utils/trip-destinations';
 import { TripService } from './trip.service';
 import { UserService } from './user.service';
@@ -11,9 +11,9 @@ import { UserService } from './user.service';
  * shell), then a Home banner on later visits
  * (see utils/survey.ts). The wording and link come from `_config/survey`
  * (scripts/set-survey.js); each person's progress is kept on their account,
- * so it follows them across devices. A "visit" is one app session, or a
- * return to the app after SURVEY_NEW_VISIT_AFTER_MS in the background (an
- * iPhone app can stay open for days).
+ * so it follows them across devices. A "visit" is one launch (or reload) of
+ * the app, or a return to it after SURVEY_NEW_VISIT_AFTER_MS in the
+ * background (an iPhone app can stay open for days).
  */
 @Injectable({ providedIn: 'root' })
 export class SurveyService {
@@ -25,7 +25,10 @@ export class SurveyService {
   private readonly _config = signal<SurveyConfig | null>(null);
   readonly config = this._config.asReadonly();
 
-  /** Survey ids already shown and closed in this visit. */
+  /** Whether the app is on screen (not a background tab or a backgrounded phone app). */
+  private readonly visibility = signal<DocumentVisibilityState>(document.visibilityState);
+
+  /** Survey ids already shown and closed in this visit (kept in memory: a relaunch is a new visit). */
   private readonly quietIds = signal<ReadonlySet<string>>(new Set());
   /** The pop-up stays up until it is answered, even after it is recorded as seen. */
   readonly popupOpen = signal(false);
@@ -71,6 +74,7 @@ export class SurveyService {
   constructor() {
     let hiddenAt: number | null = null;
     document.addEventListener('visibilitychange', () => {
+      this.visibility.set(document.visibilityState);
       if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
       if (isNewVisit(hiddenAt, Date.now())) this.newVisit();
       hiddenAt = null;
@@ -103,7 +107,8 @@ export class SurveyService {
     // Open the pop-up once, and record it straight away so closing the app
     // without answering moves them on to the banner rather than the pop-up again.
     effect(() => {
-      if (this.view() !== 'popup' || this.popupOpen()) return;   // view waits for their trips, so the wording is settled
+      // view waits for their trips (so the wording is settled); only open on screen.
+      if (!shouldOpenSurveyPopup(this.view(), this.popupOpen(), this.visibility())) return;
       const id = this._config()!.id;
       this.popupOpen.set(true);
       this.quiet(id);
@@ -135,22 +140,11 @@ export class SurveyService {
     void this.record({ [`surveys.${id}.bannerDismissals`]: increment(1) });
   }
 
-  private newVisit(): void {
-    try {
-      for (const key of Object.keys(sessionStorage)) if (key.startsWith('surveyQuiet:')) sessionStorage.removeItem(key);
-    } catch { /* private mode */ }
-    this.quietIds.set(new Set());
-  }
+  private newVisit(): void { this.quietIds.set(new Set()); }
 
-  private isQuiet(id: string): boolean {
-    if (this.quietIds().has(id)) return true;
-    try { return sessionStorage.getItem(`surveyQuiet:${id}`) === '1'; } catch { return false; }
-  }
+  private isQuiet(id: string): boolean { return this.quietIds().has(id); }
 
-  private quiet(id: string): void {
-    try { sessionStorage.setItem(`surveyQuiet:${id}`, '1'); } catch { /* private mode */ }
-    this.quietIds.update(s => new Set(s).add(id));
-  }
+  private quiet(id: string): void { this.quietIds.update(s => new Set(s).add(id)); }
 
   private async record(patch: DocumentData): Promise<void> {
     const uid = this.uid();
