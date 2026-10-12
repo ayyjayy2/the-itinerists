@@ -1,4 +1,4 @@
-import { SURVEY_BANNER_MAX_DISMISSALS, SURVEY_NEW_VISIT_AFTER_MS, isLiveSurvey, isNewVisit, surveyView } from './survey';
+import { SURVEY_BANNER_MAX_DISMISSALS, SURVEY_NEW_VISIT_AFTER_MS, isLiveSurvey, isNewVisit, surveyPending, surveyView } from './survey';
 import { SurveyConfig } from '../models/trip.models';
 
 const config: SurveyConfig = {
@@ -65,5 +65,20 @@ describe('isNewVisit', () => {
 
   it('is not a new visit when the app was never hidden', () => {
     expect(isNewVisit(null, 5_000)).toBeFalse();
+  });
+});
+
+describe('surveyPending', () => {
+  it('is pending from the start until they tap it or close the banner the maximum number of times', () => {
+    expect(surveyPending(config, undefined)).toBeTrue();
+    expect(surveyPending(config, { promptSeenAt: 1 })).toBeTrue();
+    expect(surveyPending(config, { promptSeenAt: 1, bannerDismissals: 2 })).toBeTrue();
+    expect(surveyPending(config, { promptSeenAt: 1, bannerDismissals: 3 })).toBeFalse();
+    expect(surveyPending(config, { promptSeenAt: 1, takenAt: 2 })).toBeFalse();
+  });
+
+  it('is never pending without a live survey', () => {
+    expect(surveyPending(null, undefined)).toBeFalse();
+    expect(surveyPending({ ...config, active: false }, undefined)).toBeFalse();
   });
 });

@@ -25,6 +25,16 @@ export function surveyView(config: SurveyConfig | null, progress: SurveyProgress
   return 'banner';
 }
 
+/**
+ * The invitation isn't finished: they haven't tapped the survey or closed the
+ * banner the maximum number of times. While it's pending the survey holds the
+ * banner spot on Home, so closing it never makes another banner pop up instead.
+ */
+export function surveyPending(config: SurveyConfig | null, progress: SurveyProgress | undefined): boolean {
+  return isLiveSurvey(config) && !progress?.takenAt
+    && (progress?.bannerDismissals ?? 0) < SURVEY_BANNER_MAX_DISMISSALS;
+}
+
 /** Coming back to the app after this long in the background counts as a new visit. */
 export const SURVEY_NEW_VISIT_AFTER_MS = 30 * 60_000;
 

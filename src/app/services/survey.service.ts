@@ -1,7 +1,7 @@
 import { Injectable, Injector, computed, effect, inject, runInInjectionContext, signal } from '@angular/core';
 import { DocumentData, Firestore, doc, increment, onSnapshot, updateDoc, Unsubscribe } from '@angular/fire/firestore';
 import { SurveyConfig } from '../models/trip.models';
-import { isLiveSurvey, isNewVisit, surveyView } from '../utils/survey';
+import { isLiveSurvey, isNewVisit, surveyPending, surveyView } from '../utils/survey';
 import { UserService } from './user.service';
 
 /**
@@ -34,6 +34,12 @@ export class SurveyService {
     if (!isLiveSurvey(config)) return 'none';
     const progress = this.userService.firestoreUser()?.surveys?.[config.id];
     return surveyView(config, progress, this.isQuiet(config.id));
+  });
+
+  /** The invitation isn't finished yet (see surveyPending): Home keeps its banner spot. */
+  readonly pending = computed(() => {
+    const config = this._config();
+    return surveyPending(config, config ? this.userService.firestoreUser()?.surveys?.[config.id] : undefined);
   });
 
   constructor() {

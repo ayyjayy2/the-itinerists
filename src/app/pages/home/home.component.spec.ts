@@ -32,7 +32,7 @@ describe('HomeComponent (hidden pages)', () => {
   let hidden: WritableSignal<string[]>;
   let firestoreUser: WritableSignal<any>;
   let activeMembers: ReturnType<typeof signal<any[]>>;
-  let survey: { config: WritableSignal<any>; view: WritableSignal<string>; popupOpen: WritableSignal<boolean>; take: jasmine.Spy; closePopup: jasmine.Spy; dismissBanner: jasmine.Spy };
+  let survey: { config: WritableSignal<any>; view: WritableSignal<string>; pending: WritableSignal<boolean>; popupOpen: WritableSignal<boolean>; take: jasmine.Spy; closePopup: jasmine.Spy; dismissBanner: jasmine.Spy };
   let confirmStub: { waiting: ReturnType<typeof signal<string>>; sentAt: ReturnType<typeof signal<number>>; send: jasmine.Spy };
 
   beforeEach(async () => {
@@ -41,7 +41,7 @@ describe('HomeComponent (hidden pages)', () => {
     activeMembers = signal<any[]>([]);
     survey = {
       config: signal({ id: 's1', active: true, url: 'https://example.com/form', title: 'Hi, I made this', body: 'How did it go?', bannerText: 'Got 5 minutes?' }),
-      view: signal('none'), popupOpen: signal(false),
+      view: signal('none'), pending: signal(false), popupOpen: signal(false),
       take: jasmine.createSpy('take'), closePopup: jasmine.createSpy('closePopup'), dismissBanner: jasmine.createSpy('dismissBanner'),
     };
     confirmStub = { waiting: signal(''), sentAt: signal(0), send: jasmine.createSpy('send').and.resolveTo(true) };
@@ -182,7 +182,7 @@ describe('HomeComponent (hidden pages)', () => {
   });
 
   it('shows the survey banner on a later visit, with the link and a close button', () => {
-    survey.view.set('banner');
+    survey.view.set('banner'); survey.pending.set(true);
     const el = render().nativeElement as HTMLElement;
     const banner = el.querySelector('.survey-nudge')!;
     expect(banner.textContent).toContain('Got 5 minutes?');
@@ -192,12 +192,19 @@ describe('HomeComponent (hidden pages)', () => {
   });
 
   it('puts the survey banner first: no email reminder while it shows', () => {
-    survey.view.set('banner');
+    survey.view.set('banner'); survey.pending.set(true);
     confirmStub.waiting.set('maya@example.com');                 // unconfirmed email
     const el = render().nativeElement as HTMLElement;            // and no recovery email on file
     expect(el.querySelector('.survey-nudge')).not.toBeNull();
     expect(el.querySelector('.confirm-nudge')).toBeNull();
     expect(el.querySelectorAll('.recovery-nudge').length).toBe(1);
+  });
+
+  it('holds back the email reminders while the survey is still pending, even with no survey banner this visit', () => {
+    survey.pending.set(true);                 // e.g. the pop-up was just closed
+    confirmStub.waiting.set('maya@example.com');
+    const el = render().nativeElement as HTMLElement;
+    expect(el.querySelector('.recovery-nudge')).toBeNull();
   });
 
   it('brings the email reminders back once the survey banner is gone', () => {
