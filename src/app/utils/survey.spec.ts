@@ -1,4 +1,4 @@
-import { SURVEY_BANNER_MAX_DISMISSALS, SURVEY_NEW_VISIT_AFTER_MS, fillSurveyText, surveyAvailable, isLiveSurvey, isNewVisit, surveyPending, surveyTripPlace, surveyView } from './survey';
+import { SURVEY_BANNER_MAX_DISMISSALS, SURVEY_NEW_VISIT_AFTER_MS, fillSurveyText, shouldOpenSurveyPopup, surveyAvailable, isLiveSurvey, isNewVisit, surveyPending, surveyTripPlace, surveyView } from './survey';
 import { TripDoc } from '../models/trip.models';
 import { SurveyConfig } from '../models/trip.models';
 
@@ -126,5 +126,18 @@ describe('surveyAvailable', () => {
   it('needs a live survey', () => {
     expect(surveyAvailable(null, true, 'Berlin')).toBeFalse();
     expect(surveyAvailable({ ...config, active: false }, true, 'Berlin')).toBeFalse();
+  });
+});
+
+describe('shouldOpenSurveyPopup', () => {
+  it('opens the pop-up only on a screen someone is looking at', () => {
+    expect(shouldOpenSurveyPopup('popup', false, 'visible')).toBeTrue();
+    expect(shouldOpenSurveyPopup('popup', false, 'hidden')).toBeFalse();   // a background tab or a backgrounded phone app waits
+  });
+
+  it('opens it once, and only when it is due', () => {
+    expect(shouldOpenSurveyPopup('popup', true, 'visible')).toBeFalse();
+    expect(shouldOpenSurveyPopup('banner', false, 'visible')).toBeFalse();
+    expect(shouldOpenSurveyPopup('none', false, 'visible')).toBeFalse();
   });
 });

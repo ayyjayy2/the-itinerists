@@ -70,3 +70,12 @@ export function fillSurveyText(text: string, place: string | null): string {
 export function surveyAvailable(config: SurveyConfig | null, tripsLoaded: boolean, place: string | null): boolean {
   return isLiveSurvey(config) && tripsLoaded && place !== null;
 }
+
+/**
+ * Open the pop-up now? Only when it's due, not already open, and the app is on
+ * screen: a background tab, or a phone app in the background, waits until it
+ * is in front, so the one-time pop-up is never spent where nobody sees it.
+ */
+export function shouldOpenSurveyPopup(view: SurveyView, alreadyOpen: boolean, visibility: DocumentVisibilityState): boolean {
+  return view === 'popup' && !alreadyOpen && visibility === 'visible';
+}
