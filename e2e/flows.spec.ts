@@ -31,7 +31,7 @@ test('log out, then sign up with a name, email and password (no username)', asyn
   await signOut(page);
   await page.goto('/signup');
   await expect(page.getByPlaceholder(/3–20 letters/)).toHaveCount(0);
-  await page.getByPlaceholder('e.g. Alayna').fill('Test Person');
+  await page.getByPlaceholder('e.g. Maya').fill('Test Person');
   await page.getByPlaceholder('you@example.com').fill('test@example.com');
   await page.getByPlaceholder('At least 8 characters').fill('Sunshine2026');
   await page.getByPlaceholder('Re-enter password').fill('Sunshine2026');

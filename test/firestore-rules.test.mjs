@@ -317,6 +317,21 @@ await t('admin changes the survey settings', 'deny', () => updateDoc(doc(admin, 
 await t('self records survey progress', 'allow', () => updateDoc(doc(bob, 'users', 'bob'), { 'surveys.s1.promptSeenAt': 1 }));
 await t('someone else records your survey progress', 'deny', () => updateDoc(doc(alice, 'users', 'bob'), { 'surveys.s1.takenAt': 1 }));
 
+console.log('\nApp launch list (_waitlist: "Notify me" on the welcome page)');
+const wl = (o = {}) => ({ email: 'maya@example.com', list: 'ios', at: serverTimestamp(), ...o });
+await t('anon joins the iPhone app list', 'allow', () => setDoc(doc(anon, '_waitlist', 'w1'), wl()));
+await t('signed-in person joins the list', 'allow', () => setDoc(doc(bob, '_waitlist', 'w2'), wl()));
+await t('join with a malformed email', 'deny', () => setDoc(doc(anon, '_waitlist', 'w3'), wl({ email: 'not-an-email' })));
+await t('join with a huge email', 'deny', () => setDoc(doc(anon, '_waitlist', 'w3'), wl({ email: 'a'.repeat(250) + '@x.io' })));
+await t('join an unknown list', 'deny', () => setDoc(doc(anon, '_waitlist', 'w3'), wl({ list: 'android' })));
+await t('join with an extra field', 'deny', () => setDoc(doc(anon, '_waitlist', 'w3'), wl({ name: 'Maya' })));
+await t('join with a client timestamp', 'deny', () => setDoc(doc(anon, '_waitlist', 'w3'), wl({ at: new Date(Date.now() - 60_000) })));
+await t('anon reads the list', 'deny', () => getDoc(doc(anon, '_waitlist', 'w1')));
+await t('member lists the list', 'deny', () => getDocs(collection(bob, '_waitlist')));
+await t('admin lists the list', 'deny', () => getDocs(collection(admin, '_waitlist')));
+await t('anon edits an entry', 'deny', () => updateDoc(doc(anon, '_waitlist', 'w1'), { email: 'x@y.io' }));
+await t('anon deletes an entry', 'deny', () => deleteDoc(doc(anon, '_waitlist', 'w1')));
+
 console.log('\nWrite log (_writes)');
 const wr = (uid, extra = {}) => ({ uid, tripId: 'T', kind: 'itinerary', action: 'added', at: serverTimestamp(), ...extra });
 await t('member logs own write', 'allow', () => setDoc(doc(bob, '_writes', 'w1'), wr('bob')));

@@ -1,8 +1,9 @@
 /**
  * Demo-build stand-in for `@angular/fire/auth`.
  *
- * The demo starts signed in as the seeded traveller. Signing out works; signing
- * back in with any username and password signs in as that same traveller.
+ * The demo starts signed in as the seeded traveller. Signing out works, and lasts
+ * for the rest of the tab; signing back in with any username and password signs
+ * in as that same traveller.
  * Self-serve signup mints a throwaway uid so the flow completes in memory.
  * Password and email helpers resolve without doing anything.
  */
@@ -28,13 +29,22 @@ export interface AuthCredential {
   password: string;
 }
 
+/** A sign-out lasts for the rest of the browser tab, so reloading shows the signed-out pages. */
+const SIGNED_OUT_KEY = 'demo:signedOut';
+function signedOutInThisTab(): boolean {
+  try { return sessionStorage.getItem(SIGNED_OUT_KEY) === '1'; } catch { return false; }
+}
+
 export class Auth {
-  private readonly subject = new BehaviorSubject<User | null>({ uid: DEMO_UID, email: DEMO_EMAIL });
+  private readonly subject = new BehaviorSubject<User | null>(signedOutInThisTab() ? null : { uid: DEMO_UID, email: DEMO_EMAIL });
 
   get currentUser(): User | null { return this.subject.value; }
   get user$(): Observable<User | null> { return this.subject.asObservable(); }
 
-  setUser(user: User | null): void { this.subject.next(user); }
+  setUser(user: User | null): void {
+    try { user ? sessionStorage.removeItem(SIGNED_OUT_KEY) : sessionStorage.setItem(SIGNED_OUT_KEY, '1'); } catch { /* private mode */ }
+    this.subject.next(user);
+  }
 }
 
 const demoAuth = new Auth();

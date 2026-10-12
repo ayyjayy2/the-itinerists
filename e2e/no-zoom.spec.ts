@@ -36,13 +36,15 @@ for (const [route, open] of pages) {
   });
 }
 
-test('no field under 16px on sign-in and sign-up', async ({ page }) => {
+test('no field under 16px on sign-in, sign-up and the welcome page', async ({ page }) => {
   await page.goto('/profile');
   await page.getByRole('button', { name: 'Log Out' }).click();
   await page.getByRole('button', { name: 'Yes' }).click();
   await expect(page).toHaveURL(/\/login/);
   expect(await smallFields(page)).toEqual([]);
   await page.goto('/signup');
+  expect(await smallFields(page)).toEqual([]);
+  await page.goto('/welcome');
   expect(await smallFields(page)).toEqual([]);
 });
 

@@ -1,11 +1,16 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './guards/auth.guard';
+import { authGuard, welcomeGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full'
+  },
+  {
+    path: 'welcome',   // signed-out visitors on the website (see authGuard)
+    loadComponent: () => import('./pages/welcome/welcome.component').then(m => m.WelcomeComponent),
+    canActivate: [welcomeGuard],
   },
   {
     path: 'login',
