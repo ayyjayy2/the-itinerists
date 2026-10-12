@@ -18,7 +18,7 @@ describe('SignupComponent show-password eye', () => {
     });
   });
 
-  it('gives both password fields an eye that shows and hides them', () => {
+  it('gives each password field its own eye: tapping one shows only that field', () => {
     const fixture = TestBed.createComponent(SignupComponent);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
@@ -27,12 +27,17 @@ describe('SignupComponent show-password eye', () => {
     expect(fields().length).toBe(2);
     expect(eyes().length).toBe(2);
 
-    eyes()[1].click();
+    eyes()[0].click();
     fixture.detectChanges();
-    expect(fields().every(f => f.type === 'text')).toBeTrue();
+    expect(fields().map(f => f.type)).toEqual(['text', 'password']);
 
     eyes()[1].click();
     fixture.detectChanges();
-    expect(fields().every(f => f.type === 'password')).toBeTrue();
+    expect(fields().map(f => f.type)).toEqual(['text', 'text']);
+
+    eyes()[0].click();
+    fixture.detectChanges();
+    expect(fields().map(f => f.type)).toEqual(['password', 'text']);
+    expect(eyes().map(e => e.getAttribute('aria-label'))).toEqual(['Show password', 'Hide password']);
   });
 });

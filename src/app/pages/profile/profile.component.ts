@@ -53,8 +53,12 @@ export class ProfileComponent implements OnInit {
   confirmPassword = '';
 
   showPasswordModal = signal(false);
-  /** The eye on the password fields; every modal opens with passwords hidden. */
-  showPassword = signal(false);
+  /** Which password fields are shown (each has its own eye); every modal opens with all hidden. */
+  private readonly shownFields = signal<ReadonlySet<string>>(new Set());
+  isShown(field: string): boolean { return this.shownFields().has(field); }
+  toggleShown(field: string): void {
+    this.shownFields.update(s => { const n = new Set(s); n.has(field) ? n.delete(field) : n.add(field); return n; });
+  }
 
 
   profileSaving  = signal(false);
@@ -107,7 +111,7 @@ export class ProfileComponent implements OnInit {
   }
 
   openPasswordModal(): void {
-    this.showPassword.set(false);
+    this.shownFields.set(new Set());
     this.currentPassword = '';
     this.newPassword     = '';
     this.confirmPassword = '';
@@ -119,7 +123,7 @@ export class ProfileComponent implements OnInit {
   closePasswordModal(): void { this.showPasswordModal.set(false); }
 
   openRecoveryModal(): void {
-    this.showPassword.set(false);
+    this.shownFields.set(new Set());
     this.recoveryEmail = '';
     this.recoveryPass  = '';
     this.recoveryError.set('');
@@ -207,7 +211,7 @@ export class ProfileComponent implements OnInit {
   deleteError     = signal('');
 
   openDeleteModal(): void {
-    this.showPassword.set(false);
+    this.shownFields.set(new Set());
     this.deletePass = '';
     this.deleteError.set('');
     this.showDeleteModal.set(true);
