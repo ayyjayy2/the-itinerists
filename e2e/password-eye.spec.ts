@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 
-// Every password field has an eye that shows what was typed, and hides it again.
+// Every password field has its own eye that shows what was typed, and hides it again.
 async function checkEyes(page: Page, scope = page.locator('body')) {
   const fields = scope.locator('.input-wrap input, .pw-wrap input');
   const eyes = scope.locator('.eye-btn');
@@ -14,6 +14,7 @@ async function checkEyes(page: Page, scope = page.locator('body')) {
     expect(box!.height).toBeGreaterThanOrEqual(44);
     await eyes.nth(i).click();
     await expect(fields.nth(i)).toHaveAttribute('type', 'text');
+    for (let j = 0; j < n; j++) if (j !== i) await expect(fields.nth(j)).toHaveAttribute('type', 'password');   // each eye is independent
     await expect(eyes.nth(i)).toHaveAttribute('aria-label', 'Hide password');
     await eyes.nth(i).click();
     await expect(fields.nth(i)).toHaveAttribute('type', 'password');

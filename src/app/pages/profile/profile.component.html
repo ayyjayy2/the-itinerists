@@ -109,10 +109,10 @@
       <div class="form-group">
         <label>Current Password</label>
         <div class="input-wrap">
-          <input [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="deletePass" autocomplete="current-password" placeholder="Enter current password" />
-          <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"
-                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
-            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
+          <input [type]="isShown('delete') ? 'text' : 'password'" [(ngModel)]="deletePass" autocomplete="current-password" placeholder="Enter current password" />
+          <button type="button" class="eye-btn" (click)="toggleShown('delete')" tabindex="-1"
+                  [attr.aria-label]="isShown('delete') ? 'Hide password' : 'Show password'">
+            <app-icon [name]="isShown('delete') ? 'eye-off' : 'eye'" [size]="18" />
           </button>
         </div>
       </div>
@@ -140,20 +140,20 @@
       <div class="form-group">
         <label>Current Password</label>
         <div class="input-wrap">
-          <input [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="currentPassword" autocomplete="off" placeholder="Enter current password" />
-          <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"
-                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
-            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
+          <input [type]="isShown('current') ? 'text' : 'password'" [(ngModel)]="currentPassword" autocomplete="off" placeholder="Enter current password" />
+          <button type="button" class="eye-btn" (click)="toggleShown('current')" tabindex="-1"
+                  [attr.aria-label]="isShown('current') ? 'Hide password' : 'Show password'">
+            <app-icon [name]="isShown('current') ? 'eye-off' : 'eye'" [size]="18" />
           </button>
         </div>
       </div>
       <div class="form-group">
         <label>New Password</label>
         <div class="input-wrap">
-          <input [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="newPassword" autocomplete="new-password" placeholder="At least 8 characters" />
-          <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"
-                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
-            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
+          <input [type]="isShown('new') ? 'text' : 'password'" [(ngModel)]="newPassword" autocomplete="new-password" placeholder="At least 8 characters" />
+          <button type="button" class="eye-btn" (click)="toggleShown('new')" tabindex="-1"
+                  [attr.aria-label]="isShown('new') ? 'Hide password' : 'Show password'">
+            <app-icon [name]="isShown('new') ? 'eye-off' : 'eye'" [size]="18" />
           </button>
         </div>
         @if (newPassword) {
@@ -167,10 +167,10 @@
       <div class="form-group">
         <label>Confirm New Password</label>
         <div class="input-wrap">
-          <input [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="confirmPassword" autocomplete="new-password" placeholder="Re-enter new password" />
-          <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"
-                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
-            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
+          <input [type]="isShown('confirm') ? 'text' : 'password'" [(ngModel)]="confirmPassword" autocomplete="new-password" placeholder="Re-enter new password" />
+          <button type="button" class="eye-btn" (click)="toggleShown('confirm')" tabindex="-1"
+                  [attr.aria-label]="isShown('confirm') ? 'Hide password' : 'Show password'">
+            <app-icon [name]="isShown('confirm') ? 'eye-off' : 'eye'" [size]="18" />
           </button>
         </div>
       </div>
@@ -204,10 +204,10 @@
         <div class="form-group">
           <label>Current Password</label>
           <div class="input-wrap">
-            <input [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="recoveryPass" autocomplete="current-password" placeholder="Enter current password" />
-            <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"
-                    [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
-              <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
+            <input [type]="isShown('recovery') ? 'text' : 'password'" [(ngModel)]="recoveryPass" autocomplete="current-password" placeholder="Enter current password" />
+            <button type="button" class="eye-btn" (click)="toggleShown('recovery')" tabindex="-1"
+                    [attr.aria-label]="isShown('recovery') ? 'Hide password' : 'Show password'">
+              <app-icon [name]="isShown('recovery') ? 'eye-off' : 'eye'" [size]="18" />
             </button>
           </div>
         </div>
@@ -246,10 +246,10 @@
       <div class="form-group">
         <label>Current Password</label>
         <div class="input-wrap">
-          <input [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="recoveryPass" autocomplete="off" placeholder="Enter current password" />
-          <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"
-                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
-            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
+          <input [type]="isShown('recovery') ? 'text' : 'password'" [(ngModel)]="recoveryPass" autocomplete="off" placeholder="Enter current password" />
+          <button type="button" class="eye-btn" (click)="toggleShown('recovery')" tabindex="-1"
+                  [attr.aria-label]="isShown('recovery') ? 'Hide password' : 'Show password'">
+            <app-icon [name]="isShown('recovery') ? 'eye-off' : 'eye'" [size]="18" />
           </button>
         </div>
       </div>

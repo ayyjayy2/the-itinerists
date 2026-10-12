@@ -226,7 +226,8 @@ describe('ProfileComponent show-password eye', () => {
 
       eyes()[0].click();
       fixture.detectChanges();
-      expect(fields().every(f => f.type === 'text')).toBeTrue();
+      expect(fields()[0].type).toBe('text');
+      expect(fields().slice(1).every(f => f.type === 'password')).withContext('other fields stay hidden').toBeTrue();
       expect(eyes()[0].getAttribute('aria-label')).toBe('Hide password');
 
       eyes()[0].click();
@@ -234,6 +235,16 @@ describe('ProfileComponent show-password eye', () => {
       expect(fields().every(f => f.type === 'password')).toBeTrue();
     });
   }
+
+  it('in Change password, each field has its own eye', () => {
+    const { fixture, fields, eyes } = open('openPasswordModal');
+    eyes()[2].click();
+    fixture.detectChanges();
+    expect(fields().map(f => f.type)).toEqual(['password', 'password', 'text']);
+    eyes()[1].click();
+    fixture.detectChanges();
+    expect(fields().map(f => f.type)).toEqual(['password', 'text', 'text']);
+  });
 
   it('hides the password again when a modal is reopened', () => {
     const { fixture, eyes, fields } = open('openDeleteModal');

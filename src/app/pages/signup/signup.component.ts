@@ -71,6 +71,7 @@ export class SignupComponent implements OnInit {
   }
 
   showPassword = signal(false);
+  showConfirm  = signal(false);   // each password field has its own eye
 
   /** Per-field validation (see utils/signup-form). */
   readonly form = new SignupFormState();
