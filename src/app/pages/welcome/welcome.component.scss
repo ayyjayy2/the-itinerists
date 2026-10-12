@@ -33,10 +33,12 @@
   figcaption { font-weight: 700; color: var(--text); }
 }
 .phone {
-  width: 48%; max-width: 190px; aspect-ratio: 390 / 760;
-  border: 7px solid var(--text); border-radius: 30px; overflow: hidden;
-  background: var(--surface); box-shadow: var(--shadow-md);
-  video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  // A bezel around the screen, shaped like the clips (390×844), with a small
+  // inner corner so the header and tab bar show in full.
+  width: 48%; max-width: 190px;
+  padding: 6px; border-radius: 26px;
+  background: var(--text); box-shadow: var(--shadow-md);
+  video { width: 100%; height: auto; aspect-ratio: 390 / 844; object-fit: cover; display: block; border-radius: 12px; background: var(--surface); }
 }
 .dots { display: flex; gap: 0.15rem; }
 .dot {
