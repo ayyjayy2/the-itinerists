@@ -88,8 +88,8 @@ _Last updated: 2026-07-19. This is the authoritative "pick up where we left off"
   add the issue to project #9 and set status.
 - **Verify every story in a real browser** before opening the PR (see §6). Build first
   (`npx ng build --configuration development`), then drive the running app.
-- **SECURITY — never commit the admin credentials** (`Alayna` / `admin123`). They only ever appear
-  in throwaway scratchpad scripts, never in the repo.
+- **SECURITY — never commit passwords or account credentials.** Use them only in throwaway
+  scratchpad scripts, never in the repo.
 - **Commit trailer:** `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`.
   PR body trailer: `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 
