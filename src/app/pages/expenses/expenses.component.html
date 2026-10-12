@@ -7,14 +7,17 @@
       <h2><app-icon name="expenses" [size]="22" /> My Expenses</h2>
       <p class="user-sub">{{ currentUser()?.name }}'s personal log</p>
     </div>
-    <div class="total-chip" [class.total-empty]="total() === 0">
-      ${{ total() | number:'1.2-2' }} <span class="total-code">USD</span>
+    <div class="total-chip" [class.total-empty]="totalEmpty()">
+      @for (t of totals(); track t.currency; let last = $last) {
+        <span class="total-part">{{ money(t.amount, t.currency) }}@if (!money(t.amount, t.currency).includes(t.currency)) { <span class="total-code">{{ t.currency }}</span> }</span>
+        @if (!last) { <span class="total-sep" aria-hidden="true">·</span> }
+      }
     </div>
   </div>
 
   <!-- Add form toggle -->
   @if (!showForm()) {
-    <button class="btn btn-primary add-btn" (click)="showForm.set(true)">+ Add Expense</button>
+    <button class="btn btn-primary add-btn" (click)="openForm()">+ Add Expense</button>
   } @else {
     <div class="add-form card">
       <h3>New Expense</h3>
@@ -43,9 +46,15 @@
         <input type="text" [(ngModel)]="form.description" placeholder="e.g. Brunch">
       </div>
 
-      <div class="form-group">
-        <label>Amount (USD)</label>
-        <input type="number" [(ngModel)]="form.amount" placeholder="0.00" min="0" step="0.01">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Amount</label>
+          <input type="number" [(ngModel)]="form.amount" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Currency</label>
+          <app-currency-select [value]="form.currency" (valueChange)="form.currency = $event" />
+        </div>
       </div>
 
       <div class="form-actions">
@@ -85,7 +94,12 @@
             }
           </div>
           <div class="exp-right">
-            <span class="exp-amount">${{ exp.amount | number:'1.2-2' }}</span>
+            <span class="exp-amounts">
+              <span class="exp-amount">{{ money(exp.amount, exp.currency) }}</span>
+              @if (exp.fullAmount !== undefined) {
+                <span class="exp-of">of {{ money(exp.fullAmount, exp.currency) }}</span>
+              }
+            </span>
             <button class="btn btn-ghost btn-sm edit-btn" (click)="openEdit(exp)">✏️</button>
           </div>
         </div>
@@ -122,9 +136,15 @@
             <label>Description</label>
             <input type="text" [(ngModel)]="editForm.description">
           </div>
-          <div class="form-group">
-            <label>Amount (USD)</label>
-            <input type="number" [(ngModel)]="editForm.amount" min="0" step="0.01">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Amount</label>
+              <input type="number" [(ngModel)]="editForm.amount" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <app-currency-select [value]="editForm.currency" (valueChange)="editForm.currency = $event" />
+            </div>
           </div>
           <div class="form-actions modal-actions">
             <button class="btn btn-danger" (click)="remove(exp.id)">Delete</button>
@@ -159,7 +179,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Amount (USD)</label>
+              <label>Amount ({{ financeEditDraft.currency || homeCurrency() }})</label>
               <input type="number" [(ngModel)]="financeEditDraft.amount" min="0" step="0.01">
             </div>
             <div class="form-group">
@@ -173,7 +193,7 @@
           </div>
           <div class="form-group">
             <label>Notes <span class="label-optional">(optional)</span></label>
-            <input type="text" [(ngModel)]="financeEditDraft.notes" placeholder="e.g. $25/pp × 4">
+            <input type="text" [(ngModel)]="financeEditDraft.notes" placeholder="e.g. 25 per person × 4">
           </div>
           <p class="shared-note">Shared expenses can't be deleted here — remove them from the Finance tab.</p>
           <div class="form-actions">

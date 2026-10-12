@@ -136,11 +136,18 @@
   flex-shrink: 0;
 }
 
+.exp-amounts { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
 .exp-amount {
   font-weight: 700;
   white-space: nowrap;
   font-size: 0.9rem;
 }
+// Your share of a shared expense, with the whole amount underneath.
+.exp-of { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
+
+// The total, one per currency (never added across currencies).
+.total-part { white-space: nowrap; }
+.total-sep { opacity: 0.5; margin: 0 0.15rem; }
 
 .edit-btn {
   opacity: 0.5;

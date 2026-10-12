@@ -18,6 +18,7 @@ import { StaysService } from '../../services/stays.service';
 import { RecsService } from '../../services/recs.service';
 import { ExpensesService } from '../../services/expenses.service';
 import { DataService } from '../../services/data.service';
+import { perCurrencyText } from '../../utils/currency';
 import {
   WidgetKey, WIDGET_PATHS, isPageHidden, visibleWidgetKeys,
   nextStay, nextTransport, nextFlight, expensesTotalBetween, recsGlance,
@@ -396,10 +397,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     return net;
   });
 
-  /** Running total of every expense logged for the trip — "tracked so far". */
-  readonly trackedTotal = computed(() =>
-    this.financeService.entries().reduce((sum, e) => sum + (e.amount || 0), 0),
-  );
+  /** Everything logged for the trip, "tracked so far": one amount per currency, never added across them. */
+  readonly trackedText = computed(() => {
+    const home = this.activeTrip()?.currency || 'USD';
+    return perCurrencyText(this.financeService.entries().map(e => ({ amount: e.amount || 0, currency: e.currency || home })), home);
+  });
+  /** Every expense is in the trip's currency, so a single balance in it is meaningful. */
+  readonly singleCurrency = computed(() => {
+    const home = this.activeTrip()?.currency || 'USD';
+    return this.financeService.entries().every(e => !e.currency || e.currency === home);
+  });
 
   money(amount: number): string {
     const cur = this.activeTrip()?.currency || 'USD';
@@ -486,12 +493,14 @@ export class HomeComponent implements OnInit, OnDestroy {
       case 'finance': {
         const net = this.financeNet();
         if (net !== null && this.expenseCount() > 0) {
+          // Mixed currencies: no single-number balance here (Finance converts properly).
           const [title, titleClass] =
+            !this.singleCurrency() ? ['Shared expenses', ''] :
             net >  0.01 ? [`You're owed ${this.money(net)}`, 'owed'] :
             net < -0.01 ? [`You owe ${this.money(-net)}`, 'owe'] :
                           ["You're all settled up 🎉", ''];
           return { key, path, icon: 'finance', tone: 'gold', title, titleClass,
-                   lines: [`${this.money(this.trackedTotal())} tracked so far · tap to settle up`] };
+                   lines: [`${this.trackedText()} tracked so far · tap to settle up`] };
         }
         return { key, path, icon: 'finance', tone: 'gold', title: 'Shared expenses', titleClass: '',
                  lines: ['Track who paid & who owes who'] };

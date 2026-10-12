@@ -1,3 +1,4 @@
+import { money } from './event-text';
 /**
  * Pure multi-currency helpers for the finance page. Rate tables follow the
  * Frankfurter shape: `rates` is keyed by currency code with values relative to
@@ -77,4 +78,17 @@ export function convertedTotal(
     total += converted;
   }
   return { total, missing };
+}
+
+/**
+ * Amounts in several currencies as text, one per currency with the trip's own
+ * first ("€300.00 + $12.00"). Different currencies are never added together.
+ */
+export function perCurrencyText(entries: { amount: number; currency: string }[], home: string): string {
+  const sums = Object.entries(perCurrencySubtotals(entries));
+  if (!sums.length) return money(0, home);
+  return sums
+    .sort(([a], [b]) => (a === home ? -1 : b === home ? 1 : a.localeCompare(b)))
+    .map(([currency, amount]) => money(amount, currency))
+    .join(' + ');
 }
