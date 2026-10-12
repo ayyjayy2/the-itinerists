@@ -11,6 +11,9 @@ import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
+import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
+import { perCurrencySubtotals } from '../../utils/currency';
+import { money } from '../../utils/event-text';
 
 const CATEGORIES = ['Food', 'Drink', 'Transport', 'Shopping', 'Accommodation', 'Activity', 'Other'];
 
@@ -19,7 +22,9 @@ interface DisplayExpense {
   date: string;
   vendor?: string;
   description: string;
-  amount: number;
+  amount: number;       // your share for a shared expense
+  currency: string;     // ISO code the amount is in: never assumed
+  fullAmount?: number;  // the whole shared expense, when your share is part of it
   category: string;
   isPersonal: boolean;
   financeId?: string;
@@ -27,7 +32,7 @@ interface DisplayExpense {
 
 @Component({
   selector: 'app-expenses',
-  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, NgClass, FormsModule, EmptyDateHintDirective],
+  imports: [LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, NgClass, FormsModule, EmptyDateHintDirective, CurrencySelectComponent],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss'
 })
@@ -43,6 +48,9 @@ export class ExpensesComponent implements OnInit {
 
   currentUser = this.userService.currentUser;
   categories  = CATEGORIES;
+  /** The trip's own currency: the default for new expenses and the first total shown. */
+  readonly homeCurrency = computed(() => this.tripService.activeTrip()?.currency ?? 'USD');
+  readonly money = money;
 
   showForm = signal(false);
   form = {
@@ -50,6 +58,7 @@ export class ExpensesComponent implements OnInit {
     vendor: '',
     description: '',
     amount: null as number | null,
+    currency: this.homeCurrency(),
     category: 'Food',
   };
 
@@ -59,6 +68,7 @@ export class ExpensesComponent implements OnInit {
     vendor: '',
     description: '',
     amount: null as number | null,
+    currency: 'USD',
     category: 'Food',
   };
 
@@ -89,6 +99,8 @@ export class ExpensesComponent implements OnInit {
           vendor:     e.vendor,
           description: e.description,
           amount:     share,
+          currency:   e.currency || this.homeCurrency(),
+          fullAmount: Math.abs(share - e.amount) > 0.005 ? e.amount : undefined,
           category:   e.category,
           isPersonal: false,
           financeId:  e.id,
@@ -110,12 +122,24 @@ export class ExpensesComponent implements OnInit {
     return cat === 'All' ? this.allExpenses() : this.allExpenses().filter(e => e.category === cat);
   });
 
-  total = computed(() =>
-    this.filtered().reduce((sum, e) => sum + e.amount, 0)
-  );
+  /** One total per currency, the trip's own first: different currencies are never added together. */
+  readonly totals = computed((): { currency: string; amount: number }[] => {
+    const home = this.homeCurrency();
+    const sums = perCurrencySubtotals(this.filtered());
+    const list = Object.entries(sums).map(([currency, amount]) => ({ currency, amount }));
+    if (!list.length) return [{ currency: home, amount: 0 }];
+    return list.sort((a, b) => (a.currency === home ? -1 : b.currency === home ? 1 : a.currency.localeCompare(b.currency)));
+  });
+  readonly totalEmpty = computed(() => this.filtered().length === 0);
 
   ngOnInit(): void {
     this.expensesService.init();
+  }
+
+  /** Open the add form in the trip's currency (the trip may load after the page). */
+  openForm(): void {
+    this.form.currency = this.homeCurrency();
+    this.showForm.set(true);
   }
 
   addExpense(): void {
@@ -125,7 +149,7 @@ export class ExpensesComponent implements OnInit {
       vendor:      this.form.vendor || undefined,
       description: this.form.description,
       amount:      this.form.amount,
-      currency:    'USD',
+      currency:    this.form.currency,
       category:    this.form.category,
     });
     this.form.vendor      = '';
@@ -141,6 +165,7 @@ export class ExpensesComponent implements OnInit {
       vendor:      exp.vendor ?? '',
       description: exp.description,
       amount:      exp.amount,
+      currency:    exp.currency,
       category:    exp.category,
     };
     if (!exp.isPersonal && exp.financeId) {
@@ -163,7 +188,7 @@ export class ExpensesComponent implements OnInit {
       vendor:      this.editForm.vendor || undefined,
       description: this.editForm.description,
       amount:      this.editForm.amount,
-      currency:    'USD',
+      currency:    this.editForm.currency,
       category:    this.editForm.category,
     });
     this.editingExpense.set(null);

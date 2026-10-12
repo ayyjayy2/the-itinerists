@@ -30,6 +30,7 @@ const trip = {
 
 describe('HomeComponent (hidden pages)', () => {
   let hidden: WritableSignal<string[]>;
+  let financeEntries: WritableSignal<any[]>;
   let firestoreUser: WritableSignal<any>;
   let activeMembers: ReturnType<typeof signal<any[]>>;
   let survey: { config: WritableSignal<any>; text: WritableSignal<any>; view: WritableSignal<string>; pending: WritableSignal<boolean>; popupOpen: WritableSignal<boolean>; take: jasmine.Spy; closePopup: jasmine.Spy; dismissBanner: jasmine.Spy };
@@ -37,6 +38,7 @@ describe('HomeComponent (hidden pages)', () => {
 
   beforeEach(async () => {
     hidden = signal<string[]>([]);
+    financeEntries = signal<any[]>([]);
     // homeLayout is honoured only for picker accounts (layoutPicker).
     activeMembers = signal<any[]>([]);
     survey = {
@@ -66,7 +68,7 @@ describe('HomeComponent (hidden pages)', () => {
         { provide: FlightCountdownService, useValue: {} },
         { provide: FlightsService,   useValue: { flights: signal([]), loaded: signal(true) } },
         { provide: ItineraryService, useValue: { items: signal([]), loaded: signal(true) } },
-        { provide: FinanceService,   useValue: { entries: signal([]) } },
+        { provide: FinanceService,   useValue: { entries: financeEntries } },
         { provide: PackingService,   useValue: { items: signal([]) } },
         { provide: WeatherService,   useValue: { weather: signal({}), loadMany: () => {} } },
         { provide: StaysService,     useValue: { stays: signal([]) } },
@@ -214,6 +216,23 @@ describe('HomeComponent (hidden pages)', () => {
     const el = render().nativeElement as HTMLElement;
     expect(el.querySelector('.confirm-nudge')).not.toBeNull();
     expect(el.querySelector('.survey-nudge')).toBeNull();
+  });
+
+  it('the expenses widget never adds different currencies together (#409)', () => {
+    const e = (amount: number, currency: string) => ({ id: currency, date: '2026-10-02', description: 'x', amount, currency, paidBy: 'Alayna', splitAmong: 'All', category: 'Food', addedByUid: 'me', createdAt: 1 });
+    financeEntries.set([e(300, 'EUR'), e(12, 'USD')]);
+    const el = render().nativeElement as HTMLElement;
+    const widget = el.querySelector('[data-widget="finance"]')!.textContent!;
+    expect(widget).toContain('€300.00 + $12.00 tracked so far');
+    expect(widget).not.toContain('312');
+    expect(widget).not.toMatch(/You('re owed| owe)/);   // a single balance would mix currencies: Finance converts properly
+  });
+
+  it('the expenses widget keeps the balance when everything is in the trip currency', () => {
+    const e = (amount: number) => ({ id: String(amount), date: '2026-10-02', description: 'x', amount, currency: 'EUR', paidBy: 'Alayna', splitAmong: 'All', category: 'Food', addedByUid: 'me', createdAt: 1 });
+    financeEntries.set([e(300)]);
+    const el = render().nativeElement as HTMLElement;
+    expect(el.querySelector('[data-widget="finance"]')!.textContent).toContain('€300.00 tracked so far');
   });
 
   it('shows no survey banner when there is nothing to show', () => {

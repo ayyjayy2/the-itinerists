@@ -1,4 +1,4 @@
-import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare } from './currency';
+import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText } from './currency';
 
 // Frankfurter-style rates table: base = the "to" currency (here EUR), so
 // rates[X] = how many X per 1 EUR. EUR itself is implicitly 1.
@@ -90,5 +90,20 @@ describe('convertShare', () => {
     const r = convertShare(500, 'XYZ', '2026-03-01', ratesByDate, latest, 'EUR');
     expect(r.amount).toBe(500);
     expect(r.estimated).toBe(true);
+  });
+});
+
+describe('perCurrencyText', () => {
+  it('shows one currency as a single amount', () => {
+    expect(perCurrencyText([{ amount: 200, currency: 'EUR' }, { amount: 100, currency: 'EUR' }], 'EUR')).toBe('€300.00');
+  });
+
+  it('keeps currencies apart, the trip\'s own first, never adding them together', () => {
+    const text = perCurrencyText([{ amount: 12, currency: 'USD' }, { amount: 300, currency: 'EUR' }], 'EUR');
+    expect(text).toBe('€300.00 + $12.00');
+  });
+
+  it('shows zero in the trip currency when there is nothing', () => {
+    expect(perCurrencyText([], 'EUR')).toBe('€0.00');
   });
 });
