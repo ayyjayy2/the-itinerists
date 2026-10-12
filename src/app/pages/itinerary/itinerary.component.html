@@ -75,31 +75,32 @@
             </div>
           </div>
 
-          <!-- Flight event banners -->
-          @for (flight of flightEventsForDate(group[0]); track flight.label) {
-            <div class="flight-banner">
-              <span class="flight-ic"><app-icon name="flights" [size]="16" /></span>
-              <span class="flight-time">{{ flight.time | time12 }}@if (flight.zoneLabel) { <span class="flight-zone">{{ flight.zoneLabel }}</span> }</span>
-              <span class="flight-label">{{ flight.label }}</span>
-            </div>
-          }
-
-          <!-- Transportation event banners (rental car / train / bus / ferry …) -->
-          @for (t of transportEventsForDate(group[0]); track t.label) {
-            <div class="transport-banner">
-              <span class="tb-ic"><app-icon [name]="t.icon" [size]="16" /></span>
-              <span class="tb-time">{{ t.time | time12 }}</span>
-              <span class="tb-label">{{ t.label }}</span>
-            </div>
-          }
-
-          <!-- Stay banners (check-in / check-out from the Stays page) -->
-          @for (s of stayEventsForDate(group[0]); track s.label) {
-            <div class="stay-banner">
-              <span class="sb-ic"><app-icon name="stays" [size]="16" /></span>
-              @if (s.time) { <span class="sb-time">{{ s.time | time12 }}</span> }
-              <span class="sb-label">{{ s.label }}</span>
-            </div>
+          <!-- Bookings for the day (flights, transport, stay check-in/out), in time order:
+               the same list the Calendar counts (dayBookings) -->
+          @for (b of dayBookings(group[0]); track b.kind + b.label + b.time) {
+            @switch (b.kind) {
+              @case ('flight') {
+                <div class="flight-banner">
+                  <span class="flight-ic"><app-icon name="flights" [size]="16" /></span>
+                  <span class="flight-time">{{ b.time | time12 }}@if (b.zoneLabel) { <span class="flight-zone">{{ b.zoneLabel }}</span> }</span>
+                  <span class="flight-label">{{ b.label }}</span>
+                </div>
+              }
+              @case ('transport') {
+                <div class="transport-banner">
+                  <span class="tb-ic"><app-icon [name]="b.icon" [size]="16" /></span>
+                  <span class="tb-time">{{ b.time | time12 }}</span>
+                  <span class="tb-label">{{ b.label }}</span>
+                </div>
+              }
+              @case ('stay') {
+                <div class="stay-banner">
+                  <span class="sb-ic"><app-icon name="stays" [size]="16" /></span>
+                  @if (b.time) { <span class="sb-time">{{ b.time | time12 }}</span> }
+                  <span class="sb-label">{{ b.label }}</span>
+                </div>
+              }
+            }
           }
 
           <div class="items-list"
@@ -293,15 +294,22 @@
         <div class="cal-day" [class.selected]="day.isSelected" (click)="openDay(day.date)">
           <div class="cal-day-label">{{ day.label }}</div>
           <div class="cal-day-date">{{ formatDate(day.date) }}</div>
-          <div class="cal-count">{{ day.items.length }} event{{ day.items.length !== 1 ? 's' : '' }}</div>
+          <div class="cal-count">{{ day.count }} event{{ day.count !== 1 ? 's' : '' }}</div>
           <div class="cal-preview">
-            @for (item of day.items.slice(0, 3); track item.id) {
+            <!-- Bookings first (they're fixed), then plans; three in all, then "+N more" -->
+            @for (b of day.bookings.slice(0, 3); track b.kind + b.label + b.time) {
+              <div class="cal-item cal-booking" [attr.data-kind]="b.kind">
+                <app-icon [name]="b.icon" [size]="12" />
+                @if (b.time) { <span class="cal-item-time">{{ b.time | time12 }}@if (b.zoneLabel) { {{ b.zoneLabel }}}</span> · }{{ b.label }}
+              </div>
+            }
+            @for (item of day.previewItems; track item.id) {
               <div class="cal-item" [style.background]="categoryColor(item.category)">
                 @if (item.time) { <span class="cal-item-time">{{ item.time }}</span> · }{{ item.activity }}
               </div>
             }
-            @if (day.items.length > 3) {
-              <div class="cal-more">+{{ day.items.length - 3 }} more</div>
+            @if (day.count > 3) {
+              <div class="cal-more">+{{ day.count - 3 }} more</div>
             }
           </div>
           <div class="cal-edit-hint">Tap to view &amp; edit →</div>

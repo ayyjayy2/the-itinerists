@@ -466,6 +466,17 @@
   }
 }
 
+// Bookings in the Calendar preview use the same tints as their List banners,
+// with an icon, so they read as fixed commitments (not colour alone).
+.cal-booking {
+  display: flex; align-items: center; gap: 0.25rem;
+  color: var(--text);
+  &[data-kind='flight']    { background: var(--lavender-tint); }
+  &[data-kind='transport'] { background: var(--accent-tint); }
+  &[data-kind='stay']      { background: var(--primary-tint); }
+  app-icon { flex-shrink: 0; }
+}
+
 .cal-more {
   font-size: 0.72rem;
   color: var(--text-muted);
