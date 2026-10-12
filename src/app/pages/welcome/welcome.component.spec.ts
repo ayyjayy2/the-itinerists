@@ -31,6 +31,11 @@ describe('WelcomeComponent', () => {
     }
   });
 
+  it('uses no emoji in its own words', () => {
+    const text = render().el.textContent ?? '';
+    expect(/\p{Extended_Pictographic}/u.test(text)).toBeFalse();
+  });
+
   it('points out outfit planning with a handwritten note and an arrow to More', () => {
     const { el } = render();
     expect(el.querySelector('.lede')?.textContent).toContain('outfits');

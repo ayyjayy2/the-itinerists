@@ -1,7 +1,7 @@
 <div class="welcome">
   <header class="welcome-head">
     <app-brand variant="stacked" [mark]="40" />
-    <h1>Plan the trip together ✨</h1>
+    <h1>Plan the trip together</h1>
     <p class="lede">One shared plan for flights, stays, money and packing, plus a place to plan your outfits for every day. No more digging through the group chat.</p>
   </header>
 
@@ -17,7 +17,7 @@
             </div>
             <!-- Outfits live under More: a handwritten nudge pointing at the tab -->
             <p class="outfit-note">
-              <span>Plan your outfits in here! 👗</span>
+              <span>Plan your outfits in here!</span>
               <svg class="arrow" viewBox="0 0 90 70" aria-hidden="true" focusable="false">
                 <path d="M78 6 C 84 26, 72 44, 50 52 C 38 56, 24 58, 12 60" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
                 <path d="M22 50 L 10 60 L 23 67" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
@@ -41,7 +41,7 @@
     <p class="kicker">iPhone app</p>
     <h2>Coming soon</h2>
     @if (joined()) {
-      <p class="joined">You're on the list. We'll email you when the app is out. 🎉</p>
+      <p class="joined">You're on the list. We'll email you when the app is out.</p>
     } @else {
       <p class="app-sub">Leave your email and we'll tell you when it's in the App Store.</p>
       <form (ngSubmit)="notifyMe()" novalidate>
