@@ -32,7 +32,7 @@ describe('HomeComponent (hidden pages)', () => {
   let hidden: WritableSignal<string[]>;
   let firestoreUser: WritableSignal<any>;
   let activeMembers: ReturnType<typeof signal<any[]>>;
-  let survey: { config: WritableSignal<any>; view: WritableSignal<string>; pending: WritableSignal<boolean>; popupOpen: WritableSignal<boolean>; take: jasmine.Spy; closePopup: jasmine.Spy; dismissBanner: jasmine.Spy };
+  let survey: { config: WritableSignal<any>; text: WritableSignal<any>; view: WritableSignal<string>; pending: WritableSignal<boolean>; popupOpen: WritableSignal<boolean>; take: jasmine.Spy; closePopup: jasmine.Spy; dismissBanner: jasmine.Spy };
   let confirmStub: { waiting: ReturnType<typeof signal<string>>; sentAt: ReturnType<typeof signal<number>>; send: jasmine.Spy };
 
   beforeEach(async () => {
@@ -41,6 +41,7 @@ describe('HomeComponent (hidden pages)', () => {
     activeMembers = signal<any[]>([]);
     survey = {
       config: signal({ id: 's1', active: true, url: 'https://example.com/form', title: 'Hi, I made this', body: 'How did it go?', bannerText: 'Got 5 minutes?' }),
+      text: signal({ title: 'Hi, I made this', body: 'How did Berlin go?', bannerText: 'Got 5 minutes? Tell me how Berlin went.' }),
       view: signal('none'), pending: signal(false), popupOpen: signal(false),
       take: jasmine.createSpy('take'), closePopup: jasmine.createSpy('closePopup'), dismissBanner: jasmine.createSpy('dismissBanner'),
     };
@@ -185,7 +186,7 @@ describe('HomeComponent (hidden pages)', () => {
     survey.view.set('banner'); survey.pending.set(true);
     const el = render().nativeElement as HTMLElement;
     const banner = el.querySelector('.survey-nudge')!;
-    expect(banner.textContent).toContain('Got 5 minutes?');
+    expect(banner.textContent).toContain('Got 5 minutes? Tell me how Berlin went.');
     expect(banner.querySelector<HTMLAnchorElement>('a.btn')!.href).toBe('https://example.com/form');
     (banner.querySelector('button[aria-label="Not now"]') as HTMLButtonElement).click();
     expect(survey.dismissBanner).toHaveBeenCalled();

@@ -4,11 +4,12 @@ import { SurveyPopupComponent } from './survey-popup.component';
 import { SurveyService } from '../../services/survey.service';
 
 describe('SurveyPopupComponent', () => {
-  let survey: { config: WritableSignal<any>; popupOpen: WritableSignal<boolean>; take: jasmine.Spy; closePopup: jasmine.Spy };
+  let survey: { config: WritableSignal<any>; text: WritableSignal<any>; popupOpen: WritableSignal<boolean>; take: jasmine.Spy; closePopup: jasmine.Spy };
 
   beforeEach(() => {
     survey = {
-      config: signal({ id: 's1', active: true, url: 'https://example.com/form', title: 'Hi, I made this', body: 'How did it go?', bannerText: 'Got 5 minutes?' }),
+      config: signal({ id: 's1', active: true, url: 'https://example.com/form', title: 'Hi, I made this', body: 'How did {trip} go?', bannerText: 'Got 5 minutes?' }),
+      text: signal({ title: 'Hi, I made this', body: 'How did Berlin go?', bannerText: 'Got 5 minutes?' }),
       popupOpen: signal(false),
       take: jasmine.createSpy('take'), closePopup: jasmine.createSpy('closePopup'),
     };
@@ -28,12 +29,13 @@ describe('SurveyPopupComponent', () => {
     expect(render().querySelector('.survey-popup')).toBeNull();
   });
 
-  it('shows the wording, a link to the survey and a close button', () => {
+  it('shows the wording with their trip filled in, a link to the survey and a close button', () => {
     survey.popupOpen.set(true);
     const pop = render().querySelector('.survey-popup')!;
     expect(pop.getAttribute('role')).toBe('dialog');
     expect(pop.textContent).toContain('Hi, I made this');
-    expect(pop.textContent).toContain('How did it go?');
+    expect(pop.textContent).toContain('How did Berlin go?');
+    expect(pop.textContent).not.toContain('{trip}');
     const link = pop.querySelector<HTMLAnchorElement>('a.btn')!;
     expect(link.href).toBe('https://example.com/form');
     expect(link.target).toBe('_blank');

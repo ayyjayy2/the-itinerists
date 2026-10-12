@@ -10,13 +10,13 @@ import { SurveyService } from '../../services/survey.service';
   selector: 'app-survey-popup',
   standalone: true,
   template: `
-    @if (survey.popupOpen() && survey.config(); as config) {
+    @if (survey.popupOpen() && survey.config() && survey.text(); as text) {
       <div class="modal-backdrop" (click)="survey.closePopup()">
         <div class="survey-popup" role="dialog" aria-modal="true" aria-labelledby="survey-title" (click)="$event.stopPropagation()">
           <button class="survey-close" type="button" (click)="survey.closePopup()" aria-label="Close">✕</button>
-          <h2 id="survey-title">{{ config.title }}</h2>
-          <p class="survey-body">{{ config.body }}</p>
-          <a class="btn btn-primary" [href]="config.url" target="_blank" rel="noopener" (click)="survey.take()">Take the survey</a>
+          <h2 id="survey-title">{{ text.title }}</h2>
+          <p class="survey-body">{{ text.body }}</p>
+          <a class="btn btn-primary" [href]="survey.config()!.url" target="_blank" rel="noopener" (click)="survey.take()">Take the survey</a>
         </div>
       </div>
     }

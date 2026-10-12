@@ -1,4 +1,4 @@
-import { SurveyConfig, SurveyProgress } from '../models/trip.models';
+import { SurveyConfig, SurveyProgress, TripDoc } from '../models/trip.models';
 
 /** Closing the Home banner this many times ends the invitation for good. */
 export const SURVEY_BANNER_MAX_DISMISSALS = 3;
@@ -41,4 +41,22 @@ export const SURVEY_NEW_VISIT_AFTER_MS = 30 * 60_000;
 /** Was the app away (hidden since `hiddenAt`) long enough that returning `now` is a new visit? */
 export function isNewVisit(hiddenAt: number | null, now: number): boolean {
   return hiddenAt !== null && now - hiddenAt >= SURVEY_NEW_VISIT_AFTER_MS;
+}
+
+/**
+ * The place to name in the survey wording: the city of the person's most
+ * recently finished trip ("Berlin, Germany" → "Berlin"), or the trip's name
+ * when it has no destination. Null when they have no finished trip.
+ */
+export function surveyTripPlace(trips: TripDoc[], todayISO: string): string | null {
+  const done = trips.filter(t => t.endDate && t.endDate < todayISO)
+    .sort((a, b) => b.endDate.localeCompare(a.endDate));
+  if (!done.length) return null;
+  const city = (done[0].destination ?? '').split(',')[0].trim();
+  return city || done[0].name || null;
+}
+
+/** Fill the `{trip}` placeholder in the survey wording: their trip, or "your trip". */
+export function fillSurveyText(text: string, place: string | null): string {
+  return text.split('{trip}').join(place ?? 'your trip');
 }
