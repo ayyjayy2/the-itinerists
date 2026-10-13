@@ -21,7 +21,7 @@ export const APP_PAGES = [
   { path: '/trips/new',      label: 'New trip' },
   { path: '/trip-settings',  label: 'Trip Settings' },
   { path: '/profile',        label: 'Profile' },
-  { path: '/admin',          label: 'Admin (members & invites)' },
+  { path: '/admin',          label: 'Admin' },
   { path: '/get-started',    label: 'Get started' },
   { path: '/join',           label: 'Join a trip' },
   { path: '/privacy',        label: 'Privacy policy' },

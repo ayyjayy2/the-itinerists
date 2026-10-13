@@ -271,7 +271,7 @@ for (const chart of ['perHour', 'byHour', 'perDay', 'visitMinutes', 'visitPages'
   el.addEventListener('pointerleave', hideTip);
   el.addEventListener('click', ev => { const c = ev.target.closest('.col'); if (c) showTip(chart, Number(c.dataset.i)); });
 }
-document.addEventListener('pointerdown', ev => { if (!ev.target.closest('.bars, .hbars, #tip')) hideTip(); });
+document.addEventListener('pointerdown', ev => { if (!ev.target.closest('.bars, #tip')) hideTip(); });
 
 // ── helpers ────────────────────────────────────────────────────────────────
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -539,14 +539,11 @@ function render() {
   // The moment of signing in is recorded while the address still says /login: not a visit.
   const pageViews = S.pageVisits(rows, APP_PAGES, SIGNED_OUT_PAGES);
   const maxVisits = Math.max(1, ...pageViews.map(v => v.views));
-  tip.html.set('pageVisits', pageViews.map(v =>
-    `<strong>${esc(v.label)}</strong> <span class="muted">${esc(v.page)}</span><br>${v.views} ${v.views === 1 ? 'visit' : 'visits'} · ${v.users} ${v.users === 1 ? 'person' : 'people'}`));
-  $('pageVisits').innerHTML = pageViews.map((v, i) => `
-    <div class="col${v.views === 0 ? ' zero' : ''}" data-i="${i}" tabindex="0" aria-label="${esc(v.label)}: ${v.views} ${v.views === 1 ? 'visit' : 'visits'}">
-      <span class="lbl">${esc(v.label)}</span>
-      <span class="track"><span class="bar" style="width:${(v.views / maxVisits) * 100}%"></span></span>
-      <span class="n num">${v.views}</span>
-    </div>`).join('');
+  bars('pageVisits', pageViews.map(v => ({
+    value: v.views,
+    tip: `<strong>${esc(v.label)}</strong> <span class="muted">${esc(v.page)}</span><br>${v.views} ${v.views === 1 ? 'visit' : 'visits'} · ${v.users} ${v.users === 1 ? 'person' : 'people'}`,
+  })), maxVisits, { valueLabel: true, tick: (_, i) => pageViews[i].label });
+  for (const [i, v] of pageViews.entries()) if (!v.views) $('pageVisits').querySelector(`.col[data-i="${i}"]`)?.classList.add('zero');
 
   // People
   const people = S.peopleStats(rows, state.zone);
