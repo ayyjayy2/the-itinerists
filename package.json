@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^20.3.0",
-    "@angular/cli": "^20.3.0",
+    "@angular/cli": "^20.3.39",
     "@angular/compiler-cli": "^20.3.33",
     "@capacitor/cli": "^8.5.2",
     "@firebase/rules-unit-testing": "^5.0.1",
