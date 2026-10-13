@@ -349,6 +349,19 @@ await t('admin lists the list', 'deny', () => getDocs(collection(admin, '_waitli
 await t('anon edits an entry', 'deny', () => updateDoc(doc(anon, '_waitlist', 'w1'), { email: 'x@y.io' }));
 await t('anon deletes an entry', 'deny', () => deleteDoc(doc(anon, '_waitlist', 'w1')));
 
+console.log('\nShared paid ticks (trips/T/payments, #448)');
+const paid = (db, id = 'Bob__Alice__e1') => doc(db, 'trips', 'T', 'payments', id);
+const mark = (uid, extra = {}) => ({ from: 'Bob', to: 'Alice', itemId: 'e1', markedBy: uid, at: serverTimestamp(), ...extra });
+await t('member marks a debt item paid', 'allow', () => setDoc(paid(bob), mark('bob')));
+await t('member marks it paid in someone else\'s name', 'deny', () => setDoc(paid(bob), mark('alice')));
+await t('mark with extra fields', 'deny', () => setDoc(paid(bob), mark('bob', { amount: 5 })));
+await t('mark with a client timestamp', 'deny', () => setDoc(paid(bob), mark('bob', { at: new Date(Date.now() - 60_000) })));
+await t('non-member marks a debt paid', 'deny', () => setDoc(paid(carol), mark('carol')));
+await t('member reads the paid marks', 'allow', async () => { await testEnv.withSecurityRulesDisabled(c => setDoc(paid(c.firestore()), { ...mark('bob'), at: new Date() })); return getDocs(collection(alice, 'trips', 'T', 'payments')); });
+await t('non-member reads the paid marks', 'deny', async () => { await testEnv.withSecurityRulesDisabled(c => setDoc(paid(c.firestore()), { ...mark('bob'), at: new Date() })); return getDocs(collection(carol, 'trips', 'T', 'payments')); });
+await t('member unmarks (deletes) a paid mark', 'allow', async () => { await testEnv.withSecurityRulesDisabled(c => setDoc(paid(c.firestore()), { ...mark('alice'), at: new Date() })); return deleteDoc(paid(bob)); });
+await t('member edits a paid mark', 'deny', async () => { await testEnv.withSecurityRulesDisabled(c => setDoc(paid(c.firestore()), { ...mark('bob'), at: new Date() })); return updateDoc(paid(bob), { to: 'Carol' }); });
+
 console.log('\nAccount deletion records (_deletions, #452)');
 const del = (uid, extra = {}) => ({ uid, at: serverTimestamp(), accountCreatedAt: 1_780_000_000_000, trips: 2, lastTripEnd: '2026-10-09', test: false, ...extra });
 await t('person records their own deletion', 'allow', () => setDoc(doc(carol, '_deletions', 'carol'), del('carol')));
