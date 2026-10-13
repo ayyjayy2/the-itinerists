@@ -268,12 +268,17 @@ await t('member lists everyone’s packing lists', 'deny', () => getDocs(collect
 await t('trip owner deletes a left-behind packing list (purge)', 'allow', () => deleteDoc(doc(alice, 'trips', 'T', 'packing', 'bob')));
 
 console.log('\nShared/misc collections');
-await t('signed-in reads geocache', 'allow', () => getDoc(doc(bob, 'geocache', 'g1')));
-await t('anon reads geocache', 'deny', () => getDoc(doc(anon, 'geocache', 'g1')));
-await t('signed-in adds a place to the geocache', 'allow', () => setDoc(doc(bob, 'geocache', 'g1'), { entries: { 'berlin|tv tower': { lat: 52.5, lng: 13.4 } } }, { merge: true }));
-await t('signed-in changes a cached place', 'deny', () => setDoc(doc(bob, 'geocache', 'g1'), { entries: { 'berlin|alex': { lat: 0, lng: 0 } } }, { merge: true }));
-await t('signed-in wipes the geocache', 'deny', () => setDoc(doc(bob, 'geocache', 'g1'), { entries: {} }));
-await t('signed-in writes arbitrary data to geocache', 'deny', () => setDoc(doc(bob, 'geocache', 'g2'), { x: 2 }));
+// #356: the old shared cache held every trip's place names; it is closed. Each trip keeps its own.
+await t('signed-in reads the old shared geocache', 'deny', () => getDoc(doc(bob, 'geocache', 'g1')));
+await t('signed-in lists the old shared geocache', 'deny', () => getDocs(collection(bob, 'geocache')));
+await t('signed-in adds to the old shared geocache', 'deny', () => setDoc(doc(bob, 'geocache', 'g1'), { entries: { 'berlin|tv tower': { lat: 52.5, lng: 13.4 } } }, { merge: true }));
+const tripGeo = (db) => doc(db, 'trips', 'T', 'geocache', 'places');
+await t('member adds places to their trip cache', 'allow', () => setDoc(tripGeo(bob), { entries: { 'lisbon|alfama': { lat: 38.71, lng: -9.13 } } }, { merge: true }));
+await t('member reads their trip cache', 'allow', async () => { await testEnv.withSecurityRulesDisabled(c => setDoc(tripGeo(c.firestore()), { entries: { 'lisbon|alfama': { lat: 38.71, lng: -9.13 } } })); return getDoc(tripGeo(bob)); });
+await t('non-member reads a trip cache', 'deny', async () => { await testEnv.withSecurityRulesDisabled(c => setDoc(tripGeo(c.firestore()), { entries: { 'lisbon|alfama': { lat: 38.71, lng: -9.13 } } })); return getDoc(tripGeo(carol)); });
+await t('non-member writes a trip cache', 'deny', () => setDoc(tripGeo(carol), { entries: { 'lisbon|x': { lat: 1, lng: 1 } } }, { merge: true }));
+await t('member writes other fields to a trip cache', 'deny', () => setDoc(tripGeo(bob), { entries: {}, note: 'x' }));
+await t('member deletes the trip cache (trip teardown)', 'allow', async () => { await testEnv.withSecurityRulesDisabled(c => setDoc(tripGeo(c.firestore()), { entries: {} })); return deleteDoc(tripGeo(bob)); });
 const appLog = (extra = {}) => ({ timestamp: new Date().toISOString(), type: 'js_error', message: 'boom', url: '/home', sessionId: 's1', ...extra });
 await t('anon creates _appLogs', 'allow', () => setDoc(doc(anon, '_appLogs', 'l2'), appLog({ stack: 'at x' })));
 await t('_appLogs with an extra field', 'deny', () => setDoc(doc(anon, '_appLogs', 'l2'), appLog({ data: 'x' })));
