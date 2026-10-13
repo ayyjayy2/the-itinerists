@@ -134,8 +134,8 @@
               @if (stay.bookingRef) {
                 <span class="chip chip-muted">Ref: {{ stay.bookingRef }}</span>
               }
-              @if (stay.link) {
-                <a class="chip chip-muted link-chip" [href]="stay.link" target="_blank" rel="noopener"><app-icon name="link" [size]="13" /> Booking</a>
+              @if (safeLink(stay.link); as href) {
+                <a class="chip chip-muted link-chip" [href]="href" target="_blank" rel="noopener"><app-icon name="link" [size]="13" /> Booking</a>
               }
               @if (stay.forWho !== 'All') {
                 <span class="chip chip-highlight">{{ stay.forWho }}</span>

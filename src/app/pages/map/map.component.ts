@@ -3,6 +3,7 @@ import {
   inject, signal, computed, effect, untracked, viewChild, NgZone
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { html, safeColor } from '../../utils/html';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
@@ -417,7 +418,7 @@ export class MapComponent implements OnDestroy {
 
       const short = leg.destination.split(',')[0].trim();
       const dates = `${this.formatDate(leg.startDate)} – ${this.formatDate(leg.endDate)}`;
-      const popup = `
+      const popup = html`
         <div style="min-width:150px;font-family:'Nunito',sans-serif;">
           <div style="font-weight:800;font-size:13px;color:#1a4a2e;padding-bottom:5px;
                       border-bottom:2px solid #2E6F4E;">📍 Stop ${i + 1}: ${short}</div>
@@ -425,7 +426,7 @@ export class MapComponent implements OnDestroy {
         </div>`;
 
       L.marker([coords.lat, coords.lng], { icon: destPinIcon(i + 1) })
-        .bindPopup(popup)
+        .bindPopup(String(popup))
         .addTo(this.destLayer);
       bounds.push([coords.lat, coords.lng]);
     }
@@ -716,7 +717,7 @@ export class MapComponent implements OnDestroy {
       }
 
       // Pin at arrival airport with full flight details
-      const popup = `
+      const popup = html`
         <div style="min-width:180px;max-width:230px;font-family:'Nunito',sans-serif;">
           <div style="font-weight:800;font-size:13px;margin-bottom:6px;color:#1a4a2e;
                       padding-bottom:5px;border-bottom:2px solid #94A3B8;">
@@ -728,13 +729,13 @@ export class MapComponent implements OnDestroy {
             <b>Departs:</b> ${this.formatDate(flight.departureDate)} ${flight.departureTime}<br>
             <b>Arrives:</b> ${this.formatDate(flight.arrivalDate)} ${flight.arrivalTime}
           </div>
-          ${flight.notes ? `<div style="font-size:11px;color:#888;margin-top:4px;">${flight.notes}</div>` : ''}
+          ${flight.notes ? html`<div style="font-size:11px;color:#888;margin-top:4px;">${flight.notes}</div>` : ''}
         </div>`;
 
       if (toCoords) {
         const key = `flight:${routeKey}:${flight.flightNumber}`;
         const marker = L.marker([toCoords.lat, toCoords.lng], { icon: flightPinIcon() })
-          .bindPopup(popup, { maxWidth: 240 });
+          .bindPopup(String(popup), { maxWidth: 240 });
         marker.addTo(this.flightLayer);
         this.markerByKey.set(key, marker);
         entries.push({
@@ -796,25 +797,25 @@ export class MapComponent implements OnDestroy {
       const coords = this.geocodedLocations.get(location);
       if (!coords) continue;
 
-      const rows = locItems.map(it => `
+      const rows = locItems.map(it => html`
         <div style="margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid #eee;">
           <div style="font-size:11px;color:#888;margin-bottom:2px;">
             ${this.formatDate(it.date)}${it.time ? ' · ' + it.time : ''}
           </div>
           <div style="font-weight:700;font-size:13px;line-height:1.3;">${it.activity}</div>
-          ${it.notes ? `<div style="font-size:11px;color:#666;margin-top:2px;">${it.notes}</div>` : ''}
-        </div>`).join('');
+          ${it.notes ? html`<div style="font-size:11px;color:#666;margin-top:2px;">${it.notes}</div>` : ''}
+        </div>`);
 
       const num = day ? locationOrder.get(location) : undefined;
       const cat = locItems[0]?.category ?? '';
       const key = `itin:${location}`;
       const marker = L.marker([coords.lat, coords.lng], { icon: itinPinIcon(catColor(cat), num) })
-        .bindPopup(`
+        .bindPopup(String(html`
           <div style="min-width:190px;max-width:250px;font-family:'Nunito',sans-serif;">
             <div style="font-weight:800;font-size:13px;margin-bottom:8px;color:#1a4a2e;
                         padding-bottom:6px;border-bottom:2px solid #8BAF7C;">📍 ${location}</div>
             ${rows}
-          </div>`, { maxWidth: 260 });
+          </div>`), { maxWidth: 260 });
       marker.addTo(this.itinLayer);
       this.markerByKey.set(key, marker);
       const extra = locItems.length - 1;
@@ -853,7 +854,7 @@ export class MapComponent implements OnDestroy {
       const coords = this.geocodedLocations.get(acc.address);
       if (!coords) continue;
 
-      const popup = `
+      const popup = html`
         <div style="min-width:180px;max-width:230px;font-family:'Nunito',sans-serif;">
           <div style="font-weight:800;font-size:13px;margin-bottom:6px;color:#1a4a2e;
                       padding-bottom:5px;border-bottom:2px solid #B96A76;">
@@ -863,13 +864,13 @@ export class MapComponent implements OnDestroy {
             Check-in: ${this.formatDate(acc.checkIn)}<br>
             Check-out: ${this.formatDate(acc.checkOut)}
           </div>
-          ${acc.bookingRef ? `<div style="font-size:11px;color:#666;margin-top:4px;">Ref: ${acc.bookingRef}</div>` : ''}
-          ${acc.notes ? `<div style="font-size:11px;color:#666;margin-top:4px;">${acc.notes}</div>` : ''}
+          ${acc.bookingRef ? html`<div style="font-size:11px;color:#666;margin-top:4px;">Ref: ${acc.bookingRef}</div>` : ''}
+          ${acc.notes ? html`<div style="font-size:11px;color:#666;margin-top:4px;">${acc.notes}</div>` : ''}
         </div>`;
 
       const key = `stay:${acc.address}`;
       const marker = L.marker([coords.lat, coords.lng], { icon: accomPinIcon('#B96A76') })
-        .bindPopup(popup, { maxWidth: 240 });
+        .bindPopup(String(popup), { maxWidth: 240 });
       marker.addTo(this.accomLayer);
       this.markerByKey.set(key, marker);
       entries.push({
@@ -902,21 +903,21 @@ export class MapComponent implements OnDestroy {
         const coords = this.geocodedLocations.get(leg.loc);
         if (!coords) continue;
 
-        const popup = `
+        const popup = html`
           <div style="min-width:180px;max-width:230px;font-family:'Nunito',sans-serif;">
             <div style="font-weight:800;font-size:13px;margin-bottom:6px;color:#1a4a2e;
                         padding-bottom:5px;border-bottom:2px solid ${color};">
               ${t.mode || 'Rental Car'} · ${t.company}
             </div>
             <div style="font-size:11px;color:#555;line-height:1.6;">
-              <b>${leg.verb}:</b> ${leg.loc}${leg.date ? '<br>' + this.formatDate(leg.date) + (leg.time ? ' · ' + leg.time : '') : ''}
+              <b>${leg.verb}:</b> ${leg.loc}${leg.date ? html`<br>${this.formatDate(leg.date)}${leg.time ? ' · ' + leg.time : ''}` : ''}
             </div>
-            ${t.notes ? `<div style="font-size:11px;color:#888;margin-top:4px;">${t.notes}</div>` : ''}
+            ${t.notes ? html`<div style="font-size:11px;color:#888;margin-top:4px;">${t.notes}</div>` : ''}
           </div>`;
 
         const key = `transport:${t.company}:${leg.k}`;
         const marker = L.marker([coords.lat, coords.lng], { icon: transportPinIcon(color) })
-          .bindPopup(popup, { maxWidth: 240 });
+          .bindPopup(String(popup), { maxWidth: 240 });
         marker.addTo(this.transportLayer);
         this.markerByKey.set(key, marker);
         entries.push({
@@ -939,11 +940,11 @@ export class MapComponent implements OnDestroy {
     );
 
     for (const pin of pins) {
-      const adderColor = users.find(u => u.name === pin.addedBy)?.color ?? '#8BAF7C';
+      const adderColor = safeColor(users.find(u => u.name === pin.addedBy)?.color, '#8BAF7C');
       const popupId    = `del-pin-${pin.id}`;
       const canDelete  = pin.addedBy === userName;
 
-      const popup = `
+      const popup = html`
         <div style="min-width:180px;max-width:230px;font-family:'Nunito',sans-serif;">
           <div style="font-weight:800;font-size:13px;margin-bottom:6px;color:#1a4a2e;
                       padding-bottom:6px;border-bottom:2px solid ${adderColor};">
@@ -952,16 +953,16 @@ export class MapComponent implements OnDestroy {
           <div style="font-size:11px;color:#888;margin-bottom:4px;">
             ${pin.category}${pin.addedBy ? ' · Added by ' + pin.addedBy : ''}
           </div>
-          ${pin.notes ? `<div style="font-size:12px;color:#555;margin-bottom:6px;">${pin.notes}</div>` : ''}
+          ${pin.notes ? html`<div style="font-size:12px;color:#555;margin-bottom:6px;">${pin.notes}</div>` : ''}
           ${canDelete
-            ? `<button id="${popupId}" style="background:#fee2e2;border:none;border-radius:6px;
+            ? html`<button id="${popupId}" style="background:#fee2e2;border:none;border-radius:6px;
                 padding:4px 10px;font-size:11px;font-weight:700;color:#991b1b;cursor:pointer;
                 font-family:'Nunito',sans-serif;">Remove pin</button>`
             : ''}
         </div>`;
 
       const marker = L.marker([pin.lat, pin.lng], { icon: customPinIcon(adderColor) })
-        .bindPopup(popup, { maxWidth: 250 });
+        .bindPopup(String(popup), { maxWidth: 250 });
       if (canDelete) {
         marker.on('popupopen', () => {
           document.getElementById(popupId)?.addEventListener('click', () => {

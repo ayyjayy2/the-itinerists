@@ -136,7 +136,9 @@ const sortKey = (t: CalTime) => (t.allDay ? Date.parse(t.date + 'T00:00:00Z') : 
 
 // ── iCalendar text (RFC 5545) ─────────────────────────────────────────────────
 
-const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+/** Text values per RFC 5545: escape backslash, semicolon and comma, and turn every line break (CRLF, LF or a lone CR) into "\n",
+ *  so typed text can never start a new line and add calendar properties (#407). */
+const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n');
 const utc = (ms: number) => new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 const day = (iso: string) => iso.replace(/-/g, '');
 const prop = (name: string, t: CalTime) => (t.allDay ? `${name};VALUE=DATE:${day(t.date)}` : `${name}:${utc(t.ms)}`);

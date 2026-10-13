@@ -57,14 +57,28 @@ describe('calendar export', () => {
       { uid: 'stay-1', title: 'Stay', start: { allDay: true, date: '2026-10-01' }, end: { allDay: true, date: '2026-10-06' } },
     ], Date.UTC(2026, 9, 2));
     expect(ics.startsWith('BEGIN:VCALENDAR\r\nVERSION:2.0\r\n')).toBeTrue();
-    expect(ics).toContain('X-WR-CALNAME:Trip\; with\\, commas');
-    expect(ics).toContain('SUMMARY:Dinner\\, drinks\; more');
+    expect(ics).toContain('X-WR-CALNAME:Trip\\; with\\, commas');
+    expect(ics).toContain('SUMMARY:Dinner\\, drinks\\; more');
     expect(ics).toContain('DTSTART:20261008T010000Z');
     expect(ics).toContain('DTSTART;VALUE=DATE:20261001');
     expect(ics).toContain('DTEND;VALUE=DATE:20261006');
     expect(ics).toContain('UID:item-1@theitinerists.com');
     expect(ics.split('\r\n').every(l => new TextEncoder().encode(l).length <= 75)).toBeTrue();
     expect(ics.endsWith('END:VCALENDAR\r\n')).toBeTrue();
+  });
+
+  it('escapes semicolons, commas, backslashes and every kind of line break (RFC 5545), so text cannot add calendar fields (#407)', () => {
+    const ics = buildIcs('Trip', [{
+      uid: 'x', start: { allDay: true, date: '2026-10-01' }, end: { allDay: true, date: '2026-10-02' },
+      title: 'Dinner; drinks, \\ more',
+      description: 'line one\rATTENDEE:mailto:evil@example.com\r\nline two\nline three',
+    }], 0);
+    const unfolded = ics.replace(/\r\n /g, '');        // undo line folding before reading values
+    expect(unfolded).toContain('SUMMARY:Dinner\\; drinks\\, \\\\ more');
+    const lines = unfolded.split('\r\n');
+    expect(lines.some(l => l.startsWith('ATTENDEE'))).toBeFalse();
+    expect(ics).not.toMatch(/\r(?!\n)/);              // no bare carriage return anywhere
+    expect(unfolded).toContain('line one\\nATTENDEE:mailto:evil@example.com\\nline two\\nline three');
   });
 
   it('names the file after the trip', () => {
