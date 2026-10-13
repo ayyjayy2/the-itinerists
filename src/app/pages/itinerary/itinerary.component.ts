@@ -52,6 +52,7 @@ function fallbackWindow(): string[] {
 
 import { FocusTargetDirective } from '../../shared/focus-target.directive';
 import { FocusService, focusDate } from '../../services/focus.service';
+import { timeRangeProblem } from '../../utils/date-range';
 @Component({
   selector: 'app-itinerary',
   imports: [FocusTargetDirective, LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule, DragDropModule, RouterLink, TimeInputComponent, Time12Pipe],
@@ -59,6 +60,9 @@ import { FocusService, focusDate } from '../../services/focus.service';
   styleUrl: './itinerary.component.scss'
 })
 export class ItineraryComponent implements OnInit {
+  /** Same-day end must come after the start (#412); shared by add, edit and the list. */
+  protected readonly timeRangeProblem = timeRangeProblem;
+
   itineraryService  = inject(ItineraryService);
   userService       = inject(UserService);
   usersService      = inject(UsersService);
@@ -413,6 +417,7 @@ export class ItineraryComponent implements OnInit {
 
   async saveEdit(original: ItineraryItemDoc): Promise<void> {
     if (!this.draft.activity?.trim()) return;
+    if (timeRangeProblem(this.draft.time, this.draft.endTime)) return;   // the field says why
     const date = this.draft.date || original.date;
     await this.itineraryService.updateItem(original.id, {
       ...this.draft,
@@ -444,6 +449,7 @@ export class ItineraryComponent implements OnInit {
   async saveAdd(): Promise<void> {
     const date = this.addingToDate();
     if (!date || !this.newDraft.activity?.trim()) return;
+    if (timeRangeProblem(this.newDraft.time, this.newDraft.endTime)) return;   // the field says why
     const dayItems   = this.allItems().filter(i => i.date === date);
     const sortOrder  = dayItems.length;
     await this.itineraryService.addItem({

@@ -121,6 +121,9 @@
                       <span class="item-time">{{ item.time | time12 }}</span>
                       @if (item.endTime) {
                         <span class="item-time item-time-end">– {{ item.endTime | time12 }}</span>
+                        @if (timeRangeProblem(item.time, item.endTime)) {
+                          <button type="button" class="chip chip-gap check-times" (click)="startEdit(item)" title="This ends before it starts">Check the times</button>
+                        }
                       }
                     }
                     <span class="item-dot" [style.background]="categoryColor(item.category)"></span>
@@ -167,7 +170,8 @@
                       </div>
                       <div class="form-group">
                         <label>End time</label>
-                        <app-time-input [(ngModel)]="draft.endTime" label="End time" />
+                        <app-time-input [(ngModel)]="draft.endTime" label="End time" [class.invalid]="!!timeRangeProblem(draft.time, draft.endTime)" />
+                        @if (timeRangeProblem(draft.time, draft.endTime); as err) { <p class="field-error">{{ err }}</p> }
                       </div>
                       <div class="form-group">
                         <label>Category</label>
@@ -210,7 +214,7 @@
                       <button class="btn btn-danger btn-sm" (click)="deleteItem(item)">Delete</button>
                       <span class="actions-spacer"></span>
                       <button class="btn btn-ghost btn-sm"   (click)="cancelEdit()">Cancel</button>
-                      <button class="btn btn-primary btn-sm" (click)="saveEdit(item)">Save</button>
+                      <button class="btn btn-primary btn-sm" (click)="saveEdit(item)" [disabled]="!!timeRangeProblem(draft.time, draft.endTime)">Save</button>
                     </div>
                   </div>
                 }
@@ -231,7 +235,8 @@
                   </div>
                   <div class="form-group">
                     <label>End time</label>
-                    <app-time-input [(ngModel)]="newDraft.endTime" label="End time" />
+                    <app-time-input [(ngModel)]="newDraft.endTime" label="End time" [class.invalid]="!!timeRangeProblem(newDraft.time, newDraft.endTime)" />
+                    @if (timeRangeProblem(newDraft.time, newDraft.endTime); as err) { <p class="field-error">{{ err }}</p> }
                   </div>
                   <div class="form-group">
                     <label>Category</label>
@@ -272,7 +277,7 @@
 
                 <div class="edit-actions">
                   <button class="btn btn-ghost btn-sm" (click)="cancelAdd()">Cancel</button>
-                  <button class="btn btn-primary btn-sm" (click)="saveAdd()">Add Event</button>
+                  <button class="btn btn-primary btn-sm" (click)="saveAdd()" [disabled]="!!timeRangeProblem(newDraft.time, newDraft.endTime)">Add Event</button>
                 </div>
               </div>
             } @else {

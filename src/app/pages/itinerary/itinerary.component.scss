@@ -584,3 +584,7 @@
 }
 
 .outside-hint { margin: 0.3rem 0 0; font-size: 0.8rem; color: var(--accent-dark); }
+
+/* An activity saved before #412 that ends before it starts: a small way back to fix it. */
+.check-times { margin-left: 0.35rem; min-height: 44px; display: inline-flex; align-items: center; border: none; cursor: pointer; font-size: 0.72rem; }
+.chip-gap { background: var(--accent-tint); color: var(--accent-dark); }
