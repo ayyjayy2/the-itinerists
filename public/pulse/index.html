@@ -140,6 +140,16 @@
   .bars.days .col { flex: 0 1 72px; }
   .bars.days .bar { background: var(--accent); }
   @media (prefers-reduced-motion: reduce) { .bars .bar { transition: none; } }
+  /* horizontal bars: page visits (a label, a track, the count) */
+  .hbars { display: grid; gap: 2px; }
+  .hbars .col { display: grid; grid-template-columns: minmax(6.5rem, 11rem) 1fr 2.5rem; align-items: center; gap: 0.6rem; padding: 4px 2px; border-radius: 4px; cursor: default; }
+  .hbars .col:hover, .hbars .col:focus-visible { background: var(--surface-2); outline: none; }
+  .hbars .lbl { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hbars .track { display: block; height: 12px; border-radius: 0 4px 4px 0; background: var(--surface-2); overflow: hidden; }
+  .hbars .bar { display: block; height: 100%; border-radius: 0 4px 4px 0; background: var(--primary); transition: width 0.3s; }
+  .hbars .n { text-align: right; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+  .hbars .zero .lbl, .hbars .zero .n { color: var(--text-muted); }
+  @media (prefers-reduced-motion: reduce) { .hbars .bar { transition: none; } }
 
   /* lists and tables */
   .rows { list-style: none; margin: 0; padding: 0; }
@@ -264,6 +274,12 @@
         <h2>People</h2>
         <ul class="rows" id="people"></ul>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>Page visits <small>every page, busiest first</small></h2>
+      <div class="hbars" id="pageVisits"></div>
+      <p class="hint">Visits are counted once someone is signed in, so the welcome, sign-in, sign-up and password pages aren't listed. Follows the range, trip and Hide choices above. Hover a bar for how many people.</p>
     </div>
 
     <div class="card">

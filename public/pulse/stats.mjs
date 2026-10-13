@@ -386,3 +386,26 @@ export function activityTimeline(rows, writes, zone) {
     writes: { total: d.writes.total, byKind: d.writes.byKind, byPerson: d.writes.byPerson, uids: [...d.writes.uids].sort() },
   }));
 }
+
+/**
+ * Page visits (`page` events) and distinct people for EVERY page in `pages`
+ * (path + label), 0 included, busiest first. A page that isn't in the list
+ * (an old or renamed route) is kept, named by its path, rather than dropped;
+ * pages in `ignore` are left out.
+ */
+export function pageVisits(rows, pages, ignore = []) {
+  const skip = new Set(ignore);
+  const label = new Map(pages.map(p => [p.path, p.label]));
+  const acc = new Map(pages.map(p => [p.path, { views: 0, users: new Set() }]));
+  for (const r of rows) {
+    if (r.type !== 'page' || !r.page) continue;
+    const page = pageName(r.page);
+    if (skip.has(page)) continue;
+    const s = acc.get(page) ?? acc.set(page, { views: 0, users: new Set() }).get(page);
+    s.views++;
+    s.users.add(r.uid);
+  }
+  return [...acc.entries()]
+    .map(([page, s]) => ({ page, label: label.get(page) ?? page, views: s.views, users: s.users.size }))
+    .sort((a, b) => b.views - a.views || b.users - a.users || a.label.localeCompare(b.label));
+}
