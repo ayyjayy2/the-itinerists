@@ -15,6 +15,23 @@
     </div>
   }
 
+  @if (leftOutEntries().length) {
+    <section class="split-gap-notice" aria-label="Expenses that leave people out">
+      @for (gap of leftOutEntries(); track gap.entry.id) {
+        <div class="split-gap">
+          <p>
+            <strong>{{ gap.entry.vendor || gap.entry.description }}</strong> was split before
+            {{ peopleList(gap.missing) }} joined, so {{ peopleList(gap.missing) }} {{ gap.missing.length === 1 ? 'owes' : 'owe' }} nothing for it.
+          </p>
+          <div class="split-gap-actions">
+            <button class="btn btn-primary btn-sm" (click)="splitEquallyWithEveryone(gap.entry)">Split equally with everyone</button>
+            <button class="btn btn-ghost btn-sm" (click)="editLeftOut(gap.entry)">Set amounts</button>
+          </div>
+        </div>
+      }
+    </section>
+  }
+
   <!-- ── Balance Banners ── -->
   @if (settlementsStatus() === 'owed') {
 
@@ -362,6 +379,9 @@
                   <span class="chip" [class.chip-primary]="entry.splitAmong === 'All'" [class.chip-highlight]="entry.splitAmong !== 'All'">
                     {{ entry.splitAmong === 'All' ? 'Everyone' : entry.splitAmong }}
                   </span>
+                  @if (leftOut(entry); as missing) {
+                    @if (missing.length) { <span class="chip chip-gap">Leaves out {{ peopleList(missing) }}</span> }
+                  }
                   @if (safeLink(entry.link); as href) {
                     <a class="entry-link" [href]="href" target="_blank" rel="noopener">🔗</a>
                   }

@@ -20,6 +20,7 @@ const LAST_CURRENCY_PREFIX = 'tripplanner_last_currency_';
 import { FocusTargetDirective } from '../../shared/focus-target.directive';
 import { FocusService } from '../../services/focus.service';
 import { safeLink } from '../../utils/safe-link';
+import { leftOutOfSplit, splitPatch } from '../../utils/split-gaps';
 
 @Component({
   selector: 'app-finance',
@@ -151,6 +152,31 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ratesLoaded() && this.ratesPending() === 0 && this.directDebts().some(d => d.items.some(i => i.estimated)));
   /** "≈ " when settlement figures include converted amounts, else "". */
   approxPrefix(): string { return this.settlementConverted() ? '≈ ' : ''; }
+
+  /** "Everyone" expenses with individual amounts typed before someone joined: who they leave out (#447). */
+  readonly leftOutEntries = computed(() => {
+    const members = this.financeUsers().map(u => u.name);
+    return this.entries()
+      .map(entry => ({ entry, missing: leftOutOfSplit(entry, members) }))
+      .filter(x => x.missing.length > 0);
+  });
+  leftOut(entry: FinanceEntryDoc): string[] {
+    return this.leftOutEntries().find(x => x.entry.id === entry.id)?.missing ?? [];
+  }
+  /** "Split equally with everyone": drop the old individual amounts, so the expense follows the trip. */
+  async splitEquallyWithEveryone(entry: FinanceEntryDoc): Promise<void> {
+    await this.financeService.updateEntry(entry.id, { splitAmong: 'All', splits: null });
+    this.showToast(`✓ "${entry.vendor || entry.description}" is split equally with everyone`);
+  }
+  /** "Set amounts": open the expense in the log, ready to edit, with everyone ticked. */
+  editLeftOut(entry: FinanceEntryDoc): void {
+    this.showExpenses.set(true);
+    this.startEditEntry(entry);
+  }
+  /** "Seneca", "Seneca and Jordan", "Ana, Jo and Sam". */
+  peopleList(names: readonly string[]): string {
+    return names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  }
 
   directDebts = computed((): DirectDebt[] => {
     const userNames = this.financeUsers().map(u => u.name);
@@ -463,18 +489,14 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   async saveEditEntry(id: string): Promise<void> {
     this.editFormSubmitted.set(true);
     if (!this.editEntryDraft.vendor || !this.editEntryDraft.amount || !this.editSplitIsValid) return;
-    const selected = this.financeUsers().filter(u => this.editSplitMap[u.name]).map(u => u.name);
+    const everyone = this.financeUsers().map(u => u.name);
+    const selected = everyone.filter(n => this.editSplitMap[n]);
     const patch: Partial<FinanceEntryDoc> = {
       ...this.editEntryDraft,
       amount:     Number(this.editEntryDraft.amount) || 0,
       link:       safeLink(this.editEntryDraft.link) ?? '',
-      splitAmong: selected.length === this.financeUsers().length ? 'All' : selected.join(', '),
+      ...splitPatch(this.editSplitMode(), selected, this.editIndivSplits, everyone),
     };
-    if (this.editSplitMode() === 'individual') {
-      patch.splits = Object.fromEntries(selected.map(n => [n, Number(this.editIndivSplits[n]) || 0]));
-    } else {
-      patch.splits = undefined;
-    }
     await this.financeService.updateEntry(id, patch);
     this.editingEntryId.set(null);
   }
