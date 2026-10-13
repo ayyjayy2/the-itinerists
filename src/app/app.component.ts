@@ -7,8 +7,8 @@ import { LoadingComponent } from './shared/loading/loading.component';
 import { BusyBarComponent } from './shared/loading/busy-bar.component';
 import { Capacitor } from '@capacitor/core';
 import { SplashScreen } from '@capacitor/splash-screen';
-import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
+import { AppUpdateService } from './services/app-update.service';
 import { UserService } from './services/user.service';
 import { isStaleChunkError } from './utils/chunk-error';
 import { DataService } from './services/data.service';
@@ -61,7 +61,7 @@ export class AppComponent implements OnInit {
   themeService  = inject(ThemeService);   // constructed early so the theme applies on load (DP2-4)
   private usage = inject(UsageService);   // records page views for the admin Activity page
   router        = inject(Router);
-  private swUpdate = inject(SwUpdate);
+  private appUpdate = inject(AppUpdateService);
 
   readonly version   = APP_VERSION;
   readonly isDemo    = DEMO;
@@ -258,14 +258,8 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Auto-apply new service worker versions so deploys take effect on next reload
-    if (this.swUpdate.isEnabled) {
-      this.swUpdate.versionUpdates.pipe(
-        filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
-      ).subscribe(() => {
-        this.swUpdate.activateUpdate().then(() => window.location.reload());
-      });
-    }
+    // New versions: checked at launch and on every return to the screen, applied when nobody is typing
+    this.appUpdate.start();
   }
 
   isAuthPage(): boolean {

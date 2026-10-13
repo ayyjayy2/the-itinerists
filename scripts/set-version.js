@@ -30,6 +30,9 @@ fs.writeFileSync(path.join(root, 'src/version.ts'),
   `export const APP_VERSION = '${VERSION}';\n` +
   `export const APP_BUILD = '${build}';\n` +
   `export const APP_BUILD_DATE = '${buildDate}';\n`);
+// The live build number, which an open app reads when it comes back on screen
+// to see whether it should refresh (src/app/services/app-update.service.ts).
+fs.writeFileSync(path.join(root, 'public/version.json'), JSON.stringify({ build }) + '\n');
 console.log(`[version] ${VERSION} (${build}) — ${buildDate}`);
 
 if (process.argv.includes('--ios')) {
