@@ -2,8 +2,9 @@ import { Injectable, ErrorHandler, inject } from '@angular/core';
 import { Firestore, collection, addDoc } from '@angular/fire/firestore';
 import { LocalCacheService } from './local-cache.service';
 import { CrashReporterService } from './crash-reporter.service';
+import { cspViolationMessage } from '../utils/csp-violation';
 
-type LogType = 'js_error' | 'http_error' | 'firebase_error' | 'write_spike';
+type LogType = 'js_error' | 'http_error' | 'firebase_error' | 'write_spike' | 'csp_violation';
 
 interface AppLog {
   timestamp: string;   // ISO 8601 UTC
@@ -40,6 +41,24 @@ export class ErrorLoggerService {
   // Threshold: more than this many Firestore writes in 60 seconds flags as suspicious.
   // Set at 45 to comfortably accommodate rapid editing sessions from laptop/phone.
   private readonly SPIKE_THRESHOLD = 45;
+
+  /** Each blocked rule + host once per session (#445). */
+  private readonly cspSeen = new Set<string>();
+
+  constructor() {
+    // The Content-Security-Policy blocked something (on the web from the hosting
+    // header, in the iPhone app from the page's own policy): note it, so a
+    // policy that's too tight shows up in the log instead of failing quietly.
+    if (typeof document !== 'undefined') {
+      document.addEventListener('securitypolicyviolation', e => {
+        const message = cspViolationMessage(e);
+        if (this.cspSeen.has(message)) return;
+        this.cspSeen.add(message);
+        console.warn('[CSP]', message);
+        this.writeLog({ type: 'csp_violation', message });
+      });
+    }
+  }
 
   /**
    * Call this from every service-layer Firestore write so the rate can be tracked.

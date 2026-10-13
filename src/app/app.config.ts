@@ -9,7 +9,7 @@ import { provideAuth, getAuth, initializeAuth, indexedDBLocalPersistence } from 
 import { Capacitor } from '@capacitor/core';
 import { FirebaseCrashlytics } from '@capacitor-firebase/crashlytics';
 import { CRASH_REPORTER_PLUGIN, CRASH_REPORTER_NATIVE } from './services/crash-reporter.service';
-import { provideAppCheck, initializeAppCheck, ReCaptchaV3Provider, getToken } from '@angular/fire/app-check';
+import { provideAppCheck, initializeAppCheck, ReCaptchaV3Provider, CustomProvider, getToken } from '@angular/fire/app-check';
 import { provideAnalytics, initializeAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
 import { DEMO } from './demo-flag';
 
@@ -66,7 +66,12 @@ export const appConfig: ApplicationConfig = {
               environment.appCheckDebugToken || true;
           }
           const appCheck = initializeAppCheck(getApp(), {
-            provider: new ReCaptchaV3Provider(environment.recaptchaSiteKey),
+            // In the iPhone app the debug token is what gets exchanged; a reCAPTCHA
+            // provider would still load Google's script, which the app's own
+            // Content-Security-Policy blocks (#445). This one is never asked.
+            provider: NATIVE
+              ? new CustomProvider({ getToken: () => Promise.reject(new Error('App Check uses the debug token in the iPhone app')) })
+              : new ReCaptchaV3Provider(environment.recaptchaSiteKey),
             isTokenAutoRefreshEnabled: true,
           });
           // Fetch the token now, while the sign-in screen is up, instead of on

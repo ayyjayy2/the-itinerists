@@ -90,7 +90,7 @@ service cloud.firestore {
     // used to store arbitrary data.
     match /_appLogs/{log} {
       allow create: if request.resource.data.keys().hasOnly(['timestamp', 'type', 'message', 'stack', 'url', 'sessionId'])
-        && request.resource.data.type in ['js_error', 'http_error', 'firebase_error', 'write_spike']
+        && request.resource.data.type in ['js_error', 'http_error', 'firebase_error', 'write_spike', 'csp_violation']
         && shortString(request.resource.data.message, 2000)
         && shortString(request.resource.data.get('stack', ''), 600)
         && shortString(request.resource.data.url, 500)
