@@ -19,6 +19,7 @@ artifacts; the artifact is the source of truth and the file says so in its first
 | [apis.md](apis.md) | Every tool, service and script the project uses | this file (edit it directly) |
 | [authorization-check.md](authorization-check.md) | Two-account authorization check on staging: what was tried, what was refused, what was fixed (#403) | this file (edit it directly) |
 | [sign-in-check.md](sign-in-check.md) | Sign-in, password reset, sessions and logout checked on staging; Firebase Auth settings of both projects (#405) | this file (edit it directly) |
+| [incidents/2026-10-13-finance-split-before-join.md](incidents/2026-10-13-finance-split-before-join.md) | Incident write-up: two members owed nothing for expenses split before they joined; cause, data fix, Finance warning (#447) | this file (edit it directly) |
 | [HANDOFF.md](HANDOFF.md) | Project snapshot and history | this file |
 
 ## Working with the data
