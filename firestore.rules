@@ -324,23 +324,10 @@ service cloud.firestore {
         && (resource == null || isOwner(resource.data.tripId) || isAdmin());
     }
 
-    // ── Shared geocode cache (place name → coordinates, any signed-in user) ─
-    // { entries: { [place]: { lat, lng } } }. Add-only: a write may add a few
-    // new places but never change or remove one someone else resolved, so the
-    // cache can't be wiped or redirected.
+    // The old shared place cache held every trip's place names, readable by any
+    // signed-in account (#356). Closed: each trip keeps its own (below).
     match /geocache/{docId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn()
-        && request.resource.data.keys().hasOnly(['entries'])
-        && request.resource.data.entries is map
-        && request.resource.data.entries.size() <= 20;
-      allow update: if isSignedIn()
-        && request.resource.data.keys().hasOnly(['entries'])
-        && request.resource.data.entries is map
-        && request.resource.data.entries.diff(resource.data.get('entries', {})).removedKeys().size() == 0
-        && request.resource.data.entries.diff(resource.data.get('entries', {})).changedKeys().size() == 0
-        && request.resource.data.entries.diff(resource.data.get('entries', {})).addedKeys().size() <= 20;
-      allow delete: if false;
+      allow read, write: if false;
     }
 
     // ── Per-user "My Expenses" — private to the owner ──────────────────────
@@ -432,6 +419,15 @@ service cloud.firestore {
       // policy promises; other members can't read, list or change them. The
       // trip owner may delete one (a removed member's, when the trip is torn
       // down) but never read it.
+      // Place lookups for this trip's map (#356): place name → coordinates,
+      // shared by the trip's members only. Removed with the trip.
+      match /geocache/{docId} {
+        allow read, delete: if isMember(tripId);
+        allow create, update: if isMember(tripId)
+          && request.resource.data.keys().hasOnly(['entries'])
+          && request.resource.data.entries is map;
+      }
+
       match /packing/{ownerUid} {
         allow read, write: if isMember(tripId) && ownerUid == uid();
         allow delete:      if isMember(tripId) && (ownerUid == uid() || isOwner(tripId));

@@ -29,7 +29,7 @@ let uid = '', otherUid = `deletion-other-${stamp}`;
 
 /** Every sub-collection the app writes under a trip. */
 const TRIP_SUBS = ['members', 'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins', 'flights', 'outfits', 'dayLabels',
-  'packing', 'packingSuggestions', 'invites', 'activityLog', 'events', 'removedMembers', 'outfitPhotos'];
+  'packing', 'packingSuggestions', 'invites', 'activityLog', 'events', 'removedMembers', 'outfitPhotos', 'geocache'];
 
 async function leftovers(): Promise<string[]> {
   const left: string[] = [];

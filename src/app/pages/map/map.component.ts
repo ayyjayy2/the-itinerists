@@ -23,9 +23,9 @@ import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.c
 const GEOCACHE_KEY         = 'tripmap_geocache';
 const GEOCACHE_VERSION_KEY = 'tripmap_geocache_version';
 const GEOCACHE_VERSION     = '7';
-// Shared (cross-user) geocache doc — versioned so the old Ireland-biased,
-// non-namespaced entries are abandoned rather than reused.
-const FIRESTORE_GEOCACHE_DOC = 'trip_locations_v7';
+// Each trip's place lookups live under it (trips/{id}/geocache/places),
+// readable by its members only. The old shared doc held every trip's places (#356).
+const TRIP_GEOCACHE_DOC = 'places';
 
 // Dusk Garden palette (light-theme hexes — the map tiles are always light).
 // Markers carry a white outline, so these muted tones still read on the map.
@@ -469,12 +469,18 @@ export class MapComponent implements OnDestroy {
     localStorage.setItem(GEOCACHE_KEY, JSON.stringify(this.geocache));
   }
 
-  /** Pull the shared geocache from Firestore. One read per session;
-   *  any locations already resolved by another user are used immediately,
-   *  cutting Nominatim calls to near-zero after the first full load. */
+  /** This trip's place lookups, shared by its members: one read per visit, so
+   *  places a fellow member already resolved appear at once, without Nominatim. */
+  private tripGeocacheRef() {
+    const tripId = this.tripService.activeTrip()?.id;
+    return tripId ? doc(this.firestore, 'trips', tripId, 'geocache', TRIP_GEOCACHE_DOC) : null;
+  }
+
   private async loadFirestoreCache(): Promise<void> {
+    const ref = this.tripGeocacheRef();
+    if (!ref) return;
     try {
-      const snap = await getDoc(doc(this.firestore, 'geocache', FIRESTORE_GEOCACHE_DOC));
+      const snap = await getDoc(ref);
       if (!snap.exists()) return;
       const entries = snap.data()['entries'] as Record<string, { lat: number; lng: number }> ?? {};
       let addedNew = false;
@@ -488,14 +494,12 @@ export class MapComponent implements OnDestroy {
     } catch { /* offline or permission error — fall back to local cache */ }
   }
 
-  /** Write a single newly-resolved coordinate to the shared Firestore cache.
-   *  Fire-and-forget; failures are silently ignored. */
+  /** Add one newly resolved place to this trip's cache. Fire-and-forget. */
   private saveToFirestoreCache(location: string, coords: { lat: number; lng: number }): void {
-    setDoc(
-      doc(this.firestore, 'geocache', FIRESTORE_GEOCACHE_DOC),
-      { entries: { [location]: coords } },
-      { merge: true },
-    ).catch(() => { /* ignore write failures */ });
+    const ref = this.tripGeocacheRef();
+    if (!ref) return;
+    setDoc(ref, { entries: { [location]: coords } }, { merge: true })
+      .catch(() => { /* ignore write failures */ });
   }
 
   /** One Nominatim lookup. With `near`, only results within about 150 km of it count
@@ -577,7 +581,7 @@ export class MapComponent implements OnDestroy {
         this.geocache[key] = coords;
         this.geocodedLocations.set(location, coords);
         this.saveCache();
-        this.saveToFirestoreCache(key, coords); // share with all users (destination-namespaced)
+        this.saveToFirestoreCache(key, coords); // share with the trip's members
         return coords;
       }
     }
