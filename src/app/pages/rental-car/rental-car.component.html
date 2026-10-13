@@ -111,8 +111,8 @@
             <p class="car-notes">{{ car.notes }}</p>
           }
 
-          @if (car.link) {
-            <a class="car-link" [href]="car.link" target="_blank" rel="noopener"><app-icon name="link" [size]="15" /> View booking</a>
+          @if (safeLink(car.link); as href) {
+            <a class="car-link" [href]="href" target="_blank" rel="noopener"><app-icon name="link" [size]="15" /> View booking</a>
           }
         </div>
       }

@@ -26,6 +26,8 @@ function blankForm(): CarForm {
 }
 
 import { FocusTargetDirective } from '../../shared/focus-target.directive';
+import { safeLink } from '../../utils/safe-link';
+
 @Component({
   selector: 'app-rental-car',
   imports: [FocusTargetDirective, IconComponent, NoTripStateComponent, CommonModule, NgTemplateOutlet, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
@@ -33,6 +35,9 @@ import { FocusTargetDirective } from '../../shared/focus-target.directive';
   styleUrl: './rental-car.component.scss'
 })
 export class RentalCarComponent {
+  /** Typed-in links pass through this before they're shown (#407). */
+  protected readonly safeLink = safeLink;
+
   /** Start/end date pairs: the end may not be before the start (utils/date-range). */
   readonly dateRangeProblem = dateRangeProblem;
 
@@ -122,7 +127,7 @@ export class RentalCarComponent {
       dropoffTime:        this.editForm.dropoffTime,
       dropoffLocation:    this.editForm.dropoffLocation.trim(),
       notes:              (this.editForm.notes ?? '').trim(),
-      link:               (this.editForm.link ?? '').trim(),
+      link:               safeLink(this.editForm.link) ?? '',
     });
     this.editingIndex.set(null);
   }
@@ -151,7 +156,7 @@ export class RentalCarComponent {
       pickupLocation:     this.addForm.pickupLocation.trim(),
       dropoffLocation:    this.addForm.dropoffLocation.trim(),
       notes:              (this.addForm.notes ?? '').trim(),
-      link:               (this.addForm.link ?? '').trim(),
+      link:               safeLink(this.addForm.link) ?? '',
       drivers: '',
     });
     this.addForm = blankForm();

@@ -19,6 +19,8 @@ const LAST_CURRENCY_PREFIX = 'tripplanner_last_currency_';
 
 import { FocusTargetDirective } from '../../shared/focus-target.directive';
 import { FocusService } from '../../services/focus.service';
+import { safeLink } from '../../utils/safe-link';
+
 @Component({
   selector: 'app-finance',
   imports: [FocusTargetDirective, LoadingComponent, IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule, EmptyDateHintDirective],
@@ -26,6 +28,9 @@ import { FocusService } from '../../services/focus.service';
   styleUrl: './finance.component.scss'
 })
 export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
+  /** Typed-in links pass through this before they're shown (#407). */
+  protected readonly safeLink = safeLink;
+
   @ViewChild('addBtnRef') addBtnRef!: ElementRef<HTMLButtonElement>;
 
   financeService = inject(FinanceService);
@@ -405,7 +410,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       splitAmong:  selected.length === this.financeUsers().length ? 'All' : selected.join(', '),
       category:    this.newEntry.category    ?? '',
       notes:       this.newEntry.notes       ?? '',
-      link:        this.newEntry.link        ?? '',
+      link:        safeLink(this.newEntry.link) ?? '',
       addedByUid:  this.currentUser()?.uid   ?? '',
       createdAt:   Date.now(),
     };
@@ -462,6 +467,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     const patch: Partial<FinanceEntryDoc> = {
       ...this.editEntryDraft,
       amount:     Number(this.editEntryDraft.amount) || 0,
+      link:       safeLink(this.editEntryDraft.link) ?? '',
       splitAmong: selected.length === this.financeUsers().length ? 'All' : selected.join(', '),
     };
     if (this.editSplitMode() === 'individual') {

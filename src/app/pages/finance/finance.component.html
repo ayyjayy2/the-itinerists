@@ -362,8 +362,8 @@
                   <span class="chip" [class.chip-primary]="entry.splitAmong === 'All'" [class.chip-highlight]="entry.splitAmong !== 'All'">
                     {{ entry.splitAmong === 'All' ? 'Everyone' : entry.splitAmong }}
                   </span>
-                  @if (entry.link) {
-                    <a class="entry-link" [href]="entry.link.startsWith('http') ? entry.link : 'https://' + entry.link" target="_blank" rel="noopener">🔗</a>
+                  @if (safeLink(entry.link); as href) {
+                    <a class="entry-link" [href]="href" target="_blank" rel="noopener">🔗</a>
                   }
                 </div>
               </div>

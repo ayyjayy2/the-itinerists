@@ -15,6 +15,8 @@ import { Time12Pipe } from '../../shared/time12.pipe';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
 import { FocusTargetDirective } from '../../shared/focus-target.directive';
+import { safeLink } from '../../utils/safe-link';
+
 @Component({
   selector: 'app-accommodations',
   imports: [FocusTargetDirective, LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule, TimeInputComponent, Time12Pipe, EmptyDateHintDirective],
@@ -22,6 +24,9 @@ import { FocusTargetDirective } from '../../shared/focus-target.directive';
   styleUrl: './accommodations.component.scss'
 })
 export class AccommodationsComponent {
+  /** Typed-in links pass through this before they're shown (#407). */
+  protected readonly safeLink = safeLink;
+
   /** Start/end date pairs: the end may not be before the start (utils/date-range). */
   readonly dateRangeProblem = dateRangeProblem;
 
@@ -101,6 +106,7 @@ export class AccommodationsComponent {
     if (dateRangeProblem(this.draft.checkIn, this.draft.checkOut)) return;   // the field shows why
     await this.staysService.updateStay(original.id, {
       ...this.draft,
+      link: safeLink(this.draft.link) ?? '',
       forWho: this.buildForWho(this.editForWhoMap),
     });
     this.cancelEdit();
@@ -133,7 +139,7 @@ export class AccommodationsComponent {
       checkOutTime: this.newDraft.checkOutTime ?? '',
       notes:      this.newDraft.notes      ?? '',
       bookingRef: this.newDraft.bookingRef ?? '',
-      link:       this.newDraft.link       ?? '',
+      link:       safeLink(this.newDraft.link) ?? '',
       forWho:     this.buildForWho(this.addForWhoMap),
       addedByUid: this.currentUser()?.uid  ?? '',
       createdAt:  Date.now(),
