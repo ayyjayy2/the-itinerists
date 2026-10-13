@@ -410,12 +410,21 @@ service cloud.firestore {
         allow delete: if isMember(tripId) && resource.data.ownerUid == uid();
       }
 
+      // Packing lists: PRIVATE to their owner (packing/{uid}), as the privacy
+      // policy promises; other members can't read, list or change them. The
+      // trip owner may delete one (a removed member's, when the trip is torn
+      // down) but never read it.
+      match /packing/{ownerUid} {
+        allow read, write: if isMember(tripId) && ownerUid == uid();
+        allow delete:      if isMember(tripId) && (ownerUid == uid() || isOwner(tripId));
+      }
+
       // Collaborative + per-user trip data. Enumerated so the wildcard can't
       // over-grant on the members/invites sub-collections above.
       match /{sub}/{doc} {
         allow read, write: if isMember(tripId) && sub in [
           'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
-          'flights', 'outfits', 'dayLabels', 'packing', 'packingSuggestions',
+          'flights', 'outfits', 'dayLabels', 'packingSuggestions',
           'activityLog', 'removedMembers', 'events'
         ];
       }

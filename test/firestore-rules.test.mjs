@@ -254,6 +254,13 @@ await t('member reads packingSuggestions', 'allow', () => getDoc(doc(bob, 'trips
 await t('member writes removedMembers snapshot', 'allow', () => setDoc(doc(alice, 'trips', 'T', 'removedMembers', 'bob'), { uid: 'bob', displayName: 'Bob' }));
 await t('non-member reads removedMembers', 'deny', () => getDoc(doc(carol, 'trips', 'T', 'removedMembers', 'bob')));
 await t('non-member writes packing', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'packing', 'carol'), { items: [] }));
+// A packing list is private to its owner (privacy policy), even from other members (#403).
+await t('member reads own packing list', 'allow', () => getDoc(doc(bob, 'trips', 'T', 'packing', 'bob')));
+await t('member writes own packing list', 'allow', () => setDoc(doc(bob, 'trips', 'T', 'packing', 'bob'), { items: [] }));
+await t('member reads another member’s packing list', 'deny', () => getDoc(doc(alice, 'trips', 'T', 'packing', 'bob')));
+await t('member changes another member’s packing list', 'deny', () => setDoc(doc(alice, 'trips', 'T', 'packing', 'bob'), { items: [] }));
+await t('member lists everyone’s packing lists', 'deny', () => getDocs(collection(bob, 'trips', 'T', 'packing')));
+await t('trip owner deletes a left-behind packing list (purge)', 'allow', () => deleteDoc(doc(alice, 'trips', 'T', 'packing', 'bob')));
 
 console.log('\nShared/misc collections');
 await t('signed-in reads geocache', 'allow', () => getDoc(doc(bob, 'geocache', 'g1')));
