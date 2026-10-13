@@ -14,6 +14,11 @@ concurrency:
   group: deploy-staging
   cancel-in-progress: true
 
+# actions: read lets the deploy see whether the newest master has passed CI (#439).
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
@@ -25,21 +30,41 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: master
           # Full history: the build number is the commit count (scripts/set-version.js),
           # and open apps compare it with /version.json to know when to refresh.
           fetch-depth: 0
+      # Deploy the newest master that has passed CI, not just this run's commit:
+      # two quick merges could otherwise leave staging on the older one (#439).
+      - name: Pick the commit to deploy
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRIGGERED: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          TIP=$(git rev-parse HEAD)
+          TIP_CI=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$TIP" --limit 1 \
+            --json status,conclusion -q '.[0] | if . == null then "" elif .status == "completed" then .conclusion else .status end')
+          SHA=$(node scripts/staging-deploy-target.mjs "$TRIGGERED" "$TIP" "$TIP_CI")
+          echo "triggered by ${TRIGGERED::7}; master is at ${TIP::7} (CI: ${TIP_CI:-not started}); deploying: ${SHA:-nothing, the newer run will}"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          if [ -n "$SHA" ]; then git checkout --quiet --detach "$SHA"; fi
       - uses: actions/setup-node@v7
+        if: steps.pick.outputs.sha != ''
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+        if: steps.pick.outputs.sha != ''
       # The staging build swaps in src/environments/environment.staging.ts; the
       # default environment file only has to exist for the compiler.
       - run: cp .env.example .env && node scripts/gen-env.js
+        if: steps.pick.outputs.sha != ''
       - name: Build (staging configuration)
+        if: steps.pick.outputs.sha != ''
         run: npm run build:staging
       - name: Deploy hosting, rules and indexes to staging
+        if: steps.pick.outputs.sha != ''
         env:
           SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}
         run: |
