@@ -18,7 +18,9 @@ import { StaysService } from '../../services/stays.service';
 import { RecsService } from '../../services/recs.service';
 import { ExpensesService } from '../../services/expenses.service';
 import { DataService } from '../../services/data.service';
-import { perCurrencyText } from '../../utils/currency';
+import { Rates, convertedTotal, perCurrencyText } from '../../utils/currency';
+import { ExchangeRateService } from '../../services/exchange-rate.service';
+import { money as formatMoney } from '../../utils/event-text';
 import {
   WidgetKey, WIDGET_PATHS, isPageHidden, visibleWidgetKeys,
   nextStay, nextTransport, nextFlight, expensesTotalBetween, recsGlance,
@@ -397,10 +399,25 @@ export class HomeComponent implements OnInit, OnDestroy {
     return net;
   });
 
-  /** Everything logged for the trip, "tracked so far": one amount per currency, never added across them. */
+  /** Everything logged for the trip, "tracked so far": one amount per currency, plus
+   *  (when currencies mix) the total in the trip's currency at each expense's date rate. */
   readonly trackedText = computed(() => {
     const home = this.activeTrip()?.currency || 'USD';
-    return perCurrencyText(this.financeService.entries().map(e => ({ amount: e.amount || 0, currency: e.currency || home })), home);
+    const entries = this.financeService.entries().map(e => ({ amount: e.amount || 0, currency: e.currency || home, date: e.date }));
+    const text = perCurrencyText(entries, home);
+    if (this.singleCurrency()) return text;
+    const { total, missing } = convertedTotal(entries, this.trackedRates(), home);
+    return missing === entries.length ? text : `${text} (≈ ${formatMoney(total, home)})`;
+  });
+  private rateService = inject(ExchangeRateService);
+  private readonly trackedRates = signal<Record<string, Rates>>({});
+  private ratesRequest = 0;
+  private readonly loadTrackedRates = effect(() => {
+    if (this.singleCurrency()) return;
+    const home = this.activeTrip()?.currency || 'USD';
+    const dates = this.financeService.entries().map(e => e.date).filter(Boolean);
+    const req = ++this.ratesRequest;
+    void this.rateService.ratesByDate(home, dates).then(r => { if (req === this.ratesRequest) this.trackedRates.set(r); });
   });
   /** Every expense is in the trip's currency, so a single balance in it is meaningful. */
   readonly singleCurrency = computed(() => {

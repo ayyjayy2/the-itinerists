@@ -7,6 +7,7 @@ import { FinanceService } from '../../services/finance.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
 import { TripService } from '../../services/trip.service';
+import { ExchangeRateService } from '../../services/exchange-rate.service';
 
 /** My Expenses keeps every amount in its own currency (#409). */
 describe('ExpensesComponent currencies', () => {
@@ -37,6 +38,8 @@ describe('ExpensesComponent currencies', () => {
         { provide: UserService, useValue: { currentUser: signal({ uid: 'u1', name: 'Maya' }) } },
         { provide: UsersService, useValue: { tripUsers: () => [{ name: 'Maya' }] } },
         { provide: TripService, useValue: { activeTrip: signal({ id: 't1', currency: 'EUR' }), ready: signal(true) } },
+        // 1 EUR = 1.25 USD on every date: $12 is €9.60.
+        { provide: ExchangeRateService, useValue: { ratesByDate: (_home: string, dates: string[]) => Promise.resolve(Object.fromEntries(dates.map(d => [d, { USD: 1.25 }]))) } },
       ],
     });
   });
@@ -89,6 +92,21 @@ describe('ExpensesComponent currencies', () => {
     expect(total).toContain('€300.00');
     expect(total).toContain('$12.00');
     expect(total).not.toContain('312');
+  });
+
+  it("adds a converted total in the trip's currency when currencies are mixed", async () => {
+    personal.set([{ id: 'p1', date: '2027-05-11', description: 'Taxi', amount: 12, currency: 'USD', category: 'Transport' }]);
+    const { fixture, el } = render();
+    await fixture.whenStable(); fixture.detectChanges();
+    const converted = el.querySelector('.total-converted')!.textContent!;
+    expect(converted).toContain('≈ €309.60');                         // 300 + 12 / 1.25
+    expect(converted).toContain("converted to EUR at each expense's date rate");
+  });
+
+  it('shows no converted line when everything is in one currency', async () => {
+    const { fixture, el } = render();
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(el.querySelector('.total-converted')).toBeNull();
   });
 
   it("starts a new personal expense in the trip's currency, and saves the one you pick", () => {

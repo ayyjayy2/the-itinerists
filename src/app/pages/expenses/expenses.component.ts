@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExpensesService } from '../../services/expenses.service';
@@ -12,7 +12,8 @@ import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
-import { perCurrencySubtotals } from '../../utils/currency';
+import { Rates, convertedTotal, perCurrencySubtotals } from '../../utils/currency';
+import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { money } from '../../utils/event-text';
 
 const CATEGORIES = ['Food', 'Drink', 'Transport', 'Shopping', 'Accommodation', 'Activity', 'Other'];
@@ -131,6 +132,21 @@ export class ExpensesComponent implements OnInit {
     return list.sort((a, b) => (a.currency === home ? -1 : b.currency === home ? 1 : a.currency.localeCompare(b.currency)));
   });
   readonly totalEmpty = computed(() => this.filtered().length === 0);
+
+  // ── Converted total: everything in the trip's currency (Trip Settings), each
+  //    expense at its own date's rate, as Finance does. Shown when currencies mix. ──
+  private rateService = inject(ExchangeRateService);
+  private readonly ratesByDate = signal<Record<string, Rates>>({});
+  readonly mixedCurrencies = computed(() => new Set(this.filtered().map(e => e.currency)).size > 1);
+  readonly converted = computed(() => convertedTotal(this.filtered(), this.ratesByDate(), this.homeCurrency()));
+  private ratesRequest = 0;
+  private readonly loadRates = effect(() => {
+    if (!this.mixedCurrencies()) return;
+    const home = this.homeCurrency();
+    const dates = this.filtered().map(e => e.date).filter(Boolean);
+    const req = ++this.ratesRequest;   // a slower, older answer never overwrites a newer one
+    void this.rateService.ratesByDate(home, dates).then(r => { if (req === this.ratesRequest) this.ratesByDate.set(r); });
+  });
 
   ngOnInit(): void {
     this.expensesService.init();
