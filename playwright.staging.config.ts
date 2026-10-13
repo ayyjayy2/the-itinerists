@@ -27,5 +27,7 @@ export default defineConfig({
     { name: 'checks', testMatch: /staging\.spec\.ts/, dependencies: ['sign-in'], use: { storageState: 'e2e-staging/.auth/alayna.json' } },
     // #403: direct reads and writes as two real accounts (Firebase client, no browser).
     { name: 'authorization', testMatch: /authorization\.spec\.ts/ },
+    // #406: a second account on the same browser never sees the first one's trips.
+    { name: 'account-switch', testMatch: /account-switch\.spec\.ts/ },
   ],
 });

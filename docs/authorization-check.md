@@ -43,3 +43,20 @@ list is visible only to you. `packing` sat in the shared "any member" list of su
 
 Exports and background jobs (none run server-side yet), invite expiry and reuse (#404), sessions and recovery (#405),
 local data after logout (#406), and Storage rules (no production bucket yet).
+
+## Logging out and switching accounts (#406, 2026-10-13)
+
+**Decision (owner):** logging out does **not** wipe the device's offline copy of the trip. Launches and signing back
+in stay fast, and shared devices are rare. Logging out ends the session (see #405); the copy stays in the browser's
+storage, where the app won't show it to anyone signed out.
+
+What is guaranteed instead, checked on staging (`npx playwright test -c playwright.staging.config.ts --project account-switch`):
+Maya signs in and opens her trip, logs out, and Sam (on no trip) signs in on the same browser. A recorder captures
+every frame of text on screen through the sign-in and five pages (Home, Itinerary, Finance, My Expenses, My Trips):
+**none of Maya's trip names or destinations ever appear**, and Sam gets the no-trip state. As a control, the same
+recorder does catch Maya's trip while she's signed in.
+
+Why it holds: the open trip is remembered per account (`trip-context.service.ts`), private expenses are backed up
+per account, logging out reloads the page so nothing stays in memory, and each account only asks for its own trips.
+Finance's "paid" ticks are remembered per trip on the device, so two people on the *same* trip sharing a device
+would see each other's ticks. That's minor, and it never crosses trips.
