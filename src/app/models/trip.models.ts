@@ -338,7 +338,7 @@ export interface FinanceEntryDoc {
   currency: string;    // USD for Savannah trip
   paidBy: string;
   splitAmong: string;  // comma-separated display names or "All"
-  splits?: Record<string, number>;
+  splits?: Record<string, number> | null;  // per-person amounts when split unequally; null = equal
   category: string;
   notes?: string;
   link?: string;
@@ -353,7 +353,7 @@ export interface FinanceEntry {
   currency: string;    // EUR, USD, etc.
   paidBy: string;
   splitAmong: string;  // comma-separated names or "All"
-  splits?: Record<string, number>;  // per-person amounts when split unequally
+  splits?: Record<string, number> | null;  // per-person amounts when split unequally; null = equal
   category: string;
   vendor?: string;
   notes?: string;
