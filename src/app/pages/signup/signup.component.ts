@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -29,6 +30,7 @@ export class SignupComponent implements OnInit {
   private router      = inject(Router);
   private localCache  = inject(LocalCacheService);
   private route       = inject(ActivatedRoute);
+  private location    = inject(Location);
 
   readonly version   = APP_VERSION;
   readonly buildDate = APP_BUILD_DATE;
@@ -49,7 +51,12 @@ export class SignupComponent implements OnInit {
   inviteChecking = signal(false);
 
   ngOnInit(): void {
-    const code = (this.route.snapshot.queryParamMap.get('code') ?? '').trim().toUpperCase();
+    // From the join page (navigation state), or an older ?code= link, whose code
+    // is then taken out of the address bar (analytics and history keep URLs).
+    const fromJoin = (this.location.getState() as { inviteCode?: string } | null)?.inviteCode ?? '';
+    const fromLink = this.route.snapshot.queryParamMap.get('code') ?? '';
+    if (fromLink) this.location.replaceState('/signup');
+    const code = (fromJoin || fromLink).trim().toUpperCase();
     if (code) { this.inviteCode = code; void this.checkInviteCode(); }
   }
 

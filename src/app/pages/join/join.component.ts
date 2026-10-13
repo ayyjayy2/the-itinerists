@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -25,12 +26,16 @@ export class JoinComponent implements OnInit {
   private router      = inject(Router);
   private route       = inject(ActivatedRoute);
   private localCache  = inject(LocalCacheService);
+  private location    = inject(Location);
 
   codeError = signal('');
   step      = signal<'validating' | 'invalid'>('validating');
 
   async ngOnInit(): Promise<void> {
     const code = (this.route.snapshot.queryParams['code'] ?? '').trim().toUpperCase();
+    // An invite code admits people for a week: take it out of the address bar
+    // straight away, so analytics, history and shared screenshots never keep it.
+    if (code) this.location.replaceState('/join');
     await this.userService.authReadyPromise;
 
     if (this.userService.hasUser()) {
@@ -46,6 +51,7 @@ export class JoinComponent implements OnInit {
       return;
     }
 
-    this.router.navigate(['/signup'], code ? { queryParams: { code } } : {});
+    // Hand the code to sign-up privately (navigation state), not in the address.
+    this.router.navigate(['/signup'], code ? { state: { inviteCode: code } } : {});
   }
 }

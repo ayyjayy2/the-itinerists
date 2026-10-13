@@ -183,6 +183,16 @@ Staging is a separate Firebase project with the same rules and indexes and its o
 | Analytics without content | The usage and edit logs record that something happened, never what was written. |
 | Keys | Service-account keys and local account files are never committed; admin scripts check which project they're pointed at before doing anything. |
 
+### Invites and unconfirmed accounts (policy, checked on staging in #404)
+
+- **Unconfirmed accounts** (email not yet verified) can do everything a confirmed one can: create trips (20 a day per account), invite, join. This is a product decision: confirmation is gentle and never blocks.
+- **An invite** lives 7 days. A trip has one live invite: making a new one closes the old. Within its week a code can admit several people, since one link is meant for the whole group.
+- **Only the trip owner** (or an app admin) can make or close an invite. A joiner always lands as a plain `member`, never `owner`. They can add only themselves to the invite's `usedBy`, and can't extend or close it.
+- **Expired and closed codes fail.** The rules check the invite's expiry when the member record is written, not only the app.
+- **Who sees what:** before joining, a code resolves through `/inviteIndex`, which holds only the trip id and expiry (lookup by exact code; no listing). The invite record itself, with the owner and everyone who joined, is members-only.
+- **Codes stay out of logs:** the join and sign-up pages take a code out of the address bar as soon as they read it. Google Analytics doesn't send its automatic first page view, so the full address is never reported; screen views carry only the path. Error logs keep only the path.
+- **Abuse limits** today: Firebase Auth's own limits on sign-ups and emails, App Check on Firestore, per-account daily quotas, crypto-random 8-character codes. Server-side rate limits come after Blaze (#357).
+
 ## What's watched, and what's planned
 
 ### Watched today

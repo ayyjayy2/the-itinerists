@@ -3,6 +3,7 @@ import { EnvironmentProviders, Injectable } from '@angular/core';
 
 export class Analytics {}
 export function getAnalytics(_app?: unknown): Analytics { return new Analytics(); }
+export function initializeAnalytics(_app?: unknown, _options?: unknown): Analytics { return new Analytics(); }
 export function provideAnalytics(_factory: () => Analytics): EnvironmentProviders { return [] as unknown as EnvironmentProviders; }
 @Injectable({ providedIn: 'root' }) export class ScreenTrackingService {}
 @Injectable({ providedIn: 'root' }) export class UserTrackingService {}

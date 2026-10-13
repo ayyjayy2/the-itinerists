@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { initializeApp, deleteApp, FirebaseApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { arrayUnion } from 'firebase/firestore';
 import {
   getFirestore, Firestore, doc, collection, getDocFromServer, getDocsFromServer,
   setDoc, updateDoc, deleteDoc,
@@ -193,5 +194,30 @@ test('an owner tearing down a trip can delete everyone’s packing list without 
     expect((await adb.collection(`trips/${T}/packing`).get()).size, 'no packing lists left').toBe(0);
   } finally {
     for (const p of [`trips/${T}/packing/${maya.uid}`, `trips/${T}/packing/${theo.uid}`, `trips/${T}/removedMembers/${theo.uid}`, `trips/${T}/members/${maya.uid}`, `trips/${T}`]) await adb.doc(p).delete();
+  }
+});
+
+test('invites: expired and closed codes fail, a live one admits a plain member only, and outsiders can’t read it', async () => {
+  const live = 'AZLIVE', expired = 'AZEXPD', closed = 'AZCLSD';
+  const at = (ms: number) => ({ tripId: LISBON, createdBy: maya.uid, createdAt: Date.now(), usedBy: [], expiresAt: Date.now() + ms });
+  await adb.doc(`trips/${LISBON}/invites/${live}`).set(at(3_600_000));
+  await adb.doc(`inviteIndex/${live}`).set({ tripId: LISBON, expiresAt: Date.now() + 3_600_000 });
+  await adb.doc(`trips/${LISBON}/invites/${expired}`).set(at(-60_000));
+  const anon = getFirestore(initializeApp(firebaseConfig, `anon-${Date.now()}`));   // never signed in
+  try {
+    await check('Anyone (signed out)', 'read a live invite by code', 'denied', () => getDocFromServer(doc(anon, `trips/${LISBON}/invites/${live}`)));
+    await check('Anyone (signed out)', 'look a live code up in the index', 'allowed', () => getDocFromServer(doc(anon, `inviteIndex/${live}`)));
+    await check('Sam (outsider)', 'read a live invite by code', 'denied', () => getDocFromServer(doc(S.db, `trips/${LISBON}/invites/${live}`)));
+    await check('Sam (outsider)', 'join with an expired code', 'denied', () => setDoc(doc(S.db, `trips/${LISBON}/members/${sam.uid}`), { uid: sam.uid, role: 'member', inviteCode: expired }));
+    await check('Sam (outsider)', 'join with a closed (deleted) code', 'denied', () => setDoc(doc(S.db, `trips/${LISBON}/members/${sam.uid}`), { uid: sam.uid, role: 'member', inviteCode: closed }));
+    await check('Sam (outsider)', 'join with a live code as owner', 'denied', () => setDoc(doc(S.db, `trips/${LISBON}/members/${sam.uid}`), { uid: sam.uid, role: 'owner', inviteCode: live }));
+    await check('Sam (joiner)', 'join with a live code as member', 'allowed', () => setDoc(doc(S.db, `trips/${LISBON}/members/${sam.uid}`), { uid: sam.uid, role: 'member', inviteCode: live }));
+    await check('Sam (joiner)', 'add himself to the invite’s usedBy', 'allowed', () => updateDoc(doc(S.db, `trips/${LISBON}/invites/${live}`), { usedBy: arrayUnion(sam.uid) }));
+    await check('Sam (joiner)', 'add someone else to usedBy', 'denied', () => updateDoc(doc(S.db, `trips/${LISBON}/invites/${live}`), { usedBy: arrayUnion(theo.uid) }));
+    await check('Sam (joiner)', 'extend the invite', 'denied', () => updateDoc(doc(S.db, `trips/${LISBON}/invites/${live}`), { expiresAt: Date.now() + 1e10 }));
+    await check('Sam (joiner)', 'close the invite', 'denied', () => deleteDoc(doc(S.db, `trips/${LISBON}/invites/${live}`)));
+    await check('Sam (joiner)', 'make himself owner after joining', 'denied', () => updateDoc(doc(S.db, `trips/${LISBON}/members/${sam.uid}`), { role: 'owner' }));
+  } finally {
+    for (const p of [`trips/${LISBON}/members/${sam.uid}`, `trips/${LISBON}/invites/${live}`, `inviteIndex/${live}`, `trips/${LISBON}/invites/${expired}`]) await adb.doc(p).delete();
   }
 });

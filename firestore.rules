@@ -372,11 +372,11 @@ service cloud.firestore {
         allow delete: if memberId == uid() || isOwner(tripId) || isAdmin();
       }
 
-      // Invites: a single invite can be read before sign-in (the join page
-      // checks the code); only members can list them.
+      // Invites: members only. The doc names the owner and everyone who joined
+      // (createdBy, usedBy), so outsiders resolve a code through /inviteIndex,
+      // which holds just the trip id and expiry.
       match /invites/{code} {
-        allow get:    if true;
-        allow list:   if isMember(tripId);
+        allow read:   if isMember(tripId);
         // Only the trip's owner (or an app admin) can mint or revoke invites.
         allow create, delete: if isOwner(tripId) || isAdmin();
         // A person who just joined adds themselves to usedBy, and nothing
