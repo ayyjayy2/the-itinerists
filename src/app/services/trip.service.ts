@@ -461,6 +461,20 @@ export class TripService {
    * mirrors) and the trip doc itself. Used by {@link leaveTrip} when the last
    * member leaves — there is no global "delete for everyone" action (TP-24).
    */
+  /**
+   * Packing lists are private to their owner, so nobody (the trip owner
+   * included) may list them all. Delete them by person instead: your own, and
+   * each removed member's (kept so a restore brings it back). Members who left
+   * deleted theirs on the way out.
+   */
+  private async deletePackingLists(tripId: string): Promise<void> {
+    const me = this.requireUser().uid;
+    const removed = await getDocs(collection(this.firestore, 'trips', tripId, 'removedMembers')).catch(() => null);
+    const uids = new Set([me, ...(removed?.docs.map(d => d.id) ?? [])]);
+    await Promise.all([...uids].map(uid =>
+      deleteDoc(doc(this.firestore, 'trips', tripId, 'packing', uid)).catch(() => {/* may not exist */})));
+  }
+
   private async purgeTripData(tripId: string): Promise<void> {
     const deleteCollection = async (name: string): Promise<void> => {
       const snap = await getDocs(collection(this.firestore, 'trips', tripId, name));
@@ -478,7 +492,9 @@ export class TripService {
     // Delete everything except members first, then the trip doc — security
     // rules require the caller to still be a member for all of these writes.
     for (const name of TripService.SUBCOLLECTIONS) {
-      if (name !== 'members') await deleteCollection(name);
+      if (name === 'members') continue;
+      if (name === 'packing') { await this.deletePackingLists(tripId); continue; }
+      await deleteCollection(name);
     }
     await deleteDoc(doc(this.firestore, 'trips', tripId));
     // Members last: removing our own member doc revokes our own access.

@@ -17,6 +17,7 @@ artifacts; the artifact is the source of truth and the file says so in its first
 | [product/making-money.md](product/making-money.md) | Trip Pass, Plus, Keep, booking links: terms and edge cases | Itinerists HQ → Launch plan → Making money |
 | [product/storage-and-costs.md](product/storage-and-costs.md) | What storage and Firebase cost, now and at scale | Itinerists HQ → Launch plan → Storage & costs |
 | [apis.md](apis.md) | Every tool, service and script the project uses | this file (edit it directly) |
+| [authorization-check.md](authorization-check.md) | Two-account authorization check on staging: what was tried, what was refused, what was fixed (#403) | this file (edit it directly) |
 | [HANDOFF.md](HANDOFF.md) | Project snapshot and history | this file |
 
 ## Working with the data

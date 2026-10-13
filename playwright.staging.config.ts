@@ -25,5 +25,7 @@ export default defineConfig({
   projects: [
     { name: 'sign-in', testMatch: /auth\.setup\.ts/ },
     { name: 'checks', testMatch: /staging\.spec\.ts/, dependencies: ['sign-in'], use: { storageState: 'e2e-staging/.auth/alayna.json' } },
+    // #403: direct reads and writes as two real accounts (Firebase client, no browser).
+    { name: 'authorization', testMatch: /authorization\.spec\.ts/ },
   ],
 });

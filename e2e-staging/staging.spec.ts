@@ -22,10 +22,10 @@ test.describe('1. Sign-in', () => {
     await expect(page).not.toHaveURL(/\/login/);              // reload keeps the session
     await signOut(page);
 
-    await page.getByPlaceholder('Username or recovery email').fill('alayna');
+    await page.getByPlaceholder('you@example.com').fill('alayna');
     await page.getByPlaceholder('Enter your password').fill('Not-the-password-1');
     await page.locator('form button[type=submit]').click();
-    await expect(page.getByText('Invalid username, email, or password.')).toBeVisible();   // a sentence, not a Firebase code
+    await expect(page.getByText('Wrong email or password. Check them and try again.')).toBeVisible();   // a sentence, not a Firebase code
     await expect(page.getByText(/auth\//)).toHaveCount(0);
   });
 
