@@ -25,7 +25,7 @@ const db = getFirestore(app);
 const viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 const state = {
   range: '24h', trip: 'all', zone: viewerZone, hourMode: 'local',
-  rows: [], trips: new Map(), users: new Map(), members: new Map(), now: Date.now(),
+  rows: [], trips: new Map(), users: new Map(), members: new Map(), deletions: [], now: Date.now(),
   testTrips: new Set(),
   showTests: false,       // test trips stay out of the table unless the owner asks to see them
   testUsers: new Set(),   // throwaway accounts (_pulse/prefs.testUsers, set by hand)
@@ -35,7 +35,7 @@ const state = {
   firstAt: null,          // the oldest _activity row: when collection began
   updatedAt: null,        // when live data last arrived (any listener), shown as "Updated …"
 };
-let unsubRows = null, unsubWrites = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null;
+let unsubRows = null, unsubWrites = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null, unsubDeletions = null;
 const memberSubs = new Map(); // tripId → unsubscribe
 /** The owner's dashboard preferences: test trips (kept out of every number) and the display zone. */
 const prefsRef = () => doc(db, '_pulse', 'prefs');
@@ -94,6 +94,11 @@ function start() {
     syncMemberSubs();
     scheduleRender();
   }, err => showError('Trips: ' + err.message));
+  // Accounts deleted (#452): one record each, written as the account deletes itself.
+  unsubDeletions = onSnapshot(collection(db, '_deletions'), snap => {
+    state.deletions = snap.docs.map(d => { const r = d.data(); return { ...r, at: r.at?.toMillis?.() ?? 0 }; });
+    scheduleRender();
+  }, err => showError('Deletions: ' + err.message));
   unsubUsers = onSnapshot(collection(db, 'users'), snap => {
     state.users = new Map(snap.docs.map(d => [d.id, d.data()]));
     dataArrived();
@@ -142,7 +147,7 @@ function syncMemberSubs() {
   }
 }
 function stop() {
-  unsubRows?.(); unsubWrites?.(); unsubTrips?.(); unsubUsers?.(); unsubPrefs?.(); unsubRows = unsubWrites = unsubTrips = unsubUsers = unsubPrefs = null;
+  unsubRows?.(); unsubWrites?.(); unsubTrips?.(); unsubUsers?.(); unsubPrefs?.(); unsubDeletions?.(); unsubRows = unsubWrites = unsubTrips = unsubUsers = unsubPrefs = unsubDeletions = null;
   for (const unsub of memberSubs.values()) unsub();
   memberSubs.clear();
   $('dot').classList.remove('on');
@@ -603,6 +608,21 @@ function render() {
     value: d.uids.length, label: dayLabel(d.day),
     tip: `<strong>${esc(dayLabel(d.day))}</strong> · ${d.uids.length} ${d.uids.length === 1 ? 'sign-up' : 'sign-ups'}<br>${names(d.uids)}`,
   })), Math.max(1, ...signups.map(d => d.uids.length)), { valueLabel: signups.length <= 31, tick: (it, i) => signups.length <= 14 ? it.label : (i % Math.ceil(signups.length / 8) === 0 ? it.label : '') });
+
+  // Accounts deleted, under the same Hide rules (a record carries its own test flag)
+  const gone = S.deletionStats((state.deletions ?? []).filter(r => !hiddenUids.has(r.uid) && !(state.hide.testUsers && r.test)), queryStart(), now + DAY);
+  $('deletionsSub').textContent = gone.count ? `${gone.count} in ${rangeLabel}` : `none in ${rangeLabel}`;
+  $('deletionsSummary').textContent = !gone.count ? '' : [
+    gone.afterTrip && `${gone.afterTrip} after a trip ended${gone.medianDaysAfterTrip === null ? '' : ` (median ${gone.medianDaysAfterTrip} ${gone.medianDaysAfterTrip === 1 ? 'day' : 'days'} later)`}`,
+    gone.duringOrBefore && `${gone.duringOrBefore} while a trip was still on or ahead`,
+    gone.noTrip && `${gone.noTrip} never on a trip`,
+  ].filter(Boolean).join(' · ');
+  const afterText = d => d.daysAfterTrip === null ? '<span class="muted">no trip</span>'
+    : d.daysAfterTrip < 0 ? `${-d.daysAfterTrip} ${d.daysAfterTrip === -1 ? 'day' : 'days'} before it ended`
+    : d.daysAfterTrip === 0 ? 'the day it ended' : `${d.daysAfterTrip} ${d.daysAfterTrip === 1 ? 'day' : 'days'} after`;
+  $('deletions').innerHTML = gone.count === 0 ? '<tr><td class="muted">No accounts deleted.</td></tr>' :
+    '<tr><th>Deleted</th><th>Person</th><th>Last trip</th><th class="n">Trips</th><th class="n">Account age</th></tr>' +
+    gone.list.map(d => `<tr><td>${esc(S.stampText(d.at, state.zone))}</td><td>${esc(userName(d.uid))}</td><td>${afterText(d)}</td><td class="n num">${d.trips}</td><td class="n num">${d.accountAgeDays === null ? '–' : `${d.accountAgeDays} d`}</td></tr>`).join('');
 
   // Countries the app was used in (from each event's zone, recorded at the moment of use)
   const countries = S.countryStats(rows, zoneCountry);

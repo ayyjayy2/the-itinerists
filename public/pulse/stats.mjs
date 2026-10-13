@@ -409,3 +409,39 @@ export function pageVisits(rows, pages, ignore = []) {
     .map(([page, s]) => ({ page, label: label.get(page) ?? page, views: s.views, users: s.users.size }))
     .sort((a, b) => b.views - a.views || b.users - a.users || a.label.localeCompare(b.label));
 }
+
+
+// ── Account deletions ───────────────────────────────────────────────────────
+
+/**
+ * Accounts deleted inside [from, to), newest first, from the `_deletions`
+ * records the app writes as an account deletes itself (#452). For each: days
+ * after their last trip ended (calendar days; negative = deleted while a
+ * trip was still on or ahead, null = never on a trip) and the account's age.
+ * Totals split those three ways, plus the median days after a trip ended.
+ */
+export function deletionStats(records, from, to) {
+  const DAY = 86_400_000;
+  const list = records
+    .filter(r => r.at >= from && r.at < to)
+    .map(r => {
+      // Calendar days: a trip that ended Oct 9 and a deletion on Oct 12 is 3 days after.
+      const deletedDay = Date.parse(new Date(r.at).toISOString().slice(0, 10));
+      return {
+        ...r,
+        daysAfterTrip: r.lastTripEnd ? Math.round((deletedDay - Date.parse(r.lastTripEnd)) / DAY) : null,
+        accountAgeDays: r.accountCreatedAt ? Math.floor((r.at - r.accountCreatedAt) / DAY) : null,
+      };
+    })
+    .sort((a, b) => b.at - a.at);
+  const after = list.filter(d => d.daysAfterTrip !== null && d.daysAfterTrip >= 0).map(d => d.daysAfterTrip).sort((a, b) => a - b);
+  const mid = after.length ? (after.length % 2 ? after[(after.length - 1) / 2] : (after[after.length / 2 - 1] + after[after.length / 2]) / 2) : null;
+  return {
+    list,
+    count: list.length,
+    afterTrip: after.length,
+    duringOrBefore: list.filter(d => d.daysAfterTrip !== null && d.daysAfterTrip < 0).length,
+    noTrip: list.filter(d => d.daysAfterTrip === null).length,
+    medianDaysAfterTrip: mid,
+  };
+}

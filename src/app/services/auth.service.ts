@@ -16,6 +16,7 @@ import {
   Firestore,
   doc,
   setDoc,
+  serverTimestamp,
   getDoc,
   updateDoc,
   collection,
@@ -37,6 +38,7 @@ import { UserService } from './user.service';
 import { randomCode } from '../utils/invite-code';
 import { TripEventsService } from './trip-events.service';
 import { ExpensesService } from './expenses.service';
+import { deletionRecord } from '../utils/account-deletion';
 
 const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
 
@@ -388,6 +390,12 @@ export class AuthService {
 
     const tripService = this.injector.get(TripService);
     const trips = await tripService.getUserTrips(user.uid);
+    // For the owner's Pulse: when, and how soon after a trip (#452). Never in the way of the deletion.
+    const profile = this.userService.firestoreUser();
+    await setDoc(doc(this.firestore, '_deletions', user.uid), {
+      ...deletionRecord({ uid: user.uid, createdAt: profile?.createdAt, isTest: profile?.isTest }, trips),
+      at: serverTimestamp(),
+    }).catch(err => console.warn('[AuthService] deletion record failed:', (err as Error).message));
     for (const trip of trips) await tripService.leaveTrip(trip.id);
 
     const gone = (path: string) => deleteDoc(doc(this.firestore, path, user.uid)).catch(() => {/* may not exist */});

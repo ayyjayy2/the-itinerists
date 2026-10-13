@@ -101,6 +101,7 @@ owner-only tools read the same database ↑
 - `userExpenses/{uid}` private expenses
 - `geocache` place lookups, shared
 - `_activity`, `_writes`, `_appLogs`, `_pulse` usage, edit and error logs; Pulse settings. Owner-only reads
+- `_deletions` one record per deleted account (when, account age, trips, last trip end; no name or content), for Pulse. Owner-only reads
 - `_apiConsoleAccess`, `_apiConsole` who may open the staging API console, and its request list. Written only by the owner's script
 
 ### Inside each trip

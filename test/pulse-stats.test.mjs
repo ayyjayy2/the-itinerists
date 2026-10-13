@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   dayKey, hourIn, startOfDay, stampText, onlineNow, windowMoved, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, peopleStats, tripStats,
+  deletionStats,
 } from '../public/pulse/stats.mjs';
 
 const H = 3_600_000;
@@ -322,4 +323,34 @@ test('the page list matches the app routes (signed-in pages), so no page is miss
     .map(m => m[1]).filter(p => p && p !== '**').map(p => '/' + p);
   const signedIn = routes.filter(p => !SIGNED_OUT_PAGES.includes(p)).sort();
   assert.deepEqual(APP_PAGES.map(p => p.path).sort(), signedIn);
+});
+
+// ── Account deletions (#452) ────────────────────────────────────────────────
+test('deletionStats: newest first, days after the last trip ended, account age, inside the range only', () => {
+  const day = 86_400_000;
+  const at = (iso) => Date.parse(iso);
+  const records = [
+    { uid: 'a', at: at('2026-10-12T15:00:00Z'), accountCreatedAt: at('2026-09-01T00:00:00Z'), trips: 1, lastTripEnd: '2026-10-09' },
+    { uid: 'b', at: at('2026-10-05T09:00:00Z'), accountCreatedAt: at('2026-10-04T09:00:00Z'), trips: 0, lastTripEnd: null },
+    { uid: 'c', at: at('2026-10-08T12:00:00Z'), accountCreatedAt: at('2026-08-01T00:00:00Z'), trips: 2, lastTripEnd: '2026-10-09' },
+    { uid: 'old', at: at('2026-01-01T00:00:00Z'), accountCreatedAt: at('2025-12-01T00:00:00Z'), trips: 1, lastTripEnd: '2025-12-20' },
+  ];
+  const s = deletionStats(records, at('2026-10-01T00:00:00Z'), at('2026-10-13T00:00:00Z'));
+  assert.deepEqual(s.list.map(d => d.uid), ['a', 'c', 'b']);                       // newest first; 'old' is outside the range
+  assert.equal(s.list[0].daysAfterTrip, 3);                                        // trip ended Oct 9 (end of day), deleted Oct 12
+  assert.equal(s.list[1].daysAfterTrip, -1);                                       // deleted before the trip was over
+  assert.equal(s.list[2].daysAfterTrip, null);                                     // never on a trip
+  assert.equal(s.list[0].accountAgeDays, 41);
+  assert.equal(s.list[2].accountAgeDays, 1);
+  assert.equal(s.count, 3);
+  assert.equal(s.afterTrip, 1);        // deleted after a trip ended
+  assert.equal(s.duringOrBefore, 1);   // while a trip was still on or ahead
+  assert.equal(s.noTrip, 1);
+  assert.equal(s.medianDaysAfterTrip, 3);
+  void day;
+});
+
+test('deletionStats: nothing in range gives zeros and no median', () => {
+  const s = deletionStats([], 0, 1);
+  assert.deepEqual(s, { list: [], count: 0, afterTrip: 0, duringOrBefore: 0, noTrip: 0, medianDaysAfterTrip: null });
 });
