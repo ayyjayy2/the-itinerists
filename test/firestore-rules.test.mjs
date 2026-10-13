@@ -156,7 +156,12 @@ await t('non-owner removes another member', 'deny', () => deleteDoc(doc(bob, 'tr
 await t('admin removes a member', 'allow', () => deleteDoc(doc(admin, 'trips', 'T', 'members', 'bob')));
 
 console.log('\nInvites (pre-auth join reads these)');
-await t('anon reads invite by code', 'allow', () => getDoc(doc(anon, 'trips', 'T', 'invites', 'CODE1')));
+// The invite doc names the owner and everyone who joined (createdBy, usedBy):
+// members only. Outsiders resolve a code through inviteIndex, which holds just
+// the trip id and expiry (#404).
+await t('anon reads invite by code', 'deny', () => getDoc(doc(anon, 'trips', 'T', 'invites', 'CODE1')));
+await t('signed-in non-member reads invite by code', 'deny', () => getDoc(doc(carol, 'trips', 'T', 'invites', 'CODE1')));
+await t('member reads the trip\'s invite', 'allow', () => getDoc(doc(bob, 'trips', 'T', 'invites', 'CODE1')));
 await t('anon lists a trip\'s invites', 'deny', () => getDocs(collection(anon, 'trips', 'T', 'invites')));
 await t('member lists the trip\'s invites', 'allow', () => getDocs(collection(bob, 'trips', 'T', 'invites')));
 await t('member adds themselves to usedBy', 'allow', () => updateDoc(doc(bob, 'trips', 'T', 'invites', 'CODE1'), { usedBy: arrayUnion('bob') }));

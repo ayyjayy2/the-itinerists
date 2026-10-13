@@ -10,7 +10,7 @@ import { Capacitor } from '@capacitor/core';
 import { FirebaseCrashlytics } from '@capacitor-firebase/crashlytics';
 import { CRASH_REPORTER_PLUGIN, CRASH_REPORTER_NATIVE } from './services/crash-reporter.service';
 import { provideAppCheck, initializeAppCheck, ReCaptchaV3Provider, getToken } from '@angular/fire/app-check';
-import { provideAnalytics, getAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
+import { provideAnalytics, initializeAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
 import { DEMO } from './demo-flag';
 
 import { routes } from './app.routes';
@@ -82,7 +82,10 @@ export const appConfig: ApplicationConfig = {
     // plugin will cover that later) and the demo reports nothing. Without a
     // measurementId in .env this contributes no providers — a safe no-op.
     ...(environment.firebase.measurementId && !NATIVE && !DEMO
-      ? [provideAnalytics(() => getAnalytics()), ScreenTrackingService, UserTrackingService]
+      // No automatic page_view: it reports the full address, which can hold an
+      // invite code (/join?code=…). ScreenTrackingService logs each route's
+      // path, without the query, so views are still counted.
+      ? [provideAnalytics(() => initializeAnalytics(getApp(), { config: { send_page_view: false } })), ScreenTrackingService, UserTrackingService]
       : []),
     { provide: ErrorHandler, useClass: AppErrorHandler },
 

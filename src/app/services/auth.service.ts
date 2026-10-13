@@ -173,9 +173,10 @@ export class AuthService {
     const tripId = await this.validateInviteCode(inviteCode);
     if (!tripId) throw new Error('This invite code is invalid or has expired.');
 
+    // The invite doc itself is members-only (it names the owner and who joined);
+    // the index has already confirmed the code is live, and the rules check the
+    // invite again when the member doc is written.
     const inviteRef  = doc(this.firestore, 'trips', tripId, 'invites', inviteCode);
-    const inviteSnap = await getDoc(inviteRef);
-    if (!inviteSnap.exists()) throw new Error('Invalid invite code.');
 
     // The Auth account is created with the person's real email: how they sign
     // in, and where password resets go. Legacy accounts used a synthetic
