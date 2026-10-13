@@ -36,9 +36,14 @@ export class ExchangeRateService {
     return p;
   }
 
-  /** Preload rates for a set of (home, date) pairs; resolves when all settle. */
-  async preload(home: string, dates: Iterable<string>): Promise<void> {
-    await Promise.all([...new Set(dates)].map(d => this.ratesFor(home, d).catch(() => null)));
+  /** Rates (base = home) for each of these dates; dates without a rate are left out. */
+  async ratesByDate(home: string, dates: Iterable<string>): Promise<Record<string, Rates>> {
+    const out: Record<string, Rates> = {};
+    await Promise.all([...new Set(dates)].map(async d => {
+      const r = await this.ratesFor(home, d).catch(() => null);
+      if (r) out[d] = r;
+    }));
+    return out;
   }
 
   private async fetchRates(home: string, date: string, key: string): Promise<Rates | null> {

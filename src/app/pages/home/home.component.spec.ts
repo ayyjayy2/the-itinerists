@@ -18,6 +18,7 @@ import { RecsService } from '../../services/recs.service';
 import { ExpensesService } from '../../services/expenses.service';
 import { DataService } from '../../services/data.service';
 import { SurveyService } from '../../services/survey.service';
+import { ExchangeRateService } from '../../services/exchange-rate.service';
 
 /** The real card boots a map; a stub with the same selector keeps the test cheap. */
 @Component({ selector: 'app-day-map-card', template: '<div data-stub="day-map"></div>' })
@@ -77,6 +78,8 @@ describe('HomeComponent (hidden pages)', () => {
         { provide: DataService,      useValue: { data: signal(null) } },
         { provide: EmailConfirmService, useValue: confirmStub },
         { provide: SurveyService, useValue: survey },
+        // 1 EUR = 1.25 USD on every date.
+        { provide: ExchangeRateService, useValue: { ratesByDate: (_h: string, dates: string[]) => Promise.resolve(Object.fromEntries(dates.map(d => [d, { USD: 1.25 }]))) } },
       ],
     })
     .overrideComponent(HomeComponent, {
@@ -216,6 +219,16 @@ describe('HomeComponent (hidden pages)', () => {
     const el = render().nativeElement as HTMLElement;
     expect(el.querySelector('.confirm-nudge')).not.toBeNull();
     expect(el.querySelector('.survey-nudge')).toBeNull();
+  });
+
+  it('the expenses widget adds a converted total in the trip currency for mixed currencies', async () => {
+    const e = (amount: number, currency: string) => ({ id: currency, date: '2026-10-02', description: 'x', amount, currency, paidBy: 'Alayna', splitAmong: 'All', category: 'Food', addedByUid: 'me', createdAt: 1 });
+    financeEntries.set([e(300, 'EUR'), e(12, 'USD')]);
+    const fixture = render();
+    await new Promise(r => setTimeout(r));   // the rates reply (Home's clock keeps it from ever being "stable")
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-widget="finance"]')!.textContent)
+      .toContain('€300.00 + $12.00 (≈ €309.60) tracked so far');
   });
 
   it('the expenses widget never adds different currencies together (#409)', () => {

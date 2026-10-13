@@ -2,9 +2,11 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem 1rem;
   margin-bottom: 1rem;
+  flex-wrap: wrap;               // a long total (several currencies) drops below the title
 
+  h2 { white-space: nowrap; }    // "My Expenses" stays on one line
   .user-sub { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem; }
 }
 
@@ -22,6 +24,7 @@
     font-size: 0.72rem;
     font-weight: 600;
     opacity: 0.7;
+    margin-left: 0.2rem;   // "$12.00 USD", not "$12.00USD"
   }
 
   &.total-empty { opacity: 0.45; font-size: 0.9rem; }
@@ -193,4 +196,10 @@
     display: flex;
     gap: 0.5rem;
   }
+}
+
+// The converted total under the per-currency amounts (mixed currencies only).
+.total-converted {
+  margin: -0.25rem 0 1rem; font-weight: 800; color: var(--text);
+  .total-note { display: block; font-size: 0.78rem; font-weight: 400; color: var(--text-muted); }
 }

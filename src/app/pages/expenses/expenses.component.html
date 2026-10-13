@@ -15,6 +15,13 @@
     </div>
   </div>
 
+  @if (mixedCurrencies()) {
+    <p class="total-converted">
+      ≈ {{ money(converted().total, homeCurrency()) }} in all
+      <span class="total-note">converted to {{ homeCurrency() }} at each expense's date rate@if (converted().missing) {; {{ converted().missing }} not converted yet (no rate)}</span>
+    </p>
+  }
+
   <!-- Add form toggle -->
   @if (!showForm()) {
     <button class="btn btn-primary add-btn" (click)="openForm()">+ Add Expense</button>
