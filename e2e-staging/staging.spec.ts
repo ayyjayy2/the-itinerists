@@ -29,6 +29,42 @@ test.describe('1. Sign-in', () => {
     await expect(page.getByText(/auth\//)).toHaveCount(0);
   });
 
+  test('logging out ends the session: no saved sign-in, app pages send you to sign in (#405)', async ({ page }) => {
+    await signIn(page, 'maya');
+    await page.waitForTimeout(1_500);                                 // let Firebase save the session
+    const savedSignIns = () => page.evaluate(() => new Promise<number>(resolve => {
+      const open = indexedDB.open('firebaseLocalStorageDb');
+      open.onerror = () => resolve(-1);
+      open.onsuccess = () => {
+        const db = open.result;
+        if (!db.objectStoreNames.contains('firebaseLocalStorage')) { db.close(); resolve(0); return; }
+        const all = db.transaction('firebaseLocalStorage').objectStore('firebaseLocalStorage').getAll();
+        all.onsuccess = () => { db.close(); resolve(all.result.filter((r: { fbase_key?: string }) => r.fbase_key?.startsWith('firebase:authUser:')).length); };
+        all.onerror = () => { db.close(); resolve(-1); };
+      };
+    }));
+    expect(await savedSignIns()).toBe(1);
+
+    await signOut(page);
+    expect(await savedSignIns()).toBe(0);                             // nothing left that could sign back in
+    await page.reload();
+    await expect(page).toHaveURL(/\/login/);                          // a reload stays signed out
+    for (const path of ['/home', '/finance', '/profile']) {
+      await page.goto(path);
+      await expect(page).toHaveURL(/\/(login|welcome)/);              // app pages need signing in again
+    }
+    await page.goBack();
+    await expect(page).toHaveURL(/\/(login|welcome)/);                // Back doesn't reopen the app either
+  });
+
+  test('the reset page answers the same for an address with no account (#405)', async ({ page }) => {
+    await page.goto('/forgot-password');
+    await page.getByLabel('Email').fill(`nobody-${Date.now()}@example.com`);
+    await page.locator('form button[type=submit]').click();
+    await expect(page.getByText(/If an account uses n•••@example\.com, a reset link is on its way\./)).toBeVisible();
+    await expect(page.getByText(/No account|not found|doesn't exist/i)).toHaveCount(0);
+  });
+
   test('Profile shows the version line', async ({ browser, baseURL }) => {
     const { ctx, page } = await secondPerson(browser, 'alayna', baseURL!);
     await page.goto('/profile');

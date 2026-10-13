@@ -8,7 +8,7 @@ import { TripService } from '../../services/trip.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
-import { userMessage, isBrokenLocalCacheError } from '../../utils/user-message';
+import { userMessage, isBrokenLocalCacheError, isTooManyAttempts, TOO_MANY_ATTEMPTS_MESSAGE } from '../../utils/user-message';
 import { LocalCacheService } from '../../services/local-cache.service';
 import { SESSION_EXPIRED_MESSAGE } from '../../utils/session';
 
@@ -54,6 +54,7 @@ export class LoginComponent {
       this.error.set(
         err instanceof UseEmailToSignInError ? err.message
         : isBrokenLocalCacheError(err) ? userMessage(err, '')
+        : isTooManyAttempts(err) ? TOO_MANY_ATTEMPTS_MESSAGE
         : 'Wrong email or password. Check them and try again.');
       this.loading.set(false);
       return;
