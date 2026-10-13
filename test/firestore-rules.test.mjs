@@ -344,6 +344,23 @@ await t('admin lists the list', 'deny', () => getDocs(collection(admin, '_waitli
 await t('anon edits an entry', 'deny', () => updateDoc(doc(anon, '_waitlist', 'w1'), { email: 'x@y.io' }));
 await t('anon deletes an entry', 'deny', () => deleteDoc(doc(anon, '_waitlist', 'w1')));
 
+console.log('\nAccount deletion records (_deletions, #452)');
+const del = (uid, extra = {}) => ({ uid, at: serverTimestamp(), accountCreatedAt: 1_780_000_000_000, trips: 2, lastTripEnd: '2026-10-09', test: false, ...extra });
+await t('person records their own deletion', 'allow', () => setDoc(doc(carol, '_deletions', 'carol'), del('carol')));
+await t('record with no trip', 'allow', () => setDoc(doc(dave, '_deletions', 'dave'), del('dave', { trips: 0, lastTripEnd: null })));
+await t("someone else's deletion", 'deny', () => setDoc(doc(bob, '_deletions', 'alice'), del('alice')));
+await t('record under another id', 'deny', () => setDoc(doc(bob, '_deletions', 'x'), del('bob')));
+await t('record with a name in it', 'deny', () => setDoc(doc(bob, '_deletions', 'bob'), del('bob', { displayName: 'Bob' })));
+await t('record with a client timestamp', 'deny', () => setDoc(doc(bob, '_deletions', 'bob'), del('bob', { at: new Date() })));
+await t('record with a malformed trip date', 'deny', () => setDoc(doc(bob, '_deletions', 'bob'), del('bob', { lastTripEnd: 'soon' })));
+await t('anon records a deletion', 'deny', () => setDoc(doc(anon, '_deletions', 'carol'), del('carol')));
+const existingDeletion = () => testEnv.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), '_deletions', 'carol'), { ...del('carol'), at: new Date() }));
+await t('overwrite a deletion record', 'deny', async () => { await existingDeletion(); return setDoc(doc(carol, '_deletions', 'carol'), del('carol', { trips: 9 })); });
+await t('delete a deletion record', 'deny', async () => { await existingDeletion(); return deleteDoc(doc(carol, '_deletions', 'carol')); });
+await t('owner lists deletions', 'allow', async () => { await existingDeletion(); return getDocs(collection(owner, '_deletions')); });
+await t('person reads their own record', 'deny', async () => { await existingDeletion(); return getDoc(doc(carol, '_deletions', 'carol')); });
+await t('admin lists deletions', 'deny', () => getDocs(collection(admin, '_deletions')));
+
 console.log('\nWrite log (_writes)');
 const wr = (uid, extra = {}) => ({ uid, tripId: 'T', kind: 'itinerary', action: 'added', at: serverTimestamp(), ...extra });
 await t('member logs own write', 'allow', () => setDoc(doc(bob, '_writes', 'w1'), wr('bob')));

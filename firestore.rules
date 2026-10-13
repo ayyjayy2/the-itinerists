@@ -177,6 +177,24 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Account deletions: _deletions/{uid} (#452) ─────────────────────────
+    // Written by the account itself as it deletes itself, read only in Pulse:
+    // when, when the account was made, how many trips, when the last ended.
+    // No name, email or content. One per account, never changed.
+    match /_deletions/{userId} {
+      allow create: if isSignedIn() && userId == uid()
+        && request.resource.data.keys().hasOnly(['uid', 'at', 'accountCreatedAt', 'trips', 'lastTripEnd', 'test'])
+        && request.resource.data.uid == uid()
+        && request.resource.data.at == request.time
+        && request.resource.data.accountCreatedAt is int
+        && request.resource.data.trips is int && request.resource.data.trips >= 0
+        && (request.resource.data.lastTripEnd == null
+            || (request.resource.data.lastTripEnd is string && request.resource.data.lastTripEnd.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+        && request.resource.data.test is bool;
+      allow read: if isAppOwner();
+      allow update, delete: if false;
+    }
+
     // ── Per-account limits: _quotas/{uid}/kinds/{kind} ───────────────────────
     // { windowStart, count, at }: how many of a kind this account has added
     // since windowStart. The counter only ever goes up by one, or starts over

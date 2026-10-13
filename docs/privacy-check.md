@@ -49,9 +49,9 @@ deletes itself through Profile, and the Admin SDK lists anything left behind. Th
 
 ## Still open
 
-- **Usage records** (`_activity`, `_writes`) stay after an account is deleted, keyed by the old account id. Nobody but
-  the app owner can read them, and with the profile gone they no longer name anyone. The policy doesn't say either
-  way. **Owner's decision:** say so in the policy, or remove them (an admin script now, a Cloud Function after Blaze).
+- **Usage records** (`_activity`, `_writes`) stay after an account is deleted, keyed by the old account id. **Owner's
+  decision (Oct 13): keep them**, and the privacy policy says so. Each deletion also leaves a record in `_deletions`
+  (when, account age, trips, last trip end; no name, email or content) for Pulse's "Accounts deleted" card (#452).
 - **Daily-limit counters** from the last 24 hours stay (a count and a time, nothing else). By design they can't be
   removed early, or deleting one would reset the limit.
 - **A removed member's** outfit photos and packing list stay on the trip, because nobody else may read or delete them. A

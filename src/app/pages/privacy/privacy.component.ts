@@ -82,7 +82,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <ul>
           <li><strong>Edit</strong> your name, avatar, email and password on the Profile page.</li>
           <li><strong>Leave a trip</strong> from Trip Settings. Your personal lists and photos for that trip go with you.</li>
-          <li><strong>Delete your account</strong> from the Profile page. This removes your profile, email, personal lists and photos, takes you off every trip, and deletes your sign-in. A trip you owned passes to its longest-standing member; a trip you were the only member of is deleted, with everything in it. Shared things you added to a trip with others, such as itinerary events and expenses, stay with the trip for them. This cannot be undone.</li>
+          <li><strong>Delete your account</strong> from the Profile page. This removes your profile, email, personal lists and photos, takes you off every trip, and deletes your sign-in. A trip you owned passes to its longest-standing member; a trip you were the only member of is deleted, with everything in it. Shared things you added to a trip with others, such as itinerary events and expenses, stay with the trip for them, and usage records are kept (see How long we keep data). This cannot be undone.</li>
         </ul>
 
         <h2>Your rights</h2>
@@ -97,7 +97,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <p>We don't sell your personal information or share it for targeted advertising, and we don't collect sensitive personal information. If your state gives you privacy rights (such as California, Colorado, Virginia or Illinois), you can use them by emailing us, and we won't treat you differently for doing so.</p>
 
         <h2>How long we keep data</h2>
-        <p>Until you delete it. Trip content stays as long as the trip has members. The iPhone app launch list is deleted once we've emailed everyone on it. Error reports are kept for troubleshooting and contain no personal data.</p>
+        <p>Until you delete it, with one exception: usage records (which screens you opened and when, and that you changed something, never what you wrote) are kept after you delete your account, together with a note of when it was deleted, when it was created, how many trips it was on and when the last one ended. Those notes carry no name, email or trip content and are used only to understand how the app is used. Trip content stays as long as the trip has members. The iPhone app launch list is deleted once we've emailed everyone on it. Error reports are kept for troubleshooting and contain no personal data.</p>
 
         <h2>Security</h2>
         <p>All traffic is encrypted in transit. Database access is restricted by security rules that are tested with every change. Only the developer can administer the project.</p>

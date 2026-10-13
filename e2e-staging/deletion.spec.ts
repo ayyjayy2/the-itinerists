@@ -99,7 +99,7 @@ test.afterAll(async () => {
     await db.doc(`trips/${t}`).delete().catch(() => {});
   }
   for (const p of [`users/${uid}/private/account`, `users/${uid}`, `userTrips/${uid}`, `userExpenses/${uid}`,
-    `_quotas/${uid}/kinds/photos`, `_quotas/${uid}/kinds/trips`, `inviteIndex/${CODE}`]) await db.doc(p).delete().catch(() => {});
+    `_quotas/${uid}/kinds/photos`, `_quotas/${uid}/kinds/trips`, `inviteIndex/${CODE}`, `_deletions/${uid}`]) await db.doc(p).delete().catch(() => {});
 });
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -124,4 +124,9 @@ test('deleting an account through Profile leaves nothing of it behind (#408)', a
   // The shared trip and its shared items are still there for the other member.
   expect((await db.doc(`trips/${SHARED}/members/${otherUid}`).get()).exists).toBe(true);
   expect((await db.doc(`trips/${SHARED}/itinerary/shared`).get()).exists).toBe(true);
+  // Pulse's deletion record (#452): counts, dates and the test flag; nothing that names the person.
+  const record = (await db.doc(`_deletions/${uid}`).get()).data();
+  expect(record).toBeTruthy();
+  expect(Object.keys(record!).sort()).toEqual(['accountCreatedAt', 'at', 'lastTripEnd', 'test', 'trips', 'uid']);
+  expect(record).toMatchObject({ uid, trips: 2, lastTripEnd: '2026-11-05', test: true });
 });
