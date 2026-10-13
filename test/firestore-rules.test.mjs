@@ -281,6 +281,8 @@ await t('member writes other fields to a trip cache', 'deny', () => setDoc(tripG
 await t('member deletes the trip cache (trip teardown)', 'allow', async () => { await testEnv.withSecurityRulesDisabled(c => setDoc(tripGeo(c.firestore()), { entries: {} })); return deleteDoc(tripGeo(bob)); });
 const appLog = (extra = {}) => ({ timestamp: new Date().toISOString(), type: 'js_error', message: 'boom', url: '/home', sessionId: 's1', ...extra });
 await t('anon creates _appLogs', 'allow', () => setDoc(doc(anon, '_appLogs', 'l2'), appLog({ stack: 'at x' })));
+await t('a blocked request (CSP) is logged (#445)', 'allow', () => setDoc(doc(bob, '_appLogs', 'l3'), appLog({ type: 'csp_violation', message: 'connect-src blocked example.com' })));
+await t('an unknown log type', 'deny', () => setDoc(doc(bob, '_appLogs', 'l4'), appLog({ type: 'anything' })));
 await t('_appLogs with an extra field', 'deny', () => setDoc(doc(anon, '_appLogs', 'l2'), appLog({ data: 'x' })));
 await t('_appLogs with a huge message', 'deny', () => setDoc(doc(anon, '_appLogs', 'l2'), appLog({ message: 'x'.repeat(5000) })));
 await t('_appLogs in another shape', 'deny', () => setDoc(doc(anon, '_appLogs', 'l2'), { m: 'y' }));
