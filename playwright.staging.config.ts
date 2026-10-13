@@ -29,5 +29,7 @@ export default defineConfig({
     { name: 'authorization', testMatch: /authorization\.spec\.ts/ },
     // #406: a second account on the same browser never sees the first one's trips.
     { name: 'account-switch', testMatch: /account-switch\.spec\.ts/ },
+    // #408: deleting an account removes everything it promises (a throwaway account).
+    { name: 'deletion', testMatch: /deletion\.spec\.ts/ },
   ],
 });

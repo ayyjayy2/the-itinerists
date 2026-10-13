@@ -86,6 +86,24 @@ export class ExpensesService {
     );
   }
 
+  /**
+   * Account deletion: stop listening and drop this device's copies first.
+   * Otherwise the listener sees the list disappear and restores it from the
+   * backup, in the middle of the deletion (#408).
+   */
+  forget(): void {
+    this._unsubscribe?.();
+    this._unsubscribe = null;
+    const name = this.userService.currentUser()?.name;
+    if (name) {
+      try {
+        localStorage.removeItem(STORAGE_KEY_PREFIX + name);
+        localStorage.removeItem(BACKUP_KEY_PREFIX + name);
+      } catch { /* storage unavailable */ }
+    }
+    this._expenses.set([]);
+  }
+
   add(expense: Omit<Expense, 'id'>): void {
     const newItem: Expense = { ...sanitizeStrings(expense), id: crypto.randomUUID() };
     const updated = [...this._expenses(), newItem];

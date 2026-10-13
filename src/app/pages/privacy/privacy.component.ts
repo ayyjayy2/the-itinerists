@@ -20,7 +20,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <header class="policy-head">
           <app-brand [mark]="40" [showWordmark]="false" />
           <h1>Privacy Policy</h1>
-          <p class="effective">Effective October 12, 2026</p>
+          <p class="effective">Effective October 13, 2026</p>
           <p class="lede">The Itinerists is a group trip planner. This page says exactly what the app stores, who can see it, and which outside services it talks to. Short version: your trip data is shared only with the people on your trip, your email is private, we don't sell or advertise with anything, and you can delete your account yourself at any time.</p>
         </header>
 
@@ -34,7 +34,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         </ul>
         <h3>Trip content you add</h3>
         <ul>
-          <li>Trip names, destinations and dates, itinerary events, flights, stays, transportation, shared expenses and who paid, recommendations, map pins, and an activity log of changes. Everyone on that trip can see and edit this.</li>
+          <li>Trip names, destinations and dates, itinerary events, flights, stays, transportation, shared expenses and who paid, recommendations, map pins, and an activity log of changes. Everyone on that trip can see and edit this. Marking who an item is for only changes what each person's screens show; everyone on the trip can still open it.</li>
           <li><strong>Personal lists</strong> — your packing list and your "My Expenses" log — are visible only to you.</li>
           <li><strong>Outfit photos</strong> you choose to add are visible only to you. The app never opens your camera or photo library on its own; you pick each photo.</li>
         </ul>
@@ -55,7 +55,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
           <li><strong>People on your trip</strong> see your name and avatar, and everything added to that trip.</li>
           <li><strong>Only you</strong> see your email, personal lists, outfit photos, and account settings.</li>
           <li><strong>Nobody</strong> can list the app's users. Access is enforced by database security rules, not just by the app's screens.</li>
-          <li><strong>The app's administrator</strong> (the developer) can read account records to support you and to remove accounts that break the rules.</li>
+          <li><strong>The app's administrator</strong> (the developer) can read account records, and each trip's name, destinations, dates and member list, to support you and to remove accounts that break the rules. Not the trip's contents.</li>
         </ul>
 
         <h2>Services we rely on</h2>
@@ -68,7 +68,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
             <tr><td>Google Analytics (web only)</td><td>Usage statistics</td><td>Screens opened, app version, time zone, platform, your account id, the open trip's id, a random device id, and when a trip is created, joined or shared. Not your name, email or trip content</td></tr>
             <tr><td>Google reCAPTCHA (web only)</td><td>Integrity checks</td><td>Browser and interaction signals, under Google's own privacy policy</td></tr>
             <tr><td>Open-Meteo</td><td>Weather on the home screen</td><td>Your trip destination's coordinates. Never your own location</td></tr>
-            <tr><td>OpenStreetMap Nominatim</td><td>Turns place names into map pins</td><td>The place name you typed. Results are kept in our database so each place is looked up once</td></tr>
+            <tr><td>OpenStreetMap Nominatim</td><td>Turns place names into map pins</td><td>Place names and addresses on your trip: destinations, itinerary places, stay addresses, pick-up and drop-off points and map pins, sent from your device. Never notes, booking references or links. Results are kept in our database so each place is looked up once</td></tr>
             <tr><td>OpenStreetMap tiles</td><td>The map pictures on Map and day cards</td><td>A request from your device for the area of the map on screen</td></tr>
             <tr><td>Frankfurter</td><td>Currency conversion rates</td><td>Currency codes only</td></tr>
             <tr><td>Google Fonts</td><td>The app's typefaces</td><td>A font request from your device</td></tr>
@@ -82,7 +82,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <ul>
           <li><strong>Edit</strong> your name, avatar, email and password on the Profile page.</li>
           <li><strong>Leave a trip</strong> from Trip Settings. Your personal lists and photos for that trip go with you.</li>
-          <li><strong>Delete your account</strong> from the Profile page. This removes your profile, email, personal lists and photos, takes you off every trip, and deletes your sign-in. A trip you owned passes to its longest-standing member; a trip you were the only member of is deleted. This cannot be undone.</li>
+          <li><strong>Delete your account</strong> from the Profile page. This removes your profile, email, personal lists and photos, takes you off every trip, and deletes your sign-in. A trip you owned passes to its longest-standing member; a trip you were the only member of is deleted, with everything in it. Shared things you added to a trip with others, such as itinerary events and expenses, stay with the trip for them. This cannot be undone.</li>
         </ul>
 
         <h2>Your rights</h2>
