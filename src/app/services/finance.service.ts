@@ -1,13 +1,15 @@
 import { Injectable, signal, inject, Injector, runInInjectionContext, effect, computed } from '@angular/core';
-import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, Unsubscribe } from '@angular/fire/firestore';
+import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, serverTimestamp, Unsubscribe } from '@angular/fire/firestore';
 import { FinanceEntryDoc } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
 import { TripService } from './trip.service';
 import { TripEventsService } from './trip-events.service';
 import { financeAdded, financeChanged, financeRemoved } from '../utils/event-text';
+import { markId, paidKey, parsePaidKey, ticksToShare } from '../utils/paid-marks';
 
-const PAID_PREFIX = 'tripplanner_paid_items_'; // per-trip: paid state shouldn't bleed across trips
+// Where ticks lived before they were shared with the trip (#448); moved to the trip once, then removed.
+const PAID_PREFIX = 'tripplanner_paid_items_';
 
 @Injectable({ providedIn: 'root' })
 export class FinanceService {
@@ -36,13 +38,54 @@ export class FinanceService {
   readonly loaded = this._loaded.asReadonly();
 
   private unsub?: Unsubscribe;
+  private unsubPaid?: Unsubscribe;
 
   constructor() {
     effect(() => {
       const tripId = this.signedInTripId();
       this.subscribe(tripId);
-      this._paidItems.set(this.loadPaid(tripId));
+      this.subscribePaid(tripId);
     });
+  }
+
+  /**
+   * "Paid" ticks are shared with the trip (#448): one record per debt item
+   * under trips/{id}/payments, live for everyone. On the first snapshot, ticks
+   * this device saved before they were shared are moved to the trip, once.
+   */
+  private subscribePaid(tripId: string | null): void {
+    this.unsubPaid?.(); this.unsubPaid = undefined;
+    this._paidItems.set(new Set());
+    if (!tripId) return;
+    let first = true;
+    runInInjectionContext(this.injector, () => {
+      this.unsubPaid = onSnapshot(collection(this.firestore, 'trips', tripId, 'payments'), snap => {
+        const shared = new Set(snap.docs.map(d => d.data() as { from: string; to: string; itemId: string })
+          .map(m => paidKey(m.from, m.to, m.itemId)));
+        this._paidItems.set(shared);
+        if (first) { first = false; void this.moveDeviceTicks(tripId, shared); }
+      }, err => console.warn('[FinanceService] paid marks:', err.message));
+    });
+  }
+
+  private async moveDeviceTicks(tripId: string, shared: ReadonlySet<string>): Promise<void> {
+    let local: string[] = [];
+    try { local = JSON.parse(localStorage.getItem(PAID_PREFIX + tripId) ?? '[]'); } catch { /* none */ }
+    const toShare = ticksToShare(local, shared);
+    try {
+      await Promise.all(toShare.map(key => this.writeMark(tripId, key)));
+      localStorage.removeItem(PAID_PREFIX + tripId);
+    } catch (err) {
+      console.warn('[FinanceService] moving ticks to the trip failed; will retry next time:', (err as Error).message);
+    }
+  }
+
+  private writeMark(tripId: string, key: string): Promise<void> {
+    const parts = parsePaidKey(key);
+    const uid = this.userService.currentUser()?.uid;
+    if (!parts || !uid) return Promise.resolve();
+    return runInInjectionContext(this.injector, () =>
+      setDoc(doc(this.firestore, 'trips', tripId, 'payments', markId(key)), { ...parts, markedBy: uid, at: serverTimestamp() }));
   }
 
   /** Retained for AppComponent compatibility — the constructor effect drives the subscription. */
@@ -96,21 +139,23 @@ export class FinanceService {
 
   private currency(): string { return this.tripService.activeTrip()?.currency || 'USD'; }
 
+  /** Tick or untick one debt item for the whole trip. Shows at once; the shared record follows. */
   togglePaidItem(key: string): void {
     const tid = this.tripContext.activeTripId();
     if (!tid) return;
-    const s = new Set(this._paidItems());
-    s.has(key) ? s.delete(key) : s.add(key);
-    this._paidItems.set(s);
-    localStorage.setItem(PAID_PREFIX + tid, JSON.stringify([...s]));
-  }
-
-  private loadPaid(tripId: string | null): Set<string> {
-    if (!tripId) return new Set();
-    try {
-      const raw = localStorage.getItem(PAID_PREFIX + tripId);
-      return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
-    } catch { return new Set(); }
+    const wasPaid = this._paidItems().has(key);
+    const next = new Set(this._paidItems());
+    wasPaid ? next.delete(key) : next.add(key);
+    this._paidItems.set(next);
+    const write = wasPaid
+      ? runInInjectionContext(this.injector, () => deleteDoc(doc(this.firestore, 'trips', tid, 'payments', markId(key))))
+      : this.writeMark(tid, key);
+    write.catch(err => {
+      console.warn('[FinanceService] paid tick failed:', (err as Error).message);
+      const undo = new Set(this._paidItems());
+      wasPaid ? undo.add(key) : undo.delete(key);
+      this._paidItems.set(undo);
+    });
   }
 
   private requireTrip(): string {

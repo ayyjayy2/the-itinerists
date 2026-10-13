@@ -21,6 +21,7 @@ import { FocusTargetDirective } from '../../shared/focus-target.directive';
 import { FocusService } from '../../services/focus.service';
 import { safeLink } from '../../utils/safe-link';
 import { leftOutOfSplit, splitPatch } from '../../utils/split-gaps';
+import { paidKey } from '../../utils/paid-marks';
 
 @Component({
   selector: 'app-finance',
@@ -309,7 +310,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     }));
 
   // ── Paid tracking ─────────────────────────────────────────────────────────────
-  paidKey(from: string, to: string, id: string): string { return `${from}__${to}__${id}`; }
+  paidKey(from: string, to: string, id: string): string { return paidKey(from, to, id); }
   isItemPaid(from: string, to: string, id: string): boolean {
     return this.financeService.paidItems().has(this.paidKey(from, to, id));
   }

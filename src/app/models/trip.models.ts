@@ -346,6 +346,15 @@ export interface FinanceEntryDoc {
   createdAt: number;
 }
 
+/** A Finance "paid" tick shared with the trip (#448): trips/{id}/payments/{markId}. */
+export interface PaymentMark {
+  from: string;     // who owed (display name, as in the split)
+  to: string;       // who was owed
+  itemId: string;   // the finance entry
+  markedBy: string; // uid of whoever ticked it
+  at: unknown;      // server time
+}
+
 export interface FinanceEntry {
   date: string;
   description: string;

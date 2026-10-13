@@ -103,6 +103,32 @@ test.describe('2. Live updates between two people', () => {
       await maya.ctx.close();
     }
   });
+
+  test('a debt ticked as paid shows as paid for the other person too, live (#448)', async ({ page, browser, baseURL }) => {
+    const pairCard = (p: typeof page) => p.locator('.debt-card').filter({ hasText: 'Maya' }).filter({ hasText: 'Alayna' }).first();
+    const tab = (p: typeof page, name: 'Owed' | 'Paid') => p.locator('.status-tabs, .settle-tabs, body').getByRole('button', { name, exact: true }).first();
+    await page.goto('/finance');
+    await expect(pairCard(page)).toBeVisible({ timeout: 20_000 });
+    const item = pairCard(page).locator('.debt-item').first();
+    const label = (await item.locator('.di-label').innerText()).trim();
+
+    const maya = await secondPerson(browser, 'maya', baseURL!);
+    try {
+      await maya.page.goto('/finance');
+      await expect(pairCard(maya.page)).toBeVisible({ timeout: 20_000 });
+      await item.locator('.di-check').click();                                         // Alayna ticks it
+      await tab(maya.page, 'Paid').click();                                            // Maya, no reload
+      await expect(pairCard(maya.page).locator('.debt-item.item-paid', { hasText: label })).toBeVisible({ timeout: 20_000 });
+
+      await tab(page, 'Paid').click();                                                 // Alayna unticks it
+      await pairCard(page).locator('.debt-item', { hasText: label }).locator('.di-check').click();
+      await tab(maya.page, 'Owed').click();
+      await expect(pairCard(maya.page).locator('.debt-item', { hasText: label })).toBeVisible({ timeout: 20_000 });
+      await expect(pairCard(maya.page).locator('.debt-item.item-paid', { hasText: label })).toHaveCount(0);
+    } finally {
+      await maya.ctx.close();
+    }
+  });
 });
 
 test.describe('3. Every page', () => {

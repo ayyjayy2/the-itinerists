@@ -428,6 +428,20 @@ service cloud.firestore {
           && request.resource.data.entries is map;
       }
 
+      // Finance "paid" ticks, shared with the trip (#448): one record per
+      // debt item marked paid (from → to, for one expense), saying who ticked
+      // it. Unticking deletes it; a tick is never edited.
+      match /payments/{markId} {
+        allow read, delete: if isMember(tripId);
+        allow create: if isMember(tripId)
+          && request.resource.data.keys().hasOnly(['from', 'to', 'itemId', 'markedBy', 'at'])
+          && request.resource.data.markedBy == uid()
+          && request.resource.data.at == request.time
+          && request.resource.data.from is string && request.resource.data.to is string
+          && request.resource.data.itemId is string;
+        allow update: if false;
+      }
+
       match /packing/{ownerUid} {
         allow read, write: if isMember(tripId) && ownerUid == uid();
         allow delete:      if isMember(tripId) && (ownerUid == uid() || isOwner(tripId));
