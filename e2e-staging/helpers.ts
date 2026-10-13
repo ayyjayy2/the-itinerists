@@ -11,7 +11,7 @@ export const stamp = () => `${TAG} ${new Date().toISOString().slice(11, 19)}`;
 
 const ACCOUNTS = join(__dirname, '..', 'scripts', 'staging-accounts.local.json');
 /** A staging test account's password: from the git-ignored file, or STAGING_PASSWORD_<NAME>. */
-export function password(user: 'alayna' | 'maya'): string {
+export function password(user: 'alayna' | 'maya' | 'sam'): string {
   const env = process.env[`STAGING_PASSWORD_${user.toUpperCase()}`];
   if (env) return env;
   if (!existsSync(ACCOUNTS)) throw new Error(`No password for ${user}: add scripts/staging-accounts.local.json (node scripts/seed-staging.js writes it) or set STAGING_PASSWORD_${user.toUpperCase()}.`);
@@ -24,7 +24,7 @@ export function apiKey(): string {
   return env.match(/apiKey:\s*'([^']+)'/)![1];
 }
 
-export async function signIn(page: Page, user: 'alayna' | 'maya', as: 'username' | 'email' = 'username') {   // 'email' = a recovery email
+export async function signIn(page: Page, user: 'alayna' | 'maya' | 'sam', as: 'username' | 'email' = 'username') {   // 'email' = a recovery email
   await page.goto('/login');
   await page.getByPlaceholder('you@example.com').fill(as === 'email' ? `${user}@the-itinerists.local` : user);
   await page.getByPlaceholder('Enter your password').fill(password(user));
