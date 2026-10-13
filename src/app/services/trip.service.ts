@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext, signal, computed, effect } from '@angular/core';
 import {
   Firestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot,
-  writeBatch, arrayUnion, arrayRemove, increment, Unsubscribe,
+  writeBatch, arrayUnion, arrayRemove, increment, Unsubscribe, query, where,
 } from '@angular/fire/firestore';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
@@ -417,7 +417,9 @@ export class TripService {
   private static readonly SUBCOLLECTIONS = [
     'members', 'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
     'flights', 'outfits', 'dayLabels', 'packing', 'packingSuggestions',
-    'invites', 'activityLog',
+    'outfitPhotos', 'invites', 'activityLog', 'events',
+    // Last: packing lists are found through it.
+    'removedMembers',
   ];
 
   /**
@@ -445,6 +447,9 @@ export class TripService {
     // Per-user packing list (TP-21).
     await deleteDoc(doc(this.firestore, 'trips', tripId, 'packing', user.uid))
       .catch(() => {/* may not exist */});
+
+    // Their outfit photos: private to them, and the policy says they go with them (#408).
+    await this.deleteOwnOutfitPhotos(tripId, user.uid);
 
     // Packing suggestions to or from the leaver (TP-21).
     const suggestions = await getDocs(collection(this.firestore, 'trips', tripId, 'packingSuggestions'));
@@ -475,6 +480,13 @@ export class TripService {
       deleteDoc(doc(this.firestore, 'trips', tripId, 'packing', uid)).catch(() => {/* may not exist */})));
   }
 
+  /** Your own outfit photos on a trip. Photos are private, so only your own can be found and deleted. */
+  private async deleteOwnOutfitPhotos(tripId: string, uid: string): Promise<void> {
+    const mine = await getDocs(query(collection(this.firestore, 'trips', tripId, 'outfitPhotos'), where('ownerUid', '==', uid)))
+      .catch(() => null);
+    await Promise.all((mine?.docs ?? []).map(d => deleteDoc(d.ref).catch(() => {/* best-effort */})));
+  }
+
   private async purgeTripData(tripId: string): Promise<void> {
     const deleteCollection = async (name: string): Promise<void> => {
       const snap = await getDocs(collection(this.firestore, 'trips', tripId, name));
@@ -494,6 +506,7 @@ export class TripService {
     for (const name of TripService.SUBCOLLECTIONS) {
       if (name === 'members') continue;
       if (name === 'packing') { await this.deletePackingLists(tripId); continue; }
+      if (name === 'outfitPhotos') { await this.deleteOwnOutfitPhotos(tripId, this.requireUser().uid); continue; }
       await deleteCollection(name);
     }
     await deleteDoc(doc(this.firestore, 'trips', tripId));

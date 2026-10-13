@@ -101,6 +101,16 @@ export class UserService {
       updateDoc(doc(this.firestore, 'users', uid), { homePins: pins }));
   }
 
+  /**
+   * Account deletion: stop the profile listeners. The private-account one
+   * writes the sign-in email back whenever the record is missing, which would
+   * re-create it while the account is being deleted (#408).
+   */
+  stopListening(): void {
+    this.unsubs.forEach(u => u());
+    this.unsubs = [];
+  }
+
   constructor() {
     let resolveReady!: () => void;
     this.authReadyPromise = new Promise(res => (resolveReady = res));

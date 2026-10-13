@@ -36,6 +36,7 @@ import { normalizeUsername } from '../utils/signup-form';
 import { UserService } from './user.service';
 import { randomCode } from '../utils/invite-code';
 import { TripEventsService } from './trip-events.service';
+import { ExpensesService } from './expenses.service';
 
 const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
 
@@ -381,6 +382,9 @@ export class AuthService {
     const user = this.auth.currentUser;
     if (!user?.email) throw new Error('Not signed in.');
     await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, currentPassword));
+    // Nothing may write the account's records back while they're being deleted (#408).
+    this.userService.stopListening();
+    this.injector.get(ExpensesService).forget();
 
     const tripService = this.injector.get(TripService);
     const trips = await tripService.getUserTrips(user.uid);

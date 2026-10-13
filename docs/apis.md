@@ -46,6 +46,26 @@ this file whenever a service is added or removed (the privacy policy at
 All of these are listed in the hosting Content-Security-Policy in `firebase.json`; a new
 host must be added there or the browser blocks it.
 
+### What each outside service receives
+
+Checked against the code on 2026-10-13 (#408). Requests go **from the person's device**, so each service also
+sees their IP address. **No notes, booking references, links, amounts or names are sent to any of them.**
+
+| Service | Receives | Never receives |
+|---|---|---|
+| **Nominatim** | Place names and addresses on the trip: destinations, itinerary places (and route ends), stay addresses, pick-up and drop-off points, a new map pin's address, with the trip's destination as context | Notes, booking references, who is going |
+| **OpenStreetMap tiles** | Which map squares are on screen (so roughly where the map is looking) | Anything typed |
+| **Open-Meteo** | A destination's coordinates | The person's own location |
+| **Frankfurter** | Currency codes and dates | Amounts |
+| **Google Analytics** (web) | Screen paths (invite codes are stripped first, #404), account id, open trip's id, platform, time zone, app version, trip created / joined / shared | Names, emails, trip content |
+| **Crashlytics** (iPhone) | Error message and stack, device model, iOS and app version, account id | Names, emails, trip content |
+| **reCAPTCHA** (web) | Browser and interaction signals, under Google's policy | Anything from the app's data |
+| **Google Fonts** | A font request | Anything from the app's data |
+
+The built web app holds no secrets: a scan of `dist/` finds no private keys, service-account credentials or
+tokens. Its only key is the public Firebase web key, which every Firebase site ships; App Check and the security
+rules are what protect the data.
+
 ## Our own instruments
 
 | Tool | What it does | Where |
