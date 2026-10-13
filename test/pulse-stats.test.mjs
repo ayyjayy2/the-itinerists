@@ -287,3 +287,39 @@ test('stampText: a moment on the dashboard\'s clock, with or without seconds', (
   // The date follows the zone, not UTC: 23:30 UTC is already Oct 1 in Berlin.
   assert.equal(stampText(Date.UTC(2026, 8, 30, 23, 30), 'Europe/Berlin'), 'Oct 1, 2026 at 1:30 AM');
 });
+
+// ── Page visits: every signed-in page, zeros included ─────────────────────────
+import { pageVisits } from '../public/pulse/stats.mjs';
+import { APP_PAGES, SIGNED_OUT_PAGES } from '../public/pulse/app-pages.mjs';
+import { readFileSync } from 'node:fs';
+
+test('pageVisits lists every page, busiest first, with 0 for pages nobody opened', () => {
+  const pages = [{ path: '/home', label: 'Home' }, { path: '/finance', label: 'Finance' }, { path: '/outfits', label: 'Outfits' }];
+  const rows = [
+    row({ uid: 'a', page: '/finance' }), row({ uid: 'b', page: '/finance' }), row({ uid: 'a', page: '/finance' }),
+    row({ uid: 'a', page: '/' }),                           // the entry redirect counts as Home
+    row({ uid: 'a', page: '/finance', type: 'ping' }),      // pings aren't visits
+  ];
+  assert.deepEqual(pageVisits(rows, pages), [
+    { page: '/finance', label: 'Finance', views: 3, users: 2 },
+    { page: '/home',    label: 'Home',    views: 1, users: 1 },
+    { page: '/outfits', label: 'Outfits', views: 0, users: 0 },
+  ]);
+});
+
+test('pageVisits keeps a page that is not in the list (an old or renamed route) rather than dropping it', () => {
+  const out = pageVisits([row({ uid: 'a', page: '/old-page' })], [{ path: '/home', label: 'Home' }]);
+  assert.deepEqual(out.map(p => [p.page, p.views]), [['/old-page', 1], ['/home', 0]]);
+});
+
+test('pageVisits leaves out pages it is told to ignore (sign-in moments recorded on /login)', () => {
+  const out = pageVisits([row({ uid: 'a', page: '/login' }), row({ uid: 'a', page: '/home' })], [{ path: '/home', label: 'Home' }], ['/login']);
+  assert.deepEqual(out.map(p => [p.page, p.views]), [['/home', 1]]);
+});
+
+test('the page list matches the app routes (signed-in pages), so no page is missed', () => {
+  const routes = [...readFileSync(new URL('../src/app/app.routes.ts', import.meta.url), 'utf8').matchAll(/path: '([^']*)'/g)]
+    .map(m => m[1]).filter(p => p && p !== '**').map(p => '/' + p);
+  const signedIn = routes.filter(p => !SIGNED_OUT_PAGES.includes(p)).sort();
+  assert.deepEqual(APP_PAGES.map(p => p.path).sort(), signedIn);
+});

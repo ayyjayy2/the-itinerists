@@ -140,6 +140,14 @@
   .bars.days .col { flex: 0 1 72px; }
   .bars.days .bar { background: var(--accent); }
   @media (prefers-reduced-motion: reduce) { .bars .bar { transition: none; } }
+  /* page visits: one column per page, names hanging below (angled to fit) */
+  .pagebars-wrap { overflow-x: auto; padding: 0 0 7.5rem 4.5rem; }
+  .bars.pagebars { height: 190px; gap: 6px; min-width: 620px; }
+  .bars.pagebars .col { min-width: 22px; position: relative; }
+  .bars.pagebars .tick { position: absolute; top: 100%; right: 50%; height: auto; margin-top: 0.35rem;
+    font-size: 0.72rem; color: var(--text); white-space: nowrap; overflow: visible;
+    transform: rotate(-55deg); transform-origin: top right; }
+  .bars.pagebars .col.zero .tick, .bars.pagebars .col.zero .val { color: var(--text-muted); }
 
   /* lists and tables */
   .rows { list-style: none; margin: 0; padding: 0; }
@@ -264,6 +272,12 @@
         <h2>People</h2>
         <ul class="rows" id="people"></ul>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>Page visits <small>every page, busiest first</small></h2>
+      <div class="pagebars-wrap"><div class="bars pagebars" id="pageVisits"></div></div>
+      <p class="hint">Visits are counted once someone is signed in, so the welcome, sign-in, sign-up and password pages aren't listed. Follows the range, trip and Hide choices above. Hover a bar for how many people.</p>
     </div>
 
     <div class="card">

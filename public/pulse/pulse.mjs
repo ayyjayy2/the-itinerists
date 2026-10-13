@@ -5,6 +5,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, setDoc, query, where, o
 import { firebaseConfig, recaptchaSiteKey } from './config.mjs';
 import * as S from './stats.mjs';
 import { ZONES } from './zones.mjs';
+import { APP_PAGES, SIGNED_OUT_PAGES } from './app-pages.mjs';
 import { CODE_BY_LONG_NAME, CODE_BY_ZONE } from './zone-codes.mjs';
 
 const HOUR = 3_600_000, DAY = 24 * HOUR, ONLINE = 3 * 60_000; // the app pings every 2 minutes while visible
@@ -264,7 +265,7 @@ function showTip(chart, index) {
   tip.el.style.top = `${r.top + window.scrollY - t.height - 8}px`;
 }
 function hideTip() { tip.chart = null; tip.index = -1; tip.el.hidden = true; }
-for (const chart of ['perHour', 'byHour', 'perDay', 'visitMinutes', 'visitPages', 'around', 'platform', 'countries', 'signups']) {
+for (const chart of ['perHour', 'byHour', 'perDay', 'visitMinutes', 'visitPages', 'around', 'platform', 'countries', 'signups', 'pageVisits']) {
   const el = $(chart);
   el.addEventListener('pointerover', ev => { const c = ev.target.closest('.col'); if (c) showTip(chart, Number(c.dataset.i)); });
   el.addEventListener('pointerleave', hideTip);
@@ -533,6 +534,16 @@ function render() {
   $('pages').innerHTML = pages.length === 0 ? '<tr><td class="muted">No page views yet.</td></tr>' :
     '<tr><th>Page</th><th class="n">Views</th><th class="n">People</th></tr>' +
     pages.map(p => `<tr><td class="page">${esc(p.page)}</td><td class="n num">${p.views}</td><td class="n num">${p.users}</td></tr>`).join('');
+
+  // Page visits: every signed-in page, 0 included, so unused pages show.
+  // The moment of signing in is recorded while the address still says /login: not a visit.
+  const pageViews = S.pageVisits(rows, APP_PAGES, SIGNED_OUT_PAGES);
+  const maxVisits = Math.max(1, ...pageViews.map(v => v.views));
+  bars('pageVisits', pageViews.map(v => ({
+    value: v.views,
+    tip: `<strong>${esc(v.label)}</strong> <span class="muted">${esc(v.page)}</span><br>${v.views} ${v.views === 1 ? 'visit' : 'visits'} · ${v.users} ${v.users === 1 ? 'person' : 'people'}`,
+  })), maxVisits, { valueLabel: true, tick: (_, i) => pageViews[i].label });
+  for (const [i, v] of pageViews.entries()) if (!v.views) $('pageVisits').querySelector(`.col[data-i="${i}"]`)?.classList.add('zero');
 
   // People
   const people = S.peopleStats(rows, state.zone);
