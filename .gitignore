@@ -102,3 +102,6 @@ scripts/serviceAccountKey*.json
 
 # Saved staging test sessions (live tokens)
 e2e-staging/.auth/
+
+# Written by scripts/set-version.js at build time
+public/version.json
