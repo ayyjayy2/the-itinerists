@@ -62,4 +62,13 @@ describe('LoginComponent', () => {
     await comp.submit();
     expect(comp.error()).toBe('Wrong email or password. Check them and try again.');
   });
+
+  it('says to wait when Firebase has paused sign-in after too many attempts, instead of "wrong password" (#405)', async () => {
+    auth.login.and.rejectWith({ code: 'auth/too-many-requests' });
+    const { comp } = create();
+    comp.email = 'maya@example.com';
+    comp.password = 'nope';
+    await comp.submit();
+    expect(comp.error()).toBe('Too many attempts. Please wait a few minutes and try again.');
+  });
 });

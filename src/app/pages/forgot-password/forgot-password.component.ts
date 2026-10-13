@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService, UseEmailToSignInError } from '../../services/auth.service';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { maskEmail } from '../../utils/email';
+import { isTooManyAttempts, TOO_MANY_ATTEMPTS_MESSAGE } from '../../utils/user-message';
 
 @Component({
   selector: 'app-forgot-password',
@@ -17,8 +18,8 @@ import { maskEmail } from '../../utils/email';
         </div>
 
         @if (sentTo()) {
-          <p class="reset-info">Reset link sent to <strong>{{ sentTo() }}</strong>.
-            Follow it to choose a new password, then sign in here.</p>
+          <p class="reset-info">If an account uses <strong>{{ sentTo() }}</strong>, a reset link is on its way.
+            Follow it to choose a new password, then sign in here. Nothing after a few minutes? Check your spam folder.</p>
         } @else if (noRecovery()) {
           <p class="reset-info">No recovery email is on file for this account, so a reset link can't be sent.
             Email <a href="mailto:support&#64;theitinerists.com">support&#64;theitinerists.com</a> from any address
@@ -72,8 +73,12 @@ export class ForgotPasswordComponent {
       if (sentTo === null) this.noRecovery.set(true);
       else this.sentTo.set(maskEmail(sentTo));
     } catch (err: any) {
+      // Never say whether an account uses the address: a "not found" (only possible if
+      // Firebase's email enumeration protection were switched off) gets the same answer
+      // as a sent link (#405).
+      if (err?.code === 'auth/user-not-found') { this.sentTo.set(maskEmail(this.email.trim().toLowerCase())); return; }
       this.error.set(err instanceof UseEmailToSignInError ? err.message
-        : err?.code === 'auth/user-not-found' ? 'No account uses that email.'
+        : isTooManyAttempts(err) ? TOO_MANY_ATTEMPTS_MESSAGE
         : 'Something went wrong. Please try again.');
     } finally {
       this.loading.set(false);

@@ -11,6 +11,14 @@
 
 const NETWORK_MESSAGE = "Couldn't reach the server. Check your connection and try again.";
 
+/** Firebase Auth has paused sign-in or reset requests from this device for a while. */
+export const TOO_MANY_ATTEMPTS_MESSAGE = 'Too many attempts. Please wait a few minutes and try again.';
+
+/** True when Firebase Auth refused because of too many attempts (says nothing about whether an account exists). */
+export function isTooManyAttempts(err: unknown): boolean {
+  return (err as { code?: string } | null)?.code === 'auth/too-many-requests';
+}
+
 const BROKEN_CACHE_MESSAGE =
   "Your browser's saved app data got out of sync. Reload the page and try again.";
 
@@ -21,7 +29,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   'permission-denied':           "You don't have permission to do that.",
   'unauthenticated':             'Your session expired. Please sign in again.',
   'resource-exhausted':          'The app is busy right now. Please try again in a minute.',
-  'auth/too-many-requests':      'Too many attempts. Please wait a few minutes and try again.',
+  'auth/too-many-requests':      TOO_MANY_ATTEMPTS_MESSAGE,
 };
 
 /** Firestore's on-device cache (IndexedDB) failed. Safari on iOS does this
