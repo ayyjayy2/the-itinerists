@@ -1,13 +1,12 @@
 @for (card of cards(); track card.id) {
-  <div class="card offer-card" role="button" tabindex="0"
+  <div class="card rec-card offer-card" role="button" tabindex="0"
        (click)="show(card, $event)" (keydown.enter)="show(card, $event)" (keydown.space)="$event.preventDefault(); show(card, $event)">
-    <span class="offer-icon" aria-hidden="true">{{ card.icon }}</span>
-    <span class="offer-text">
-      <span class="offer-title">{{ card.title }}</span>
-      <span class="offer-sub">{{ card.subline }}</span>
-    </span>
-    <button class="offer-hide" type="button" (click)="hide(card, $event)" (keydown.enter)="$event.stopPropagation()"
-            [attr.aria-label]="'Hide ' + card.title">Hide</button>
+    <div class="offer-head">
+      <span class="offer-title"><span class="offer-icon" aria-hidden="true">{{ card.icon }}</span> <span class="offer-name">{{ card.title }}</span></span>
+      <button class="offer-hide" type="button" (click)="hide(card, $event)" (keydown.enter)="$event.stopPropagation()"
+              [attr.aria-label]="'Hide ' + card.title">Hide</button>
+    </div>
+    <p class="offer-sub">{{ card.subline }}</p>
   </div>
 }
 
