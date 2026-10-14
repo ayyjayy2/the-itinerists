@@ -20,7 +20,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <header class="policy-head">
           <app-brand [mark]="40" [showWordmark]="false" />
           <h1>Privacy Policy</h1>
-          <p class="effective">Effective October 13, 2026</p>
+          <p class="effective">Effective October 14, 2026</p>
           <p class="lede">The Itinerists is a group trip planner. This page says exactly what the app stores, who can see it, and which outside services it talks to. Short version: your trip data is shared only with the people on your trip, your email is private, we don't sell or advertise with anything, and you can delete your account yourself at any time.</p>
         </header>
 
@@ -72,6 +72,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
             <tr><td>OpenStreetMap tiles</td><td>The map pictures on Map and day cards</td><td>A request from your device for the area of the map on screen</td></tr>
             <tr><td>Frankfurter</td><td>Currency conversion rates</td><td>Currency codes only</td></tr>
             <tr><td>Google Fonts</td><td>The app's typefaces</td><td>A font request from your device</td></tr>
+            <tr><td>Travel partners (eSIMs, travel insurance)</td><td>Optional offers on Tips &amp; Recs when your trip goes abroad</td><td>Nothing from the app. Tapping Open takes you to the partner's own site, under its own privacy policy, and it may know you came from us. We may earn a commission. We count taps per partner, never who bought what</td></tr>
           </tbody>
         </table>
 
