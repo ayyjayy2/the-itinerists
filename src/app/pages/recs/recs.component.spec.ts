@@ -50,7 +50,16 @@ describe('RecsComponent: partner offers in the Tips group (#476)', () => {
   const render = () => fixture.detectChanges();
   const group = (name: string, root: ParentNode = el) =>
     [...root.querySelectorAll('.rec-group')].find(g => g.querySelector('.rec-group-title')!.textContent!.trim() === name);
-  const chip = (name: string) => [...el.querySelectorAll<HTMLButtonElement>('.filter-chips .chip')].find(b => b.textContent!.trim() === name)!;
+  const dropdowns = () => [...el.querySelectorAll('.recs-filters app-multi-select')];
+  const dropdown = (label: string) => dropdowns().find(d => d.querySelector('.ms-label')!.textContent!.startsWith(label))!;
+  /** Opens the dropdown if needed and ticks (or unticks) an option (#482). */
+  const tick = (label: string, option: string) => {
+    const d = dropdown(label);
+    if (!d.querySelector('.ms-panel')) { d.querySelector<HTMLButtonElement>('.ms-trigger')!.click(); render(); }
+    [...d.querySelectorAll('.ms-option')].find(o => o.textContent!.trim() === option)!.querySelector('input')!.click();
+    render();
+  };
+  const titles = () => [...el.querySelectorAll('.rec-group-title')].map(t => t.textContent!.trim());
 
   it('puts the cards at the end of the Tips group, after the group\'s own tips', () => {
     recs.set([rec('a', 'Food', 'Currywurst'), rec('b', 'Tips', 'Carry cash')]);
@@ -68,13 +77,16 @@ describe('RecsComponent: partner offers in the Tips group (#476)', () => {
     expect(group('Tips')!.querySelectorAll('.offer-card').length).toBe(1);
   });
 
-  it('shows them under the All and Tips filters only', () => {
+  it('shows them when no category is ticked, or Tips is among those ticked', () => {
     recs.set([rec('a', 'Food', 'Currywurst')]);
     render();
-    chip('Food').click(); render();
+    tick('Categories', 'Food');
     expect(el.querySelector('.offer-card')).toBeNull();
-    chip('Tips').click(); render();
+    tick('Categories', 'Tips');
     expect(el.querySelector('.offer-card')).not.toBeNull();
+    expect(titles()).toEqual(['Food', 'Tips']);
+    tick('Categories', 'Food');
+    expect(titles()).toEqual(['Tips']);
     expect(el.textContent).not.toContain('No recs match');
   });
 
@@ -95,8 +107,84 @@ describe('RecsComponent: partner offers in the Tips group (#476)', () => {
     expect(group('Tips', sections()[1])!.querySelector('.offer-card')).not.toBeNull();
     expect(sections()[0].querySelector('.offer-card')).toBeNull();
 
-    chip('Prague, Czechia').click(); render();
+    tick('Places', 'Prague, Czechia');
     expect(sections().map(titleOf)).toEqual(['Anywhere']);
     expect(el.querySelector('.offer-card')).not.toBeNull();
+  });
+});
+
+describe('RecsComponent: place and category dropdowns (#482)', () => {
+  let fixture: ComponentFixture<RecsComponent>;
+  let el: HTMLElement;
+  const recs = signal<any[]>([]);
+  const trip = signal<any>(ONE_STOP);
+
+  beforeEach(() => {
+    recs.set([]); trip.set(ONE_STOP);
+    TestBed.configureTestingModule({
+      imports: [RecsComponent],
+      providers: [
+        provideRouter([]),
+        { provide: RecsService, useValue: { recs, loaded: signal(true) } },
+        { provide: UserService, useValue: { currentUser: signal({ uid: 'u' }), isAdmin: signal(false) } },
+        { provide: TripService, useValue: { activeTrip: trip, ready: signal(true) } },
+        { provide: OfferCardsService, useValue: { cards: signal([]) } },
+        { provide: UsageService, useValue: { recordOffer: () => {} } },
+      ],
+    });
+    fixture = TestBed.createComponent(RecsComponent);
+    el = fixture.nativeElement;
+  });
+
+  const render = () => fixture.detectChanges();
+  const labels = () => [...el.querySelectorAll('.recs-filters .ms-trigger')].map(b => b.textContent!.replace(/\s+/g, ' ').trim());
+  const dropdown = (label: string) =>
+    [...el.querySelectorAll('.recs-filters app-multi-select')].find(d => d.querySelector('.ms-label')!.textContent!.startsWith(label))!;
+  const open = (label: string) => { dropdown(label).querySelector<HTMLButtonElement>('.ms-trigger')!.click(); render(); };
+  const options = (label: string) => [...dropdown(label).querySelectorAll('.ms-option')].map(o => o.textContent!.trim());
+  const tick = (label: string, option: string) => {
+    if (!dropdown(label).querySelector('.ms-panel')) open(label);
+    [...dropdown(label).querySelectorAll('.ms-option')].find(o => o.textContent!.trim() === option)!.querySelector('input')!.click();
+    render();
+  };
+  const recTitles = () => [...el.querySelectorAll('.rec-title')].map(t => t.textContent!.trim());
+
+  it('replaces the chip rows: one-stop trips get only the Categories dropdown', () => {
+    render();
+    expect(el.querySelector('.filter-chips')).toBeNull();
+    expect(labels()).toEqual(['Categories: All']);
+  });
+
+  it('multi-stop trips get Places, then Categories, on one row', () => {
+    trip.set(TWO_STOPS);
+    render();
+    expect(labels()).toEqual(['Places: All', 'Categories: All']);
+    open('Places');
+    expect(options('Places')).toEqual(['Berlin, Germany', 'Prague, Czechia', 'Anywhere']);
+  });
+
+  it('lists the group\'s own categories after the usual ones', () => {
+    recs.set([rec('a', 'Nightlife', 'Berghain')]);
+    render();
+    open('Categories');
+    expect(options('Categories')).toEqual(['Food', 'Drink', 'Places', 'Activities', 'Tips', 'Culture', 'Nightlife']);
+  });
+
+  it('shows the recs of every ticked category, and the button names them', () => {
+    recs.set([rec('a', 'Food', 'Currywurst'), rec('b', 'Drink', 'Club Mate'), rec('c', 'Tips', 'Carry cash')]);
+    render();
+    tick('Categories', 'Food');
+    tick('Categories', 'Drink');
+    expect(recTitles()).toEqual(['Currywurst', 'Club Mate']);
+    expect(labels()).toEqual(['Categories: Food, Drink']);
+  });
+
+  it('shows the recs of every ticked place', () => {
+    trip.set(TWO_STOPS);
+    recs.set([rec('a', 'Food', 'Currywurst', 'Berlin, Germany'), rec('b', 'Food', 'Trdelník', 'Prague, Czechia'), rec('c', 'Tips', 'Carry cash')]);
+    render();
+    tick('Places', 'Prague, Czechia');
+    tick('Places', 'Anywhere');
+    expect(recTitles()).toEqual(['Trdelník', 'Carry cash']);
   });
 });

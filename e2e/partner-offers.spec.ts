@@ -10,9 +10,11 @@ test('partner offers: the eSIM card opens with its guide, and the cards stay lik
   const card = tips.locator('.offer-card', { hasText: 'Need data abroad?' });
   await expect(card).toBeVisible();
   await expect(tips.locator('.rec-card').last()).toContainText('Covered if plans change?');
-  await page.locator('.filter-chips .chip', { hasText: 'Food' }).click();
+  await page.getByRole('button', { name: /^Categories:/ }).click();
+  await page.getByRole('checkbox', { name: 'Food' }).check();
   await expect(page.locator('.offer-card')).toHaveCount(0);
-  await page.locator('.filter-chips .chip', { hasText: 'All' }).first().click();
+  await page.getByRole('button', { name: 'Show all' }).click();
+  await page.keyboard.press('Escape');
   await expect(card).toContainText('Thailand');
   await expect(page.locator('.offer-card', { hasText: 'Covered if plans change?' })).toBeVisible();
 

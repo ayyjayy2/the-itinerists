@@ -18,9 +18,10 @@ const OFFERS_CATEGORY = 'Tips';
 
 import { FocusTargetDirective } from '../../shared/focus-target.directive';
 import { PartnerOffersComponent } from './partner-offers/partner-offers.component';
+import { MultiSelectComponent } from '../../shared/multi-select/multi-select.component';
 @Component({
   selector: 'app-recs',
-  imports: [FocusTargetDirective, PartnerOffersComponent, LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule],
+  imports: [FocusTargetDirective, PartnerOffersComponent, MultiSelectComponent, LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule],
   templateUrl: './recs.component.html',
   styleUrl: './recs.component.scss'
 })
@@ -36,11 +37,12 @@ export class RecsComponent {
   currentUser = this.userService.currentUser;
   isAdmin     = this.userService.isAdmin;
 
-  selectedCategory    = signal<string>('All');
-  selectedDestination = signal<string>('All');
-  showForm            = signal(false);
+  /** The filters (#482): nothing ticked means everything. */
+  selectedCategories = signal<string[]>([]);
+  selectedPlaces     = signal<string[]>([]);
+  showForm           = signal(false);
 
-  readonly categories = ['All', ...CATEGORIES];
+  readonly categories = CATEGORIES;
   readonly anywhere   = ANYWHERE;
   readonly offersCategory = OFFERS_CATEGORY;
 
@@ -50,6 +52,8 @@ export class RecsComponent {
     return t ? tripDestinations(t).map(d => d.destination) : [];
   });
   readonly isMultiDestination = computed(() => this.legs().length > 1);
+  /** What the Places filter offers: each stop, then Anywhere. */
+  readonly placeOptions = computed(() => [...this.legs(), ANYWHERE]);
 
   /** The leg to preselect for a new rec: the one happening now, else the next up. */
   private defaultDestination(): string {
@@ -70,12 +74,17 @@ export class RecsComponent {
   // Recs are entirely user-added, per trip (no hardcoded seed content).
   readonly allRecs = computed((): RecDoc[] => this.recsService.recs());
 
+  /** The ticked filters that are still options (a category's last rec may be gone). */
+  private readonly activeCategories = computed(() => this.categoryOptions().filter(c => this.selectedCategories().includes(c)));
+  private readonly activePlaces = computed(() =>
+    this.isMultiDestination() ? this.placeOptions().filter(p => this.selectedPlaces().includes(p)) : []);
+
   readonly filtered = computed((): RecDoc[] => {
-    const cat  = this.selectedCategory();
-    const dest = this.selectedDestination();
+    const cats   = this.activeCategories();
+    const places = this.activePlaces();
     return this.allRecs().filter(r =>
-      (cat === 'All' || r.category === cat) &&
-      (dest === 'All' || !this.isMultiDestination() || this.sectionFor(r) === dest));
+      (!cats.length || cats.includes(r.category)) &&
+      (!places.length || places.includes(this.sectionFor(r))));
   });
 
   /** Which section a rec belongs to: its leg, or Anywhere when unset / no longer a leg. */
@@ -85,9 +94,11 @@ export class RecsComponent {
   }
 
   /** The partner offer cards (eSIMs, insurance) go in the Tips group for the whole
-   *  trip (#474, #476): shown under the All and Tips filters, whatever stop is chosen. */
-  readonly showOffers = computed(() =>
-    this.offerCards.cards().length > 0 && ['All', OFFERS_CATEGORY].includes(this.selectedCategory()));
+   *  trip (#474, #476): shown when no category or Tips is ticked, whatever stops are (#482). */
+  readonly showOffers = computed(() => {
+    const cats = this.activeCategories();
+    return this.offerCards.cards().length > 0 && (!cats.length || cats.includes(OFFERS_CATEGORY));
+  });
 
   /** Single-destination trips: one flat list of category groups. */
   readonly groupedByCat = computed(() => {
@@ -144,8 +155,8 @@ export class RecsComponent {
   editCustomCategory    = '';
   editUseCustomCategory = false;
 
-  /** Categories offered when editing: the defaults plus any custom ones already used on this trip. */
-  readonly editCategoryOptions = computed((): string[] => {
+  /** The defaults plus any custom ones already used on this trip: for editing and for the filter. */
+  readonly categoryOptions = computed((): string[] => {
     const used = new Set(this.allRecs().map(r => r.category));
     return [...CATEGORIES, ...[...used].filter(c => !CATEGORIES.includes(c)).sort()];
   });
@@ -196,7 +207,4 @@ export class RecsComponent {
   async deleteRec(id: string): Promise<void> {
     await this.recsService.deleteRec(id);
   }
-
-  setCategory(cat: string): void { this.selectedCategory.set(cat); }
-  setDestination(dest: string): void { this.selectedDestination.set(dest); }
 }

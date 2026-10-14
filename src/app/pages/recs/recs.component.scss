@@ -28,18 +28,14 @@
   margin-bottom: 1rem;
 }
 
-.filter-chips {
+.recs-filters {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: wrap;           // one row on most phones; two only when the choices are long
   gap: 0.5rem;
   margin-bottom: 1.5rem;
-  .chip {
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    app-icon { color: currentColor; }
-  }
+  // Places gives way first (its value ends in "…"); Categories keeps its size.
+  .filter-places { flex: 1 1 7.5rem; min-width: 0; max-width: max-content; }
+  .filter-categories { flex: none; }
 }
 
 // ── Destination sections (multi-destination trips) ──────────────────────────
@@ -59,8 +55,6 @@
 
   app-icon { color: var(--primary-dark); }
 }
-
-.dest-chips { margin-bottom: 0.5rem; }
 
 .rec-group {
   margin-bottom: 1.75rem;
