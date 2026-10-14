@@ -31,3 +31,26 @@ test('partner offers: the eSIM card opens with its guide, and Hide sticks', asyn
   await expect(page.locator('.offer-card', { hasText: 'Covered if plans change?' })).toBeVisible();
   await expect(page.locator('.offer-card', { hasText: 'Need data abroad?' })).toHaveCount(0);
 });
+
+test('the offer pop-up fits between the header and the tab bar, with the same gap at both ends', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 600 });     // a short phone screen: the pop-up must scroll, not run under the tab bar
+  await page.goto('/recs');
+  await page.locator('.offer-card', { hasText: 'Need data abroad?' }).click();
+  await page.getByRole('tab', { name: "What's an eSIM?" }).click();   // the longest content
+  const sheet = await page.locator('.offer-sheet').boundingBox();
+  const header = await page.locator('.app-header, header').first().boundingBox();
+  const tabs = await page.locator('nav.tab-bar').boundingBox();
+  expect(sheet && header && tabs).toBeTruthy();
+  const gapTop = sheet!.y - (header!.y + header!.height);
+  const gapBottom = tabs!.y - (sheet!.y + sheet!.height);
+  expect(gapTop).toBeGreaterThanOrEqual(8);
+  expect(gapBottom).toBeGreaterThanOrEqual(8);
+  expect(Math.abs(gapTop - gapBottom)).toBeLessThanOrEqual(2);
+
+  // Only the content scrolls: the title and ✕ stay where they are.
+  const closeBefore = await page.locator('.offer-close').boundingBox();
+  await page.locator('.offer-body').evaluate(el => el.scrollTo(0, el.scrollHeight));
+  await expect(page.locator('.offer-disclosure')).toBeInViewport();          // the end of the pop-up
+  expect((await page.locator('.offer-close').boundingBox())!.y).toBe(closeBefore!.y);
+  await expect(page.locator('#offer-title')).toBeInViewport();
+});
