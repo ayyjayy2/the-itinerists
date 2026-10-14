@@ -195,3 +195,7 @@ export function arrayRemove(...values: unknown[]): any { return FieldTransform.a
 // so there is nothing to shut down or wipe.
 export async function terminate(_db: Firestore): Promise<void> {}
 export async function clearIndexedDbPersistence(_db: Firestore): Promise<void> {}
+
+// Restarting the connection on return (see FirestoreResumeService): the demo has none.
+export async function disableNetwork(_db: Firestore): Promise<void> {}
+export async function enableNetwork(_db: Firestore): Promise<void> {}
