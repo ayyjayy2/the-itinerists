@@ -1,3 +1,4 @@
+import { VisibleAreaService } from './services/visible-area.service';
 import { DiagnosticsService } from './services/diagnostics.service';
 import { Component, OnInit, inject, computed, effect, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
@@ -66,6 +67,7 @@ export class AppComponent implements OnInit {
   private appUpdate = inject(AppUpdateService);
   private firestoreResume = inject(FirestoreResumeService);
   private diagnostics = inject(DiagnosticsService);
+  private visibleArea = inject(VisibleAreaService);
 
   readonly version   = APP_VERSION;
   readonly isDemo    = DEMO;
@@ -213,6 +215,7 @@ export class AppComponent implements OnInit {
 
   constructor() {
     this.usage.start();
+    this.visibleArea.start();   // pop-ups size to the part above the keyboard (#470)
 
     // Native shell: the launch screen is held (launchAutoHide: false) until we
     // know whether someone is signed in, then fades into the first real screen.
