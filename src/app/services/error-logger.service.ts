@@ -4,7 +4,7 @@ import { LocalCacheService } from './local-cache.service';
 import { CrashReporterService } from './crash-reporter.service';
 import { cspViolationMessage } from '../utils/csp-violation';
 
-type LogType = 'js_error' | 'http_error' | 'firebase_error' | 'write_spike' | 'csp_violation';
+type LogType = 'js_error' | 'http_error' | 'firebase_error' | 'write_spike' | 'csp_violation' | 'diagnostic';
 
 interface AppLog {
   timestamp: string;   // ISO 8601 UTC
@@ -90,6 +90,12 @@ export class ErrorLoggerService {
       message: err.message,
       stack: err.stack?.slice(0, 500),
     });
+  }
+
+  /** A note for tracking down a problem (#484, #485): what happened and how long, nothing anyone wrote. */
+  logDiagnostic(message: string): void {
+    console.info('[diagnostic]', message);
+    this.writeLog({ type: 'diagnostic', message });
   }
 
   private writeLog(partial: Omit<AppLog, 'timestamp' | 'url' | 'sessionId'>): void {
