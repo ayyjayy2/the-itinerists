@@ -29,7 +29,7 @@ describe('OfferCardsService', () => {
   }
   const titles = (s: OfferCardsService) => s.cards().map(c => c.title);
 
-  beforeEach(() => { localStorage.removeItem('itinerists_offers_hidden_T1'); config.set(OFFERS); });
+  beforeEach(() => config.set(OFFERS));
 
   it('offers both cards when the trip is abroad for this phone, naming the country', () => {
     const s = make();
@@ -48,10 +48,7 @@ describe('OfferCardsService', () => {
     expect(titles(make())).toEqual(['Need data abroad?']);
   });
 
-  it('Hide removes a card for this trip, and it stays hidden', () => {
-    const s = make();
-    s.hide('esim');
-    expect(titles(s)).toEqual(['Covered if plans change?']);
-    expect(titles(make())).toEqual(['Covered if plans change?']);
+  it('has no way to hide a card: the cards stay, like the other tips (#480)', () => {
+    expect((make() as any).hide).toBeUndefined();
   });
 });

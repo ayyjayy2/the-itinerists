@@ -39,7 +39,7 @@ describe('RecsComponent: partner offers in the Tips group (#476)', () => {
         { provide: RecsService, useValue: { recs, loaded: signal(true) } },
         { provide: UserService, useValue: { currentUser: signal({ uid: 'u' }), isAdmin: signal(false) } },
         { provide: TripService, useValue: { activeTrip: trip, ready: signal(true) } },
-        { provide: OfferCardsService, useValue: { cards, hide: () => {} } },
+        { provide: OfferCardsService, useValue: { cards } },
         { provide: UsageService, useValue: { recordOffer: () => {} } },
       ],
     });

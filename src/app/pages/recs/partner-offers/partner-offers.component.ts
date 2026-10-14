@@ -76,11 +76,6 @@ export class PartnerOffersComponent {
     this.trigger?.focus();
   }
 
-  hide(card: OfferCard, ev: Event): void {
-    ev.stopPropagation();
-    this.offers.hide(card.id);
-  }
-
   async copy(code: string, el: HTMLElement): Promise<void> {
     try {
       await navigator.clipboard.writeText(code);

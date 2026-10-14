@@ -22,8 +22,7 @@ Two rec cards at the end of the **Tips** group, with the rest of the recs (#476,
 - **When:** only when at least one stop on the trip is in a different country from this person's
   phone (see "Abroad, per person"). Both cards follow the same rule. With no partners configured, a
   card isn't shown.
-- **Hide:** each card has a small "Hide" link. Hidden cards stay hidden for that trip on that device
-  (localStorage, key per trip and card). It never asks twice.
+- **No Hide:** the cards stay, like the other tips (#480, the owner's call).
 - **Tap a card:** it opens a pop-up (the app's existing sheet/dialog pattern; closes with ✕, a tap
   outside and Escape; focus moves into it and back to the card).
 
@@ -124,12 +123,12 @@ names are in the repository.
   - `abroad.spec.ts`: same country, different country, US territories both ways, unknown zones,
     de-duplication and order.
   - The Recs component: cards show and hide with the abroad rule and with partners present or
-    absent; Hide persists per trip; the pop-up tabs switch; copy falls back when the clipboard
+    absent; the pop-up tabs switch; copy falls back when the clipboard
     refuses; Open records one `offer` event.
   - `PartnersService`: reads once; an error means no cards.
 - **Rules tests** as listed above. **Pulse tests** for the card.
 - **End-to-end (demo, phone size):** on an abroad trip the eSIM card shows; it opens with two tabs;
-  the explainer tab shows; Hide removes the card after a reload. Form fields stay at least 16px
+  the explainer tab shows; the cards are still there after a reload (no Hide). Form fields stay at least 16px
   (the existing no-zoom check).
 - **Staging:** `set-partners.js --staging --run` with test links, then a look on the staging iPhone
   app before production.

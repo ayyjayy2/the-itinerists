@@ -15,15 +15,13 @@ describe('PartnerOffersComponent', () => {
   let fixture: ComponentFixture<PartnerOffersComponent>;
   let el: HTMLElement;
   let usage: jasmine.SpyObj<UsageService>;
-  let hide: jasmine.Spy;
 
   beforeEach(() => {
     usage = jasmine.createSpyObj<UsageService>('UsageService', ['recordOffer']);
-    hide = jasmine.createSpy('hide');
     TestBed.configureTestingModule({
       imports: [PartnerOffersComponent],
       providers: [
-        { provide: OfferCardsService, useValue: { cards: signal(CARDS), hide } },
+        { provide: OfferCardsService, useValue: { cards: signal(CARDS) } },
         { provide: UsageService, useValue: usage },
       ],
     });
@@ -40,11 +38,9 @@ describe('PartnerOffersComponent', () => {
     expect(cards[0].textContent).toContain('Skip roaming fees in Germany');
   });
 
-  it('Hide hides that card, without opening it', () => {
-    (el.querySelector('.offer-card .offer-hide') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    expect(hide).toHaveBeenCalledOnceWith('esim');
-    expect(el.querySelector('[role=dialog]')).toBeNull();
+  it('has no Hide button: the cards stay, like the other tips (#480)', () => {
+    expect(el.querySelector('.offer-hide')).toBeNull();
+    expect([...el.querySelectorAll('.offer-card button')].map(b => b.textContent!.trim())).not.toContain('Hide');
   });
 
   it('opens the eSIM pop-up with two tabs, and switches to the guide', () => {

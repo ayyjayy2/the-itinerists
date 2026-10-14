@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 // The demo trip is in Chiang Mai; a phone in Chicago is abroad there (#474).
 test.use({ timezoneId: 'America/Chicago' });
 
-test('partner offers: the eSIM card opens with its guide, and Hide sticks', async ({ page }) => {
+test('partner offers: the eSIM card opens with its guide, and the cards stay like other tips', async ({ page }) => {
   await page.goto('/recs');
   // With the rest of the recs: at the end of the Tips group, for the whole trip (#476).
   const tips = page.locator('.rec-group', { has: page.locator('.rec-group-title', { hasText: 'Tips' }) });
@@ -25,11 +25,9 @@ test('partner offers: the eSIM card opens with its guide, and Hide sticks', asyn
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
 
-  await card.getByRole('button', { name: /Hide/ }).click();
-  await expect(card).toHaveCount(0);
+  await expect(card.getByRole('button', { name: /Hide/ })).toHaveCount(0);       // no Hide (#480)
   await page.reload();
-  await expect(page.locator('.offer-card', { hasText: 'Covered if plans change?' })).toBeVisible();
-  await expect(page.locator('.offer-card', { hasText: 'Need data abroad?' })).toHaveCount(0);
+  await expect(tips.locator('.offer-card', { hasText: 'Need data abroad?' })).toBeVisible();
 });
 
 test('the offer pop-up fits between the header and the tab bar, with the same gap at both ends', async ({ page }) => {
