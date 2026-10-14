@@ -71,6 +71,11 @@ try {
 }
 
 run('xcrun', ['devicectl', 'device', 'install', 'app', '--device', device, join(work, 'build/Build/Products/Debug-iphoneos/App.app')]);
-run('xcrun', ['devicectl', 'device', 'process', 'launch', '--device', device, BUNDLE_ID]);
 rmSync(work, { recursive: true, force: true });
-console.log(`\n[ios-staging] "${NAME}" is installed and open. Run \`npm run ios:sync\` before building the real app again.`);
+try {
+  run('xcrun', ['devicectl', 'device', 'process', 'launch', '--device', device, BUNDLE_ID]);
+  console.log(`\n[ios-staging] "${NAME}" is installed and open.`);
+} catch {
+  console.log(`\n[ios-staging] "${NAME}" is installed; it couldn't open by itself (is the phone locked?). Tap its icon.`);
+}
+console.log('[ios-staging] Run `npm run ios:sync` before building the real app again.');
