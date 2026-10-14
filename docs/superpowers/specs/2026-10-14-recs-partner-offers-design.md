@@ -12,7 +12,7 @@ country. This is the first step of the "enhancements, not new features" money pl
 
 ## What people see
 
-Two cards at the top of Tips & Recs, styled like the page's other cards (tokens and shared classes only):
+Two rec cards at the end of the **Tips** group, with the rest of the recs (#476, the owner's call after seeing them above the filters). They show under the All and Tips filters. If the trip has no tips yet, a Tips group is added just for them. On multi-stop trips they belong to the whole trip: the Tips group of the "Anywhere" section, also when one stop is chosen. Tokens and shared classes only:
 
 | Card | Title | Subline |
 |---|---|---|

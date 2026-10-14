@@ -1,21 +1,14 @@
 import { Component, ElementRef, HostListener, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { PartnerOffer } from '../../../models/trip.models';
-import { DEVICE_ZONE, PartnersService } from '../../../services/partners.service';
-import { TripService } from '../../../services/trip.service';
+import { OfferCard, OfferCardId, OfferCardsService } from '../../../services/offer-cards.service';
 import { UsageService } from '../../../services/usage.service';
-import { countryList, countryName, foreignCountries } from '../../../utils/abroad';
 import { ESIM_GOOD_TO_KNOW, ESIM_INTRO, ESIM_STEPS } from '../../../utils/esim-guide';
-import { tripDestinations } from '../../../utils/trip-destinations';
-
-type CardId = 'esim' | 'insurance';
-interface OfferCard { id: CardId; icon: string; title: string; subline: string; partners: PartnerOffer[]; }
-
-const HIDDEN_KEY = (tripId: string) => `itinerists_offers_hidden_${tripId}`;
 
 /**
- * Partner offers for trips abroad, at the top of Tips & Recs (#474): a soft card
- * for eSIMs and one for travel insurance, each opening a pop-up. Shown only when
- * a stop is in another country from this phone; each card can be hidden per trip.
+ * Partner offers for trips abroad (#474), shown as rec cards in the Tips group of
+ * Tips & Recs (#476): an eSIM card and an insurance card (OfferCardsService
+ * decides which), each opening a pop-up. Host is `display: contents`, so the
+ * cards sit in the group's grid like the other recs.
  */
 @Component({
   selector: 'app-partner-offers',
@@ -24,52 +17,23 @@ const HIDDEN_KEY = (tripId: string) => `itinerists_offers_hidden_${tripId}`;
   styleUrl: './partner-offers.component.scss',
 })
 export class PartnerOffersComponent {
-  private partners = inject(PartnersService);
-  private trips    = inject(TripService);
-  private usage    = inject(UsageService);
-  private zone     = inject(DEVICE_ZONE);
+  private offers = inject(OfferCardsService);
+  private usage  = inject(UsageService);
 
   readonly guideIntro = ESIM_INTRO;
   readonly guideSteps = ESIM_STEPS;
   readonly guideNotes = ESIM_GOOD_TO_KNOW;
 
-  private readonly tripId = computed(() => this.trips.activeTrip()?.id ?? null);
-  private readonly hidden = signal<Set<CardId>>(new Set());
-  readonly openCard = signal<CardId | null>(null);
+  readonly cards    = this.offers.cards;
+  readonly openCard = signal<OfferCardId | null>(null);
   readonly tab      = signal<'pick' | 'guide'>('pick');
   readonly copied   = signal<string | null>(null);
   private trigger: HTMLElement | null = null;
   private readonly closeBtn = viewChild<ElementRef<HTMLButtonElement>>('closeBtn');
 
-  /** The trip's countries outside this phone's, as names. */
-  readonly abroad = computed(() => {
-    const t = this.trips.activeTrip();
-    if (!t) return [];
-    const zones = [...tripDestinations(t).map(d => d.timeZone), t.timeZone];
-    return foreignCountries(zones, this.zone).map(countryName);
-  });
-
-  readonly cards = computed((): OfferCard[] => {
-    const cfg = this.partners.config();
-    const places = this.abroad();
-    if (!cfg || !places.length) return [];
-    const all: OfferCard[] = [
-      { id: 'esim', icon: '📶', title: 'Need data abroad?', subline: `Skip roaming fees in ${countryList(places)}`, partners: cfg.esim },
-      { id: 'insurance', icon: '🛡', title: 'Covered if plans change?', subline: 'Travel insurance for trips abroad', partners: cfg.insurance },
-    ];
-    return all.filter(c => c.partners.length && !this.hidden().has(c.id));
-  });
-
   readonly open = computed(() => this.cards().find(c => c.id === this.openCard()) ?? null);
 
   constructor() {
-    void this.partners.ensureLoaded();
-    effect(() => {                                   // hidden cards, per trip, on this device
-      const id = this.tripId();
-      let list: CardId[] = [];
-      try { list = id ? JSON.parse(localStorage.getItem(HIDDEN_KEY(id)) ?? '[]') : []; } catch { /* none */ }
-      this.hidden.set(new Set(list));
-    });
     effect(() => { if (this.open()) this.closeBtn()?.nativeElement.focus(); });
   }
 
@@ -87,10 +51,7 @@ export class PartnerOffersComponent {
 
   hide(card: OfferCard, ev: Event): void {
     ev.stopPropagation();
-    const next = new Set(this.hidden()).add(card.id);
-    this.hidden.set(next);
-    const id = this.tripId();
-    try { if (id) localStorage.setItem(HIDDEN_KEY(id), JSON.stringify([...next])); } catch { /* storage unavailable */ }
+    this.offers.hide(card.id);
   }
 
   async copy(code: string, el: HTMLElement): Promise<void> {
