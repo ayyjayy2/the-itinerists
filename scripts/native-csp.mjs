@@ -11,6 +11,8 @@
  *
  * Run by `npm run ios:sync` after `cap sync`:
  *   node scripts/native-csp.mjs [path/to/index.html]   (default: the iOS copy)
+ * The staging iPhone app (`npm run ios:staging`) takes the staging site's policy:
+ *   node scripts/native-csp.mjs --site the-itinerists-staging
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -18,12 +20,12 @@ import { dirname, join } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** The production website's policy, from firebase.json. */
-export function webPolicy(firebaseJson) {
+/** A website's policy from firebase.json: production unless another site is named. */
+export function webPolicy(firebaseJson, siteName = 'the-itinerists') {
   const sites = Array.isArray(firebaseJson.hosting) ? firebaseJson.hosting : [firebaseJson.hosting];
-  const site = sites.find(s => (s.site || s.target) === 'the-itinerists');
+  const site = sites.find(s => (s.site || s.target) === siteName);
   const header = site?.headers?.flatMap(h => h.headers).find(h => /^content-security-policy$/i.test(h.key));
-  if (!header) throw new Error('No Content-Security-Policy for the-itinerists in firebase.json');
+  if (!header) throw new Error(`No Content-Security-Policy for ${siteName} in firebase.json`);
   return header.value;
 }
 
@@ -50,8 +52,11 @@ export function injectPolicy(html, policy) {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const target = process.argv[2] || join(ROOT, 'ios/App/App/public/index.html');
-  const policy = nativePolicy(webPolicy(JSON.parse(readFileSync(join(ROOT, 'firebase.json'), 'utf8'))));
+  const args = process.argv.slice(2);
+  const siteAt = args.indexOf('--site');
+  const siteName = siteAt >= 0 ? args.splice(siteAt, 2)[1] : undefined;
+  const target = args[0] || join(ROOT, 'ios/App/App/public/index.html');
+  const policy = nativePolicy(webPolicy(JSON.parse(readFileSync(join(ROOT, 'firebase.json'), 'utf8')), siteName));
   writeFileSync(target, injectPolicy(readFileSync(target, 'utf8'), policy));
   console.log(`[native-csp] ${target}\n  ${policy}`);
 }
