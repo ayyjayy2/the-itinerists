@@ -540,6 +540,12 @@ function render() {
     '<tr><th>Page</th><th class="n">Views</th><th class="n">People</th></tr>' +
     pages.map(p => `<tr><td class="page">${esc(p.page)}</td><td class="n num">${p.views}</td><td class="n num">${p.users}</td></tr>`).join('');
 
+  // Partner offers on Tips & Recs (#474)
+  const offers = S.offerStats(rows);
+  $('offers').innerHTML = offers.length === 0 ? '<tr><td class="muted">No taps yet.</td></tr>' :
+    '<tr><th>Partner</th><th class="n">Taps</th><th class="n">People</th></tr>' +
+    offers.map(o => `<tr><td>${esc(o.offer)}</td><td class="n num">${o.taps}</td><td class="n num">${o.users}</td></tr>`).join('');
+
   // Page visits: every signed-in page, 0 included, so unused pages show.
   // The moment of signing in is recorded while the address still says /login: not a visit.
   const pageViews = S.pageVisits(rows, APP_PAGES, SIGNED_OUT_PAGES);

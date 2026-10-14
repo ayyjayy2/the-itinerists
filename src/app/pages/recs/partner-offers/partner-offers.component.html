@@ -1,0 +1,65 @@
+@for (card of cards(); track card.id) {
+  <div class="card offer-card" role="button" tabindex="0"
+       (click)="show(card, $event)" (keydown.enter)="show(card, $event)" (keydown.space)="$event.preventDefault(); show(card, $event)">
+    <span class="offer-icon" aria-hidden="true">{{ card.icon }}</span>
+    <span class="offer-text">
+      <span class="offer-title">{{ card.title }}</span>
+      <span class="offer-sub">{{ card.subline }}</span>
+    </span>
+    <button class="offer-hide" type="button" (click)="hide(card, $event)" (keydown.enter)="$event.stopPropagation()"
+            [attr.aria-label]="'Hide ' + card.title">Hide</button>
+  </div>
+}
+
+@if (open(); as card) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="offer-sheet" role="dialog" aria-modal="true" aria-labelledby="offer-title" (click)="$event.stopPropagation()">
+      <button #closeBtn class="offer-close" type="button" (click)="close()" aria-label="Close">✕</button>
+      <h2 id="offer-title">{{ card.icon }} {{ card.title }}</h2>
+
+      @if (card.id === 'esim') {
+        <div class="offer-tabs" role="tablist">
+          <button type="button" role="tab" data-tab="pick" [attr.aria-selected]="tab() === 'pick'" [class.active]="tab() === 'pick'" (click)="tab.set('pick')">Pick an eSIM</button>
+          <button type="button" role="tab" data-tab="guide" [attr.aria-selected]="tab() === 'guide'" [class.active]="tab() === 'guide'" (click)="tab.set('guide')">What's an eSIM?</button>
+        </div>
+      }
+
+      @if (card.id === 'insurance' || tab() === 'pick') {
+        <ul class="offer-list">
+          @for (p of card.partners; track p.id) {
+            <li class="offer-row">
+              <div class="offer-row-text">
+                <strong>{{ p.name }}</strong>
+                <span>{{ p.offer }}</span>
+                @if (p.code) {
+                  <button #codeEl class="chip offer-code" type="button" (click)="copy(p.code, codeEl)"
+                          [attr.aria-label]="'Copy code ' + p.code">{{ copied() === p.code ? 'Copied' : 'Code ' + p.code }}</button>
+                }
+              </div>
+              <a class="btn btn-primary btn-sm offer-open" [href]="p.url" target="_blank" rel="noopener sponsored" (click)="opened(p)">Open</a>
+            </li>
+          }
+        </ul>
+        @if (card.id === 'esim' && card.partners.length > 1) {
+          <p class="offer-tip">Prices differ by country, so it's worth comparing them.</p>
+        }
+      } @else {
+        <div class="offer-guide">
+          <p>{{ guideIntro }}</p>
+          <ol>
+            @for (s of guideSteps; track s.title) {
+              <li><strong>{{ s.title }}</strong><span>{{ s.text }}</span></li>
+            }
+          </ol>
+          <h3>Good to know</h3>
+          <ul>
+            @for (n of guideNotes; track n) { <li>{{ n }}</li> }
+          </ul>
+          <button class="btn btn-primary btn-sm" type="button" (click)="tab.set('pick')">Pick an eSIM</button>
+        </div>
+      }
+
+      <p class="offer-disclosure">We may earn a small commission if you buy through these links. It doesn't change your price.</p>
+    </div>
+  </div>
+}

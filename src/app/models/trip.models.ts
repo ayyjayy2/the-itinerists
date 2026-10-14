@@ -490,6 +490,22 @@ export interface OutfitEntry {
   notes?: string;
 }
 
+/** One partner offer on Tips & Recs (#474). Written by scripts/set-partners.js. */
+export interface PartnerOffer {
+  id: string;        // [a-z0-9-]{1,32}; what taps are counted under
+  name: string;      // "Airalo"
+  offer: string;     // "US$3 off your first eSIM"
+  code?: string;     // referral code, if the partner uses one
+  url: string;       // https link (shown through safeLink)
+}
+
+/** Stored at `_config/partners`: the offers for trips abroad. Any signed-in person reads it. */
+export interface PartnersConfig {
+  active: boolean;
+  esim: PartnerOffer[];
+  insurance: PartnerOffer[];
+}
+
 /** The survey invitation at `_config/survey`. Set by scripts/set-survey.js from a
  *  gitignored file, so the wording (which names real people) stays out of the repo. */
 export interface SurveyConfig {

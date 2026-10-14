@@ -9,7 +9,7 @@ import { usagePage, usagePlatform, localClock, isRepeatPageView, UsagePlatform }
 import { DEMO } from '../demo-flag';
 import { APP_VERSION } from '../../version';
 
-export type UsageEventType = 'session' | 'page' | 'ping';
+export type UsageEventType = 'session' | 'page' | 'ping' | 'offer';
 
 /** One row of the `_activity` collection. Field set is enforced by firestore.rules. */
 export interface UsageEvent {
@@ -17,6 +17,8 @@ export interface UsageEvent {
   tripId: string | null;
   type: UsageEventType;
   page: string;
+  /** Which partner offer was opened (type 'offer' only, #474). */
+  offer?: string;
   at: ReturnType<typeof serverTimestamp>;
   localHour: number;
   tz: string;
@@ -115,7 +117,13 @@ export class UsageService {
     this.record('ping');
   }
 
-  private record(type: UsageEventType): void {
+  /** A tap on a partner offer's Open button (Tips & Recs, #474): counted, nothing else. */
+  recordOffer(id: string): void {
+    if (DEMO) return;
+    this.record('offer', { offer: id, page: '/recs' });
+  }
+
+  private record(type: UsageEventType, extra: Pick<Partial<UsageEvent>, 'offer' | 'page'> = {}): void {
     const uid = this.userService.currentUser()?.uid;
     if (!uid) return;
     const now = Date.now();
@@ -138,7 +146,12 @@ export class UsageService {
       platform: this.platform,
       sessionId: this.sessionId,
       appVersion: APP_VERSION,
+      ...extra,
     };
+    this.write(event);
+  }
+
+  private write(event: UsageEvent): void {
     addDoc(collection(this.firestore, '_activity'), event).catch(err => {
       console.warn('[Usage] event not recorded:', err?.message ?? err);
     });
