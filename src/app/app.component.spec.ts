@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { signal, WritableSignal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { AppUpdateService } from './services/app-update.service';
+import { FirestoreResumeService } from './services/firestore-resume.service';
 
 import { AppComponent } from './app.component';
 import { UserService } from './services/user.service';
@@ -65,6 +66,7 @@ describe('AppComponent', () => {
         { provide: RecsService, useValue: initStub() },
         { provide: OutfitsService, useValue: initStub() },
         { provide: AppUpdateService, useValue: { start: () => {} } },
+        { provide: FirestoreResumeService, useValue: { start: () => {} } },
         { provide: UsageService, useValue: { start: () => {} } },
         { provide: SurveyService, useValue: { popupOpen: signal(false), config: signal(null) } },
       ],
