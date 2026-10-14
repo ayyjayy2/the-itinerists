@@ -9,6 +9,7 @@ import type {
   FirestoreUser, TripDoc, TripMember, UserTripsDoc, ActivityLogEntry,
   ItineraryItemDoc, FlightDoc, AccommodationDoc, FinanceEntryDoc, RecDoc,
   RentalCar, MapPin, PackingItem, PackingSuggestion, Expense, OutfitEntry,
+  PartnersConfig,
 } from '../app/models/trip.models';
 
 const T0 = Date.UTC(2026, 8, 1, 12, 0, 0); // a fixed "created at" baseline (1 Sep 2026)
@@ -48,10 +49,11 @@ export function seedDemo(store: MemoryStore): void {
     name: 'Chiang Mai, November',
     destinations: [{
       destination: 'Chiang Mai, Thailand', startDate: TRIP_START, endDate: TRIP_END,
-      currency: 'THB', destinationCoords: CHIANG_MAI,
+      currency: 'THB', destinationCoords: CHIANG_MAI, timeZone: 'Asia/Bangkok',
     }],
     destination: 'Chiang Mai, Thailand',
     destinationCoords: CHIANG_MAI,
+    timeZone: 'Asia/Bangkok',
     startDate: TRIP_START, endDate: TRIP_END, currency: 'THB',
     createdBy: ALAYNA.uid, createdAt: at(10), memberCount: PEOPLE.length,
   };
@@ -210,4 +212,17 @@ export function seedDemo(store: MemoryStore): void {
     { id: 'exp-2', date: '2026-11-14', vendor: 'Grab',     description: 'Ride to Nimman', amount: 95,  currency: 'THB', category: 'transport' },
   ];
   store.set(`userExpenses/${ALAYNA.uid}`, { items: expenses } as unknown as DocData);
+
+  // ── Partner offers on Tips & Recs (#474): fictional partners, example links ──
+  const partners: PartnersConfig = {
+    active: true,
+    esim: [
+      { id: 'demo-esim-a', name: 'Sample eSIM A', offer: '$3 off your first eSIM', code: 'DEMO3', url: 'https://example.com/esim-a' },
+      { id: 'demo-esim-b', name: 'Sample eSIM B', offer: '25% off your first plan', code: 'DEMO25', url: 'https://example.com/esim-b' },
+    ],
+    insurance: [
+      { id: 'demo-cover', name: 'Sample Cover', offer: 'Travel medical insurance by the week', url: 'https://example.com/cover' },
+    ],
+  };
+  store.set('_config/partners', partners as unknown as DocData);
 }
