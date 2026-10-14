@@ -122,8 +122,12 @@ service cloud.firestore {
         && request.resource.data.uid == uid()
         && request.resource.data.keys().hasOnly([
              'uid', 'tripId', 'type', 'page', 'at', 'localHour', 'tz',
-             'tzOffsetMin', 'platform', 'sessionId', 'appVersion'])
-        && request.resource.data.type in ['session', 'page', 'ping']
+             'tzOffsetMin', 'platform', 'sessionId', 'appVersion', 'offer'])
+        && request.resource.data.type in ['session', 'page', 'ping', 'offer']
+        // A partner-offer tap (#474) names the partner, and only that kind of event does.
+        && (request.resource.data.type == 'offer'
+              ? request.resource.data.get('offer', '').matches('^[a-z0-9-]{1,32}$')
+              : !('offer' in request.resource.data))
         && shortString(request.resource.data.page, 200)
         && (request.resource.data.get('tripId', null) == null || shortString(request.resource.data.tripId, 64))
         && shortString(request.resource.data.get('tz', ''), 64)
