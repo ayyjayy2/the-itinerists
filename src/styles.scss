@@ -127,6 +127,11 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+// The strip behind the status bar (and any edge Safari shows) takes the header's
+// colour, not the page's: in tinted themes the page colour framed the cream
+// header from above (#464). The body still fills the screen with --bg.
+html { background: var(--surface); }
+
 h1 { font-size: 1.8rem; font-weight: 800; }
 h2 { font-size: 1.4rem; font-weight: 700; }
 h3 { font-size: 1.1rem; font-weight: 700; }
