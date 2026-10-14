@@ -1,0 +1,17 @@
+<button #trigger type="button" class="ms-trigger" [class.active]="ticked().length > 0"
+        [attr.aria-expanded]="open()" [attr.aria-controls]="panelId" (click)="toggleOpen()">
+  <span class="ms-label">{{ label() }}:&ngsp;</span>
+  <span class="ms-value">{{ summary() }}</span>
+  <span class="ms-caret" aria-hidden="true"></span>
+</button>
+@if (open()) {
+  <div class="ms-panel" [id]="panelId" role="group" [attr.aria-label]="label()">
+    <button type="button" class="ms-all" [class.on]="ticked().length === 0" (click)="showAll()">Show all</button>
+    @for (option of options(); track option) {
+      <label class="ms-option">
+        <input type="checkbox" [checked]="isTicked(option)" (change)="toggle(option)">
+        {{ option }}
+      </label>
+    }
+  </div>
+}

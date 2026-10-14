@@ -1,0 +1,100 @@
+:host {
+  position: relative;
+  display: inline-block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ms-trigger {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+
+  &.active {
+    background: var(--primary-dark);
+    color: var(--on-primary);
+    border-color: transparent;
+    .ms-label { color: inherit; opacity: 0.85; }
+  }
+}
+
+.ms-label { color: var(--text-muted); flex: none; white-space: pre; }
+
+.ms-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-caret {
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.ms-panel {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 20;
+  min-width: 12rem;
+  max-width: calc(100vw - 32px);
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 0.35rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.ms-all,
+.ms-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 0.7rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 1rem;
+  color: var(--text);
+  cursor: pointer;
+
+  &:hover { background: var(--surface-2); }
+}
+
+.ms-all {
+  border: none;
+  background: none;
+  font-weight: 800;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  margin-bottom: 0.25rem;
+
+  &.on { color: var(--primary-dark); }
+}
+
+.ms-option input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--primary-dark);
+  flex: none;
+}
