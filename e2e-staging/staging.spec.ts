@@ -129,6 +129,48 @@ test.describe('2. Live updates between two people', () => {
       await maya.ctx.close();
     }
   });
+
+  test('an expense added while the app was in the background shows on return, and the connection restarts (#469)', async ({ page, browser, baseURL }) => {
+    const title = `${stamp()} back from the background`;
+    // A new Firestore listen session is a channel request without a session id yet.
+    let listenSessions = 0;
+    page.on('request', r => { if (r.url().includes('/Listen/channel') && !r.url().includes('SID=')) listenSessions++; });
+    await page.goto('/finance');
+    await expect(page.getByRole('button', { name: '+ Add' })).toBeVisible({ timeout: 20_000 });
+
+    // Phones pause a hidden app; here the page says it's hidden, as a phone's would.
+    const setVisibility = (state: 'hidden' | 'visible') => page.evaluate(s => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => s });
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => s === 'hidden' });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, state);
+    await setVisibility('hidden');
+    const sessionsBefore = listenSessions;
+
+    const maya = await secondPerson(browser, 'maya', baseURL!);
+    try {
+      await maya.page.goto('/finance');
+      await maya.page.getByRole('button', { name: '+ Add' }).click();
+      await maya.page.getByPlaceholder('e.g. The Grey').fill(title);
+      await maya.page.getByPlaceholder('0.00').first().fill('42');
+      await maya.page.getByRole('button', { name: 'Add Expense' }).click();
+      await expect(maya.page.getByText(title).first()).toBeVisible();
+
+      await page.waitForTimeout(11_000);                                   // longer than RECONNECT_AFTER_HIDDEN_MS
+      await setVisibility('visible');
+      await expect(page.getByText(title).first()).toBeVisible({ timeout: 20_000 });   // no page change, no reload
+      await expect.poll(() => listenSessions - sessionsBefore, { timeout: 10_000 }).toBeGreaterThan(0);
+
+      const toggle = maya.page.locator('.expenses-toggle');
+      if (await toggle.count() && !(await maya.page.locator('.table-row').filter({ hasText: title }).count())) await toggle.click();
+      await maya.page.locator('.table-row').filter({ hasText: title }).first().locator('.edit-row-btn').click();
+      maya.page.once('dialog', d => d.accept());                          // "Delete …?" confirm
+      await maya.page.getByRole('button', { name: /Delete/ }).first().click();
+      await expect(page.getByText(title)).toHaveCount(0, { timeout: 20_000 });
+    } finally {
+      await maya.ctx.close();
+    }
+  });
 });
 
 test.describe('3. Every page', () => {

@@ -9,6 +9,7 @@ import { Capacitor } from '@capacitor/core';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { filter } from 'rxjs/operators';
 import { AppUpdateService } from './services/app-update.service';
+import { FirestoreResumeService } from './services/firestore-resume.service';
 import { UserService } from './services/user.service';
 import { isStaleChunkError } from './utils/chunk-error';
 import { DataService } from './services/data.service';
@@ -62,6 +63,7 @@ export class AppComponent implements OnInit {
   private usage = inject(UsageService);   // records page views for the admin Activity page
   router        = inject(Router);
   private appUpdate = inject(AppUpdateService);
+  private firestoreResume = inject(FirestoreResumeService);
 
   readonly version   = APP_VERSION;
   readonly isDemo    = DEMO;
@@ -260,6 +262,8 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     // New versions: checked at launch and on every return to the screen, applied when nobody is typing
     this.appUpdate.start();
+    // Live updates: after a while in the background, the connection restarts on return (#469)
+    this.firestoreResume.start();
   }
 
   isAuthPage(): boolean {
