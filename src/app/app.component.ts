@@ -127,6 +127,9 @@ export class AppComponent implements OnInit {
   readonly tabItems  = computed<NavItem[]>(() => this.orderedNavItems().slice(0, 4));
   readonly moreItems = computed<NavItem[]>(() => this.orderedNavItems().slice(4));
   moreOpen = signal(false);
+  /** The page the More sheet or drawer was opened on: a navigation that ends
+   *  there (the app's first load finishing late) leaves them open (#489). */
+  private openedOn = '';
   private currentUrl = signal(this.router.url);
   /** True when the active route lives under the "More" menu (highlights the More tab). */
   readonly moreActive = computed(() => {
@@ -134,7 +137,7 @@ export class AppComponent implements OnInit {
     return !this.tabItems().some(i => url.startsWith(i.path));
   });
 
-  toggleMore(): void { this.moreOpen.update(v => !v); }
+  toggleMore(): void { if (!this.moreOpen()) this.openedOn = location.pathname; this.moreOpen.update(v => !v); }
   closeMore(): void  { this.moreOpen.set(false); this.reorderMode.set(false); this.sheetDragY.set(0); }
 
   // ── Swipe-down to dismiss the More sheet (the sheet follows the finger) ────
@@ -180,7 +183,7 @@ export class AppComponent implements OnInit {
   /** Bell lives in B and C; Type A keeps its inline home feed instead. */
   readonly showBell  = computed(() => effectiveHomeLayout(this.userService.firestoreUser()) !== 'A');
   drawerOpen = signal(false);
-  toggleDrawer(): void { this.drawerOpen.update(v => !v); }
+  toggleDrawer(): void { if (!this.drawerOpen()) this.openedOn = location.pathname; this.drawerOpen.update(v => !v); }
   closeDrawer(): void  { this.drawerOpen.set(false); this.drawerDragX.set(0); }
 
   // ── Swipe-left to dismiss the drawer (mirrors its slide-in from the left).
@@ -232,10 +235,16 @@ export class AppComponent implements OnInit {
       else if (e instanceof NavigationEnd || e instanceof NavigationCancel || e instanceof NavigationError) this.navigating.set(false);
     });
 
-    // Track the active URL (for the More-tab highlight) and close the sheet on navigation.
+    // Track the active URL (for the More-tab highlight) and close the sheet and
+    // drawer when the page changes.
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe(e => { this.currentUrl.set(e.urlAfterRedirects); this.closeMore(); this.closeDrawer(); });
+      .subscribe(e => {
+        this.currentUrl.set(e.urlAfterRedirects);
+        if (e.urlAfterRedirects.split(/[?#]/)[0] === this.openedOn) return;
+        this.closeMore();
+        this.closeDrawer();
+      });
 
     // No service worker, so an open tab keeps the version it loaded. After a
     // deploy, the first visit to a not-yet-loaded page fails to fetch its

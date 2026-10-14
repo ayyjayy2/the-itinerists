@@ -1,7 +1,8 @@
 import { DiagnosticsService } from './services/diagnostics.service';
 import { TestBed } from '@angular/core/testing';
 import { signal, WritableSignal } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router, NavigationEnd } from '@angular/router';
+import { Subject } from 'rxjs';
 import { AppUpdateService } from './services/app-update.service';
 import { FirestoreResumeService } from './services/firestore-resume.service';
 
@@ -87,6 +88,41 @@ describe('AppComponent', () => {
     const paths = app.navItems().map(i => i.path);
     expect(paths).toContain('/home');
     expect(paths).toContain('/trip-settings');
+  });
+
+  describe('closing the More sheet and the drawer on navigation (#489)', () => {
+    const end = (id: number, url: string) =>
+      (TestBed.inject(Router).events as Subject<unknown>).next(new NavigationEnd(id, url, url));
+    const at = (path: string) => history.replaceState(null, '', path);
+    afterEach(() => at('/'));
+
+    it('keeps them open when the first page load finishes on the page they were opened on', () => {
+      at('/home');
+      const app = TestBed.createComponent(AppComponent).componentInstance;
+      app.toggleMore();
+      app.toggleDrawer();
+      end(1, '/home');                    // the app's first navigation ends after the tap
+      expect(app.moreOpen()).toBe(true);
+      expect(app.drawerOpen()).toBe(true);
+    });
+
+    it('closes them when the page changes', () => {
+      at('/home');
+      const app = TestBed.createComponent(AppComponent).componentInstance;
+      app.toggleMore();
+      app.toggleDrawer();
+      end(2, '/map');
+      expect(app.moreOpen()).toBe(false);
+      expect(app.drawerOpen()).toBe(false);
+    });
+
+    it('ignores a query string: the same page is the same page', () => {
+      at('/home');
+      const app = TestBed.createComponent(AppComponent).componentInstance;
+      app.toggleMore();
+      end(1, '/home?invite=1');
+      expect(app.moreOpen()).toBe(true);
+    });
   });
 
   describe('More-sheet swipe-down dismiss', () => {
