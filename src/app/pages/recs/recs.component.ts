@@ -9,9 +9,12 @@ import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { tripDestinations, activeLeg, localTodayISO, tripZone } from '../../utils/trip-destinations';
-import { groupRecsByCategory, groupRecsByDestination, ANYWHERE, DestinationSection } from '../../utils/rec-groups';
+import { groupRecsByCategory, groupRecsByDestination, withAnywhereCategory, withCategory, ANYWHERE, DestinationSection } from '../../utils/rec-groups';
+import { OfferCardsService } from '../../services/offer-cards.service';
 
 const CATEGORIES = ['Food', 'Drink', 'Places', 'Activities', 'Tips', 'Culture'];
+/** Where the partner offer cards sit (#476). */
+const OFFERS_CATEGORY = 'Tips';
 
 import { FocusTargetDirective } from '../../shared/focus-target.directive';
 import { PartnerOffersComponent } from './partner-offers/partner-offers.component';
@@ -25,6 +28,7 @@ export class RecsComponent {
   recsService = inject(RecsService);
   userService = inject(UserService);
   tripService = inject(TripService);
+  private offerCards = inject(OfferCardsService);
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
   /** Spinner (delayed) until we know the trip and its data — no empty-state flash. */
   readonly loading = computed(() => !this.tripService.ready() || !this.recsService.loaded());
@@ -38,6 +42,7 @@ export class RecsComponent {
 
   readonly categories = ['All', ...CATEGORIES];
   readonly anywhere   = ANYWHERE;
+  readonly offersCategory = OFFERS_CATEGORY;
 
   // ── Destinations (multi-leg trips group recs by place) ─────────────────────
   readonly legs = computed((): string[] => {
@@ -79,13 +84,22 @@ export class RecsComponent {
     return this.legs().find(l => l.trim().toLowerCase() === k) ?? ANYWHERE;
   }
 
+  /** The partner offer cards (eSIMs, insurance) go in the Tips group for the whole
+   *  trip (#474, #476): shown under the All and Tips filters, whatever stop is chosen. */
+  readonly showOffers = computed(() =>
+    this.offerCards.cards().length > 0 && ['All', OFFERS_CATEGORY].includes(this.selectedCategory()));
+
   /** Single-destination trips: one flat list of category groups. */
-  readonly groupedByCat = computed(() =>
-    groupRecsByCategory(this.filtered(), CATEGORIES));
+  readonly groupedByCat = computed(() => {
+    const groups = groupRecsByCategory(this.filtered(), CATEGORIES);
+    return this.showOffers() ? withCategory(groups, OFFERS_CATEGORY, CATEGORIES) : groups;
+  });
 
   /** Multi-destination trips: a section per leg (leg order), categories inside, Anywhere last. */
-  readonly sections = computed((): DestinationSection<RecDoc>[] =>
-    groupRecsByDestination(this.filtered(), this.legs(), CATEGORIES));
+  readonly sections = computed((): DestinationSection<RecDoc>[] => {
+    const sections = groupRecsByDestination(this.filtered(), this.legs(), CATEGORIES);
+    return this.showOffers() ? withAnywhereCategory(sections, OFFERS_CATEGORY, CATEGORIES) : sections;
+  });
 
   /** Line-icon + Dusk Garden colour per category (falls back for custom ones). */
   categoryMeta(cat: string): { icon: string; color: string } {
