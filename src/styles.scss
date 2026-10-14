@@ -11,7 +11,10 @@
   --card-bg:       #FFFFFF;   // (legacy alias of --surface)
 
   --primary:       #8BAF7C;   // sage
-  --primary-dark:  #6A8F5E;   // sage — button fills & text on tint
+  --primary-dark:  #55734C;   // sage for text & button fills: 4.5:1 with white and on tint (#413)
+  --on-primary:    #FFFFFF;   // text on --primary-dark fills
+  --hero-from:     #5A7D4D;   // Home trip banner gradient: white text passes end to end (#413)
+  --hero-to:       #4A6642;
   --primary-tint:  #EAF1E3;   // sage wash
 
   --lavender:      #B4A6D4;   // third voice
@@ -19,7 +22,7 @@
   --lavender-tint: #ECE7F4;
 
   --accent:        #F2C48A;   // gold
-  --accent-dark:   #B97F35;   // gold text (AA)
+  --accent-dark:   #91642A;   // gold text: 4.5:1 on cards (#413)
   --accent-tint:   #FBEED9;
 
   --highlight:     #E8B4B8;   // pink
@@ -30,7 +33,7 @@
   --danger-tint:   #F7E4E1;
 
   --text:          #3A3328;   // warm near-black brown
-  --text-muted:    #8A7E6A;
+  --text-muted:    #796E5D;   // 4.5:1 on cream and white (#413)
   --border:        #EDE5D8;
 
   --shadow:        0 2px 12px rgba(139, 175, 124, 0.18);
@@ -56,7 +59,9 @@
 [data-theme="dusk-meadow"] {
   --bg: #BFC6A9; --surface: #EFE6D2; --surface-2: #E4DAC3; --card-bg: #EFE6D2;
   --border: #CDBFA4;
-  --primary-dark: #4F6F44; --primary-tint: #DEE6CF;
+  --primary-dark: #3E5735; --primary-tint: #DEE6CF;   // #413: 4.5:1 on its green page too
+  --text-muted: #554D41; --accent-dark: #895E27;
+  --hero-from: #4C6A42; --hero-to: #3E5735;
   --shadow: 0 2px 12px rgba(70, 80, 55, 0.18); --shadow-md: 0 4px 24px rgba(70, 80, 55, 0.22);
 }
 
@@ -64,7 +69,9 @@
 [data-theme="golden-hour"] {
   --bg: #C4AFB6; --surface: #F1E4C8; --surface-2: #E7D7B8; --card-bg: #F1E4C8;
   --border: #D6C6A6;
-  --primary-dark: #5E7F4C; --primary-tint: #E3E9D1;
+  --primary-dark: #384C2D; --primary-tint: #E3E9D1;   // #413: 4.5:1 on its rose page too
+  --text-muted: #4C453A; --accent-dark: #875D27;
+  --hero-from: #4A6440; --hero-to: #384C2D;
   --shadow: 0 2px 12px rgba(90, 65, 72, 0.18); --shadow-md: 0 4px 24px rgba(90, 65, 72, 0.22);
 }
 
@@ -72,7 +79,9 @@
 [data-theme="plum-dusk"] {
   --bg: #221B20; --surface: #2C242A; --surface-2: #362C34; --card-bg: #2C242A; --border: #3D3340;
   --text: #F3EAEE; --text-muted: #AC9AA6;
-  --primary: #9DBF8E; --primary-dark: #7AA269; --primary-tint: rgba(157, 191, 142, 0.16);
+  --primary: #9DBF8E; --primary-dark: #8FB181; --primary-tint: rgba(157, 191, 142, 0.16);
+  --on-primary: #221B20;   // #413: dark text on green buttons
+  --hero-from: #4E6E44; --hero-to: #3A5433;   // banner stays deep so its white text reads
   --lavender: #CDB4DE; --lavender-dark: #CDB4DE; --lavender-tint: #3A2D3A;
   --accent: #F2C48A; --accent-dark: #EAB877; --accent-tint: #3C2F1E;
   --highlight: #E8B4B8; --highlight-dk: #ECAAB0; --highlight-tint: #3E2A2D;
@@ -84,7 +93,9 @@
 [data-theme="night-garden"] {
   --bg: #1A1F17; --surface: #2C2530; --surface-2: #352C3A; --card-bg: #2C2530; --border: #403646;
   --text: #F0EFE2; --text-muted: #A9A38F;
-  --primary: #A8CB96; --primary-dark: #7DA76B; --primary-tint: rgba(168, 203, 150, 0.16);
+  --primary: #A8CB96; --primary-dark: #94B785; --primary-tint: rgba(168, 203, 150, 0.16);
+  --on-primary: #1A1F17;   // #413: dark text on green buttons
+  --hero-from: #4E6E44; --hero-to: #3A5433;   // banner stays deep so its white text reads
   --lavender: #C9B7DE; --lavender-dark: #C9B7DE; --lavender-tint: #3A2F42;
   --accent: #EFC98D; --accent-dark: #E9BE77; --accent-tint: #41371F;
   --highlight: #F0B7C6; --highlight-dk: #F0B7C6; --highlight-tint: #4A3040;
@@ -96,7 +107,9 @@
 [data-theme="deep-moss"] {
   --bg: #191E16; --surface: #222921; --surface-2: #2B332A; --card-bg: #222921; --border: #303A2E;
   --text: #EEF1E4; --text-muted: #9FAB92;
-  --primary: #A8CB96; --primary-dark: #7DA76B; --primary-tint: rgba(168, 203, 150, 0.16);
+  --primary: #A8CB96; --primary-dark: #94B785; --primary-tint: rgba(168, 203, 150, 0.16);
+  --on-primary: #191E16;   // #413: dark text on green buttons
+  --hero-from: #4E6E44; --hero-to: #3A5433;   // banner stays deep so its white text reads
   --lavender: #C3B7E0; --lavender-dark: #C3B7E0; --lavender-tint: #2E2A3A;
   --accent: #F2C48A; --accent-dark: #EAB877; --accent-tint: #33301E;
   --highlight: #E8B4B8; --highlight-dk: #ECAAB0; --highlight-tint: #33262A;
@@ -213,7 +226,7 @@ h1 > app-icon, h2 > app-icon {
   color: var(--text-muted);
   border: 1px solid var(--border);
 }
-.chip-primary   { background: var(--primary-dark);  color: #fff;                 border-color: transparent; }
+.chip-primary   { background: var(--primary-dark);  color: var(--on-primary);                 border-color: transparent; }
 .chip-accent    { background: var(--accent-tint);   color: var(--accent-dark);   border-color: transparent; }
 .chip-lavender  { background: var(--lavender-tint);  color: var(--lavender-dark); border-color: transparent; }
 .chip-highlight { background: var(--highlight-tint); color: var(--highlight-dk);  border-color: transparent; }
@@ -236,7 +249,7 @@ h1 > app-icon, h2 > app-icon {
   text-decoration: none;
   white-space: nowrap;
 
-  &-primary  { background: var(--primary-dark); color: #fff;         &:hover { background: #5c7e50; } }
+  &-primary  { background: var(--primary-dark); color: var(--on-primary); &:hover { filter: brightness(0.92); } }
   &-accent   { background: var(--accent);       color: var(--text);  &:hover { filter: brightness(0.96); } }
   &-ghost    { background: transparent; border: 1.5px solid var(--primary); color: var(--primary-dark); &:hover { background: var(--primary-tint); } }
   &-danger   { background: var(--danger-tint);  color: var(--danger); &:hover { background: #f2d6d1; } }
@@ -474,7 +487,7 @@ label {
   &.selected {
     background: var(--primary-dark);
     border-color: var(--primary-dark);
-    color: #fff;
+    color: var(--on-primary);
   }
 
   &:hover:not(.selected) {

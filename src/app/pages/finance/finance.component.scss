@@ -4,7 +4,7 @@
   bottom: 1.5rem;
   right: 1.5rem;
   background: var(--primary-dark);
-  color: #fff;
+  color: var(--on-primary);
   padding: 0.65rem 1.1rem;
   border-radius: var(--radius);
   font-size: 0.88rem;
@@ -44,7 +44,7 @@
 
   &:hover {
     background: var(--primary-dark);
-    color: #fff;
+    color: var(--on-primary);
     transform: scale(1.08);
   }
 }
@@ -394,7 +394,7 @@
 
     &.active {
       background: var(--primary-dark);
-      color: #fff;
+      color: var(--on-primary);
     }
   }
 }
@@ -1039,7 +1039,7 @@
 
     &.active {
       background: var(--primary-dark);
-      color: #fff;
+      color: var(--on-primary);
     }
   }
 }
