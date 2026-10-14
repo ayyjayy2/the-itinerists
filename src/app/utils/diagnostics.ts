@@ -4,14 +4,24 @@
  * codes, no trip or account details.
  */
 
-/** A start slower than this (launch → the open trip's data) gets a note. */
+/** A start slower than this (launch, or a fresh sign-in, → the open trip's data) gets a note. */
 export const SLOW_START_MS = 4_000;
 
 const secs = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
 
-export function startupReport(t: { authMs: number; readyMs: number; native: boolean }): string | null {
+export interface StartTimes {
+  /** Launch → the app knows whether someone is signed in. */
+  authMs: number;
+  /** `from` → the open trip's data is ready. */
+  readyMs: number;
+  /** 'launch' when already signed in; 'sign-in' when they signed in by hand (time on the form doesn't count). */
+  from: 'launch' | 'sign-in';
+  native: boolean;
+}
+
+export function startupReport(t: StartTimes): string | null {
   if (t.readyMs < SLOW_START_MS) return null;
-  return `slow start: signed in after ${secs(t.authMs)}, trip ready after ${secs(t.readyMs)} (${t.native ? 'iPhone app' : 'website'})`;
+  return `slow start: sign-in known ${secs(t.authMs)} after launch, trip ready ${secs(t.readyMs)} after ${t.from} (${t.native ? 'iPhone app' : 'website'})`;
 }
 
 /**

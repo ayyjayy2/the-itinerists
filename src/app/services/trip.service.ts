@@ -1,3 +1,4 @@
+import { DiagnosticsService } from './diagnostics.service';
 import { Injectable, inject, Injector, runInInjectionContext, signal, computed, effect } from '@angular/core';
 import {
   Firestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot,
@@ -63,6 +64,7 @@ export class TripService {
   private analytics   = inject(AnalyticsService);
   private events = inject(TripEventsService);
   private quota  = inject(QuotaService);
+  private diagnostics = inject(DiagnosticsService);
 
   /** Live document for the active trip (null when none is selected). */
   private _activeTrip = signal<TripDoc | null>(null);
@@ -186,6 +188,8 @@ export class TripService {
             .filter(i => i.expiresAt > now)
             .sort((a, b) => b.createdAt - a.createdAt);
           this._activeInvite.set(live[0] ?? null);
+          this.diagnostics.invitesSeen(live.map(i => i.code),
+            { fromCache: !!snap.metadata?.fromCache, pendingWrites: !!snap.metadata?.hasPendingWrites });
         }, () => this._activeInvite.set(null)),
       );
     });
@@ -300,7 +304,8 @@ export class TripService {
   /** Close an invite so its code/link no longer work (owner only). */
   async revokeInvite(tripId: string, code: string): Promise<void> {
     this.requireUser();
-    await this.authService.revokeInviteCode(tripId, code);
+    // Notes a failed or stalled close, or one that comes back (#484).
+    await this.diagnostics.watchInviteClose(code, () => this.authService.revokeInviteCode(tripId, code));
   }
 
   /** Switch the active trip (updates the context immediately, persists lastActiveTrip). */

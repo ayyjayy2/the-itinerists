@@ -2,14 +2,14 @@ import { ClosedInviteTracker, SLOW_START_MS, startupReport } from './diagnostics
 
 describe('startupReport (#485)', () => {
   it('says nothing for a quick start', () => {
-    expect(startupReport({ authMs: 300, readyMs: SLOW_START_MS - 1, native: true })).toBeNull();
+    expect(startupReport({ authMs: 300, readyMs: SLOW_START_MS - 1, native: true, from: 'launch' })).toBeNull();
   });
 
   it('describes a slow start: where the time went and on what', () => {
-    expect(startupReport({ authMs: 1200, readyMs: 9800, native: true }))
-      .toBe('slow start: signed in after 1.2 s, trip ready after 9.8 s (iPhone app)');
-    expect(startupReport({ authMs: 400, readyMs: 5000, native: false }))
-      .toBe('slow start: signed in after 0.4 s, trip ready after 5.0 s (website)');
+    expect(startupReport({ authMs: 1200, readyMs: 9800, native: true, from: 'launch' }))
+      .toBe('slow start: sign-in known 1.2 s after launch, trip ready 9.8 s after launch (iPhone app)');
+    expect(startupReport({ authMs: 400, readyMs: 5000, native: false, from: 'sign-in' }))
+      .toBe('slow start: sign-in known 0.4 s after launch, trip ready 5.0 s after sign-in (website)');
   });
 });
 

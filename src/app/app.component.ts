@@ -1,3 +1,4 @@
+import { DiagnosticsService } from './services/diagnostics.service';
 import { Component, OnInit, inject, computed, effect, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -64,6 +65,7 @@ export class AppComponent implements OnInit {
   router        = inject(Router);
   private appUpdate = inject(AppUpdateService);
   private firestoreResume = inject(FirestoreResumeService);
+  private diagnostics = inject(DiagnosticsService);
 
   readonly version   = APP_VERSION;
   readonly isDemo    = DEMO;
@@ -216,6 +218,14 @@ export class AppComponent implements OnInit {
         if (this.userService.authInitialized()) void SplashScreen.hide({ fadeOutDuration: 250 });
       });
     }
+
+    // How long the first start takes, noted when slow (#485).
+    effect(() => this.diagnostics.startupTick({
+      authKnown: this.userService.authInitialized(),
+      signedIn:  !!this.userService.currentUser(),
+      ready:     this.tripService.ready(),
+      native:    Capacitor.isNativePlatform(),
+    }));
 
     this.router.events.subscribe(e => {
       if (e instanceof NavigationStart) this.navigating.set(true);

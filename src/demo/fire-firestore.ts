@@ -56,6 +56,8 @@ export class QueryDocumentSnapshot extends DocumentSnapshot {
 
 export class QuerySnapshot {
   constructor(readonly docs: QueryDocumentSnapshot[]) {}
+  /** In memory: never from a cache, never waiting on the server. */
+  readonly metadata = { fromCache: false, hasPendingWrites: false };
   get empty(): boolean { return this.docs.length === 0; }
   get size(): number { return this.docs.length; }
   forEach(cb: (d: QueryDocumentSnapshot) => void): void { this.docs.forEach(cb); }

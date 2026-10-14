@@ -1,3 +1,4 @@
+import { DiagnosticsService } from './services/diagnostics.service';
 import { TestBed } from '@angular/core/testing';
 import { signal, WritableSignal } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -67,6 +68,7 @@ describe('AppComponent', () => {
         { provide: OutfitsService, useValue: initStub() },
         { provide: AppUpdateService, useValue: { start: () => {} } },
         { provide: FirestoreResumeService, useValue: { start: () => {} } },
+        { provide: DiagnosticsService, useValue: { startupTick: () => {} } },
         { provide: UsageService, useValue: { start: () => {} } },
         { provide: SurveyService, useValue: { popupOpen: signal(false), config: signal(null) } },
       ],
