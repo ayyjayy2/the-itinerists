@@ -1,4 +1,4 @@
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, computed, inject } from '@angular/core';
 import { PartnerOffer } from '../models/trip.models';
 import { countryList, countryName, foreignCountries } from '../utils/abroad';
 import { tripDestinations } from '../utils/trip-destinations';
@@ -8,21 +8,16 @@ import { TripService } from './trip.service';
 export type OfferCardId = 'esim' | 'insurance';
 export interface OfferCard { id: OfferCardId; icon: string; title: string; subline: string; partners: PartnerOffer[]; }
 
-const HIDDEN_KEY = (tripId: string) => `itinerists_offers_hidden_${tripId}`;
-
 /**
  * Which partner offer cards Tips & Recs shows (#474, #476): an eSIM card and an
- * insurance card, only when a stop is in another country from this phone, minus
- * the ones this person hid on this trip (kept on this device).
+ * insurance card, only when a stop is in another country from this phone. They
+ * stay like the other tips: there's no Hide (#480).
  */
 @Injectable({ providedIn: 'root' })
 export class OfferCardsService {
   private partners = inject(PartnersService);
   private trips    = inject(TripService);
   private zone     = inject(DEVICE_ZONE);
-
-  private readonly tripId = computed(() => this.trips.activeTrip()?.id ?? null);
-  private readonly hidden = signal<Set<OfferCardId>>(new Set());
 
   /** The trip's countries outside this phone's, as names. */
   readonly abroad = computed(() => {
@@ -40,23 +35,10 @@ export class OfferCardsService {
       { id: 'esim', icon: '📶', title: 'Need data abroad?', subline: `Skip roaming fees in ${countryList(places)}`, partners: cfg.esim },
       { id: 'insurance', icon: '🛡', title: 'Covered if plans change?', subline: 'Travel insurance for trips abroad', partners: cfg.insurance },
     ];
-    return all.filter(c => c.partners.length && !this.hidden().has(c.id));
+    return all.filter(c => c.partners.length);
   });
 
   constructor() {
     void this.partners.ensureLoaded();
-    effect(() => {                                   // hidden cards, per trip, on this device
-      const id = this.tripId();
-      let list: OfferCardId[] = [];
-      try { list = id ? JSON.parse(localStorage.getItem(HIDDEN_KEY(id)) ?? '[]') : []; } catch { /* none */ }
-      this.hidden.set(new Set(list));
-    });
-  }
-
-  hide(id: OfferCardId): void {
-    const next = new Set(this.hidden()).add(id);
-    this.hidden.set(next);
-    const trip = this.tripId();
-    try { if (trip) localStorage.setItem(HIDDEN_KEY(trip), JSON.stringify([...next])); } catch { /* storage unavailable */ }
   }
 }
