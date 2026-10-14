@@ -161,26 +161,17 @@
 
 // ── Edit / detail modal ────────────────────────────────────────────────────────
 .modal-backdrop {
-  position: fixed;
-  // The part of the screen the person can see: on an iPhone the keyboard covers
-  // the page without shrinking it, so size to the visible area (#470).
-  top: var(--visible-top, 0px);
-  left: 0;
-  right: 0;
-  height: var(--visible-height, 100dvh);
   background: rgba(0,0,0,0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
-  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  padding-inline: 1rem;
 }
 
 .modal-card {
   width: 100%;
   max-width: 420px;
-  max-height: 100%;
-  overflow-y: auto;
 
   h3 { margin-bottom: 1rem; }
 }

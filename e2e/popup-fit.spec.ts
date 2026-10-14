@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 /**
  * #470: "while inputting an expense on my phone the bottom of the screen gets
- * cut off". On an iPhone the keyboard covers the page without shrinking it;
+ * cut off"; #492: every pop-up with a text field. On an iPhone the keyboard covers the page without shrinking it;
  * only the visual viewport shrinks. Stand in for that: a visual viewport 330px
  * tall (a phone with its keyboard up), and check the whole form, save button
  * included, can be scrolled into that visible part.
@@ -17,7 +17,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function expectFits(page: Page, saveName: string) {
-  const card = page.locator('.modal-card');
+  const card = page.locator('.modal-backdrop > *').first();
   await card.evaluate(el => (el.scrollTop = el.scrollHeight));          // scroll the form to its end
   const box = (await card.boundingBox())!;
   expect(box.y).toBeGreaterThanOrEqual(0);
@@ -36,4 +36,22 @@ test('the edit-expense form fits above the keyboard (Expenses)', async ({ page }
   await page.goto('/expenses');
   await page.locator('.edit-btn').first().click();
   await expectFits(page, 'Save');
+});
+
+test('the add-flight form fits above the keyboard', async ({ page }) => {
+  await page.goto('/flights');
+  await page.getByRole('button', { name: '+ Add Flight' }).click();
+  await expectFits(page, 'Add Flight');
+});
+
+test('the add-pin form fits above the keyboard (Map)', async ({ page }) => {
+  await page.goto('/map');
+  await page.getByRole('button', { name: '+ Add Pin' }).click();
+  await expectFits(page, 'Save Pin');
+});
+
+test('the change-password form fits above the keyboard (Profile)', async ({ page }) => {
+  await page.goto('/profile');
+  await page.getByRole('button', { name: 'Change Password' }).click();
+  await expectFits(page, (await page.locator('.modal-box .btn-primary').first().innerText()).trim());
 });

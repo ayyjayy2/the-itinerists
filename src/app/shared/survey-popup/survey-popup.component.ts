@@ -23,9 +23,9 @@ import { SurveyService } from '../../services/survey.service';
   `,
   styles: [`
     .modal-backdrop {
-      position: fixed; inset: 0; z-index: 300;
+      z-index: 300;   // where it sits: the shared .modal-backdrop rule (#492)
       display: flex; align-items: center; justify-content: center;
-      padding: 1.5rem;
+      padding-inline: 1.5rem;
       background: rgba(0, 0, 0, 0.45);
     }
     .survey-popup {

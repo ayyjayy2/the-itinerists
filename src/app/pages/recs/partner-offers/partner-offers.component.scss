@@ -17,7 +17,7 @@
 .offer-sub { margin: 0.35rem 0 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
 
 .modal-backdrop {
-  position: fixed; inset: 0; z-index: 300;
+  position: fixed; inset: 0; height: auto; z-index: 300;   // its own fit, between header and tab bar (#478)
   display: flex; align-items: center; justify-content: center;
   padding: 12px 1rem;              // top and bottom are set from the header and tab bar (#478)
   background: rgba(0, 0, 0, 0.45);
