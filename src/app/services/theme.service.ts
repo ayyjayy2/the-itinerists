@@ -43,6 +43,11 @@ export class ThemeService {
   private apply(id: string): void {
     if (typeof document === 'undefined') return;
     document.documentElement.setAttribute('data-theme', id);
+    // The strip above the header (status bar, browser chrome) takes this
+    // colour: match the theme's header, not one fixed sage (#464).
+    const header = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (meta && header) meta.content = header;
   }
 }
 
