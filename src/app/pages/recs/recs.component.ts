@@ -14,9 +14,10 @@ import { groupRecsByCategory, groupRecsByDestination, ANYWHERE, DestinationSecti
 const CATEGORIES = ['Food', 'Drink', 'Places', 'Activities', 'Tips', 'Culture'];
 
 import { FocusTargetDirective } from '../../shared/focus-target.directive';
+import { PartnerOffersComponent } from './partner-offers/partner-offers.component';
 @Component({
   selector: 'app-recs',
-  imports: [FocusTargetDirective, LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule],
+  imports: [FocusTargetDirective, PartnerOffersComponent, LoadingComponent, IconComponent, NoTripStateComponent, CommonModule, FormsModule],
   templateUrl: './recs.component.html',
   styleUrl: './recs.component.scss'
 })
