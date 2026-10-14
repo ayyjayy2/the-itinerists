@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import {
   addItineraryEvent, apiKey, itineraryCard, password, secondPerson, signIn, signOut, stamp, watchErrors,
 } from './helpers';
@@ -252,12 +252,29 @@ test.describe('4. Joining a trip', () => {
   });
 });
 
+/**
+ * Counts page code (chunk-*.js) still downloading. After the first page shows,
+ * the router fetches every other page's code in the background; going offline
+ * before that's done leaves those pages unopenable (#487).
+ */
+function trackPageCode(page: Page): { quiet: () => boolean } {
+  let pending = 0, lastChange = Date.now();
+  const isChunk = (url: string) => /\/chunk-[A-Z0-9]+\.js$/.test(new URL(url).pathname);
+  page.on('request', r => { if (isChunk(r.url())) { pending++; lastChange = Date.now(); } });
+  const done = (r: { url(): string }) => { if (isChunk(r.url())) { pending--; lastChange = Date.now(); } };
+  page.on('requestfinished', done);
+  page.on('requestfailed', done);
+  return { quiet: () => pending === 0 && Date.now() - lastChange > 750 };
+}
+
 test.describe('5. Offline', () => {
   test('opened pages keep working offline, and an offline edit syncs when back online', async ({ page, context, browser, baseURL }) => {
     const title = `${stamp()} offline`;
+    const pageCode = trackPageCode(page);
     await page.goto('/home');
     await page.goto('/itinerary');
     await expect(page.locator('.itinerary-item').first()).toBeVisible();   // the trip has loaded
+    await expect.poll(pageCode.quiet, { message: 'every page\'s code has downloaded', timeout: 30_000 }).toBe(true);
 
     await context.setOffline(true);
     const tab = (name: string) => page.getByRole('navigation').getByRole('link', { name });
