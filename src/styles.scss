@@ -416,6 +416,27 @@ label {
 }
 .form-row     { display: flex; gap: 0.75rem; flex-wrap: wrap; > * { flex: 1; min-width: 120px; } }
 
+// ── Pop-ups ── one rule for where every pop-up sits (#470, #492) ──────────────
+// The part of the screen the person can see: on an iPhone the keyboard covers
+// the page without shrinking it, so a pop-up sized to the whole screen keeps
+// its save button behind the keyboard. VisibleAreaService publishes the visible
+// area; pop-ups fill it, clear of the notch and the home bar, and scroll inside.
+// Pages keep their own look (background, z-index, side padding, alignment).
+.modal-backdrop {
+  position: fixed;
+  top: var(--visible-top, 0px);
+  left: 0;
+  right: 0;
+  height: var(--visible-height, 100dvh);
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.modal-backdrop > .modal-card,
+.modal-backdrop > .modal-box {
+  max-height: 100%;
+  overflow-y: auto;
+}
+
 // ── Loading ───────────────────────────────────────────────────────────────────
 .spinner {
   display: inline-block;

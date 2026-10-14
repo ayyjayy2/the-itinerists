@@ -219,21 +219,17 @@
 
 // Modal (reuse expense modal styles since they're in global scope via app)
 .modal-backdrop {
-  position: fixed;
-  inset: 0;
   background: rgba(0,0,0,0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding-inline: 1rem;
 }
 
 .modal-card {
   width: 100%;
   max-width: 440px;
-  max-height: 90vh;
-  overflow-y: auto;
 
   h3 { margin-bottom: 1rem; }
 }

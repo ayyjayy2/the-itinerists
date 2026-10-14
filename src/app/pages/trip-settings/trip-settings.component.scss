@@ -130,12 +130,10 @@
 .lifecycle-row.danger strong { color: var(--danger, #c0392b); }
 
 .modal-backdrop {
-  position: fixed;
-  inset: 0;
   background: rgba(0, 0, 0, 0.45);
   display: grid;
   place-items: center;
-  padding: 1rem;
+  padding-inline: 1rem;
   z-index: 1000;
 }
 .modal-card {
