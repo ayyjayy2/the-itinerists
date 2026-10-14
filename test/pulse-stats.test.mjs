@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  dayKey, hourIn, startOfDay, stampText, onlineNow, windowMoved, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, peopleStats, tripStats,
+  dayKey, hourIn, startOfDay, stampText, onlineNow, windowMoved, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, offerStats, peopleStats, tripStats,
   deletionStats,
 } from '../public/pulse/stats.mjs';
 
@@ -88,6 +88,18 @@ test('hourOfDay counts a person once per hour per day, on their clock or in one 
   const own = hourOfDayDetail(rows, 'local');
   assert.deepEqual(own[14], { count: 2, uids: ['a'], zones: ['Europe/Berlin'], pages: ['/home'] });
   assert.deepEqual(own[7], { count: 1, uids: ['b'], zones: ['America/Chicago'], pages: ['/home'] });
+});
+
+test('offerStats counts taps and distinct people per partner, most tapped first', () => {
+  const rows = [
+    { uid: 'a', type: 'offer', offer: 'airalo' }, { uid: 'a', type: 'offer', offer: 'airalo' },
+    { uid: 'b', type: 'offer', offer: 'saily' }, { uid: 'c', type: 'offer', offer: 'airalo' },
+    { uid: 'a', type: 'page', page: '/recs' },
+  ];
+  assert.deepEqual(offerStats(rows), [
+    { offer: 'airalo', taps: 3, users: 2 },
+    { offer: 'saily', taps: 1, users: 1 },
+  ]);
 });
 
 test('pageStats counts views and distinct people per page, busiest first', () => {

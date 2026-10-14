@@ -180,6 +180,20 @@ export function pageStats(rows) {
     .sort((a, b) => b.views - a.views || b.users - a.users || a.page.localeCompare(b.page));
 }
 
+/** Partner-offer taps on Tips & Recs (#474): taps and people per partner, most tapped first. */
+export function offerStats(rows) {
+  const by = new Map();
+  for (const r of rows) {
+    if (r.type !== 'offer' || !r.offer) continue;
+    const s = by.get(r.offer) ?? by.set(r.offer, { taps: 0, users: new Set() }).get(r.offer);
+    s.taps++;
+    s.users.add(r.uid);
+  }
+  return [...by.entries()]
+    .map(([offer, s]) => ({ offer, taps: s.taps, users: s.users.size }))
+    .sort((a, b) => b.taps - a.taps || a.offer.localeCompare(b.offer));
+}
+
 /** One line per person: latest platform, zone and trip, last seen, page views, days active, app opens. */
 export function peopleStats(rows, zone) {
   const acc = new Map();
