@@ -24,12 +24,12 @@
 .modal-backdrop {
   position: fixed; inset: 0; z-index: 300;
   display: flex; align-items: center; justify-content: center;
-  padding: 1rem;
+  padding: 12px 1rem;              // top and bottom are set from the header and tab bar (#478)
   background: rgba(0, 0, 0, 0.45);
 }
 .offer-sheet {
   position: relative;
-  width: 100%; max-width: 440px; max-height: min(85vh, 640px); overflow-y: auto;
+  width: 100%; max-width: 440px; max-height: min(100%, 640px); overflow: hidden;
   display: flex; flex-direction: column; gap: 1rem;
   padding: 1.75rem 1.25rem 1.25rem;
   background: var(--card-bg); border: 1px solid var(--border);
@@ -39,7 +39,9 @@
   .offer-sheet { animation: offer-in 0.18s ease-out; }
   @keyframes offer-in { from { opacity: 0; transform: translateY(8px); } }
 }
-.offer-sheet h2 { margin: 0; padding-right: 2.5rem; }
+.offer-sheet h2 { margin: 0; padding-right: 2.5rem; flex-shrink: 0; }
+// Title, tabs and ✕ stay put; only this part scrolls when the pop-up is taller than the room (#478).
+.offer-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 1rem; }
 .offer-close {
   position: absolute; top: 0.25rem; right: 0.25rem;
   width: 44px; height: 44px;
@@ -48,7 +50,7 @@
   color: var(--text-muted); font-size: 1rem;
 }
 
-.offer-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border); }
+.offer-tabs { flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border); }
 .offer-tabs button {
   min-height: 44px; background: none; border: none; border-bottom: 3px solid transparent;
   color: var(--text-muted); font: inherit; font-weight: 600; cursor: pointer;

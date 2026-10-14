@@ -10,6 +10,9 @@ import { ESIM_GOOD_TO_KNOW, ESIM_INTRO, ESIM_STEPS } from '../../../utils/esim-g
  * decides which), each opening a pop-up. Host is `display: contents`, so the
  * cards sit in the group's grid like the other recs.
  */
+/** Space between the pop-up and the header above it / the tab bar below it. */
+const SHEET_GAP = 12;
+
 @Component({
   selector: 'app-partner-offers',
   standalone: true,
@@ -30,11 +33,29 @@ export class PartnerOffersComponent {
   readonly copied   = signal<string | null>(null);
   private trigger: HTMLElement | null = null;
   private readonly closeBtn = viewChild<ElementRef<HTMLButtonElement>>('closeBtn');
+  private readonly body = viewChild<ElementRef<HTMLElement>>('body');
 
   readonly open = computed(() => this.cards().find(c => c.id === this.openCard()) ?? null);
 
+  /** The room between the app's header and its tab bar (#478): the pop-up sits in it
+   *  with the same gap at both ends, and scrolls inside rather than running under a bar. */
+  readonly room = signal({ top: SHEET_GAP, bottom: SHEET_GAP });
+
   constructor() {
-    effect(() => { if (this.open()) this.closeBtn()?.nativeElement.focus(); });
+    effect(() => {
+      if (!this.open()) return;
+      this.measureRoom();
+      this.closeBtn()?.nativeElement.focus();
+    });
+  }
+
+  @HostListener('window:resize')
+  measureRoom(): void {
+    const header = document.querySelector('.app-header')?.getBoundingClientRect();
+    const tabs = document.querySelector('nav.tab-bar')?.getBoundingClientRect();
+    const top = header && header.height ? header.bottom : 0;
+    const bottom = tabs && tabs.height ? window.innerHeight - tabs.top : 0;
+    this.room.set({ top: Math.max(0, top) + SHEET_GAP, bottom: Math.max(0, bottom) + SHEET_GAP });
   }
 
   show(card: OfferCard, ev: Event): void {
@@ -42,6 +63,12 @@ export class PartnerOffersComponent {
     this.tab.set('pick');
     this.copied.set(null);
     this.openCard.set(card.id);
+  }
+
+  /** Switch tabs, starting the new one from its top. */
+  setTab(t: 'pick' | 'guide'): void {
+    this.tab.set(t);
+    this.body()?.nativeElement.scrollTo({ top: 0 });
   }
 
   close(): void {

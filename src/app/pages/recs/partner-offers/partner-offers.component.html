@@ -11,18 +11,19 @@
 }
 
 @if (open(); as card) {
-  <div class="modal-backdrop" (click)="close()">
+  <div class="modal-backdrop" (click)="close()" [style.padding-top.px]="room().top" [style.padding-bottom.px]="room().bottom">
     <div class="offer-sheet" role="dialog" aria-modal="true" aria-labelledby="offer-title" (click)="$event.stopPropagation()">
       <button #closeBtn class="offer-close" type="button" (click)="close()" aria-label="Close">✕</button>
       <h2 id="offer-title">{{ card.icon }} {{ card.title }}</h2>
 
       @if (card.id === 'esim') {
         <div class="offer-tabs" role="tablist">
-          <button type="button" role="tab" data-tab="pick" [attr.aria-selected]="tab() === 'pick'" [class.active]="tab() === 'pick'" (click)="tab.set('pick')">Pick an eSIM</button>
-          <button type="button" role="tab" data-tab="guide" [attr.aria-selected]="tab() === 'guide'" [class.active]="tab() === 'guide'" (click)="tab.set('guide')">What's an eSIM?</button>
+          <button type="button" role="tab" data-tab="pick" [attr.aria-selected]="tab() === 'pick'" [class.active]="tab() === 'pick'" (click)="setTab('pick')">Pick an eSIM</button>
+          <button type="button" role="tab" data-tab="guide" [attr.aria-selected]="tab() === 'guide'" [class.active]="tab() === 'guide'" (click)="setTab('guide')">What's an eSIM?</button>
         </div>
       }
 
+      <div class="offer-body" #body>
       @if (card.id === 'insurance' || tab() === 'pick') {
         <ul class="offer-list">
           @for (p of card.partners; track p.id) {
@@ -54,11 +55,12 @@
           <ul>
             @for (n of guideNotes; track n) { <li>{{ n }}</li> }
           </ul>
-          <button class="btn btn-primary btn-sm" type="button" (click)="tab.set('pick')">Pick an eSIM</button>
+          <button class="btn btn-primary btn-sm" type="button" (click)="setTab('pick')">Pick an eSIM</button>
         </div>
       }
 
       <p class="offer-disclosure">We may earn a small commission if you buy through these links. It doesn't change your price.</p>
+      </div>
     </div>
   </div>
 }
