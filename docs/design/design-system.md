@@ -19,12 +19,12 @@ The Itinerists is a group trip planner: one shared plan for flights, stays, the 
 ### Color
 
 - Set the page on `bg`, cards and sheets on `surface`, quiet areas on `surface-2`; outline with `border`.
-- Body text is `text`. Keep `text-muted` to short labels, dates and captions on `surface`: it is below 4.5:1 on `bg` in every light theme.
-- `primary` (sage) is the brand. Fill primary buttons with `primary-dark` and white text; one primary button per view.
+- Body text is `text`; `text-muted` is for short labels, dates and captions and passes 4.5:1 on `bg` and `surface` in every theme.
+- `primary` (sage) is the brand. Fill primary buttons with `primary-dark` and `on-primary` text; one primary button per view.
 - `lavender` is the second voice (the wordmark's "THE", flights). `accent` (gold) marks reminders and anything to look at again. `highlight` (pink) is a tag colour only. `danger` is for errors and destructive actions, never decoration.
 - Each hue has a `-tint` wash and a `-dark` text step: put `-dark` text on its own `-tint`, as the chips do.
 - Five themes, chosen on Profile and set as `data-theme` on `<html>`: Light (default), Dusk Meadow and Golden Hour (muted grounds, cream cards), Plum Dusk and Night Garden (dark). A sixth, Deep Moss, exists in the code as an unlisted backup.
-- **Contrast, as the code stands:** several of the brand's text pairs meet only the 3:1 large-text level, not 4.5:1: white on `primary-dark` (3.7:1 in Light, under 3:1 in the dark themes), `accent-dark` on `accent-tint` (3.0:1), `lavender-dark` and `highlight-dk` on their tints (3.4 to 3.7:1), `danger` on `danger-tint` (3.7:1). They are kept exact here and flagged in each token's note; small text on them relies on weight 800.
+- **Contrast (checked Oct 13, 2026, #413):** body text, muted text, green text and links, primary buttons, the selected menu item, gold text and the Home trip banner all reach 4.5:1 in all five themes. Still below 4.5:1 and flagged: `lavender-dark` and `highlight-dk` on their tints (3.4 to 3.7:1) and `danger` on `danger-tint` (3.7:1); small text on them relies on weight 800.
 
 ### Typography
 
@@ -74,16 +74,18 @@ CSS custom properties of the same names (`--bg`, `--primary-dark`…) are define
 | `surface-2` | `#f5efe3` | `#e4dac3` | `#e7d7b8` | `#362c34` | `#352c3a` | Sunken or secondary areas: scope-tab tracks, muted chips, quiet panels. |
 | `card-bg` | `{surface}` | `{surface}` | `{surface}` | `{surface}` | `{surface}` | Legacy alias of surface; older components still read it. Use surface in new work. |
 | `text` | `#3a3328` | `#3a3328` | `#3a3328` | `#f3eaee` | `#f0efe2` | Body text and headings on bg, surface and surface-2 (11:1 or more in every theme). |
-| `text-muted` | `#8a7e6a` | `#8a7e6a` | `#8a7e6a` | `#ac9aa6` | `#a9a38f` | Secondary text: labels, dates, captions, inactive tabs. 3.6:1 on bg and 4.0:1 on surface in Light, 1.9:1 on Golden Hour's bg: keep it to short labels on surface, never long copy or anything that must be read on bg. Flagged. |
+| `text-muted` | `#796e5d` | `#554d41` | `#4c453a` | `#ac9aa6` | `#a9a38f` | Secondary text: labels, dates, captions, inactive tabs. At least 4.5:1 on both `bg` and `surface` in every theme (#413). |
 | `border` | `#ede5d8` | `#cdbfa4` | `#d6c6a6` | `#3d3340` | `#403646` | Card outlines, dividers, input borders, chip outlines. |
 | `primary` | `#8baf7c` | `#8baf7c` | `#8baf7c` | `#9dbf8e` | `#a8cb96` | Sage. The brand hue: icons, focus rings, ghost-button borders, the spinner, the current stop's live dot. Not for small text. |
-| `primary-dark` | `#6a8f5e` | `#4f6f44` | `#5e7f4c` | `#7aa269` | `#7da76b` | Sage fill for primary buttons and chip-primary (with white text), and sage text on primary-tint. White on it is 3.7:1 in Light and under 3:1 in Plum Dusk and Night Garden, so button labels rely on their 800 weight; primary-dark on primary-tint is 3.2:1 in Light. Below WCAG AA for small text: flagged, kept exact. |
+| `primary-dark` | `#55734c` | `#3e5735` | `#384c2d` | `#8fb181` | `#94b785` | Sage for text and links, and the fill of primary buttons and chip-primary. At least 4.5:1 as text on `surface`, `bg` and `primary-tint`, and with `on-primary` text on it, in every theme (#413). |
+| `on-primary` | `#ffffff` | | | `#221b20` | `#1a1f17` | Text on a `primary-dark` fill: white in the light and medium themes, dark in the dark themes (where the green is light). Deep Moss uses `#191e16`. |
+| `hero-from` / `hero-to` | `#5a7d4d` / `#4a6642` | `#4c6a42` / `#3e5735` | `#4a6440` / `#384c2d` | `#4e6e44` / `#3a5433` | same | The Home trip banner's gradient. White text passes 4.5:1 along the whole gradient. |
 | `primary-tint` | `#eaf1e3` | `#dee6cf` | `#e3e9d1` | `rgba(157, 191, 142, 0.16)` | `rgba(168, 203, 150, 0.16)` | Sage wash: selected chips, success alerts, hover on ghost buttons, the current stop card. |
 | `lavender` | `#b4a6d4` | `#b4a6d4` | `#b4a6d4` | `#cdb4de` | `#c9b7de` | Third voice: "THE" in the wordmark, flight banners, secondary accents. |
 | `lavender-dark` | `#7e6fa8` | `#7e6fa8` | `#7e6fa8` | `#cdb4de` | `#c9b7de` | Lavender text, e.g. chip-lavender and flight banners. 4.4:1 on surface and 3.7:1 on lavender-tint in Light: AA only for large or bold text. |
 | `lavender-tint` | `#ece7f4` | `#ece7f4` | `#ece7f4` | `#3a2d3a` | `#3a2f42` | Lavender wash behind lavender text (flight items, chip-lavender). |
 | `accent` | `#f2c48a` | `#f2c48a` | `#f2c48a` | `#f2c48a` | `#efc98d` | Gold. Accent button fill (with text on it), reminder and outside-dates banners' edge. |
-| `accent-dark` | `#b97f35` | `#b97f35` | `#b97f35` | `#eab877` | `#e9be77` | Gold text on accent-tint: reminders, "Outside trip dates" tags. 3.0:1 on accent-tint in every light and medium theme: below AA for small text, flagged. |
+| `accent-dark` | `#91642a` | `#895e27` | `#875d27` | `#eab877` | `#e9be77` | Gold text: reminders, "Outside trip dates" tags. At least 4.5:1 on `surface` (and on `accent-tint` in Light) (#413). |
 | `accent-tint` | `#fbeed9` | `#fbeed9` | `#fbeed9` | `#3c2f1e` | `#41371f` | Gold wash: reminder banners (recovery email, confirm email), outside-dates notices and tags. |
 | `highlight` | `#e8b4b8` | `#e8b4b8` | `#e8b4b8` | `#e8b4b8` | `#f0b7c6` | Pink: the fourth tag hue (stay banners, avatars). |
 | `highlight-dk` | `#b96a76` | `#b96a76` | `#b96a76` | `#ecaab0` | `#f0b7c6` | Pink text on highlight-tint (chip-highlight). 3.4:1: AA only for large or bold text. |

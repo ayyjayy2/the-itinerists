@@ -19,7 +19,7 @@
 
 .btn-primary {
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary);
   white-space: nowrap;
 
   &:hover:not(:disabled) { background: var(--primary-dark); }
