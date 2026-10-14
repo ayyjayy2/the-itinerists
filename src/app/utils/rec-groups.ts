@@ -47,3 +47,25 @@ export function groupRecsByDestination<T extends { category: string; destination
   if (anywhere.length) sections.push({ destination: ANYWHERE, groups: groupRecsByCategory(anywhere, categoryOrder) });
   return sections;
 }
+
+/** The groups with an empty `category` group added in its place, if there isn't one (#476). */
+export function withCategory<T>(
+  groups: readonly CategoryGroup<T>[], category: string, order: readonly string[],
+): CategoryGroup<T>[] {
+  if (groups.some(g => g.category === category)) return [...groups];
+  const rank = (c: string) => { const i = order.indexOf(c); return i === -1 ? Infinity : i; };
+  const at = groups.findIndex(g => rank(g.category) > rank(category));
+  const out = [...groups];
+  out.splice(at === -1 ? out.length : at, 0, { category, recs: [] });
+  return out;
+}
+
+/** The sections with `category` in the Anywhere (whole trip) section, added last if missing (#476). */
+export function withAnywhereCategory<T>(
+  sections: readonly DestinationSection<T>[], category: string, order: readonly string[],
+): DestinationSection<T>[] {
+  const out = sections.filter(s => s.destination !== ANYWHERE);
+  const anywhere = sections.find(s => s.destination === ANYWHERE);
+  out.push({ destination: ANYWHERE, groups: withCategory(anywhere?.groups ?? [], category, order) });
+  return out;
+}
