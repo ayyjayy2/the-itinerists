@@ -5,10 +5,13 @@ import type { CapacitorConfig } from '@capacitor/cli';
  * The bundle id can still change until the app is registered in App Store
  * Connect; after that it is permanent.
  */
+/** `npm run ios:staging` packages the staging web build (staging data) instead. */
+const STAGING = process.env['CAP_TARGET'] === 'staging';
+
 const config: CapacitorConfig = {
   appId: 'com.theitinerists.app',
   appName: 'The Itinerists',
-  webDir: 'dist/the-itinerists/browser',
+  webDir: STAGING ? 'dist/the-itinerists-staging/browser' : 'dist/the-itinerists/browser',
   ios: {
     // 'never': the web view fills the whole screen and the app's own CSS
     // (env(safe-area-inset-*) on the header and tab bar) handles the notch and

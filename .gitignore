@@ -88,6 +88,7 @@ ios/App/Podfile.lock
 
 # Firebase iOS config (fetched by: node scripts/fetch-ios-config.js)
 ios/App/App/GoogleService-Info.plist
+ios/App/App/GoogleService-Info.staging.plist
 
 # Playwright
 test-results/

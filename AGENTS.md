@@ -36,6 +36,7 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 - **CI must pass:** unit tests, Pulse tests, the production build, security-rules tests and Playwright end-to-end tests.
 - **Merging to master deploys staging automatically** (https://the-itinerists-staging.web.app); run `npm run test:staging` once it's up. **Production (theitinerists.com) is deployed by hand,** from an up-to-date master, when the owner wants the change live.
 - **The iPhone app** only changes when a new build is installed: `npm run ios:sync`, then Xcode Run (simulator) or an `xcodebuild` + `devicectl` install (a phone). Commit the version stamp `ios:sync` writes to `ios/App/App.xcodeproj/project.pbxproj` through a pull request.
+- **Phone changes go through staging first:** `npm run ios:staging` installs "Itinerists Staging", a second app on staging data, beside the real one. The order is pull request → staging website and staging app → production website → the real iPhone app.
 - **One change per pull request,** described in plain words: what changed, why, and how it was tested.
 - **Every action item is an issue on the [Trip Planner board](https://github.com/users/ayyjayy2/projects/9)** (GitHub project #9) and moves through it as the work does: **Backlog** when it's found, **In Progress** when work starts, **In Review** when its pull request opens, **Done** when that merges. The pull request says `Closes #N` so the issue and the card close with it. New findings go on the board as Backlog issues (no real names: the repo is public). `TODO.md` keeps the owner's non-code items (survey, marketing, purchases).
 - **Commit early.** Uncommitted work can be lost to another session's checkout or stash; for feature work use a git worktree (`git worktree add .worktrees/<name> -b <branch> origin/master`).
@@ -111,13 +112,14 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 | `firebase deploy --only firestore:rules --project trip-planner-ayyjayy2` | Deploy production rules |
 | `npm run ios:sync` | Build and copy the web app into the iPhone project, stamping the version |
 | `npm run ios:run` / `npm run ios:open` | Run on a simulator / open Xcode |
+| `npm run ios:staging` | Build "Itinerists Staging" (staging data, its own app id) and install it on the connected iPhone. Needs the gitignored `ios/App/App/GoogleService-Info.staging.plist`; run `npm run ios:sync` before building the real app again |
 
 **Environments**
 
 | | Address | Firebase project | Data |
 |---|---|---|---|
 | Local | localhost:4200 (or :4400 demo) | production (or none for demo) | real (or in-memory) |
-| Staging | the-itinerists-staging.web.app | `the-itinerists-staging` | seeded test trip and test accounts; sign-up off |
+| Staging | the-itinerists-staging.web.app, and the "Itinerists Staging" iPhone app | `the-itinerists-staging` | seeded test trip and test accounts; sign-up off |
 | Production | theitinerists.com, the-itinerists.web.app | `trip-planner-ayyjayy2` | real people |
 
 ## 6. Need help?

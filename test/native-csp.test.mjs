@@ -41,3 +41,11 @@ test('injects the policy as the first thing in <head>, once, replacing an older 
   assert.equal((twice.match(/Content-Security-Policy/g) || []).length, 1);
   assert.match(twice, /content="default-src 'none'"/);
 });
+
+test('the staging iPhone app takes the staging website policy', () => {
+  const json = JSON.parse(readFileSync(new URL('../firebase.json', import.meta.url), 'utf8'));
+  const staging = webPolicy(json, 'the-itinerists-staging');
+  assert.match(staging, /script-src 'self'/);
+  assert.notEqual(staging, WEB);
+  assert.throws(() => webPolicy(json, 'no-such-site'), /no-such-site/);
+});
