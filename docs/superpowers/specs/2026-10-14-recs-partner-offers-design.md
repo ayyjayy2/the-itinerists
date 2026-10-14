@@ -33,14 +33,15 @@ Two cards at the top of Tips & Recs, styled like the page's other cards (tokens 
    offer ("$3 off your first eSIM"), the code in a tap-to-copy chip ("Copied" for 2 s, falling back
    to selecting the text when the clipboard is refused), and an **Open** button. Below the rows:
    "Prices differ by country, so it's worth comparing them." (no count, so the wording holds if partners change)
-2. **What's an eSIM?**: plain words for non-technical people, written in the app (not the config):
-   - It's a SIM card that lives inside your phone: no plastic card, no shop.
-   - Buy a data plan for where you're going before you leave, while you're on Wi-Fi.
-   - Turn it on when you land; your usual number still works for calls and texts over Wi-Fi or
-     iMessage.
-   - Will it work on my phone? Most phones from the last few years: iPhone XS and newer, Pixel 3
-     and newer, Galaxy S20 and newer. The phone must be unlocked (not tied to one carrier).
-   - Tip: delete the eSIM when you're home, or keep it for next time.
+2. **What's an eSIM?**: plain words for people who have never heard of one, so they feel
+   confident enough to tap a link. The copy is in `src/app/utils/esim-guide.ts`. It opens with one sentence
+   on what an eSIM is, then four numbered steps:
+   1. Pick a plan before you go (with a data amount guide).
+   2. Install it at home, on Wi-Fi.
+   3. Switch it on when you land (which settings, and turning roaming off for your usual line).
+   4. That's it.
+   It ends with "Good to know": which phones work and a quick check, unlocked phones, calls, and
+   switching back at home. A button returns to the partner list.
 
 **Insurance pop-up:** one row per insurance partner (name, a one-line description from the config,
 **Open**). There are no tabs.
