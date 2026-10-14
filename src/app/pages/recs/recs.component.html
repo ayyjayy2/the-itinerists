@@ -17,7 +17,7 @@
         @if (!useCustomCategory) {
           <div class="category-row">
             <select [(ngModel)]="form.category">
-              @for (cat of categories.slice(1); track cat) {
+              @for (cat of categories; track cat) {
                 <option [value]="cat">{{ cat }}</option>
               }
             </select>
@@ -65,26 +65,12 @@
     </div>
   }
 
-  <!-- ── Destination filter chips (multi-destination trips) ── -->
-  @if (isMultiDestination()) {
-    <div class="filter-chips dest-chips">
-      <button class="chip" [class.chip-primary]="selectedDestination() === 'All'" (click)="setDestination('All')">All places</button>
-      @for (leg of legs(); track leg) {
-        <button class="chip" [class.chip-primary]="selectedDestination() === leg" (click)="setDestination(leg)">
-          <app-icon name="pin" [size]="15" />{{ leg }}
-        </button>
-      }
-      <button class="chip" [class.chip-primary]="selectedDestination() === anywhere" (click)="setDestination(anywhere)">{{ anywhere }}</button>
-    </div>
-  }
-
-  <!-- ── Category filter chips ── -->
-  <div class="filter-chips">
-    @for (cat of categories; track cat) {
-      <button class="chip" [class.chip-primary]="selectedCategory() === cat" (click)="setCategory(cat)">
-        @if (cat !== 'All') { <app-icon [name]="categoryMeta(cat).icon" [size]="15" /> }{{ cat }}
-      </button>
+  <!-- ── Filters (#482) ── -->
+  <div class="recs-filters">
+    @if (isMultiDestination()) {
+      <app-multi-select class="filter-places" label="Places" [options]="placeOptions()" [(selected)]="selectedPlaces" />
     }
+    <app-multi-select class="filter-categories" label="Categories" [options]="categoryOptions()" [(selected)]="selectedCategories" />
   </div>
 
   <!-- ── Grouped recs ── -->
@@ -106,7 +92,7 @@
                     @if (!editUseCustomCategory) {
                       <div class="category-row">
                         <select [(ngModel)]="editForm.category">
-                          @for (cat of editCategoryOptions(); track cat) {
+                          @for (cat of categoryOptions(); track cat) {
                             <option [value]="cat">{{ cat }}</option>
                           }
                         </select>
@@ -202,7 +188,7 @@
     </div>
   } @else if (filtered().length === 0 && !showOffers()) {
     <div class="recs-empty">
-      <p>No recs match <strong>{{ selectedCategory() }}</strong>@if (isMultiDestination() && selectedDestination() !== 'All') { in <strong>{{ selectedDestination() }}</strong>} yet.</p>
+      <p>No recs match these filters yet. Tick more, or add one.</p>
     </div>
   }
 
