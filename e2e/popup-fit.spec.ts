@@ -55,3 +55,18 @@ test('the change-password form fits above the keyboard (Profile)', async ({ page
   await page.getByRole('button', { name: 'Change Password' }).click();
   await expectFits(page, (await page.locator('.modal-box .btn-primary').first().innerText()).trim());
 });
+
+// #495: tapping a field low in the form opens the keyboard; the pop-up shrinks
+// to the visible part and must show that field, not the top of the form.
+test('the tapped field stays in view when the keyboard opens', async ({ page }) => {
+  await page.goto('/finance');
+  const full = page.viewportSize()!.height;
+  await page.evaluate(h => { (visualViewport as any).height = h; visualViewport!.dispatchEvent(new Event('resize')); }, full);
+  await page.getByRole('button', { name: '+ Add' }).click();
+  const field = page.locator('.modal-backdrop').locator('input, textarea, select').last();
+  await field.focus();                                             // tapped while the form is full height
+  await page.evaluate(h => { (visualViewport as any).height = h; visualViewport!.dispatchEvent(new Event('resize')); }, VISIBLE);
+  const box = (await field.boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(VISIBLE);
+});

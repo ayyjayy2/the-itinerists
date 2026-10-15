@@ -14,6 +14,10 @@ type VisualViewportLike = Pick<VisualViewport, 'height' | 'offsetTop' | 'addEven
  * whole screen keeps its bottom — and its save button — behind the keyboard.
  * This publishes the visible area as `--visible-height` and `--visible-top` on
  * <html>; pop-ups size themselves to it, falling back to the full screen.
+ *
+ * When the keyboard opens, a pop-up shrinks but keeps its scroll position, so a
+ * field tapped low in the form would end up below the new bottom edge (#495).
+ * On each resize the focused field inside a pop-up is scrolled back into view.
  */
 @Injectable({ providedIn: 'root' })
 export class VisibleAreaService {
@@ -27,8 +31,18 @@ export class VisibleAreaService {
       style.setProperty('--visible-height', `${Math.round(vv.height)}px`);
       style.setProperty('--visible-top', `${Math.round(vv.offsetTop)}px`);
     };
-    vv.addEventListener('resize', update);
+    // Only on resize (the keyboard opening or closing), never on scroll, so a
+    // person scrolling the form isn't pulled back to the field.
+    vv.addEventListener('resize', () => { update(); this.revealFocusedField(); });
     vv.addEventListener('scroll', update);
     update();
+  }
+
+  /** The new size applies at once (scrollIntoView lays out first), so no frame wait is needed. */
+  private revealFocusedField(): void {
+    const field = document.activeElement;
+    if (field instanceof HTMLElement && field.closest('.modal-backdrop')) {
+      field.scrollIntoView({ block: 'center' });
+    }
   }
 }
