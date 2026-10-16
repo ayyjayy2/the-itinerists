@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { VISUAL_VIEWPORT, VisibleAreaService } from './visible-area.service';
+import { IS_NATIVE_APP, VISUAL_VIEWPORT, VisibleAreaService } from './visible-area.service';
 
 /** A stand-in for window.visualViewport: the part of the page the person can see. */
 class FakeViewport extends EventTarget {
@@ -96,4 +96,48 @@ describe('VisibleAreaService (#470)', () => {
       expect(card.scrollTop).toBe(0);
     });
   });
+
+  describe('keeps the page still in the iPhone app (#500)', () => {
+    const page = document.scrollingElement as HTMLElement;
+    let tall: HTMLElement;
+    beforeEach(() => {
+      tall = document.createElement('div');
+      tall.style.height = '5000px';
+      document.body.appendChild(tall);
+      page.style.overflow = 'auto';                                    // the test page can scroll at all
+      document.body.style.overflow = 'visible';
+    });
+    afterEach(() => {
+      TestBed.resetTestingModule();                                    // stops the service's listeners
+      tall.remove();
+      page.style.overflow = '';
+      document.body.style.overflow = '';
+      page.scrollTop = 0;
+    });
+
+    const startAs = (native: boolean) => {
+      TestBed.configureTestingModule({ providers: [
+        { provide: VISUAL_VIEWPORT, useValue: new FakeViewport(innerHeight) },
+        { provide: IS_NATIVE_APP, useValue: native },
+      ] });
+      TestBed.inject(VisibleAreaService).start();
+    };
+    const scrolledBy = async (px: number) => {
+      const fired = new Promise(r => addEventListener('scroll', r, { once: true }));
+      page.scrollTop = px;
+      await fired;                                                       // the service's listener ran first
+      return page.scrollTop;
+    };
+
+    it('puts the page back when the phone scrolls it to reveal a field', async () => {
+      startAs(true);
+      expect(await scrolledBy(334)).toBe(0);
+    });
+
+    it('leaves the website to the browser', async () => {
+      startAs(false);
+      expect(await scrolledBy(334)).toBe(334);
+    });
+  });
 });
+
