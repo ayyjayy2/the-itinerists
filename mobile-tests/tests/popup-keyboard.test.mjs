@@ -22,6 +22,7 @@ const measure = () => app.driver.execute(() => {
     innerHeight,
     visible: window.visualViewport?.height ?? innerHeight,
     header: r(document.querySelector('.app-header')),
+    tabs: r(document.querySelector('nav.tab-bar')),
     field: r(field),
     card: r(document.querySelector('.modal-backdrop > *')),
     // Is the pop-up on top at its top and bottom edges, or does a bar cover it?
@@ -67,11 +68,12 @@ test('tapping Notes in the add-flight pop-up keeps the header put and shows Note
   assert.equal(m.focusedTag && ['INPUT', 'TEXTAREA'].includes(m.focusedTag), true, 'Notes is focused');
   assert.equal(m.scrollY, 0, `the page scrolled by ${m.scrollY}px (the header and tab bar moved)`);
   assert.ok(Math.abs(m.header.top - before.header.top) < 1, `the header moved from ${before.header.top}px to ${m.header.top}px`);
+  assert.ok(m.card.top >= m.header.bottom + 11, `the pop-up starts at ${Math.round(m.card.top)}px, under the header (ends ${Math.round(m.header.bottom)}px)`);
   assert.ok(m.field.top >= 0 && m.field.bottom <= m.visible,
     `Notes is at ${Math.round(m.field.top)}–${Math.round(m.field.bottom)}px, the visible part ends at ${Math.round(m.visible)}px`);
 });
 
-test('closing the keyboard with ✓ leaves the whole pop-up in view, header put', { todo: '#497: the header and tab bar cover the pop-up' }, async () => {
+test('closing the keyboard with ✓ leaves the pop-up between the header and the tab bar (#497)', async () => {
   const { driver } = app;
   const before = await measure();
   await app.native();
@@ -85,5 +87,7 @@ test('closing the keyboard with ✓ leaves the whole pop-up in view, header put'
   const m = await measure();
   assert.equal(m.scrollY, 0, `the page scrolled by ${m.scrollY}px`);
   assert.deepEqual(m.uncovered, [true, true], `the pop-up's top/bottom edge is covered: ${JSON.stringify(m.uncovered)}`);
+  assert.ok(m.card.top >= m.header.bottom + 11, `the pop-up starts at ${Math.round(m.card.top)}px, under the header (ends ${Math.round(m.header.bottom)}px)`);
+  assert.ok(m.card.bottom <= m.tabs.top - 11, `the pop-up ends at ${Math.round(m.card.bottom)}px, under the tab bar (starts ${Math.round(m.tabs.top)}px)`);
   assert.ok(Math.abs(m.header.top - before.header.top) < 1, `the header moved from ${before.header.top}px to ${m.header.top}px`);
 });

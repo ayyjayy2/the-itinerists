@@ -27,6 +27,11 @@ type VisualViewportLike = Pick<VisualViewport, 'height' | 'offsetTop' | 'addEven
  * area resizes, the pop-up scrolls just enough to show the focused field: the
  * pop-up only, never the page behind it, and not while the person scrolls.
  *
+ * It also publishes how much of that area the header and the tab bar cover, as
+ * `--chrome-top` and `--chrome-bottom` (#497), so pop-ups sit between them, 12px
+ * clear of each like the eSIM pop-up. With the keyboard up the tab bar is behind
+ * it, so `--chrome-bottom` drops to 0.
+ *
  * The iPhone app also scrolls the whole page — header and tab bar too — to
  * reveal a tapped field (measured: 331px for Notes), though the page itself
  * never scrolls. In the app the page is put straight back and the pop-up
@@ -37,29 +42,53 @@ export class VisibleAreaService implements OnDestroy {
   private viewport = inject(VISUAL_VIEWPORT);
   private native = inject(IS_NATIVE_APP);
   private stop = new AbortController();
+  private header: Element | null = null;
+  private tabBar: Element | null = null;
+  private bars = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => this.update()) : null;
 
   start(): void {
     const vv = this.viewport;
     if (!vv) return;
-    const style = document.documentElement.style;
-    const update = () => {
-      style.setProperty('--visible-height', `${Math.round(vv.height)}px`);
-      style.setProperty('--visible-top', `${Math.round(vv.offsetTop)}px`);
-    };
     const listen = { signal: this.stop.signal };
-    vv.addEventListener('resize', () => { update(); this.revealFocusedField(); }, listen);
-    vv.addEventListener('scroll', update, listen);
+    vv.addEventListener('resize', () => { this.update(); this.revealFocusedField(); }, listen);
+    vv.addEventListener('scroll', () => this.update(), listen);
     if (this.native) addEventListener('scroll', () => {
       if (!scrollX && !scrollY) return;
       scrollTo(0, 0);
-      update();
+      this.update();
       this.revealFocusedField();
     }, listen);
-    update();
+    this.update();
+  }
+
+  /** The app's header and tab bar, or null where the page has none (sign-in, the menu layout). */
+  setChrome(header: Element | null, tabBar: Element | null): void {
+    this.bars?.disconnect();
+    this.header = header;
+    this.tabBar = tabBar;
+    for (const el of [header, tabBar]) if (el) this.bars?.observe(el);
+    this.update();
+  }
+
+  private update(): void {
+    const style = document.documentElement.style;
+    const vv = this.viewport;
+    const top = vv ? vv.offsetTop : 0;
+    const bottom = top + (vv ? vv.height : innerHeight);
+    if (vv) {
+      style.setProperty('--visible-height', `${Math.round(vv.height)}px`);
+      style.setProperty('--visible-top', `${Math.round(top)}px`);
+    }
+    const header = this.header?.getBoundingClientRect();
+    const tabs = this.tabBar?.getBoundingClientRect();
+    const covered = (px: number) => `${Math.round(Math.max(0, px))}px`;
+    style.setProperty('--chrome-top', covered(header?.height ? header.bottom - top : 0));
+    style.setProperty('--chrome-bottom', covered(tabs?.height ? bottom - tabs.top : 0));
   }
 
   ngOnDestroy(): void {
     this.stop.abort();
+    this.bars?.disconnect();
   }
 
   private revealFocusedField(): void {
