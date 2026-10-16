@@ -14,6 +14,11 @@ type VisualViewportLike = Pick<VisualViewport, 'height' | 'offsetTop' | 'addEven
  * whole screen keeps its bottom — and its save button — behind the keyboard.
  * This publishes the visible area as `--visible-height` and `--visible-top` on
  * <html>; pop-ups size themselves to it, falling back to the full screen.
+ *
+ * A pop-up that shrinks for the keyboard keeps its scroll position, so a field
+ * tapped low in the form (Notes) ended up out of sight (#500). When the visible
+ * area resizes, the pop-up scrolls just enough to show the focused field: the
+ * pop-up only, never the page behind it, and not while the person scrolls.
  */
 @Injectable({ providedIn: 'root' })
 export class VisibleAreaService {
@@ -27,8 +32,18 @@ export class VisibleAreaService {
       style.setProperty('--visible-height', `${Math.round(vv.height)}px`);
       style.setProperty('--visible-top', `${Math.round(vv.offsetTop)}px`);
     };
-    vv.addEventListener('resize', update);
+    vv.addEventListener('resize', () => { update(); this.revealFocusedField(); });
     vv.addEventListener('scroll', update);
     update();
+  }
+
+  private revealFocusedField(): void {
+    const field = document.activeElement;
+    const card = field instanceof HTMLElement ? field.closest<HTMLElement>('.modal-backdrop > *') : null;
+    if (!field || !card) return;
+    const c = card.getBoundingClientRect(), f = field.getBoundingClientRect();
+    const margin = 16;
+    if (f.bottom > c.bottom - margin) card.scrollTop += f.bottom - c.bottom + margin;
+    else if (f.top < c.top + margin) card.scrollTop -= c.top + margin - f.top;
   }
 }

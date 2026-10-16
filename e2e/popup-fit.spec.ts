@@ -55,3 +55,20 @@ test('the change-password form fits above the keyboard (Profile)', async ({ page
   await page.getByRole('button', { name: 'Change Password' }).click();
   await expectFits(page, (await page.locator('.modal-box .btn-primary').first().innerText()).trim());
 });
+
+// #500: tapping a field low in the form opens the keyboard; the pop-up shrinks
+// to the visible part and scrolls itself so that field shows.
+test('the tapped field stays in view when the keyboard opens', async ({ page }) => {
+  await page.goto('/flights');
+  const full = page.viewportSize()!.height;
+  const setVisible = (h: number) => page.evaluate(v => { (visualViewport as any).height = v; visualViewport!.dispatchEvent(new Event('resize')); }, h);
+  await setVisible(full);
+  await page.getByRole('button', { name: '+ Add Flight' }).click();
+  const field = page.locator('.modal-backdrop').locator('input, textarea').last();   // Notes
+  await field.focus();                                             // tapped while the form is full height
+  await setVisible(VISIBLE);
+  const box = (await field.boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(VISIBLE);
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+});
