@@ -82,12 +82,22 @@ describe('VisibleAreaService (#470)', () => {
       expect(document.scrollingElement!.scrollTop).toBe(page);
     });
 
-    it('leaves fields on the page itself alone', () => {
+    it('leaves fields on the page itself to the website\'s browser', () => {
       const vv = new FakeViewport(664);
       start(vv);
       focusedField(false);
       vv.move(330);
       expect(card.scrollTop).toBe(0);
+    });
+
+    it('in the iPhone app, scrolls the page\'s own scroller to a tapped page field (#513)', () => {
+      const vv = new FakeViewport(664);
+      TestBed.configureTestingModule({ providers: [{ provide: IS_NATIVE_APP, useValue: true }] });
+      start(vv);
+      focusedField(false);
+      vv.move(330);
+      expect(inView()).toBeTrue();
+      TestBed.resetTestingModule();                                    // stops the app-only listeners
     });
 
     it('does not pull the form back while the person scrolls it', () => {

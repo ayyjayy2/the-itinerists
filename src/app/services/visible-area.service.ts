@@ -118,15 +118,34 @@ export class VisibleAreaService implements OnDestroy {
     this.bars?.disconnect();
   }
 
+  /**
+   * Scrolls just enough to show the focused field above the keyboard: the
+   * pop-up it's in, or, in the iPhone app, the page's own scroller (#513) —
+   * the reset above takes back the phone's own scroll, so sign-in and other
+   * page fields would otherwise stay behind the keyboard. The website's
+   * browser reveals page fields itself.
+   */
   private revealFocusedField(): void {
     const field = document.activeElement;
-    const card = field instanceof HTMLElement ? field.closest<HTMLElement>('.modal-backdrop > *') : null;
-    if (!field || !card) return;
+    if (!(field instanceof HTMLElement)) return;
+    const card = field.closest<HTMLElement>('.modal-backdrop > *')
+      ?? (this.native ? scrollerOf(field) : null);
+    if (!card) return;
     const c = card.getBoundingClientRect(), f = field.getBoundingClientRect();
+    const vv = this.viewport;
+    const bottom = Math.min(c.bottom, vv ? vv.offsetTop + vv.height : innerHeight);
     const margin = 16;
-    if (f.bottom > c.bottom - margin) card.scrollTop += f.bottom - c.bottom + margin;
+    if (f.bottom > bottom - margin) card.scrollTop += f.bottom - bottom + margin;
     else if (f.top < c.top + margin) card.scrollTop -= c.top + margin - f.top;
   }
+}
+
+/** The nearest element that scrolls its own content, below the page itself. */
+function scrollerOf(el: Element): HTMLElement | null {
+  for (let p = el.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
+    if (/(auto|scroll)/.test(getComputedStyle(p).overflowY)) return p;
+  }
+  return null;
 }
 
 /** Fields typed into with the keyboard (not pickers, boxes or buttons). */
