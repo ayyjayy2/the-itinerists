@@ -420,7 +420,7 @@ label {
 // The part of the screen the person can see: on an iPhone the keyboard covers
 // the page without shrinking it, so a pop-up sized to the whole screen keeps
 // its save button behind the keyboard. VisibleAreaService publishes the visible
-// area; pop-ups fill it, clear of the notch and the home bar, and scroll inside.
+// area; pop-ups fill it between the header and the tab bar, and scroll inside.
 // Pages keep their own look (background, z-index, side padding, alignment).
 .modal-backdrop {
   position: fixed;
@@ -428,8 +428,10 @@ label {
   left: 0;
   right: 0;
   height: var(--visible-height, 100dvh);
-  padding-top: max(1rem, env(safe-area-inset-top));
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  // Clear of the header and the tab bar by 12px, like the offer pop-up (#478, #497);
+  // where there are none (sign-in pages), clear of the notch and the home bar.
+  padding-top: max(1rem, env(safe-area-inset-top), calc(var(--chrome-top, 0px) + 12px));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom), calc(var(--chrome-bottom, 0px) + 12px));
 }
 .modal-backdrop > .modal-card,
 .modal-backdrop > .modal-box {
