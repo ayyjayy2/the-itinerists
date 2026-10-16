@@ -32,6 +32,10 @@ type VisualViewportLike = Pick<VisualViewport, 'height' | 'offsetTop' | 'addEven
  * clear of each like the eSIM pop-up. With the keyboard up the tab bar is behind
  * it, so `--chrome-bottom` drops to 0.
  *
+ * In the app it publishes how much of the screen the keyboard covers as
+ * `--keyboard`, so a page scroller can add that much room at its end and
+ * lift a field near the bottom (the sign-in password) into view (#513).
+ *
  * The iPhone app also scrolls the whole page — header and tab bar too — to
  * reveal a tapped field (measured: 331px for Notes), though the page itself
  * never scrolls. In the app the page is put straight back and the pop-up
@@ -58,6 +62,7 @@ export class VisibleAreaService implements OnDestroy {
       scrollTo(0, 0);
       this.update();
       this.revealFocusedField();
+      this.revealOnceSettled();
     }, listen);
     this.update();
   }
@@ -85,6 +90,7 @@ export class VisibleAreaService implements OnDestroy {
     const covered = (px: number) => `${Math.round(Math.max(0, px))}px`;
     style.setProperty('--chrome-top', covered(header?.height ? header.bottom - top : 0));
     style.setProperty('--chrome-bottom', covered(tabs?.height ? bottom - tabs.top : 0));
+    if (this.native) style.setProperty('--keyboard', covered(innerHeight - this.seen()));
   }
 
   /**
@@ -118,15 +124,58 @@ export class VisibleAreaService implements OnDestroy {
     this.bars?.disconnect();
   }
 
+  /**
+   * The phone takes a few frames to catch up with the reset, and may ignore a
+   * scroll made meanwhile, leaving a page field behind the keyboard (#513).
+   * Once it reports the page back at the top, reveal the field again.
+   */
+  private revealOnceSettled(frames = 10): void {
+    requestAnimationFrame(() => {
+      if (this.stop.signal.aborted) return;
+      if (this.viewport?.offsetTop && frames > 1) return this.revealOnceSettled(frames - 1);
+      this.update();
+      this.revealFocusedField();
+    });
+  }
+
+  /**
+   * Where the visible part of the screen ends. The app holds the page at the
+   * top, so it starts at 0: the phone's own offset lags the reset by a frame
+   * or two and would place a hidden field in view (#513).
+   */
+  private seen(): number {
+    const vv = this.viewport;
+    if (!vv) return innerHeight;
+    return this.native ? vv.height : vv.offsetTop + vv.height;
+  }
+
+  /**
+   * Scrolls just enough to show the focused field above the keyboard: the
+   * pop-up it's in, or, in the iPhone app, the page's own scroller (#513) —
+   * the reset above takes back the phone's own scroll, so sign-in and other
+   * page fields would otherwise stay behind the keyboard. The website's
+   * browser reveals page fields itself.
+   */
   private revealFocusedField(): void {
     const field = document.activeElement;
-    const card = field instanceof HTMLElement ? field.closest<HTMLElement>('.modal-backdrop > *') : null;
-    if (!field || !card) return;
+    if (!(field instanceof HTMLElement)) return;
+    const card = field.closest<HTMLElement>('.modal-backdrop > *')
+      ?? (this.native ? scrollerOf(field) : null);
+    if (!card) return;
     const c = card.getBoundingClientRect(), f = field.getBoundingClientRect();
+    const bottom = Math.min(c.bottom, this.seen());
     const margin = 16;
-    if (f.bottom > c.bottom - margin) card.scrollTop += f.bottom - c.bottom + margin;
+    if (f.bottom > bottom - margin) card.scrollTop += f.bottom - bottom + margin;
     else if (f.top < c.top + margin) card.scrollTop -= c.top + margin - f.top;
   }
+}
+
+/** The nearest element that scrolls its own content, below the page itself. */
+function scrollerOf(el: Element): HTMLElement | null {
+  for (let p = el.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
+    if (/(auto|scroll)/.test(getComputedStyle(p).overflowY)) return p;
+  }
+  return null;
 }
 
 /** Fields typed into with the keyboard (not pickers, boxes or buttons). */
