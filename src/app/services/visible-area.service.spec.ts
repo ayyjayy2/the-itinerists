@@ -33,8 +33,10 @@ describe('VisibleAreaService (#470)', () => {
   });
 
   it('sets nothing where the browser has no visual viewport (CSS falls back to the full screen)', () => {
+    // Watch what this service writes: another spec's real listener may set the shared variables.
+    const set = spyOn(root, 'setProperty');
     start(null);
-    expect(vars()).toEqual(['', '']);
+    expect(set).not.toHaveBeenCalled();
   });
 
   describe('scrolls a pop-up to the tapped field when the keyboard opens (#500)', () => {
