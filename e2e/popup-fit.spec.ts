@@ -72,3 +72,17 @@ test('the tapped field stays in view when the keyboard opens', async ({ page }) 
   expect(box.y + box.height).toBeLessThanOrEqual(VISIBLE);
   expect(await page.evaluate(() => scrollY)).toBe(0);
 });
+
+// #497: with the keyboard down, a pop-up sits between the header and the tab bar,
+// 12px clear of each (like the offer pop-up), never under either.
+test('the add-flight pop-up sits between the header and the tab bar', async ({ page }) => {
+  await page.goto('/flights');
+  const full = page.viewportSize()!.height;
+  await page.evaluate(h => { (visualViewport as any).height = h; visualViewport!.dispatchEvent(new Event('resize')); }, full);
+  await page.getByRole('button', { name: '+ Add Flight' }).click();
+  const card = (await page.locator('.modal-backdrop > .modal-box').boundingBox())!;
+  const header = (await page.locator('.app-header').boundingBox())!;
+  const tabs = (await page.locator('nav.tab-bar').boundingBox())!;
+  expect(card.y).toBeGreaterThanOrEqual(header.y + header.height + 12 - 1);
+  expect(card.y + card.height).toBeLessThanOrEqual(tabs.y - 12 + 1);
+});
