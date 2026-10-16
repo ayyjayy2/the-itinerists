@@ -1,9 +1,16 @@
-import { Injectable, InjectionToken, inject } from '@angular/core';
+import { Injectable, InjectionToken, OnDestroy, inject } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 
 /** The browser's visual viewport (null where there is none); a token so tests can stand in. */
 export const VISUAL_VIEWPORT = new InjectionToken<VisualViewportLike | null>('VISUAL_VIEWPORT', {
   providedIn: 'root',
   factory: () => (typeof window !== 'undefined' ? window.visualViewport : null),
+});
+
+/** Whether this is the iPhone app; a token so tests can stand in. */
+export const IS_NATIVE_APP = new InjectionToken<boolean>('IS_NATIVE_APP', {
+  providedIn: 'root',
+  factory: () => Capacitor.isNativePlatform(),
 });
 
 type VisualViewportLike = Pick<VisualViewport, 'height' | 'offsetTop' | 'addEventListener'>;
@@ -15,61 +22,53 @@ type VisualViewportLike = Pick<VisualViewport, 'height' | 'offsetTop' | 'addEven
  * This publishes the visible area as `--visible-height` and `--visible-top` on
  * <html>; pop-ups size themselves to it, falling back to the full screen.
  *
- * It also publishes how much of that area the header and the tab bar cover, as
- * `--chrome-top` and `--chrome-bottom` (#497), so pop-ups sit between them. With
- * the keyboard up the tab bar is behind it, so `--chrome-bottom` drops to 0.
+ * A pop-up that shrinks for the keyboard keeps its scroll position, so a field
+ * tapped low in the form (Notes) ended up out of sight (#500). When the visible
+ * area resizes, the pop-up scrolls just enough to show the focused field: the
+ * pop-up only, never the page behind it, and not while the person scrolls.
  *
- * When the keyboard opens, a pop-up shrinks but keeps its scroll position, so a
- * field tapped low in the form would end up below the new bottom edge (#495).
- * On each resize the focused field inside a pop-up is scrolled back into view.
+ * The iPhone app also scrolls the whole page — header and tab bar too — to
+ * reveal a tapped field (measured: 331px for Notes), though the page itself
+ * never scrolls. In the app the page is put straight back and the pop-up
+ * scrolls instead; the mobile tests (mobile-tests/, #502) check it.
  */
 @Injectable({ providedIn: 'root' })
-export class VisibleAreaService {
+export class VisibleAreaService implements OnDestroy {
   private viewport = inject(VISUAL_VIEWPORT);
-  private header: Element | null = null;
-  private tabBar: Element | null = null;
-  private bars = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => this.update()) : null;
+  private native = inject(IS_NATIVE_APP);
+  private stop = new AbortController();
 
   start(): void {
     const vv = this.viewport;
     if (!vv) return;
-    // Only on resize (the keyboard opening or closing), never on scroll, so a
-    // person scrolling the form isn't pulled back to the field.
-    vv.addEventListener('resize', () => { this.update(); this.revealFocusedField(); });
-    vv.addEventListener('scroll', () => this.update());
-    this.update();
-  }
-
-  /** The app's header and tab bar, or null where the page has none (sign-in, the menu layout). */
-  setChrome(header: Element | null, tabBar: Element | null): void {
-    this.bars?.disconnect();
-    this.header = header;
-    this.tabBar = tabBar;
-    for (const el of [header, tabBar]) if (el) this.bars?.observe(el);
-    this.update();
-  }
-
-  private update(): void {
     const style = document.documentElement.style;
-    const vv = this.viewport;
-    const top = vv ? vv.offsetTop : 0;
-    const bottom = top + (vv ? vv.height : innerHeight);
-    if (vv) {
+    const update = () => {
       style.setProperty('--visible-height', `${Math.round(vv.height)}px`);
-      style.setProperty('--visible-top', `${Math.round(top)}px`);
-    }
-    const header = this.header?.getBoundingClientRect();
-    const tabs = this.tabBar?.getBoundingClientRect();
-    const covered = (px: number) => `${Math.round(Math.max(0, px))}px`;
-    style.setProperty('--chrome-top', covered(header?.height ? header.bottom - top : 0));
-    style.setProperty('--chrome-bottom', covered(tabs?.height ? bottom - tabs.top : 0));
+      style.setProperty('--visible-top', `${Math.round(vv.offsetTop)}px`);
+    };
+    const listen = { signal: this.stop.signal };
+    vv.addEventListener('resize', () => { update(); this.revealFocusedField(); }, listen);
+    vv.addEventListener('scroll', update, listen);
+    if (this.native) addEventListener('scroll', () => {
+      if (!scrollX && !scrollY) return;
+      scrollTo(0, 0);
+      update();
+      this.revealFocusedField();
+    }, listen);
+    update();
   }
 
-  /** The new size applies at once (scrollIntoView lays out first), so no frame wait is needed. */
+  ngOnDestroy(): void {
+    this.stop.abort();
+  }
+
   private revealFocusedField(): void {
     const field = document.activeElement;
-    if (field instanceof HTMLElement && field.closest('.modal-backdrop')) {
-      field.scrollIntoView({ block: 'center' });
-    }
+    const card = field instanceof HTMLElement ? field.closest<HTMLElement>('.modal-backdrop > *') : null;
+    if (!field || !card) return;
+    const c = card.getBoundingClientRect(), f = field.getBoundingClientRect();
+    const margin = 16;
+    if (f.bottom > c.bottom - margin) card.scrollTop += f.bottom - c.bottom + margin;
+    else if (f.top < c.top + margin) card.scrollTop -= c.top + margin - f.top;
   }
 }

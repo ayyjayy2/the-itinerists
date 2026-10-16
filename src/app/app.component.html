@@ -61,7 +61,7 @@
 
     <!-- ── Main content ── -->
     <div class="main-area">
-      <header class="app-header" #appHeader>
+      <header class="app-header">
         @if (isLayoutB()) {
           <button class="menu-btn" type="button" (click)="toggleDrawer()" aria-label="Menu">
             <app-icon name="menu" [size]="24" />
@@ -127,7 +127,7 @@
 
     @if (!isLayoutB()) {
     <!-- ── Bottom tab bar (mobile ≤768px, Type A only) ── -->
-    <nav class="tab-bar" #tabBar>
+    <nav class="tab-bar">
       @for (item of tabItems(); track item.path) {
         <a class="tab-item" [routerLink]="item.path" routerLinkActive="active">
           <app-icon [name]="item.icon" [size]="23" />

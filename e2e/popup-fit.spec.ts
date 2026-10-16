@@ -56,31 +56,19 @@ test('the change-password form fits above the keyboard (Profile)', async ({ page
   await expectFits(page, (await page.locator('.modal-box .btn-primary').first().innerText()).trim());
 });
 
-// #495: tapping a field low in the form opens the keyboard; the pop-up shrinks
-// to the visible part and must show that field, not the top of the form.
+// #500: tapping a field low in the form opens the keyboard; the pop-up shrinks
+// to the visible part and scrolls itself so that field shows.
 test('the tapped field stays in view when the keyboard opens', async ({ page }) => {
-  await page.goto('/finance');
+  await page.goto('/flights');
   const full = page.viewportSize()!.height;
-  await page.evaluate(h => { (visualViewport as any).height = h; visualViewport!.dispatchEvent(new Event('resize')); }, full);
-  await page.getByRole('button', { name: '+ Add' }).click();
-  const field = page.locator('.modal-backdrop').locator('input, textarea, select').last();
+  const setVisible = (h: number) => page.evaluate(v => { (visualViewport as any).height = v; visualViewport!.dispatchEvent(new Event('resize')); }, h);
+  await setVisible(full);
+  await page.getByRole('button', { name: '+ Add Flight' }).click();
+  const field = page.locator('.modal-backdrop').locator('input, textarea').last();   // Notes
   await field.focus();                                             // tapped while the form is full height
-  await page.evaluate(h => { (visualViewport as any).height = h; visualViewport!.dispatchEvent(new Event('resize')); }, VISIBLE);
+  await setVisible(VISIBLE);
   const box = (await field.boundingBox())!;
   expect(box.y).toBeGreaterThanOrEqual(0);
   expect(box.y + box.height).toBeLessThanOrEqual(VISIBLE);
-});
-
-// #497: with the keyboard down, a pop-up sits between the header and the tab bar,
-// 12px clear of each (like the offer pop-up), never under either.
-test('the add-flight pop-up sits between the header and the tab bar', async ({ page }) => {
-  await page.goto('/flights');
-  const full = page.viewportSize()!.height;
-  await page.evaluate(h => { (visualViewport as any).height = h; visualViewport!.dispatchEvent(new Event('resize')); }, full);
-  await page.getByRole('button', { name: '+ Add Flight' }).click();
-  const card = (await page.locator('.modal-backdrop > .modal-box').boundingBox())!;
-  const header = (await page.locator('.app-header').boundingBox())!;
-  const tabs = (await page.locator('nav.tab-bar').boundingBox())!;
-  expect(card.y).toBeGreaterThanOrEqual(header.y + header.height + 12 - 1);
-  expect(card.y + card.height).toBeLessThanOrEqual(tabs.y - 12 + 1);
+  expect(await page.evaluate(() => scrollY)).toBe(0);
 });

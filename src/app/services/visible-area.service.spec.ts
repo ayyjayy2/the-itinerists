@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { VISUAL_VIEWPORT, VisibleAreaService } from './visible-area.service';
+import { IS_NATIVE_APP, VISUAL_VIEWPORT, VisibleAreaService } from './visible-area.service';
 
 /** A stand-in for window.visualViewport: the part of the page the person can see. */
 class FakeViewport extends EventTarget {
@@ -33,99 +33,110 @@ describe('VisibleAreaService (#470)', () => {
   });
 
   it('sets nothing where the browser has no visual viewport (CSS falls back to the full screen)', () => {
-    // Watch what this service writes: another spec's real listener may set the shared variables.
-    const set = spyOn(root, 'setProperty');
     start(null);
-    expect(set).not.toHaveBeenCalled();
+    expect(vars()).toEqual(['', '']);
   });
 
-  describe('keeps the tapped field in view when the keyboard opens (#495)', () => {
+  describe('scrolls a pop-up to the tapped field when the keyboard opens (#500)', () => {
     let host: HTMLElement;
+    let card: HTMLElement;
+    let input: HTMLInputElement;
     afterEach(() => host.remove());
 
-    /** A field, focused, inside a pop-up (or not); scrollIntoView is watched. */
+    /** A focused field low in a 100px scrolling card, inside a pop-up or on the page. */
     const focusedField = (inPopup: boolean) => {
       host = document.createElement('div');
       if (inPopup) host.className = 'modal-backdrop';
-      const input = document.createElement('input');
-      host.appendChild(input);
+      card = document.createElement('div');
+      Object.assign(card.style, { height: '100px', overflowY: 'auto' });
+      const above = document.createElement('div');
+      above.style.height = '600px';
+      input = document.createElement('input');
+      card.append(above, input, above.cloneNode());
+      host.appendChild(card);
       document.body.appendChild(host);
-      input.focus();
-      return spyOn(input, 'scrollIntoView');
+      input.focus({ preventScroll: true });
+      card.scrollTop = 0;
+    };
+    const inView = () => {
+      const c = card.getBoundingClientRect(), f = input.getBoundingClientRect();
+      return f.top >= c.top && f.bottom <= c.bottom;
     };
 
-    it('scrolls a pop-up so the focused field shows above the keyboard', () => {
+    it('scrolls the pop-up down so the tapped field shows', () => {
       const vv = new FakeViewport(664);
       start(vv);
-      const scrolled = focusedField(true);
+      focusedField(true);
       vv.move(330);
-      expect(scrolled).toHaveBeenCalledWith({ block: 'center' });
+      expect(inView()).toBeTrue();
     });
 
-    it('leaves fields on the page itself to the browser', () => {
+    it('scrolls only the pop-up, never the page behind it', () => {
       const vv = new FakeViewport(664);
       start(vv);
-      const scrolled = focusedField(false);
+      focusedField(true);
+      const page = document.scrollingElement!.scrollTop;
       vv.move(330);
-      expect(scrolled).not.toHaveBeenCalled();
+      expect(document.scrollingElement!.scrollTop).toBe(page);
+    });
+
+    it('leaves fields on the page itself alone', () => {
+      const vv = new FakeViewport(664);
+      start(vv);
+      focusedField(false);
+      vv.move(330);
+      expect(card.scrollTop).toBe(0);
     });
 
     it('does not pull the form back while the person scrolls it', () => {
       const vv = new FakeViewport(330);
       start(vv);
-      const scrolled = focusedField(true);
+      focusedField(true);
       vv.dispatchEvent(new Event('scroll'));
-      expect(scrolled).not.toHaveBeenCalled();
+      expect(card.scrollTop).toBe(0);
     });
   });
 
-  describe('the room between the header and the tab bar (#497)', () => {
-    const chrome = () => [root.getPropertyValue('--chrome-top'), root.getPropertyValue('--chrome-bottom')];
-    let bars: HTMLElement[] = [];
+  describe('keeps the page still in the iPhone app (#500)', () => {
+    const page = document.scrollingElement as HTMLElement;
+    let tall: HTMLElement;
+    beforeEach(() => {
+      tall = document.createElement('div');
+      tall.style.height = '5000px';
+      document.body.appendChild(tall);
+      page.style.overflow = 'auto';                                    // the test page can scroll at all
+      document.body.style.overflow = 'visible';
+    });
     afterEach(() => {
-      bars.forEach(b => b.remove());
-      bars = [];
-      root.removeProperty('--chrome-top');
-      root.removeProperty('--chrome-bottom');
+      TestBed.resetTestingModule();                                    // stops the service's listeners
+      tall.remove();
+      page.style.overflow = '';
+      document.body.style.overflow = '';
+      page.scrollTop = 0;
     });
 
-    /** A bar fixed at the top or bottom of the screen, like the app's header and tab bar. */
-    const bar = (edge: 'top' | 'bottom', height: number) => {
-      const el = document.createElement('div');
-      Object.assign(el.style, { position: 'fixed', left: '0', right: '0', [edge]: '0', height: `${height}px` });
-      document.body.appendChild(el);
-      bars.push(el);
-      return el;
+    const startAs = (native: boolean) => {
+      TestBed.configureTestingModule({ providers: [
+        { provide: VISUAL_VIEWPORT, useValue: new FakeViewport(innerHeight) },
+        { provide: IS_NATIVE_APP, useValue: native },
+      ] });
+      TestBed.inject(VisibleAreaService).start();
+    };
+    const scrolledBy = async (px: number) => {
+      const fired = new Promise(r => addEventListener('scroll', r, { once: true }));
+      page.scrollTop = px;
+      await fired;                                                       // the service's listener ran first
+      return page.scrollTop;
     };
 
-    const startWithBars = (vv: FakeViewport) => {
-      start(vv);
-      TestBed.inject(VisibleAreaService).setChrome(bar('top', 60), bar('bottom', 70));
-    };
-
-    it('publishes how much of the visible area the header and tab bar cover', () => {
-      startWithBars(new FakeViewport(innerHeight));
-      expect(chrome()).toEqual(['60px', '70px']);
+    it('puts the page back when the phone scrolls it to reveal a field', async () => {
+      startAs(true);
+      expect(await scrolledBy(334)).toBe(0);
     });
 
-    it('drops the tab bar once the keyboard covers it', () => {
-      const vv = new FakeViewport(innerHeight);
-      startWithBars(vv);
-      vv.move(innerHeight - 300);
-      expect(chrome()).toEqual(['60px', '0px']);
-    });
-
-    it('counts only the part of the header still in view when the visible area moves down', () => {
-      const vv = new FakeViewport(innerHeight);
-      startWithBars(vv);
-      vv.move(innerHeight - 300, 40);
-      expect(chrome()[0]).toBe('20px');
-    });
-
-    it('is zero without a header or tab bar (sign-in pages, the menu layout)', () => {
-      start(new FakeViewport(innerHeight));
-      TestBed.inject(VisibleAreaService).setChrome(null, null);
-      expect(chrome()).toEqual(['0px', '0px']);
+    it('leaves the website to the browser', async () => {
+      startAs(false);
+      expect(await scrolledBy(334)).toBe(334);
     });
   });
 });
