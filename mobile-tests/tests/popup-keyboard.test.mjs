@@ -91,3 +91,50 @@ test('closing the keyboard with ✓ leaves the pop-up between the header and the
   assert.ok(m.card.bottom <= m.tabs.top - 11, `the pop-up ends at ${Math.round(m.card.bottom)}px, under the tab bar (starts ${Math.round(m.tabs.top)}px)`);
   assert.ok(Math.abs(m.header.top - before.header.top) < 1, `the header moved from ${before.header.top}px to ${m.header.top}px`);
 });
+
+test('tapping from field to field never moves the page, not even for a moment (#507)', async () => {
+  const { driver } = app;
+  // Record every page scroll before anything can put it back (document listeners run before window ones).
+  await driver.execute(() => {
+    window.__pageScrolls = [];
+    document.addEventListener('scroll', () => window.__pageScrolls.push(Math.round(scrollY)), true);
+  });
+  await app.native();
+  for (const placeholder of ['e.g. ORD', 'e.g. Delta', 'e.g. DL 123', 'e.g. Window seat confirmed']) {
+    // Scroll the pop-up (only the pop-up) so the field is in view, as a person would.
+    await app.page();
+    await driver.execute((p) => {
+      const f = document.querySelector(`[placeholder="${p}"]`), card = f.closest('.modal-backdrop > *');
+      const c = card.getBoundingClientRect(), b = f.getBoundingClientRect();
+      card.scrollTop += b.top - c.top - 40;
+    }, placeholder);
+    await app.native();
+    const field = await driver.$(`-ios predicate string:placeholderValue == "${placeholder}"`);
+    await field.click();
+    await driver.pause(900);
+    await app.page();
+    { const got = await driver.execute(() => document.activeElement?.getAttribute('placeholder') ?? document.activeElement?.tagName); assert.equal(got, placeholder, `tapped ${placeholder}, focus is on ${got}`); }
+    await app.native();
+  }
+  await app.shot('field-to-field');
+  await app.page();
+  const scrolls = await driver.execute(() => window.__pageScrolls);
+  assert.deepEqual(scrolls.filter(y => y !== 0), [], `the page moved: ${JSON.stringify(scrolls)}`);
+});
+
+test('a drag that starts on a field scrolls the form without focusing the field (#507)', async () => {
+  const { driver } = app;
+  await app.native();
+  const done = await driver.$('~Done');
+  if (await done.isExisting()) await done.click(); else await driver.hideKeyboard();
+  await driver.pause(800);
+  const field = await driver.$('-ios predicate string:placeholderValue == "e.g. Delta"');
+  const { x, y, width, height } = await field.getElementRect(field.elementId);
+  const cx = Math.round(x + width / 2), cy = Math.round(y + height / 2);
+  await driver.action('pointer', { parameters: { pointerType: 'touch' } })
+    .move({ x: cx, y: cy }).down().pause(80).move({ x: cx, y: cy - 150, duration: 300 }).up().perform();
+  await driver.pause(800);
+  await app.page();
+  const focused = await driver.execute(() => document.activeElement?.getAttribute('placeholder') ?? null);
+  assert.notEqual(focused, 'e.g. Delta', 'the drag focused the field it started on');
+});

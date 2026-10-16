@@ -66,6 +66,9 @@ export async function openApp() {
   }
   if (!web) throw new Error('The app\'s web view never appeared.');
   await driver.switchContext(web);
+  // Wait for the app to finish starting (its header is up) before a test navigates.
+  await driver.waitUntil(() => driver.execute(() => !!document.querySelector('.app-header')),
+    { timeout: 30000, timeoutMsg: 'the app never finished starting' });
   mkdirSync(SHOTS, { recursive: true });
   return {
     driver, web,
