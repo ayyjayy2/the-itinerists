@@ -21,6 +21,8 @@
     "ios:sync": "node scripts/set-version.js --ios && npm run build && npx cap sync ios && node scripts/native-csp.mjs",
     "ios:run": "npm run ios:sync && npx cap run ios",
     "ios:staging": "node scripts/ios-staging.mjs",
+    "mobile:build": "node scripts/ios-demo-sim.mjs",
+    "test:mobile": "npm --prefix mobile-tests test",
     "ios:open": "npx cap open ios",
     "test:rules:storage": "firebase emulators:exec --only storage \"node test/storage-rules.test.mjs\"",
     "test:e2e": "playwright test",

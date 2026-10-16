@@ -1,0 +1,4 @@
+.appium/
+.build/
+.shots/
+node_modules/

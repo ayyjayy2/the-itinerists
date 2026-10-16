@@ -5,19 +5,27 @@ import type { CapacitorConfig } from '@capacitor/cli';
  * The bundle id can still change until the app is registered in App Store
  * Connect; after that it is permanent.
  */
-/** `npm run ios:staging` packages the staging web build (staging data) instead. */
-const STAGING = process.env['CAP_TARGET'] === 'staging';
+/** `npm run ios:staging` packages the staging web build (staging data) instead;
+ *  `npm run mobile:build` the demo build (in-memory data) for the simulator tests. */
+const WEB_DIRS: Record<string, string> = {
+  staging: 'dist/the-itinerists-staging/browser',
+  demo: 'dist/the-itinerists-demo/browser',
+};
+const TARGET = process.env['CAP_TARGET'] ?? '';
 
 const config: CapacitorConfig = {
   appId: 'com.theitinerists.app',
   appName: 'The Itinerists',
-  webDir: STAGING ? 'dist/the-itinerists-staging/browser' : 'dist/the-itinerists/browser',
+  webDir: WEB_DIRS[TARGET] ?? 'dist/the-itinerists/browser',
   ios: {
     // 'never': the web view fills the whole screen and the app's own CSS
     // (env(safe-area-inset-*) on the header and tab bar) handles the notch and
     // home indicator. 'automatic' insets the view as well, so both applied and
     // left a band at the top and a gap under the tab bar.
     contentInset: 'never',
+    // Only the simulator test app lets tools look inside its page (Appium reads
+    // positions there, #502); the real and staging apps don't.
+    webContentsDebuggingEnabled: TARGET === 'demo',
     // Keeps the web view's background in step with the app's cream ground
     // while a page is loading, so there is no white flash.
     backgroundColor: '#F8F4EF',
