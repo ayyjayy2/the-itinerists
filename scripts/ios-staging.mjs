@@ -51,7 +51,8 @@ if (plistValue(STAGING_PLIST, 'PROJECT_ID') !== 'the-itinerists-staging' || plis
   throw new Error('GoogleService-Info.staging.plist is not the staging iPhone app\'s file.');
 
 const work = mkdtempSync(join(tmpdir(), 'ios-staging-'));
-const device = pickDevice(work);
+let device;
+try { device = pickDevice(work); } catch (e) { rmSync(work, { recursive: true, force: true }); throw e; }
 
 run('node', ['scripts/set-version.js', '--ios']);
 run('npx', ['ng', 'build', '--configuration', 'staging']);
@@ -66,12 +67,20 @@ try {
   run('xcodebuild', ['-project', 'ios/App/App.xcodeproj', '-scheme', 'App', '-configuration', 'Debug',
     '-destination', 'generic/platform=iOS', '-derivedDataPath', join(work, 'build'), '-allowProvisioningUpdates',
     `PRODUCT_BUNDLE_IDENTIFIER=${BUNDLE_ID}`, `APP_DISPLAY_NAME=${NAME}`, 'build']);
+} catch (e) {
+  rmSync(work, { recursive: true, force: true });
+  throw e;
 } finally {
   if (hadPlist) copyFileSync(saved, PLIST); else rmSync(PLIST, { force: true });
 }
 
-run('xcrun', ['devicectl', 'device', 'install', 'app', '--device', device, join(work, 'build/Build/Products/Debug-iphoneos/App.app')]);
-rmSync(work, { recursive: true, force: true });
+// The build is several GB: remove it whether or not the phone took it (a locked
+// or unreachable phone fails the install, and leftovers filled the disk once).
+try {
+  run('xcrun', ['devicectl', 'device', 'install', 'app', '--device', device, join(work, 'build/Build/Products/Debug-iphoneos/App.app')]);
+} finally {
+  rmSync(work, { recursive: true, force: true });
+}
 try {
   run('xcrun', ['devicectl', 'device', 'process', 'launch', '--device', device, BUNDLE_ID]);
   console.log(`\n[ios-staging] "${NAME}" is installed and open.`);
