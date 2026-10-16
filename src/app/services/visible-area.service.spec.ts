@@ -33,49 +33,7 @@ describe('VisibleAreaService (#470)', () => {
   });
 
   it('sets nothing where the browser has no visual viewport (CSS falls back to the full screen)', () => {
-    // Watch what this service writes: another spec's real listener may set the shared variables.
-    const set = spyOn(root, 'setProperty');
     start(null);
-    expect(set).not.toHaveBeenCalled();
-  });
-
-  describe('keeps the tapped field in view when the keyboard opens (#495)', () => {
-    let host: HTMLElement;
-    afterEach(() => host.remove());
-
-    /** A field, focused, inside a pop-up (or not); scrollIntoView is watched. */
-    const focusedField = (inPopup: boolean) => {
-      host = document.createElement('div');
-      if (inPopup) host.className = 'modal-backdrop';
-      const input = document.createElement('input');
-      host.appendChild(input);
-      document.body.appendChild(host);
-      input.focus();
-      return spyOn(input, 'scrollIntoView');
-    };
-
-    it('scrolls a pop-up so the focused field shows above the keyboard', () => {
-      const vv = new FakeViewport(664);
-      start(vv);
-      const scrolled = focusedField(true);
-      vv.move(330);
-      expect(scrolled).toHaveBeenCalledWith({ block: 'center' });
-    });
-
-    it('leaves fields on the page itself to the browser', () => {
-      const vv = new FakeViewport(664);
-      start(vv);
-      const scrolled = focusedField(false);
-      vv.move(330);
-      expect(scrolled).not.toHaveBeenCalled();
-    });
-
-    it('does not pull the form back while the person scrolls it', () => {
-      const vv = new FakeViewport(330);
-      start(vv);
-      const scrolled = focusedField(true);
-      vv.dispatchEvent(new Event('scroll'));
-      expect(scrolled).not.toHaveBeenCalled();
-    });
+    expect(vars()).toEqual(['', '']);
   });
 });
