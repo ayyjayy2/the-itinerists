@@ -1,6 +1,6 @@
 import { VisibleAreaService } from './services/visible-area.service';
 import { DiagnosticsService } from './services/diagnostics.service';
-import { Component, OnInit, inject, computed, effect, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, inject, computed, effect, signal, viewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from './shared/icon/icon.component';
@@ -68,6 +68,8 @@ export class AppComponent implements OnInit {
   private firestoreResume = inject(FirestoreResumeService);
   private diagnostics = inject(DiagnosticsService);
   private visibleArea = inject(VisibleAreaService);
+  private readonly appHeader = viewChild<ElementRef<HTMLElement>>('appHeader');
+  private readonly tabBar = viewChild<ElementRef<HTMLElement>>('tabBar');
 
   readonly version   = APP_VERSION;
   readonly isDemo    = DEMO;
@@ -216,6 +218,8 @@ export class AppComponent implements OnInit {
   constructor() {
     this.usage.start();
     this.visibleArea.start();   // pop-ups size to the part above the keyboard (#470)
+    // …and sit between the header and the tab bar, whichever are on screen (#497).
+    effect(() => this.visibleArea.setChrome(this.appHeader()?.nativeElement ?? null, this.tabBar()?.nativeElement ?? null));
 
     // Native shell: the launch screen is held (launchAutoHide: false) until we
     // know whether someone is signed in, then fades into the first real screen.
