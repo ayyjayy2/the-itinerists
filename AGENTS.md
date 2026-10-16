@@ -78,6 +78,7 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 - **Unit tests** (Karma + Jasmine) for every util and every component behaviour you change.
 - **Security-rules tests** (`test/firestore-rules.test.mjs`) for every rule you add or change: an allow and a deny.
 - **End-to-end tests** (Playwright, `e2e/`) for user flows; they run against the demo build at phone size.
+- **Mobile tests** (Appium, `mobile-tests/`) for anything the iPhone app does differently from a browser: the real keyboard, scrolling, the native shell. They drive "Itinerists Demo" on the iPhone simulator; run `npm run mobile:build` then `npm run test:mobile` before a phone change goes to the owner (CI has no Mac). Browser tests passing is not proof for keyboard or layout changes on the phone (#500).
 - Verify against reality before saying something works: a screenshot of the page, a real staging run, or the data itself.
 
 ## 4. Security and best practices
@@ -106,6 +107,8 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 | `PATH="/opt/homebrew/opt/openjdk/bin:$PATH" npm run test:rules` | Security-rules tests on the emulators (needs a JDK; the PERMISSION_DENIED lines are expected) |
 | `npm run test:e2e` | Playwright end-to-end tests (builds and serves the demo) |
 | `npm run test:staging` | After a merge has deployed staging: the after-deploy checks against the real staging site (sign-in, live updates between two test accounts, every page, invites, offline, caching, the API console, phone layout). Needs `scripts/staging-accounts.local.json`; cleans up what it adds. `STAGING_URL=…` points it at a preview channel |
+| `npm run mobile:build` | Build "Itinerists Demo" (the app shell around the demo build, in-memory data) for the iPhone simulator. Needs the gitignored `ios/App/App/GoogleService-Info.staging.plist`; run `npm run ios:sync` before building the real app again |
+| `npm run test:mobile` | Appium tests on the iPhone simulator (`mobile-tests/`): taps with the on-screen keyboard and reads positions inside the app's page. First time: `cd mobile-tests && npm install && npm run setup`. `IOS_SIM=`, `MOBILE_APP=`, `DEBUG_MOBILE=1` |
 | `npm run deploy:staging` | Build and deploy staging by hand (CI does it after every merge) |
 | `node scripts/api-console.js grant <username>` | Approve a staging account for the API console (`/api-console/index.html` on staging); also `revoke`, `list`, `publish <openapi.json>`. Only with the owner's say-so |
 | `firebase deploy --only hosting:the-itinerists --project trip-planner-ayyjayy2` | Deploy production hosting (after `npm run build`) |
