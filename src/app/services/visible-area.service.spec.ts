@@ -189,4 +189,68 @@ describe('VisibleAreaService (#470)', () => {
       expect(chrome()).toEqual(['0px', '0px']);
     });
   });
+
+  describe('focuses a tapped pop-up field without scrolling the page (#507)', () => {
+    let host: HTMLElement;
+    afterEach(() => { TestBed.resetTestingModule(); host?.remove(); });
+
+    const startAs = (native: boolean) => {
+      TestBed.configureTestingModule({ providers: [
+        { provide: VISUAL_VIEWPORT, useValue: new FakeViewport(innerHeight) },
+        { provide: IS_NATIVE_APP, useValue: native },
+      ] });
+      TestBed.inject(VisibleAreaService).start();
+    };
+    /** A field of the given type, in a pop-up or on the page; focus() is watched. */
+    const field = (type: string, inPopup = true) => {
+      host = document.createElement('div');
+      if (inPopup) host.className = 'modal-backdrop';
+      const el = document.createElement(type === 'textarea' ? 'textarea' : 'input');
+      if (el instanceof HTMLInputElement) el.type = type;
+      host.appendChild(el);
+      document.body.appendChild(host);
+      return { el, focus: spyOn(el, 'focus').and.callThrough() };
+    };
+    /** A finger down at (10, 10) and up `moved` px lower; whether the tap's default was cancelled. */
+    const touch = (el: HTMLElement, moved = 0) => {
+      const at = (y: number) => new Touch({ identifier: 1, target: el, clientX: 10, clientY: y });
+      el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [at(10)], changedTouches: [at(10)] }));
+      const end = new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [], changedTouches: [at(10 + moved)] });
+      el.dispatchEvent(end);
+      return end.defaultPrevented;
+    };
+
+    it('focuses a tapped text field itself, without scrolling', () => {
+      startAs(true);
+      for (const type of ['text', 'textarea']) {
+        const { el, focus } = field(type);
+        expect(touch(el)).withContext(type).toBeTrue();
+        expect(focus).withContext(type).toHaveBeenCalledWith({ preventScroll: true });
+        host.remove();
+      }
+    });
+
+    it('leaves a drag that starts on a field to scroll the form', () => {
+      startAs(true);
+      const { el, focus } = field('text');
+      expect(touch(el, 40)).toBeFalse();
+      expect(focus).not.toHaveBeenCalled();
+    });
+
+    it('leaves pickers, page fields and the website to the browser', () => {
+      startAs(true);
+      for (const [type, inPopup] of [['date', true], ['time', true], ['checkbox', true], ['text', false]] as const) {
+        const { el, focus } = field(type, inPopup);
+        expect(touch(el)).withContext(`${type} ${inPopup}`).toBeFalse();
+        expect(focus).not.toHaveBeenCalled();
+        host.remove();
+      }
+      TestBed.resetTestingModule();
+      startAs(false);
+      const { el, focus } = field('text');
+      expect(touch(el)).toBeFalse();
+      expect(focus).not.toHaveBeenCalled();
+    });
+  });
 });
+

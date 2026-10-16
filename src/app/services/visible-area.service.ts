@@ -52,6 +52,7 @@ export class VisibleAreaService implements OnDestroy {
     const listen = { signal: this.stop.signal };
     vv.addEventListener('resize', () => { this.update(); this.revealFocusedField(); }, listen);
     vv.addEventListener('scroll', () => this.update(), listen);
+    if (this.native) this.focusWithoutScrolling(listen);
     if (this.native) addEventListener('scroll', () => {
       if (!scrollX && !scrollY) return;
       scrollTo(0, 0);
@@ -86,6 +87,32 @@ export class VisibleAreaService implements OnDestroy {
     style.setProperty('--chrome-bottom', covered(tabs?.height ? bottom - tabs.top : 0));
   }
 
+  /**
+   * Tapping a field in a pop-up made the phone scroll the whole page toward it
+   * before the reset above put it back: a visible jump on every tap (#507).
+   * For a plain tap on a text field in a pop-up, the app focuses the field
+   * itself without scrolling; the pop-up then scrolls to it. A drag that starts
+   * on a field is left alone (it scrolls the form), as are pickers (dates,
+   * times, lists), which the phone opens its own way.
+   */
+  private focusWithoutScrolling(listen: { signal: AbortSignal }): void {
+    let start: { x: number; y: number } | null = null;
+    document.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      start = e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY } : null;
+    }, { passive: true, ...listen });
+    document.addEventListener('touchend', (e) => {
+      const t = e.changedTouches[0];
+      const tapped = start && t && Math.hypot(t.clientX - start.x, t.clientY - start.y) < 10;
+      start = null;
+      const field = (e.target as Element | null)?.closest?.('input, textarea');
+      if (!tapped || !(field instanceof HTMLElement) || field === document.activeElement) return;
+      if (!field.closest('.modal-backdrop') || !isTextField(field)) return;
+      e.preventDefault();                                   // no tap → no scroll toward the field
+      field.focus({ preventScroll: true });
+    }, { passive: false, ...listen });
+  }
+
   ngOnDestroy(): void {
     this.stop.abort();
     this.bars?.disconnect();
@@ -100,4 +127,11 @@ export class VisibleAreaService implements OnDestroy {
     if (f.bottom > c.bottom - margin) card.scrollTop += f.bottom - c.bottom + margin;
     else if (f.top < c.top + margin) card.scrollTop -= c.top + margin - f.top;
   }
+}
+
+/** Fields typed into with the keyboard (not pickers, boxes or buttons). */
+const TEXT_TYPES = new Set(['text', 'search', 'email', 'url', 'tel', 'number', 'password']);
+function isTextField(el: Element): boolean {
+  if (el instanceof HTMLTextAreaElement) return !el.disabled && !el.readOnly;
+  return el instanceof HTMLInputElement && TEXT_TYPES.has(el.type) && !el.disabled && !el.readOnly;
 }
