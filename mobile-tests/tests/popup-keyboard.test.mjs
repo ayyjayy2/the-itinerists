@@ -18,9 +18,19 @@ const measure = () => app.driver.execute(() => {
   const field = document.activeElement;
   return {
     scrollY: window.scrollY,
+    vvTop: window.visualViewport?.offsetTop ?? 0,
+    innerHeight,
     visible: window.visualViewport?.height ?? innerHeight,
     header: r(document.querySelector('.app-header')),
     field: r(field),
+    card: r(document.querySelector('.modal-backdrop > *')),
+    // Is the pop-up on top at its top and bottom edges, or does a bar cover it?
+    uncovered: (() => {
+      const card = document.querySelector('.modal-backdrop > *');
+      if (!card) return null;
+      const b = card.getBoundingClientRect(), x = (b.left + b.right) / 2;
+      return [b.top + 8, b.bottom - 8].map(y => card.contains(document.elementFromPoint(x, y)));
+    })(),
     focusedTag: field?.tagName,
   };
 });
@@ -31,6 +41,8 @@ test('tapping Notes in the add-flight pop-up keeps the header put and shows Note
   const add = await driver.$('button=+ Add Flight');
   await add.waitForDisplayed({ timeout: 20000 });
   await add.click();
+
+  const before = await measure();                           // the demo build's banner sits above the header
 
   // Scroll the pop-up to Notes, as a person would, then tap it like a finger.
   await driver.execute(() => {
@@ -47,9 +59,31 @@ test('tapping Notes in the add-flight pop-up keeps the header put and shows Note
   await app.page();
 
   const m = await measure();
+  if (process.env.DEBUG_MOBILE) {
+    console.log('measured', JSON.stringify(m));
+    await driver.pause(2000);
+    console.log('2s later', JSON.stringify(await measure()));
+  }
   assert.equal(m.focusedTag && ['INPUT', 'TEXTAREA'].includes(m.focusedTag), true, 'Notes is focused');
   assert.equal(m.scrollY, 0, `the page scrolled by ${m.scrollY}px (the header and tab bar moved)`);
-  assert.ok(Math.abs(m.header.top) < 1, `the header moved to ${m.header.top}px`);
+  assert.ok(Math.abs(m.header.top - before.header.top) < 1, `the header moved from ${before.header.top}px to ${m.header.top}px`);
   assert.ok(m.field.top >= 0 && m.field.bottom <= m.visible,
     `Notes is at ${Math.round(m.field.top)}–${Math.round(m.field.bottom)}px, the visible part ends at ${Math.round(m.visible)}px`);
+});
+
+test('closing the keyboard with ✓ leaves the whole pop-up in view, header put', { todo: '#497: the header and tab bar cover the pop-up' }, async () => {
+  const { driver } = app;
+  const before = await measure();
+  await app.native();
+  const done = await driver.$('~Done');
+  if (await done.isExisting()) await done.click(); else await driver.hideKeyboard();
+  await driver.waitUntil(async () => !(await driver.isKeyboardShown()), { timeout: 10000, timeoutMsg: 'the keyboard stayed up' });
+  await driver.pause(1200);
+  await app.shot('keyboard-closed');
+  await app.page();
+
+  const m = await measure();
+  assert.equal(m.scrollY, 0, `the page scrolled by ${m.scrollY}px`);
+  assert.deepEqual(m.uncovered, [true, true], `the pop-up's top/bottom edge is covered: ${JSON.stringify(m.uncovered)}`);
+  assert.ok(Math.abs(m.header.top - before.header.top) < 1, `the header moved from ${before.header.top}px to ${m.header.top}px`);
 });
