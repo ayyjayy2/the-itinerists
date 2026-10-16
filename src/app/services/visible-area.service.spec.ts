@@ -32,6 +32,23 @@ describe('VisibleAreaService (#470)', () => {
     expect(vars()).toEqual(['664px', '0px']);
   });
 
+  it('in the iPhone app, publishes how much of the screen the keyboard covers (#513)', () => {
+    const vv = new FakeViewport(innerHeight);
+    TestBed.configureTestingModule({ providers: [{ provide: IS_NATIVE_APP, useValue: true }] });
+    start(vv);
+    expect(root.getPropertyValue('--keyboard')).toBe('0px');
+    vv.move(innerHeight - 300);
+    expect(root.getPropertyValue('--keyboard')).toBe('300px');
+    TestBed.resetTestingModule();
+    root.removeProperty('--keyboard');
+  });
+
+  it('leaves the keyboard to the website\'s browser', () => {
+    const set = spyOn(root, 'setProperty').and.callThrough();   // another spec may have set it
+    start(new FakeViewport(innerHeight - 300));
+    expect(set.calls.allArgs().map(a => a[0])).not.toContain('--keyboard');
+  });
+
   it('sets nothing where the browser has no visual viewport (CSS falls back to the full screen)', () => {
     // Watch what this service writes: another spec's real listener may set the shared variables.
     const set = spyOn(root, 'setProperty');

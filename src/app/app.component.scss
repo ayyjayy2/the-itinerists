@@ -202,7 +202,7 @@
   overflow-x: hidden;
   overscroll-behavior-y: contain;   // bounce stays inside the content, never moves the chrome
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 1.5rem;
+  padding-bottom: calc(1.5rem + var(--keyboard, 0px));   // room to lift a field above the iPhone app's keyboard (#513)
   // Tab bar is now in-flow, so no extra bottom padding is needed to clear it.
 }
 
