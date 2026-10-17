@@ -24,7 +24,7 @@ import { leftOutOfSplit, splitPatch } from '../../utils/split-gaps';
 import { paidKey } from '../../utils/paid-marks';
 
 /**
- * How the working under a netted total shows (#519): 'tap' puts it behind a
+ * How the working under each balance shows (#519): 'tap' puts it behind a
  * small arrow on the row; 'always' keeps it in sight (the first version, kept
  * as an option).
  */
@@ -221,8 +221,10 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     return [...map.values()].filter(d => d.amountHome > 0.005);
   });
 
-  /** The quiet working under a netted total (#519). */
-  readonly working = workingText;
+  /** The quiet working under a balance, in the trip's currency (#519). */
+  working(line: NetLine): string {
+    return workingText(line, this.homeCurrency());
+  }
   /** Whether that working waits behind a tap on the row or is always in sight. */
   readonly workingShown = NET_WORKING_SHOWN;
   private openWorking = signal<ReadonlySet<string>>(new Set());

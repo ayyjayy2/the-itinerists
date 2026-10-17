@@ -1151,9 +1151,9 @@
 .split-gap-actions .btn { min-height: 44px; }
 .chip-gap { background: var(--accent-tint); color: var(--accent-dark); }
 
-// The working behind a netted balance: a quiet line of its own, right under
-// its total, so the total still reads first and rows stay tidy (#519).
-.banner-person, .gs-row, .gs-detail-row { flex-wrap: wrap; }
+// The working behind a balance: a quiet line of its own, right under its
+// total, so the total still reads first and rows stay tidy (#519).
+.banner-person { flex-wrap: wrap; }
 .net-working {
   flex-basis: 100%;
   margin-top: -0.2rem;
@@ -1165,7 +1165,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-// 'tap': a row whose total is netted opens its working (#519). Padding, not
+// 'tap': each row opens its working (#519). Padding, not
 // centring, makes the 44px target, so opening it grows the row downward and
 // the name and total stay where they were.
 .banner-person-tap {

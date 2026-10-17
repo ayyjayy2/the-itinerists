@@ -93,16 +93,28 @@ describe('the working behind a netted balance (#519)', () => {
 
   it('writes the working as a subtraction, larger side first, each amount after its label', () => {
     const owed = netLine('Maya', 4940, 308), owes = netLine('Maya', 308, 4940);
-    expect(workingText(owed, 'me')).toBe('they owe 4,940 − you owe 308');
-    expect(workingText(owes, 'me')).toBe('you owe 4,940 − they owe 308');
-    expect(workingText(owed, 'person')).toBe('is owed 4,940 − owes 308');
-    expect(workingText(owes, 'person')).toBe('owes 4,940 − is owed 308');
-    expect(workingText(owed, 'pair')).toBe('owes them 4,940 − they owe 308');
-    expect(workingText(owes, 'pair')).toBe('they owe 4,940 − owes them 308');
+    expect(workingText(owed, 'THB')).toBe('they owe ฿4,940 − you owe ฿308');
+    expect(workingText(owes, 'THB')).toBe('you owe ฿4,940 − they owe ฿308');
   });
 
-  it('keeps cents only when there are some, and says nothing when one side owes', () => {
-    expect(workingText(netLine('Theo', 4000, 887.5), 'me')).toBe('they owe 4,000 − you owe 887.50');
-    expect(workingText(netLine('Jo', 50, 0), 'me')).toBe('');
+  it('puts the currency symbol on each amount, or the code when there is no symbol', () => {
+    const line = netLine('Maya', 10, 2);
+    expect(workingText(line, 'USD')).toBe('they owe $10 − you owe $2');
+    expect(workingText(line, 'EUR')).toBe('they owe €10 − you owe €2');
+    expect(workingText(line, 'GBP')).toBe('they owe £10 − you owe £2');
+    expect(workingText(line, 'CHF')).toBe('they owe CHF 10 − you owe CHF 2');
+  });
+
+  it('keeps cents only when there are some', () => {
+    expect(workingText(netLine('Theo', 4000, 887.5), 'USD')).toBe('they owe $4,000 − you owe $887.50');
+  });
+
+  it('shows the other side as nothing when only one side owes', () => {
+    expect(workingText(netLine('Jo', 50, 0), 'USD')).toBe('they owe $50 − you owe $0');
+    expect(workingText(netLine('Jo', 0, 50), 'USD')).toBe('you owe $50 − they owe $0');
+  });
+
+  it('says nothing when settled', () => {
+    expect(workingText(netLine('Jo', 50, 50), 'USD')).toBe('');
   });
 });
