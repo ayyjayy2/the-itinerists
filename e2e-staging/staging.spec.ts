@@ -173,6 +173,43 @@ test.describe('2. Live updates between two people', () => {
   });
 });
 
+test.describe('2b. The bell', () => {
+  test('an expense Maya adds lights up Alayna\'s bell within seconds (#517)', async ({ page, browser, baseURL }) => {
+    const title = `${stamp()} bell check`;
+    await page.goto('/finance');
+    await expect(page.getByRole('button', { name: '+ Add' })).toBeVisible({ timeout: 20_000 });
+    // Start from a clear bell: open it once (marks everything seen), then close it.
+    const badge = page.locator('app-notification-bell .bell-badge');
+    if (await badge.count()) { await page.locator('.bell-btn').first().click(); await page.locator('.bell-scrim').click(); }
+    await expect(badge).toHaveCount(0, { timeout: 10_000 });
+
+    const maya = await secondPerson(browser, 'maya', baseURL!);
+    try {
+      await maya.page.goto('/finance');
+      await maya.page.getByRole('button', { name: '+ Add' }).click();
+      await maya.page.getByPlaceholder('e.g. The Grey').fill(title);
+      await maya.page.getByPlaceholder('0.00').first().fill('7');
+      const added = Date.now();
+      await maya.page.getByRole('button', { name: 'Add Expense' }).click();
+      await expect(page.getByText(title).first()).toBeVisible({ timeout: 20_000 });
+      const listed = Date.now() - added;
+      await expect(badge).toBeVisible({ timeout: 90_000 });
+      console.log(`expense listed after ${listed} ms, bell lit after ${Date.now() - added} ms`);
+      expect(Date.now() - added).toBeLessThan(10_000);
+    } finally {
+      const row = maya.page.locator('.table-row').filter({ hasText: title }).first();
+      const toggle = maya.page.locator('.expenses-toggle');
+      if (await toggle.count() && !(await row.count())) await toggle.click();
+      if (await row.count()) {
+        await row.locator('.edit-row-btn').click();
+        maya.page.once('dialog', d => d.accept());
+        await maya.page.getByRole('button', { name: /Delete/ }).first().click();
+      }
+      await maya.ctx.close();
+    }
+  });
+});
+
 test.describe('3. Every page', () => {
   test('loads without errors, finishes loading, and never scrolls sideways', async ({ page }) => {
     test.setTimeout(240_000);                               // 15 pages, a few seconds each
