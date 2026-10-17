@@ -3,13 +3,14 @@
  * waitlist.js — the iPhone app launch list ("Notify me" on the welcome page).
  *
  * The app can only add to `_waitlist`; reading it needs this script (Admin SDK).
- * The privacy policy promises the list is used once, for the launch email,
- * then deleted.
+ * The privacy policy promises the list is used only for the launch email and
+ * occasional updates, every email has an unsubscribe link, and an address is
+ * deleted when its person unsubscribes or asks (#526).
  *
  *   node scripts/waitlist.js                       # how many unique emails (production)
  *   node scripts/waitlist.js export                # write scripts/waitlist.local.csv (gitignored)
  *   node scripts/waitlist.js clear                 # dry run: how many entries would be deleted
- *   node scripts/waitlist.js clear --run           # delete the whole list (after the launch email)
+ *   node scripts/waitlist.js clear --run           # delete the whole list (e.g. once it moves to a mailing service)
  *   add --staging to any of these for staging
  *
  * Never paste the export into chats, issues or pull requests.
