@@ -110,14 +110,15 @@ export function netLine(name: string, owed: number, owes: number): NetLine {
 export type WorkingVoice = 'me' | 'person' | 'pair';
 
 const WORDS: Record<WorkingVoice, Record<'owed' | 'owes', [string, string]>> = {
-  me:     { owed: ['owes you', 'you owe'],   owes: ['you owe', 'owes you'] },
+  me:     { owed: ['they owe', 'you owe'],   owes: ['you owe', 'they owe'] },
   person: { owed: ['is owed', 'owes'],       owes: ['owes', 'is owed'] },
   pair:   { owed: ['owes them', 'they owe'], owes: ['they owe', 'owes them'] },
 };
 
 /**
- * The working behind a netted balance as a subtraction, larger side first:
- * "owes you 4,940 − 308 you owe" (#519). Empty when only one side owes.
+ * The working behind a netted balance as a subtraction, larger side first,
+ * each amount after its label: "they owe 4,940 − you owe 308" (#519).
+ * Empty when only one side owes.
  */
 export function workingText(line: NetLine, voice: WorkingVoice): string {
   if (line.direction === 'settled' || line.less <= 0.005) return '';
@@ -126,5 +127,5 @@ export function workingText(line: NetLine, voice: WorkingVoice): string {
     return v.toLocaleString('en-US', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 });
   };
   const [first, second] = WORDS[voice][line.direction];
-  return `${first} ${n(line.gross)} − ${n(line.less)} ${second}`;
+  return `${first} ${n(line.gross)} − ${second} ${n(line.less)}`;
 }

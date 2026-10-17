@@ -91,18 +91,18 @@ describe('the working behind a netted balance (#519)', () => {
     expect(netLine('Theo', 120, 120).direction).toBe('settled');
   });
 
-  it('writes the working as a subtraction, larger side first, from each point of view', () => {
+  it('writes the working as a subtraction, larger side first, each amount after its label', () => {
     const owed = netLine('Maya', 4940, 308), owes = netLine('Maya', 308, 4940);
-    expect(workingText(owed, 'me')).toBe('owes you 4,940 − 308 you owe');
-    expect(workingText(owes, 'me')).toBe('you owe 4,940 − 308 owes you');
-    expect(workingText(owed, 'person')).toBe('is owed 4,940 − 308 owes');
-    expect(workingText(owes, 'person')).toBe('owes 4,940 − 308 is owed');
-    expect(workingText(owed, 'pair')).toBe('owes them 4,940 − 308 they owe');
-    expect(workingText(owes, 'pair')).toBe('they owe 4,940 − 308 owes them');
+    expect(workingText(owed, 'me')).toBe('they owe 4,940 − you owe 308');
+    expect(workingText(owes, 'me')).toBe('you owe 4,940 − they owe 308');
+    expect(workingText(owed, 'person')).toBe('is owed 4,940 − owes 308');
+    expect(workingText(owes, 'person')).toBe('owes 4,940 − is owed 308');
+    expect(workingText(owed, 'pair')).toBe('owes them 4,940 − they owe 308');
+    expect(workingText(owes, 'pair')).toBe('they owe 4,940 − owes them 308');
   });
 
   it('keeps cents only when there are some, and says nothing when one side owes', () => {
-    expect(workingText(netLine('Theo', 4000, 887.5), 'me')).toBe('owes you 4,000 − 887.50 you owe');
+    expect(workingText(netLine('Theo', 4000, 887.5), 'me')).toBe('they owe 4,000 − you owe 887.50');
     expect(workingText(netLine('Jo', 50, 0), 'me')).toBe('');
   });
 });
