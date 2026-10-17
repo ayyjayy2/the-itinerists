@@ -79,11 +79,21 @@ test('tapping a netted balance shows its working under the total (#519)', async 
   const name = maya.locator('.banner-person-name');
   const closedTop = (await name.boundingBox())!.y;
   await maya.click();
-  await expect(maya.locator('.net-working')).toHaveText('(they owe 4,000 − you owe 160)');
+  await expect(maya.locator('.net-working')).toHaveText('(they owe ฿4,000 − you owe ฿160)');
   // The working opens downward: the name and total stay where they were.
   expect(Math.abs((await name.boundingBox())!.y - closedTop)).toBeLessThan(1);
   await maya.click();
   await expect(maya.locator('.net-working')).toHaveCount(0);
+
+  // Other rows open too (one-sided rows: settlements.spec.ts).
+  const jo = page.locator('.banner-positive .banner-person').filter({ hasText: 'Jo' });
+  await jo.click();
+  await expect(jo.locator('.net-working')).toHaveText('(they owe ฿4,000 − you owe ฿1,600)');
+
+  // The group summary shows totals only, opened or not.
+  await page.getByRole('button', { name: /Group Summary/ }).click();
+  await page.locator('.gs-row').filter({ hasText: 'Maya' }).click();
+  await expect(page.locator('.group-summary .net-working')).toHaveCount(0);
 });
 
 test('add an itinerary event', async ({ page }) => {
