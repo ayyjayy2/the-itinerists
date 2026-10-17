@@ -100,8 +100,9 @@ service cloud.firestore {
     }
 
     // ── Launch list: "Notify me" on the welcome page (signed out is fine) ──
-    // Add-only: an email, which list, and the server's time. Nothing in the app
-    // can read, change or delete an entry; the owner reads the list with
+    // Add-only: an email, which list, and the server's time. Nobody can change
+    // or delete an entry from the app. Only the app owner can read it (Pulse
+    // shows the count, never the emails); the list itself comes out with
     // scripts/waitlist.js (Admin SDK). App Check keeps writes to the real app.
     match /_waitlist/{entry} {
       allow create: if request.resource.data.keys().hasOnly(['email', 'list', 'at'])
@@ -110,7 +111,8 @@ service cloud.firestore {
         && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
         && request.resource.data.list in ['ios']
         && request.resource.data.at == request.time;
-      allow read, update, delete: if false;
+      allow read: if isAppOwner();
+      allow update, delete: if false;
     }
 
     // ── Usage events: append-only by the signed-in user, read by the owner ─

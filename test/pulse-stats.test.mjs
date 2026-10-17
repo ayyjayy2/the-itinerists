@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   dayKey, hourIn, startOfDay, stampText, onlineNow, windowMoved, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, offerStats, peopleStats, tripStats,
-  deletionStats,
+  deletionStats, waitlistStats,
 } from '../public/pulse/stats.mjs';
 
 const H = 3_600_000;
@@ -365,4 +365,21 @@ test('deletionStats: newest first, days after the last trip ended, account age, 
 test('deletionStats: nothing in range gives zeros and no median', () => {
   const s = deletionStats([], 0, 1);
   assert.deepEqual(s, { list: [], count: 0, afterTrip: 0, duringOrBefore: 0, noTrip: 0, medianDaysAfterTrip: null });
+});
+
+test('waitlistStats: unique emails (case and spaces ignored), first sign-up decides the range, latest time', () => {
+  const at = (iso) => Date.parse(iso);
+  const entries = [
+    { email: 'maya@example.com', at: at('2026-10-02T10:00:00Z') },
+    { email: ' Maya@Example.com', at: at('2026-10-12T10:00:00Z') },   // the same person again, on another device
+    { email: 'theo@example.com', at: at('2026-10-11T09:00:00Z') },
+    { email: 'jo@example.com', at: at('2026-10-14T18:30:00Z') },
+    { email: 'rafa@example.com', at: 0 },                              // no server time yet: counted, never "latest"
+  ];
+  const s = waitlistStats(entries, at('2026-10-10T00:00:00Z'), at('2026-10-16T00:00:00Z'));
+  assert.equal(s.total, 4);
+  assert.equal(s.inRange, 2);                     // theo and jo; maya first signed up before the range
+  assert.equal(s.lastAt, at('2026-10-14T18:30:00Z'));
+  assert.deepEqual(Object.keys(s).sort(), ['inRange', 'lastAt', 'total']); // counts only: no emails come back
+  assert.deepEqual(waitlistStats([], 0, 1), { total: 0, inRange: 0, lastAt: null });
 });
