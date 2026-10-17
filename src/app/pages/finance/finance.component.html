@@ -49,11 +49,22 @@
         </div>
         <div class="banner-persons">
           @for (p of personNetBreakdown().owed; track p.name) {
-            <div class="banner-person">
-              <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-              <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
-              @if (working(p, 'me'); as w) {<span class="net-working">({{ w }})</span>}
-            </div>
+            @let w = working(p, 'me');
+            @let open = showWorking('owed:' + p.name);
+            @if (w && workingShown === 'tap') {
+              <button type="button" class="banner-person banner-person-tap" (click)="toggleWorking('owed:' + p.name)"
+                      [attr.aria-expanded]="open" [attr.aria-label]="p.name + ': how this is worked out'">
+                <span class="banner-person-name"><span class="working-arrow" aria-hidden="true">{{ open ? '▾' : '▸' }}</span>{{ getUserEmoji(p.name) }} {{ p.name }}</span>
+                <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
+                @if (open) {<span class="net-working">({{ w }})</span>}
+              </button>
+            } @else {
+              <div class="banner-person">
+                <span class="banner-person-name">@if (workingShown === 'tap') {<span class="working-arrow" aria-hidden="true"></span>}{{ getUserEmoji(p.name) }} {{ p.name }}</span>
+                <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
+                @if (w) {<span class="net-working">({{ w }})</span>}
+              </div>
+            }
           }
         </div>
       </div>
@@ -67,11 +78,22 @@
         </div>
         <div class="banner-persons">
           @for (p of personNetBreakdown().owing; track p.name) {
-            <div class="banner-person">
-              <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-              <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
-              @if (working(p, 'me'); as w) {<span class="net-working">({{ w }})</span>}
-            </div>
+            @let w = working(p, 'me');
+            @let open = showWorking('owing:' + p.name);
+            @if (w && workingShown === 'tap') {
+              <button type="button" class="banner-person banner-person-tap" (click)="toggleWorking('owing:' + p.name)"
+                      [attr.aria-expanded]="open" [attr.aria-label]="p.name + ': how this is worked out'">
+                <span class="banner-person-name"><span class="working-arrow" aria-hidden="true">{{ open ? '▾' : '▸' }}</span>{{ getUserEmoji(p.name) }} {{ p.name }}</span>
+                <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
+                @if (open) {<span class="net-working">({{ w }})</span>}
+              </button>
+            } @else {
+              <div class="banner-person">
+                <span class="banner-person-name">@if (workingShown === 'tap') {<span class="working-arrow" aria-hidden="true"></span>}{{ getUserEmoji(p.name) }} {{ p.name }}</span>
+                <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
+                @if (w) {<span class="net-working">({{ w }})</span>}
+              </div>
+            }
           }
         </div>
       </div>
@@ -122,7 +144,9 @@
               }
               <span class="gs-chevron">{{ expandedGroupUsers().has(u.name) ? '▲' : '▼' }}</span>
             </span>
-            @if (working(u, 'person'); as w) {<span class="net-working">({{ w }})</span>}
+            @if (working(u, 'person'); as w) {
+              @if (workingShown === 'always' || expandedGroupUsers().has(u.name)) {<span class="net-working">({{ w }})</span>}
+            }
           </button>
 
           @if (expandedGroupUsers().has(u.name)) {
