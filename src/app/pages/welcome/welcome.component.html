@@ -42,6 +42,7 @@
     <h2>Coming soon</h2>
     @if (joined()) {
       <p class="joined">You're on the list. We'll email you when the app is out.</p>
+      <p class="consent">Plus occasional updates. No spam, and you can unsubscribe any time.</p>
     } @else {
       <p class="app-sub">Leave your email and we'll tell you when it's in the App Store.</p>
       <form (ngSubmit)="notifyMe()" novalidate>
@@ -51,6 +52,7 @@
                [attr.aria-invalid]="error() ? true : null" [attr.aria-describedby]="error() ? 'notify-error' : null" />
         @if (error()) { <p class="field-error" id="notify-error">{{ error() }}</p> }
         <button class="btn btn-primary" type="submit" [disabled]="sending()">{{ sending() ? 'Adding…' : 'Notify me' }}</button>
+        <p class="consent">We'll email you at launch, plus occasional updates. No spam, and you can unsubscribe any time.</p>
       </form>
     }
   </section>

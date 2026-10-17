@@ -74,6 +74,7 @@
   h2 { margin: 0; font-size: 1.35rem; font-weight: 800; }
   .app-sub, .joined { margin: 0; line-height: 1.5; }
   .joined { font-weight: 700; color: var(--primary-dark); }
+  .consent { margin: 0; font-size: 0.85rem; line-height: 1.45; color: var(--text-muted); text-align: center; text-wrap: balance; }
   form { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.25rem; text-align: left; }
   .btn { justify-content: center; width: 100%; }
 }

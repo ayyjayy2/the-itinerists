@@ -78,6 +78,14 @@ describe('WelcomeComponent', () => {
     expect(el.querySelector('.app-card')?.textContent).toContain("You're on the list");
   });
 
+  it('says what signing up means: launch news, occasional updates, no spam, unsubscribe any time', () => {
+    const { el } = render();
+    const text = el.querySelector('.app-card')?.textContent ?? '';
+    expect(text).toContain('occasional updates');
+    expect(text).toContain('No spam');
+    expect(text).toContain('unsubscribe any time');
+  });
+
   it('remembers someone already on the list', () => {
     waitlist.joined = () => true;
     const { el } = render();
