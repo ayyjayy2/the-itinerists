@@ -71,6 +71,13 @@ test('add an expense and see it in the log', async ({ page }) => {
   await expect(page.getByText('Night market').first()).toBeVisible();
 });
 
+test('a netted balance shows its working under the total (#519)', async ({ page }) => {
+  await page.goto('/finance');
+  const maya = page.locator('.banner-positive .banner-person').filter({ hasText: 'Maya' });
+  await expect(maya.locator('.banner-person-amounts')).toHaveText('3,840.00');
+  await expect(maya.locator('.net-working')).toHaveText('(owes you 4,000 − 160 you owe)');
+});
+
 test('add an itinerary event', async ({ page }) => {
   await page.goto('/itinerary');
   await page.getByRole('button', { name: '+ Add event' }).first().click();

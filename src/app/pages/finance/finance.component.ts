@@ -8,7 +8,7 @@ import { TripService } from '../../services/trip.service';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
 import { Rates, perCurrencySubtotals, convertedTotal, convertShare } from '../../utils/currency';
-import { DirectDebt, filterSettlements } from '../../utils/settlements';
+import { DirectDebt, NetLine, filterSettlements, netLine, personTotals, unpaidBetween, workingText } from '../../utils/settlements';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
@@ -214,33 +214,33 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     return [...map.values()].filter(d => d.amountHome > 0.005);
   });
 
-  personNetBreakdown = computed((): { owed: Array<{ name: string; amountHome: number }>; owing: Array<{ name: string; amountHome: number }> } => {
+  /** The quiet working before a netted total (#519). */
+  readonly working = workingText;
+
+  /**
+   * My balance with each person, netted: what they still owe me less what I
+   * still owe them. `gross` and `less` are the working, shown quietly when
+   * both sides owe (#519).
+   */
+  personNetBreakdown = computed((): { owed: NetLine[]; owing: NetLine[] } => {
     const me = this.currentUser()?.name ?? '';
     if (!me) return { owed: [], owing: [] };
+    const debts = this.directDebts(), paid = this.isItemPaid.bind(this);
 
     const others = new Set<string>();
-    for (const d of this.directDebts()) {
+    for (const d of debts) {
       const hasUnpaid = d.items.some(item => !this.isItemPaid(d.from, d.to, item.id));
       if (!hasUnpaid) continue;
       if (d.from === me) others.add(d.to);
       if (d.to   === me) others.add(d.from);
     }
 
-    const owed:  Array<{ name: string; amountHome: number }> = [];
-    const owing: Array<{ name: string; amountHome: number }> = [];
-
+    const owed: NetLine[] = [], owing: NetLine[] = [];
     for (const other of others) {
-      const unpaid = (from: string, to: string) =>
-        this.directDebts()
-          .filter(d => d.from === from && d.to === to)
-          .flatMap(d => d.items.filter(item => !this.isItemPaid(d.from, d.to, item.id)))
-          .reduce((s, item) => s + item.amount, 0);
-
-      const net = unpaid(other, me) - unpaid(me, other);
-      if      (net >  0.005) owed .push({ name: other, amountHome:  net });
-      else if (net < -0.005) owing.push({ name: other, amountHome: -net });
+      const line = netLine(other, unpaidBetween(debts, other, me, paid), unpaidBetween(debts, me, other, paid));
+      if      (line.direction === 'owed') owed.push(line);
+      else if (line.direction === 'owes') owing.push(line);
     }
-
     return { owed, owing };
   });
 
@@ -260,35 +260,21 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 0);
   });
 
-  allUsersNetBalance = computed(() =>
-    this.financeUsers().map(u => {
-      const net = this.directDebts().reduce((sum, d) => {
-        const unpaidHome = d.items
-          .filter(item => !this.isItemPaid(d.from, d.to, item.id))
-          .reduce((s, item) => s + item.amount, 0);
-        if (d.to   === u.name) return sum + unpaidHome;
-        if (d.from === u.name) return sum - unpaidHome;
-        return sum;
-      }, 0);
-      return { name: u.name, emoji: u.avatarEmoji, amountHome: net };
-    })
-  );
+  allUsersNetBalance = computed(() => {
+    const debts = this.directDebts(), paid = this.isItemPaid.bind(this);
+    return this.financeUsers().map(u => {
+      const { owed, owes } = personTotals(debts, u.name, paid);
+      return { ...netLine(u.name, owed, owes), emoji: u.avatarEmoji, amountHome: owed - owes };
+    });
+  });
 
-  userDebtDetails(name: string): Array<{ counterpart: string; emoji: string; amountHome: number; direction: 'owes' | 'owed' }> {
-    const details: Array<{ counterpart: string; emoji: string; amountHome: number; direction: 'owes' | 'owed' }> = [];
-    for (const u of this.financeUsers()) {
-      if (u.name === name) continue;
-      const unpaid = (from: string, to: string) =>
-        this.directDebts()
-          .filter(d => d.from === from && d.to === to)
-          .reduce((sum, d) => sum + d.items
-            .filter(item => !this.isItemPaid(d.from, d.to, item.id))
-            .reduce((s, item) => s + item.amount, 0), 0);
-      const net = unpaid(u.name, name) - unpaid(name, u.name);
-      if      (net >  0.005) details.push({ counterpart: u.name, emoji: u.avatarEmoji, amountHome:  net, direction: 'owed' });
-      else if (net < -0.005) details.push({ counterpart: u.name, emoji: u.avatarEmoji, amountHome: -net, direction: 'owes' });
-    }
-    return details;
+  userDebtDetails(name: string): Array<NetLine & { counterpart: string; emoji: string }> {
+    const debts = this.directDebts(), paid = this.isItemPaid.bind(this);
+    return this.financeUsers()
+      .filter(u => u.name !== name)
+      .map(u => ({ ...netLine(u.name, unpaidBetween(debts, u.name, name, paid), unpaidBetween(debts, name, u.name, paid)),
+        counterpart: u.name, emoji: u.avatarEmoji }))
+      .filter(l => l.direction !== 'settled');
   }
 
   // ── Search & filter ───────────────────────────────────────────────────────────

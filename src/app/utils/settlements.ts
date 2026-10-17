@@ -59,3 +59,72 @@ export function filterSettlements(debts: readonly DirectDebt[], f: SettlementFil
       return [{ ...d, items, amountHome: items.reduce((s, i) => s + i.amount, 0) }];
     });
 }
+
+type IsPaid = (from: string, to: string, itemId: string) => boolean;
+
+/** What `from` still owes `to` in the home currency: their unpaid items only. */
+export function unpaidBetween(debts: readonly DirectDebt[], from: string, to: string, isPaid: IsPaid): number {
+  return debts
+    .filter(d => d.from === from && d.to === to)
+    .reduce((sum, d) => sum + d.items.filter(i => !isPaid(d.from, d.to, i.id)).reduce((s, i) => s + i.amount, 0), 0);
+}
+
+/**
+ * What a person is still owed and still owes across everyone, before netting:
+ * the working behind a netted balance ("4,940.00 − 308.00", #519).
+ */
+export function personTotals(debts: readonly DirectDebt[], name: string, isPaid: IsPaid): { owed: number; owes: number } {
+  let owed = 0, owes = 0;
+  for (const d of debts) {
+    const unpaid = d.items.filter(i => !isPaid(d.from, d.to, i.id)).reduce((s, i) => s + i.amount, 0);
+    if (d.to === name) owed += unpaid;
+    if (d.from === name) owes += unpaid;
+  }
+  return { owed, owes };
+}
+
+/** One netted balance and its working: `gross − less = amountHome`. */
+export interface NetLine {
+  name: string;
+  direction: 'owed' | 'owes' | 'settled';
+  /** The netted amount, always positive (0 when settled). */
+  amountHome: number;
+  /** The larger side, before netting. */
+  gross: number;
+  /** What the other side takes off it; 0 when only one side owes. */
+  less: number;
+}
+
+/** Nets what `name` is owed against what they owe (amounts in the home currency). */
+export function netLine(name: string, owed: number, owes: number): NetLine {
+  const net = owed - owes;
+  if (net > 0.005)  return { name, direction: 'owed', amountHome: net, gross: owed, less: owes };
+  if (net < -0.005) return { name, direction: 'owes', amountHome: -net, gross: owes, less: owed };
+  return { name, direction: 'settled', amountHome: 0, gross: owed, less: owes };
+}
+
+/**
+ * Whose point of view the working is written from: mine (the balance banner),
+ * one person's overall line, or that person with one other.
+ */
+export type WorkingVoice = 'me' | 'person' | 'pair';
+
+const WORDS: Record<WorkingVoice, Record<'owed' | 'owes', [string, string]>> = {
+  me:     { owed: ['owes you', 'you owe'],   owes: ['you owe', 'owes you'] },
+  person: { owed: ['is owed', 'owes'],       owes: ['owes', 'is owed'] },
+  pair:   { owed: ['owes them', 'they owe'], owes: ['they owe', 'owes them'] },
+};
+
+/**
+ * The working behind a netted balance as a subtraction, larger side first:
+ * "owes you 4,940 − 308 you owe" (#519). Empty when only one side owes.
+ */
+export function workingText(line: NetLine, voice: WorkingVoice): string {
+  if (line.direction === 'settled' || line.less <= 0.005) return '';
+  const n = (v: number) => {
+    const cents = Math.round(v * 100) % 100 !== 0;
+    return v.toLocaleString('en-US', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 });
+  };
+  const [first, second] = WORDS[voice][line.direction];
+  return `${first} ${n(line.gross)} − ${n(line.less)} ${second}`;
+}

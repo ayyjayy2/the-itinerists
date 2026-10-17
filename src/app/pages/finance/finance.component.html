@@ -52,6 +52,7 @@
             <div class="banner-person">
               <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
               <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
+              @if (working(p, 'me'); as w) {<span class="net-working">({{ w }})</span>}
             </div>
           }
         </div>
@@ -69,6 +70,7 @@
             <div class="banner-person">
               <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
               <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
+              @if (working(p, 'me'); as w) {<span class="net-working">({{ w }})</span>}
             </div>
           }
         </div>
@@ -120,6 +122,7 @@
               }
               <span class="gs-chevron">{{ expandedGroupUsers().has(u.name) ? '▲' : '▼' }}</span>
             </span>
+            @if (working(u, 'person'); as w) {<span class="net-working">({{ w }})</span>}
           </button>
 
           @if (expandedGroupUsers().has(u.name)) {
@@ -138,6 +141,7 @@
                     }
                   </span>
                   <span class="gs-detail-amounts">{{ d.amountHome | number:'1.2-2' }}</span>
+                  @if (working(d, 'pair'); as w) {<span class="net-working">({{ w }})</span>}
                 </div>
               }
             </div>
