@@ -103,29 +103,35 @@ export function netLine(name: string, owed: number, owes: number): NetLine {
   return { name, direction: 'settled', amountHome: 0, gross: owed, less: owes };
 }
 
-/**
- * Whose point of view the working is written from: mine (the balance banner),
- * one person's overall line, or that person with one other.
- */
-export type WorkingVoice = 'me' | 'person' | 'pair';
-
-const WORDS: Record<WorkingVoice, Record<'owed' | 'owes', [string, string]>> = {
-  me:     { owed: ['they owe', 'you owe'],   owes: ['you owe', 'they owe'] },
-  person: { owed: ['is owed', 'owes'],       owes: ['owes', 'is owed'] },
-  pair:   { owed: ['owes them', 'they owe'], owes: ['they owe', 'owes them'] },
+/** What "they" and "you" owe, larger side first. */
+const WORDS: Record<'owed' | 'owes', [string, string]> = {
+  owed: ['they owe', 'you owe'],
+  owes: ['you owe', 'they owe'],
 };
 
 /**
- * The working behind a netted balance as a subtraction, larger side first,
- * each amount after its label: "they owe 4,940 − you owe 308" (#519).
- * Empty when only one side owes.
+ * One amount in the working, with its currency's symbol ($10, €10, ฿4,940),
+ * or its code where it has none (CHF 10). Cents only when there are some.
  */
-export function workingText(line: NetLine, voice: WorkingVoice): string {
-  if (line.direction === 'settled' || line.less <= 0.005) return '';
-  const n = (v: number) => {
-    const cents = Math.round(v * 100) % 100 !== 0;
-    return v.toLocaleString('en-US', { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 });
-  };
-  const [first, second] = WORDS[voice][line.direction];
-  return `${first} ${n(line.gross)} − ${second} ${n(line.less)}`;
+function money(v: number, currency: string): string {
+  const cents = Math.round(v * 100) % 100 !== 0;
+  const digits = { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 };
+  try {
+    return v.toLocaleString('en-US', { style: 'currency', currency, currencyDisplay: 'narrowSymbol', ...digits })
+      .replace(/\u00a0/g, ' ');
+  } catch {
+    return `${v.toLocaleString('en-US', digits)} ${currency}`;   // not a currency code Intl knows
+  }
+}
+
+/**
+ * The working behind my balance with someone, as a subtraction, larger side
+ * first, each amount after its label: "they owe ฿4,940 − you owe ฿308" (#519).
+ * When only one side owes, the other side is shown as nothing ("you owe $0").
+ * Empty when settled.
+ */
+export function workingText(line: NetLine, currency: string): string {
+  if (line.direction === 'settled') return '';
+  const [first, second] = WORDS[line.direction];
+  return `${first} ${money(line.gross, currency)} − ${second} ${money(line.less, currency)}`;
 }
