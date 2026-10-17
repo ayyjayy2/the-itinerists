@@ -1,12 +1,12 @@
 .onboard-screen {
-  height: 100dvh;
+  height: calc(100dvh - var(--keyboard, 0px));   // in the iPhone app, ends where the keyboard starts so the form scrolls (#513)
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem 1.5rem calc(2rem + var(--keyboard, 0px));   // room to lift a field above the iPhone app's keyboard (#513)
+  padding: 2rem 1.5rem;
   background: linear-gradient(160deg, var(--primary-tint) 0%, var(--bg) 45%, var(--highlight-tint) 100%);
 }
 

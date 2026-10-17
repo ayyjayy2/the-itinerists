@@ -25,12 +25,18 @@ test('tapping the password on the sign-in page shows it above the keyboard (#513
 
   const m = await driver.execute(() => {
     const b = document.activeElement?.getBoundingClientRect();
+    const screen = document.querySelector('.auth-screen');
     return { id: document.activeElement?.id, top: b?.top, bottom: b?.bottom, scrollY,
+      screenBottom: screen?.getBoundingClientRect().bottom, scrolls: screen ? screen.scrollHeight > screen.clientHeight : false,
       visible: window.visualViewport?.height ?? innerHeight, innerHeight };
   });
   if (process.env.DEBUG_MOBILE) console.log('measured', JSON.stringify(m));
   assert.equal(m.id, 'password', 'the password field is focused');
   assert.equal(m.scrollY, 0, `the page scrolled by ${m.scrollY}px`);
+  // The screen ends at the keyboard, so a finger can scroll the whole form into view
+  // (#513: on an iPhone the form couldn't scroll at all).
+  assert.ok(m.screenBottom <= m.visible + 1, `the sign-in screen ends at ${Math.round(m.screenBottom)}px, under the keyboard (visible part ends at ${Math.round(m.visible)}px)`);
+  assert.ok(m.scrolls, 'the sign-in form can scroll');
   assert.ok(m.top >= 0 && m.bottom <= m.visible,
     `the password is at ${Math.round(m.top)}–${Math.round(m.bottom)}px, the visible part ends at ${Math.round(m.visible)}px`);
 });
