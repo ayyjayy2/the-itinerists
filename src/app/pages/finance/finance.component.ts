@@ -24,9 +24,10 @@ import { leftOutOfSplit, splitPatch } from '../../utils/split-gaps';
 import { paidKey } from '../../utils/paid-marks';
 
 /**
- * How the working under each balance shows (#519): 'tap' puts it behind a
- * small arrow on the row; 'always' keeps it in sight (the first version, kept
- * as an option).
+ * How the working under each balance shows (#519): 'tap' shows it with a
+ * small arrow that folds it away (open to begin with, since people wondered
+ * where a total came from); 'always' keeps it in sight with no arrow (the
+ * first version, kept as an option).
  */
 export const NET_WORKING_SHOWN: 'tap' | 'always' = 'tap';
 
@@ -227,14 +228,14 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   /** Whether that working waits behind a tap on the row or is always in sight. */
   readonly workingShown = NET_WORKING_SHOWN;
-  private openWorking = signal<ReadonlySet<string>>(new Set());
+  private foldedWorking = signal<ReadonlySet<string>>(new Set());
   showWorking(key: string): boolean {
-    return this.workingShown === 'always' || this.openWorking().has(key);
+    return this.workingShown === 'always' || !this.foldedWorking().has(key);
   }
   toggleWorking(key: string): void {
-    const open = new Set(this.openWorking());
-    if (!open.delete(key)) open.add(key);
-    this.openWorking.set(open);
+    const folded = new Set(this.foldedWorking());
+    if (!folded.delete(key)) folded.add(key);
+    this.foldedWorking.set(folded);
   }
 
   /**
