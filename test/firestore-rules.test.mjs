@@ -352,6 +352,10 @@ await t('join with a client timestamp', 'deny', () => setDoc(doc(anon, '_waitlis
 await t('anon reads the list', 'deny', () => getDoc(doc(anon, '_waitlist', 'w1')));
 await t('member lists the list', 'deny', () => getDocs(collection(bob, '_waitlist')));
 await t('admin lists the list', 'deny', () => getDocs(collection(admin, '_waitlist')));
+await t('app owner lists the list (Pulse count)', 'allow', () => getDocs(collection(owner, '_waitlist')));
+await t('signed in without the owner claim lists the list', 'deny', () => getDocs(collection(fakeOwner, '_waitlist')));
+await t('app owner edits an entry', 'deny', () => updateDoc(doc(owner, '_waitlist', 'w1'), { email: 'x@y.io' }));
+await t('app owner deletes an entry', 'deny', () => deleteDoc(doc(owner, '_waitlist', 'w1')));
 await t('anon edits an entry', 'deny', () => updateDoc(doc(anon, '_waitlist', 'w1'), { email: 'x@y.io' }));
 await t('anon deletes an entry', 'deny', () => deleteDoc(doc(anon, '_waitlist', 'w1')));
 

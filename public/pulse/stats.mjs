@@ -459,3 +459,22 @@ export function deletionStats(records, from, to) {
     medianDaysAfterTrip: mid,
   };
 }
+
+/**
+ * The iPhone launch list ("Notify me", `_waitlist`) as counts only: unique
+ * emails (case and spaces ignored) all time, how many first signed up in
+ * [from, to), and the latest sign-up. The emails themselves never leave here.
+ */
+export function waitlistStats(entries, from, to) {
+  const first = new Map();   // email -> earliest sign-up
+  let lastAt = null;
+  for (const { email, at } of entries) {
+    const key = String(email ?? '').trim().toLowerCase();
+    if (!key) continue;
+    if (!first.has(key) || (at && at < first.get(key))) first.set(key, at || first.get(key) || 0);
+    if (at && (lastAt === null || at > lastAt)) lastAt = at;
+  }
+  let inRange = 0;
+  for (const at of first.values()) if (at >= from && at < to) inRange++;
+  return { total: first.size, inRange, lastAt };
+}

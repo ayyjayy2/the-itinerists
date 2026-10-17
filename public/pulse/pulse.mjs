@@ -25,7 +25,7 @@ const db = getFirestore(app);
 const viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 const state = {
   range: '24h', trip: 'all', zone: viewerZone, hourMode: 'local',
-  rows: [], trips: new Map(), users: new Map(), members: new Map(), deletions: [], now: Date.now(),
+  rows: [], trips: new Map(), users: new Map(), members: new Map(), deletions: [], waitlist: [], now: Date.now(),
   testTrips: new Set(),
   showTests: false,       // test trips stay out of the table unless the owner asks to see them
   testUsers: new Set(),   // throwaway accounts (_pulse/prefs.testUsers, set by hand)
@@ -35,7 +35,7 @@ const state = {
   firstAt: null,          // the oldest _activity row: when collection began
   updatedAt: null,        // when live data last arrived (any listener), shown as "Updated …"
 };
-let unsubRows = null, unsubWrites = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null, unsubDeletions = null;
+let unsubRows = null, unsubWrites = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null, unsubDeletions = null, unsubWaitlist = null;
 const memberSubs = new Map(); // tripId → unsubscribe
 /** The owner's dashboard preferences: test trips (kept out of every number) and the display zone. */
 const prefsRef = () => doc(db, '_pulse', 'prefs');
@@ -99,6 +99,11 @@ function start() {
     state.deletions = snap.docs.map(d => { const r = d.data(); return { ...r, at: r.at?.toMillis?.() ?? 0 }; });
     scheduleRender();
   }, err => showError('Deletions: ' + err.message));
+  // iPhone launch list (#524): counted here, never shown; scripts/waitlist.js exports it.
+  unsubWaitlist = onSnapshot(collection(db, '_waitlist'), snap => {
+    state.waitlist = snap.docs.map(d => { const r = d.data(); return { email: r.email, at: r.at?.toMillis?.() ?? 0 }; });
+    scheduleRender();
+  }, err => showError('Launch list: ' + err.message));
   unsubUsers = onSnapshot(collection(db, 'users'), snap => {
     state.users = new Map(snap.docs.map(d => [d.id, d.data()]));
     dataArrived();
@@ -147,7 +152,7 @@ function syncMemberSubs() {
   }
 }
 function stop() {
-  unsubRows?.(); unsubWrites?.(); unsubTrips?.(); unsubUsers?.(); unsubPrefs?.(); unsubDeletions?.(); unsubRows = unsubWrites = unsubTrips = unsubUsers = unsubPrefs = unsubDeletions = null;
+  unsubRows?.(); unsubWrites?.(); unsubTrips?.(); unsubUsers?.(); unsubPrefs?.(); unsubDeletions?.(); unsubWaitlist?.(); unsubRows = unsubWrites = unsubTrips = unsubUsers = unsubPrefs = unsubDeletions = unsubWaitlist = null;
   for (const unsub of memberSubs.values()) unsub();
   memberSubs.clear();
   $('dot').classList.remove('on');
@@ -629,6 +634,12 @@ function render() {
   $('deletions').innerHTML = gone.count === 0 ? '<tr><td class="muted">No accounts deleted.</td></tr>' :
     '<tr><th>Deleted</th><th>Person</th><th>Last trip</th><th class="n">Trips</th><th class="n">Account age</th></tr>' +
     gone.list.map(d => `<tr><td>${esc(S.stampText(d.at, state.zone))}</td><td>${esc(userName(d.uid))}</td><td>${afterText(d)}</td><td class="n num">${d.trips}</td><td class="n num">${d.accountAgeDays === null ? '–' : `${d.accountAgeDays} d`}</td></tr>`).join('');
+
+  // iPhone launch list: counts only (anyone can sign up, so there are no test entries to hide)
+  const wl = S.waitlistStats(state.waitlist ?? [], queryStart(), now + DAY);
+  $('waitlistSub').textContent = `${wl.inRange} new in ${rangeLabel}`;
+  $('waitlistTotal').textContent = wl.total;
+  $('waitlistLast').textContent = wl.lastAt ? `Latest ${S.stampText(wl.lastAt, state.zone)} (${zoneAbbr(state.zone, wl.lastAt)})` : 'Nobody yet.';
 
   // Countries the app was used in (from each event's zone, recorded at the moment of use)
   const countries = S.countryStats(rows, zoneCountry);
