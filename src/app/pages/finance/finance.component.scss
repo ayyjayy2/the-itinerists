@@ -317,7 +317,7 @@
 }
 
 .gs-details {
-  padding: 0.3rem 1.1rem 0.65rem 2.1rem;
+  padding: 0.3rem 1.1rem 0.65rem;   // lines up with the names above
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -1150,3 +1150,17 @@
 .split-gap-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .split-gap-actions .btn { min-height: 44px; }
 .chip-gap { background: var(--accent-tint); color: var(--accent-dark); }
+
+// The working behind a netted balance: a quiet line of its own, right under
+// its total, so the total still reads first and rows stay tidy (#519).
+.banner-person, .gs-row, .gs-detail-row { flex-wrap: wrap; }
+.net-working {
+  flex-basis: 100%;
+  margin-top: -0.2rem;
+  text-align: right;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
