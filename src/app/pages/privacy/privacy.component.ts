@@ -40,7 +40,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         </ul>
         <h3>If you ask to hear when the iPhone app launches</h3>
         <ul>
-          <li>If you leave your email under "Notify me" on the welcome page, we keep that email and when you left it. We use it to tell you when the iPhone app is out and to send occasional updates about The Itinerists, nothing else. You don't need an account. Every email has a link to unsubscribe; when you unsubscribe or ask us, we delete your address. Only the developer can see the list, and we never sell or share it.</li>
+          <li>If you leave your email under "Notify me" on the welcome page, we keep that email and when you left it. We use it to tell you when the iPhone app is out and to send occasional updates about The Itinerists, nothing else. We keep those few and far between: no spam. You don't need an account. Every email has a link to unsubscribe; when you unsubscribe or ask us, we delete your address. Only the developer can see the list, and we never sell or share it.</li>
         </ul>
         <h3>Technical information</h3>
         <ul>
