@@ -76,8 +76,12 @@ test('tapping a netted balance shows its working under the total (#519)', async 
   const maya = page.locator('.banner-positive .banner-person').filter({ hasText: 'Maya' });
   await expect(maya.locator('.banner-person-amounts')).toHaveText('3,840.00');
   await expect(maya.locator('.net-working')).toHaveCount(0);           // behind a tap (NET_WORKING_SHOWN)
+  const name = maya.locator('.banner-person-name');
+  const closedTop = (await name.boundingBox())!.y;
   await maya.click();
   await expect(maya.locator('.net-working')).toHaveText('(they owe 4,000 − you owe 160)');
+  // The working opens downward: the name and total stay where they were.
+  expect(Math.abs((await name.boundingBox())!.y - closedTop)).toBeLessThan(1);
   await maya.click();
   await expect(maya.locator('.net-working')).toHaveCount(0);
 });
