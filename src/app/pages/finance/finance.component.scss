@@ -1164,3 +1164,24 @@
   opacity: 0.8;
   font-variant-numeric: tabular-nums;
 }
+
+// 'tap': a row whose total is netted opens its working (#519).
+.banner-person-tap {
+  width: 100%;
+  min-height: 44px;
+  margin: -0.45rem 0;
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  .net-working { margin-top: -0.6rem; padding-bottom: 0.5rem; }
+}
+.working-arrow {
+  display: inline-block;
+  width: 0.9rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
