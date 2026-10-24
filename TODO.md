@@ -3,7 +3,7 @@
 The live list, organised by launch phase. The plan itself (goals, who does what, when
 each phase ends, storage and costs) is in Itinerists HQ → Launch plan (private artifact):
 https://claude.ai/artifact/4KXwSQgFrugzPq9ZfocA9d. Engineering work is tracked as issues on the
-Trip Planner board, https://github.com/users/ayyjayy2/projects/9 (Backlog → In Progress → In
+The Itinerists Project Board, https://github.com/users/ayyjayy2/projects/9 (Backlog → In Progress → In
 Review → Done, each linked to its PR); this file keeps the owner's items and the phase checklist.
 `ROADMAP.md` is the long-range idea list
 and `docs/HANDOFF.md` the orientation doc; neither tracks status. When something ships, tick
