@@ -1,4 +1,4 @@
-import { mirroredFlightMoment, flightMomentsForUid, FlightLike } from './flight-events';
+import { mirroredFlightMoment, flightMomentsForUid, FlightLike, airportCodeIn } from './flight-events';
 
 const ordToBer: FlightLike = {
   uid: 'u1', section: 'ARRIVALS', from: 'ORD', to: 'BER',
@@ -63,5 +63,25 @@ describe('mirroredFlightMoment', () => {
   it('leaves ordinary items and flight-like items on other days alone', () => {
     expect(mirroredFlightMoment({ date: '2026-09-24', activity: 'Dinner', category: 'Food' }, moments)).toBeNull();
     expect(mirroredFlightMoment({ date: '2026-09-26', activity: 'Taxi to the airport', category: 'Transport' }, moments)).toBeNull();
+  });
+
+  it("leaves someone else's flight plan alone: it isn't your flight (#537)", () => {
+    const plan = { date: '2026-09-24', activity: 'Depart San Francisco', category: 'Transport' };
+    expect(mirroredFlightMoment({ ...plan, forWho: 'Theo, Jo' }, moments, 'Maya')).toBeNull();
+    expect(mirroredFlightMoment({ ...plan, forWho: 'Maya, Theo' }, moments, 'Maya')?.kind).toBe('depart');
+    expect(mirroredFlightMoment({ ...plan, forWho: 'All' }, moments, 'Maya')?.kind).toBe('depart');
+  });
+});
+
+describe('airportCodeIn', () => {
+  it('reads the airport code a flight-like plan names (#537)', () => {
+    expect(airportCodeIn({ activity: 'Depart Chicago O’Hare', category: 'Transport', location: 'ORD' })).toBe('ORD');
+    expect(airportCodeIn({ activity: 'Land in Chiang Mai', category: 'Transport', location: 'Chiang Mai International Airport (CNX)' })).toBe('CNX');
+  });
+
+  it('ignores plans that are not about flying, or name no code', () => {
+    expect(airportCodeIn({ activity: 'Khao soi lunch', category: 'Food', location: 'BKK' })).toBeUndefined();
+    expect(airportCodeIn({ activity: 'Depart for the market', category: 'Transport', location: 'Old City' })).toBeUndefined();
+    expect(airportCodeIn({ activity: 'Fly home', category: 'Transport' })).toBeUndefined();
   });
 });
