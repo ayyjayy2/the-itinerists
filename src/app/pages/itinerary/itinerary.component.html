@@ -89,14 +89,14 @@
               @case ('transport') {
                 <div class="transport-banner">
                   <span class="tb-ic"><app-icon [name]="b.icon" [size]="16" /></span>
-                  <span class="tb-time">{{ b.time | time12 }}</span>
+                  <span class="tb-time">{{ b.time | time12 }}@if (b.zoneLabel) {&nbsp;<span class="item-zone">{{ b.zoneLabel }}</span> }</span>
                   <span class="tb-label">{{ b.label }}</span>
                 </div>
               }
               @case ('stay') {
                 <div class="stay-banner">
                   <span class="sb-ic"><app-icon name="stays" [size]="16" /></span>
-                  @if (b.time) { <span class="sb-time">{{ b.time | time12 }}</span> }
+                  @if (b.time) { <span class="sb-time">{{ b.time | time12 }}@if (b.zoneLabel) {&nbsp;<span class="item-zone">{{ b.zoneLabel }}</span> }</span> }
                   <span class="sb-label">{{ b.label }}</span>
                 </div>
               }
@@ -118,9 +118,9 @@
                     @if (flightTimeFor(item); as ft) {
                       <span class="item-time" title="Time from the Flights page">{{ ft.time | time12 }}@if (ft.zoneLabel) {&nbsp;<span class="item-zone">{{ ft.zoneLabel }}</span> }</span>
                     } @else if (item.time) {
-                      <span class="item-time">{{ item.time | time12 }}</span>
+                      <span class="item-time">{{ item.time | time12 }}@if (!item.endTime && itemZone(item, item.time); as z) {&nbsp;<span class="item-zone">{{ z }}</span> }</span>
                       @if (item.endTime) {
-                        <span class="item-time item-time-end">– {{ item.endTime | time12 }}</span>
+                        <span class="item-time item-time-end">– {{ item.endTime | time12 }}@if (itemZone(item, item.endTime); as z) {&nbsp;<span class="item-zone">{{ z }}</span> }</span>
                         @if (timeRangeProblem(item.time, item.endTime)) {
                           <button type="button" class="chip chip-gap check-times" (click)="startEdit(item)" title="This ends before it starts">Check the times</button>
                         }
@@ -310,7 +310,8 @@
             }
             @for (item of day.previewItems; track item.id) {
               <div class="cal-item" [style.background]="categoryColor(item.category)">
-                @if (item.time) { <span class="cal-item-time">{{ item.time }}</span> · }{{ item.activity }}
+                @if (flightTimeFor(item); as ft) { <span class="cal-item-time">{{ ft.time | time12 }}@if (ft.zoneLabel) { {{ ft.zoneLabel }}}</span> · }
+                @else if (item.time) { <span class="cal-item-time">{{ item.time | time12 }}@if (itemZone(item, item.time); as z) { {{ z }}}</span> · }{{ item.activity }}
               </div>
             }
             @if (day.count > 3) {

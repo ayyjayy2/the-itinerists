@@ -11,8 +11,8 @@ export interface DayBooking {
 
 export interface BookingSources {
   flights:    { date: string; label: string; time: string; zoneLabel?: string }[];
-  transports: { date: string; label: string; time: string; icon: string }[];
-  stays:      { date: string; label: string; time: string }[];
+  transports: { date: string; label: string; time: string; icon: string; zoneLabel?: string }[];
+  stays:      { date: string; label: string; time: string; zoneLabel?: string }[];
 }
 
 /**
@@ -25,9 +25,9 @@ export function bookingsOn(date: string, src: BookingSources): DayBooking[] {
     ...src.flights.filter(f => f.date === date)
       .map(f => ({ kind: 'flight' as const, icon: 'flights', label: f.label, time: f.time, zoneLabel: f.zoneLabel })),
     ...src.transports.filter(t => t.date === date)
-      .map(t => ({ kind: 'transport' as const, icon: t.icon, label: t.label, time: t.time })),
+      .map(t => ({ kind: 'transport' as const, icon: t.icon, label: t.label, time: t.time, zoneLabel: t.zoneLabel })),
     ...src.stays.filter(s => s.date === date)
-      .map(s => ({ kind: 'stay' as const, icon: 'stays', label: s.label, time: s.time })),
+      .map(s => ({ kind: 'stay' as const, icon: 'stays', label: s.label, time: s.time, zoneLabel: s.zoneLabel })),
   ];
   const minutes = (b: DayBooking) => { const t = parseTimeString(b.time); return t ? t.h * 60 + t.min : Infinity; };
   return out

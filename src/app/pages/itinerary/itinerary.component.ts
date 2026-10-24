@@ -23,6 +23,7 @@ import { zoneAbbr } from '../../utils/zones';
 import { parseTimeString } from '../../utils/first-up';
 import { wallToUtcMs } from '../../utils/zones';
 import { stayMomentsFor } from '../../utils/stay-events';
+import { zoneLabelOn, planZoneLabel } from '../../utils/time-zone-label';
 import { TimeInputComponent } from '../../shared/time-input/time-input.component';
 import { Time12Pipe } from '../../shared/time12.pipe';
 
@@ -160,7 +161,7 @@ export class ItineraryComponent implements OnInit {
    * shows the Flights page's time in the airport's zone, never the typed one.
    */
   flightTimeFor(item: ItineraryItemDoc): { time: string; zoneLabel: string } | null {
-    const m = mirroredFlightMoment(item, this.flightMoments());
+    const m = mirroredFlightMoment(item, this.flightMoments(), this.currentUser()?.name);
     if (!m) return null;
     const t = parseTimeString(m.time);
     const zoneLabel = m.zone ? zoneAbbr(m.zone, t ? wallToUtcMs(m.date, t.h, t.min, m.zone) : Date.now()) : '';
@@ -492,9 +493,26 @@ export class ItineraryComponent implements OnInit {
   }
 
 
-  /** The day's flights, transport and stay moments in time order: what List and Calendar both show. */
+  /** The day's flights, transport and stay moments in time order: what List and Calendar both show.
+   *  Transport and stay times are in the zone of the trip stop that day, as typed plans are. */
   dayBookings(date: string): DayBooking[] {
-    return bookingsOn(date, { flights: this.flightEvents(), transports: this.transportEvents(), stays: this.stayEvents() });
+    const zoned = <T extends { date: string; time: string }>(e: T) => ({ ...e, zoneLabel: e.time ? this.planZone(e.date, e.time) : '' });
+    return bookingsOn(date, {
+      flights: this.flightEvents(),
+      transports: this.transportEvents().map(zoned),
+      stays: this.stayEvents().map(zoned),
+    });
+  }
+
+  /** The zone code after a typed time ("WEST"): the trip stop's zone on that day. */
+  planZone(date: string, time?: string): string {
+    return zoneLabelOn(this.tripService.activeTrip(), date, time);
+  }
+
+  /** A typed plan's zone code: the airport's when it names one ("Depart Chicago O'Hare", ORD → CST), else the trip stop's. */
+  itemZone(item: ItineraryItemDoc, time?: string): string {
+    const zones = this.airportZones.zones();   // read so the label updates when the table lands
+    return planZoneLabel(item, time, this.tripService.activeTrip(), code => zones[code] ?? this.airportZones.zoneFor(code));
   }
 
   categoryColor(cat: string): string {

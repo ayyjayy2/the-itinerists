@@ -27,6 +27,15 @@ describe('bookingsOn', () => {
     expect(bookingsOn('2027-05-13', sources)[0].icon).toBe('train');
   });
 
+  it('passes transport and stay zone codes through (#537)', () => {
+    const zoned = {
+      ...sources,
+      transports: sources.transports.map(t => ({ ...t, zoneLabel: 'WEST' })),
+      stays:      sources.stays.map(s => ({ ...s, zoneLabel: 'WEST' })),
+    };
+    expect(bookingsOn('2027-05-13', zoned).map(b => b.zoneLabel)).toEqual(['WEST', 'WEST', 'WEST']);
+  });
+
   it('is empty on a day with no bookings', () => {
     expect(bookingsOn('2027-05-11', sources)).toEqual([]);
   });
