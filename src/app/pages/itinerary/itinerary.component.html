@@ -82,7 +82,7 @@
               @case ('flight') {
                 <div class="flight-banner">
                   <span class="flight-ic"><app-icon name="flights" [size]="16" /></span>
-                  <span class="flight-time">{{ b.time | time12 }}@if (b.zoneLabel) { <span class="flight-zone">{{ b.zoneLabel }}</span> }</span>
+                  <span class="flight-time">{{ b.time | time12 }}@if (b.zoneLabel) {&nbsp;<span class="flight-zone">{{ b.zoneLabel }}</span> }</span>
                   <span class="flight-label">{{ b.label }}</span>
                 </div>
               }
@@ -116,7 +116,7 @@
                   <div class="drag-handle" cdkDragHandle title="Drag to reorder">⠿</div>
                   <div class="item-left">
                     @if (flightTimeFor(item); as ft) {
-                      <span class="item-time" title="Time from the Flights page">{{ ft.time | time12 }}@if (ft.zoneLabel) { <span class="item-zone">{{ ft.zoneLabel }}</span> }</span>
+                      <span class="item-time" title="Time from the Flights page">{{ ft.time | time12 }}@if (ft.zoneLabel) {&nbsp;<span class="item-zone">{{ ft.zoneLabel }}</span> }</span>
                     } @else if (item.time) {
                       <span class="item-time">{{ item.time | time12 }}</span>
                       @if (item.endTime) {
