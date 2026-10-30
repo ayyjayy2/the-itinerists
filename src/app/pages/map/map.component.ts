@@ -22,6 +22,7 @@ import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.c
 //     Brazil); airports come from the bundled table, never from a name search.
 const GEOCACHE_KEY         = 'tripmap_geocache';
 const GEOCODE_MISSES_KEY   = 'tripmap_geocode_misses';
+
 const GEOCACHE_VERSION_KEY = 'tripmap_geocache_version';
 const GEOCACHE_VERSION     = '7';
 // Each trip's place lookups live under it (trips/{id}/geocache/places),
@@ -176,6 +177,7 @@ interface LocationEntry {
 
 import { FocusService } from '../../services/focus.service';
 import { RateGate, missIsFresh } from '../../utils/rate-gate';
+import { BaseMapService } from '../../services/base-map.service';
 @Component({
   selector: 'app-map',
   imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
@@ -323,6 +325,7 @@ export class MapComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.releaseBaseMap();
     this.map?.remove();
     this.map = null;
   }
@@ -369,6 +372,13 @@ export class MapComponent implements OnDestroy {
     });
   }
 
+  // ── Base map (shared with Home's day maps, #568) ─────────────────────────────
+  private baseMap = inject(BaseMapService);
+  private releaseBaseMap = () => {};
+  /** Labels show local names (as on street signs) instead of the app's language. */
+  readonly localNames = this.baseMap.localNames;
+  toggleLocalNames(): void { this.baseMap.setLocalNames(!this.localNames()); }
+
   // ── Boot ─────────────────────────────────────────────────────────────────────
 
   private async boot(el: HTMLElement): Promise<void> {
@@ -377,10 +387,8 @@ export class MapComponent implements OnDestroy {
     this.map.on('dragstart', () => { this.userMovedMap = true; });
     el.addEventListener('wheel', () => { this.userMovedMap = true; }, { passive: true });
     el.addEventListener('touchstart', e => { if (e.touches.length > 1) this.userMovedMap = true; }, { passive: true });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-      maxZoom: 18,
-    }).addTo(this.map);
+    // Pins don't wait for the background.
+    void this.baseMap.attach(this.map, () => this.destroyed).then(release => this.releaseBaseMap = release);
     this.flightLayer.addTo(this.map);
     this.routeLayer.addTo(this.map);
     this.accomLayer.addTo(this.map);

@@ -13,6 +13,7 @@ this file whenever a service is added or removed (the privacy policy at
 | **Angular service worker** (PWA) | 20 | Installable web app, offline shell, cached assets | `ngsw-config.json`, `public/manifest.webmanifest` |
 | **Capacitor** | 8 (Swift Package Manager, no CocoaPods) | Native iOS shell around the same web build | `ios/`, `capacitor.config.ts`, `npm run ios:run` |
 | **Leaflet** | 1.9 | The trip map | `src/app/pages/map/`, `src/app/shared/day-map-card/` |
+| **MapLibre GL JS** + `@maplibre/maplibre-gl-leaflet` | 6.16 / 0.1 | Draws the maps' OpenFreeMap background under Leaflet; loaded only when a map is on screen (after Home has drawn) | `src/app/services/base-map.service.ts` |
 | **RxJS** | 7 | Streams from Firebase into signals | throughout |
 | **AngularFire** (`@angular/fire`) | 20.1 | Firebase for Angular; every Firebase call in the app goes through it. It brings its own Firebase JS SDK 11.10; `overrides` pins `rxfire` to 6.1.0 so rxfire uses that same copy, not the top-level `firebase` 12 (used by the rules tests). No release supports Angular 21 yet | `src/app/app.config.ts`, the services |
 | **tz-lookup** | 6 | Coordinates → IANA time zone, for a trip leg's zone when it is saved | `src/app/services/geocode.service.ts`, `src/app/utils/zones.ts` (Intl-only zone math) |
@@ -36,7 +37,8 @@ this file whenever a service is added or removed (the privacy policy at
 |---|---|---|---|
 | **Open-Meteo** | Weather for trip destinations on Home and Outfits: the forecast (`api.open-meteo.com`) from today on, and what the weather was (`archive-api.open-meteo.com`, 1940 to today) on past days. Settled past days are saved to the trip (`trips/{trip}/weather/{date}`, #558) | Free, no key | `src/app/services/weather.service.ts`, `utils/forecast-window.ts` |
 | **Nominatim** (OpenStreetMap) | Place names → coordinates; results cached in Firestore `geocache`. Also gives a saved trip leg its coordinates and zone | Free, no key, 1 req/s etiquette | `src/app/pages/map/map.component.ts`, `day-map-card`, `services/geocode.service.ts` |
-| **OpenStreetMap tiles** | Map imagery under Leaflet | Free | `map.component.ts` |
+| **OpenFreeMap** (`tiles.openfreemap.org`) | The background of every map (Map page and Home's day maps), drawn by MapLibre under Leaflet; labels in the app's language or local names, one switch for all (#568). Worker served from `/maplibre/` (CSP `worker-src 'self'`) | Free incl. commercial, no key | `services/base-map.service.ts`, `utils/map-labels.ts` |
+| **OpenStreetMap tiles** | The maps' fallback when a device can't draw maps (no WebGL) or OpenFreeMap fails to load | Free | `services/base-map.service.ts` |
 | **Frankfurter** | Currency conversion rates for Finance | Free, no key | `src/app/services/exchange-rate.service.ts` |
 | **Google Fonts** | Nunito and Caprasimo | Free | `src/index.html`, `public/pulse/index.html` |
 | **timeapi.io** | API console only (the app doesn't call it): every IANA zone, and one zone's local time, offset and daylight saving | Free, no key | staging CSP in `firebase.json`; request list in the owner's HQ artifact |
@@ -62,6 +64,7 @@ sees their IP address. **No notes, booking references, links, amounts or names a
 | Service | Receives | Never receives |
 |---|---|---|
 | **Nominatim** | Place names and addresses on the trip: destinations, itinerary places (and route ends), stay addresses, pick-up and drop-off points, a new map pin's address, with the trip's destination as context | Notes, booking references, who is going |
+| **OpenFreeMap** | Which map squares are on screen (so roughly where the map is looking) | Anything typed |
 | **OpenStreetMap tiles** | Which map squares are on screen (so roughly where the map is looking) | Anything typed |
 | **Open-Meteo** | A destination's coordinates and the trip's dates | The person's own location |
 | **Frankfurter** | Currency codes and dates | Amounts |

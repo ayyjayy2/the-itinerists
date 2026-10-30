@@ -42,6 +42,8 @@
 
   <div class="map-wrap">
     <div class="map-container" id="trip-map" #tripMap></div>
+    <!-- Labels in the app's language by default; local names match the street signs. -->
+    <button class="map-lang-toggle" type="button" [attr.aria-pressed]="localNames()" (click)="toggleLocalNames()">Local names</button>
     <!-- Only until the trip's data arrives: after that the map shows at once and
          new pins drop in while the chip above counts them. -->
     @if (!mapReady()) {
