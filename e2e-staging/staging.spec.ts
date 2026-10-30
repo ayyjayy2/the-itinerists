@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import {
-  addItineraryEvent, apiKey, itineraryCard, password, secondPerson, signIn, signOut, stamp, watchErrors,
+  addItineraryEvent, apiKey, go, itineraryCard, password, secondPerson, signIn, signOut, stamp, watchErrors,
 } from './helpers';
 
 /**
@@ -8,6 +8,10 @@ import {
  * Signed in as the seeded test accounts (alayna owns the Chiang Mai trip; maya
  * is on it). Everything a test adds is tagged "[check]" and removed again, by
  * the test itself or by cleanup.ts afterwards.
+ *
+ * Staging is on Firebase's free plan: 50,000 reads a day for everyone (#586). Each
+ * tab loads the app once and moves between pages with go(); page.goto() only where
+ * a reload or a direct link is what's being checked.
  */
 
 const PAGES = ['home', 'itinerary', 'flights', 'accommodations', 'transportation', 'map', 'finance',
@@ -67,7 +71,7 @@ test.describe('1. Sign-in', () => {
 
   test('Profile shows the version line', async ({ browser, baseURL }) => {
     const { ctx, page } = await secondPerson(browser, 'alayna', baseURL!);
-    await page.goto('/profile');
+    await go(page, '/profile');
     await expect(page.getByText(/Version \d+\.\d+\.\d+ \(\d+\)/)).toBeVisible();
     await ctx.close();
   });
@@ -77,17 +81,17 @@ test.describe('2. Live updates between two people', () => {
   test('an item Maya adds, Alayna edits and deletes shows up live for both', async ({ page, browser, baseURL }) => {
     const title = `${stamp()} night market`;
     await page.goto('/home');
-    await page.goto('/itinerary');
+    await go(page, '/itinerary');
 
     const maya = await secondPerson(browser, 'maya', baseURL!);
     try {
       await addItineraryEvent(maya.page, title);
       await expect(page.getByText(title).first()).toBeVisible({ timeout: 20_000 });   // no reload
 
-      await page.goto('/updates');                                                    // the bell's feed
+      await go(page, '/updates');                                                     // the bell's feed
       await expect(page.getByText(title).first()).toBeVisible();
 
-      await page.goto('/itinerary');
+      await go(page, '/itinerary');
       await itineraryCard(page, title).locator('.edit-btn').click();
       const card = page.locator('.itinerary-item').filter({ has: page.locator('.edit-actions') });   // the open edit form
       const fields = card.locator('input[type=text]');
@@ -114,7 +118,7 @@ test.describe('2. Live updates between two people', () => {
 
     const maya = await secondPerson(browser, 'maya', baseURL!);
     try {
-      await maya.page.goto('/finance');
+      await go(maya.page, '/finance');
       await expect(pairCard(maya.page)).toBeVisible({ timeout: 20_000 });
       await item.locator('.di-check').click();                                         // Alayna ticks it
       await tab(maya.page, 'Paid').click();                                            // Maya, no reload
@@ -149,7 +153,7 @@ test.describe('2. Live updates between two people', () => {
 
     const maya = await secondPerson(browser, 'maya', baseURL!);
     try {
-      await maya.page.goto('/finance');
+      await go(maya.page, '/finance');
       await maya.page.getByRole('button', { name: '+ Add' }).click();
       await maya.page.getByPlaceholder('e.g. The Grey').fill(title);
       await maya.page.getByPlaceholder('0.00').first().fill('42');
@@ -185,7 +189,7 @@ test.describe('2b. The bell', () => {
 
     const maya = await secondPerson(browser, 'maya', baseURL!);
     try {
-      await maya.page.goto('/finance');
+      await go(maya.page, '/finance');
       await maya.page.getByRole('button', { name: '+ Add' }).click();
       await maya.page.getByPlaceholder('e.g. The Grey').fill(title);
       await maya.page.getByPlaceholder('0.00').first().fill('7');
@@ -214,11 +218,11 @@ test.describe('3. Every page', () => {
   test('loads without errors, finishes loading, and never scrolls sideways', async ({ page }) => {
     test.setTimeout(240_000);                               // 15 pages, a few seconds each
     const errors = watchErrors(page, [/apis\.google\.com\/js\/api\.js/]);   // known: issue #344
-    await page.goto('/home');
+    await page.goto('/home');                               // the one load; the rest are in-app moves (#586)
     const problems: string[] = [];
     for (const p of PAGES) {
       const before = errors.length;
-      await page.goto(`/${p}`);
+      await go(page, `/${p}`);
       await page.waitForTimeout(2_500);
       if (await page.locator('app-loading .spinner').count()) problems.push(`${p}: still loading`);
       const wide = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -244,9 +248,8 @@ test.describe('3. Every page', () => {
   });
 
   test('Map draws its tiles when opened directly (refresh or link)', async ({ page }) => {
-    await page.goto('/home');
     const tile = mapTile(page);
-    await page.goto('/map');
+    await page.goto('/map');                                 // a direct load is the point here
     await tile;
     await expect(mapCanvas(page)).toBeVisible({ timeout: 30_000 });
   });
@@ -254,7 +257,7 @@ test.describe('3. Every page', () => {
   test('Finance: add a THB expense, see it, delete it', async ({ page }) => {
     const title = `${stamp()} songthaew`;
     await page.goto('/home');
-    await page.goto('/finance');
+    await go(page, '/finance');
     await page.getByRole('button', { name: '+ Add' }).click();
     await page.getByPlaceholder('e.g. The Grey').fill(title);
     await page.getByPlaceholder('0.00').first().fill('123');
@@ -274,7 +277,7 @@ test.describe('3. Every page', () => {
 test.describe('4. Joining a trip', () => {
   test('the owner makes an invite, and its link opens the join page', async ({ page, browser, baseURL }) => {
     await page.goto('/home');
-    await page.goto('/trip-settings');
+    await go(page, '/trip-settings');
     // Always make a fresh invite: the panel can first show an older one from the offline copy.
     const panel = page.locator('.invite-code');
     await page.waitForTimeout(1_500);
@@ -319,7 +322,7 @@ test.describe('5. Offline', () => {
     const title = `${stamp()} offline`;
     const pageCode = trackPageCode(page);
     await page.goto('/home');
-    await page.goto('/itinerary');
+    await go(page, '/itinerary');
     await expect(page.locator('.itinerary-item').first()).toBeVisible();   // the trip has loaded
     await expect.poll(pageCode.quiet, { message: 'every page\'s code has downloaded', timeout: 30_000 }).toBe(true);
 
@@ -337,7 +340,7 @@ test.describe('5. Offline', () => {
 
     const maya = await secondPerson(browser, 'maya', baseURL!);
     try {
-      await maya.page.goto('/itinerary');
+      await go(maya.page, '/itinerary');
       await expect(maya.page.getByText(title).first()).toBeVisible({ timeout: 30_000 });   // synced
     } finally {
       await maya.ctx.close();
@@ -390,7 +393,7 @@ test.describe('7. API console', () => {
 test.describe('8. Phone layout', () => {
   test('form fields are at least 16px, so iPhones never zoom in', async ({ page }) => {
     await page.goto('/home');
-    await page.goto('/itinerary');
+    await go(page, '/itinerary');
     await page.getByRole('button', { name: '+ Add event' }).first().click();
     const small = await page.evaluate(() => [...document.querySelectorAll('input, select, textarea')]
       .filter(el => (el as HTMLElement).offsetParent !== null)

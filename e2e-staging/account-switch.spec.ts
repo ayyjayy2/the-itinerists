@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as admin from 'firebase-admin';
-import { signIn, signOut } from './helpers';
+import { go, signIn, signOut } from './helpers';
 
 /**
  * #406: one person logs out and another signs in on the same browser. The
@@ -44,8 +44,8 @@ test("after Maya logs out, Sam signing in on the same browser never sees Maya's 
   // Maya uses the app: Home and Finance load her open trip into the offline copy.
   // Control: the recorder must catch her trip here, or the check below proves nothing.
   await signIn(page, 'maya');
-  await page.goto('/finance');
-  await page.goto('/home');
+  await go(page, '/finance');                                         // in-app moves: no re-reads (#586)
+  await go(page, '/home');
   await page.waitForTimeout(2_500);
   expect(mentionsMaya(await seenSoFar()).length, 'the recorder catches Maya\'s trip while she is signed in').toBeGreaterThan(0);
   await signOut(page);
