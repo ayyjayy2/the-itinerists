@@ -65,6 +65,10 @@ describe('VisibleAreaService (#470)', () => {
     /** A focused field low in a 100px scrolling card, inside a pop-up or on the page. */
     const focusedField = (inPopup: boolean) => {
       host = document.createElement('div');
+      // Pinned to the top of the screen: placed in the page's flow, whatever
+      // earlier tests left behind could push it below the visible area and
+      // make the check fail at random (#573).
+      Object.assign(host.style, { position: 'fixed', top: '0', left: '0', width: '300px' });
       if (inPopup) host.className = 'modal-backdrop';
       card = document.createElement('div');
       Object.assign(card.style, { height: '100px', overflowY: 'auto' });
