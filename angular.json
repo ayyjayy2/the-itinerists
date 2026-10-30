@@ -37,6 +37,11 @@
                 "glob": "swagger-ui@(-bundle.js|.css)",
                 "input": "node_modules/swagger-ui-dist",
                 "output": "api-console/vendor"
+              },
+              {
+                "glob": "maplibre-gl-worker.mjs",
+                "input": "node_modules/maplibre-gl/dist",
+                "output": "maplibre"
               }
             ],
             "styles": [
@@ -54,6 +59,11 @@
                   "ignore": [
                     "api-console/**"
                   ]
+                },
+                {
+                  "glob": "maplibre-gl-worker.mjs",
+                  "input": "node_modules/maplibre-gl/dist",
+                  "output": "maplibre"
                 }
               ],
               "budgets": [
@@ -122,6 +132,11 @@
                     "pulse/**",
                     "api-console/**"
                   ]
+                },
+                {
+                  "glob": "maplibre-gl-worker.mjs",
+                  "input": "node_modules/maplibre-gl/dist",
+                  "output": "maplibre"
                 }
               ]
             },
