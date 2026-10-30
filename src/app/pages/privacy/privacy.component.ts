@@ -20,7 +20,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <header class="policy-head">
           <app-brand [mark]="40" [showWordmark]="false" />
           <h1>Privacy Policy</h1>
-          <p class="effective">Effective October 16, 2026</p>
+          <p class="effective">Effective October 30, 2026</p>
           <p class="lede">The Itinerists is a group trip planner. This page says exactly what the app stores, who can see it, and which outside services it talks to. Short version: your trip data is shared only with the people on your trip, your email is private, we don't sell or advertise with anything, and you can delete your account yourself at any time.</p>
         </header>
 
@@ -36,6 +36,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <ul>
           <li>Trip names, destinations and dates, itinerary events, flights, stays, transportation, shared expenses and who paid, recommendations, map pins, and an activity log of changes. Everyone on that trip can see and edit this. Marking who an item is for only changes what each person's screens show; everyone on the trip can still open it.</li>
           <li><strong>Personal lists</strong> — your packing list and your "My Expenses" log — are visible only to you.</li>
+          <li><strong>Past weather.</strong> Once a trip day has passed, we keep what the weather was on the trip that day (the city, its high and low, and the conditions) so it still shows later. Everyone on that trip can see it.</li>
           <li><strong>Outfit photos</strong> you choose to add are visible only to you. The app never opens your camera or photo library on its own; you pick each photo.</li>
         </ul>
         <h3>If you ask to hear when the iPhone app launches</h3>
@@ -67,7 +68,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
             <tr><td>Firebase Crashlytics (iOS app only)</td><td>Crash reports</td><td>The error, device model, iOS version, app version and your account id. Not your name, email or trip content</td></tr>
             <tr><td>Google Analytics (web only)</td><td>Usage statistics</td><td>Screens opened, app version, time zone, platform, your account id, the open trip's id, a random device id, and when a trip is created, joined or shared. Not your name, email or trip content</td></tr>
             <tr><td>Google reCAPTCHA (web only)</td><td>Integrity checks</td><td>Browser and interaction signals, under Google's own privacy policy</td></tr>
-            <tr><td>Open-Meteo</td><td>Weather on the home screen</td><td>Your trip destination's coordinates. Never your own location</td></tr>
+            <tr><td>Open-Meteo</td><td>Weather on the home screen, and what it was on past trip days</td><td>Your trip destination's coordinates and the trip's dates. Never your own location</td></tr>
             <tr><td>OpenStreetMap Nominatim</td><td>Turns place names into map pins</td><td>Place names and addresses on your trip: destinations, itinerary places, stay addresses, pick-up and drop-off points and map pins, sent from your device. Never notes, booking references or links. Results are kept with your trip, where only its members can see them, so each place is looked up once</td></tr>
             <tr><td>OpenStreetMap tiles</td><td>The map pictures on Map and day cards</td><td>A request from your device for the area of the map on screen</td></tr>
             <tr><td>Frankfurter</td><td>Currency conversion rates</td><td>Currency codes only</td></tr>

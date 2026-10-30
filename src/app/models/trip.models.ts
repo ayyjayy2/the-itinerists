@@ -92,6 +92,19 @@ export type TripMemberRole = 'owner' | 'member';
 export type TravelMode = 'flying' | 'driving' | 'train' | 'bus' | 'other';
 
 /**
+ * What the weather was on a past day, at `/trips/{tripId}/weather/{YYYY-MM-DD}`
+ * (#558). Saved once by the first member to load the day after it settles,
+ * never edited (see firestore.rules).
+ */
+export interface WeatherDayDoc {
+  city: string;     // the stop's city, e.g. "Chiang Mai"
+  minF: number;
+  maxF: number;
+  code: number;     // WMO weather code (Open-Meteo `weather_code`)
+  savedAt: unknown; // server timestamp
+}
+
+/**
  * One leg of a trip — a destination with its own dates and currency.
  * Multi-destination trips carry an array of these (see TripDoc.destinations);
  * single-destination trips carry a one-element array.
