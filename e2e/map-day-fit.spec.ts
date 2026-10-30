@@ -15,7 +15,7 @@ test('a day on the map shows all of that day\'s stops', async ({ page }) => {
   await page.goto('/map');
   await expect(page.locator('.status-chip.status-done')).toBeVisible({ timeout: 30_000 });   // every place found
 
-  for (const day of ['Nov 13', 'Nov 14', 'Nov 15']) {
+  for (const day of ['Nov. 13', 'Nov. 14', 'Nov. 15']) {
     await page.getByRole('button', { name: day, exact: true }).click();
     await page.waitForTimeout(700);                                   // the view settles
     const box = (await page.locator('.map-container').boundingBox())!;
