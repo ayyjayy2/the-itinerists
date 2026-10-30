@@ -19,9 +19,10 @@ test('a day\'s pins count from 1, skipping places that aren\'t on the map', asyn
 
   for (const day of ['Nov. 14', 'Nov. 16']) {
     await page.getByRole('button', { name: day, exact: true }).click();
-    const numbers = await page.locator('.map-container .leaflet-marker-pane svg text').evaluateAll(els => els.map(e => (e.textContent ?? '').trim()));
-    const sorted = numbers.map(Number).sort((a, b) => a - b);
-    expect(sorted.length, `${day} has numbered pins`).toBeGreaterThan(1);
+    const read = () => page.locator('.map-container .leaflet-marker-pane svg text')
+      .evaluateAll(els => els.map(e => Number((e.textContent ?? '').trim())).sort((a, b) => a - b));
+    await expect.poll(async () => (await read()).length, { message: `${day} has numbered pins` }).toBeGreaterThan(1);   // the map has redrawn
+    const sorted = await read();
     expect(sorted, `${day} counts from 1`).toEqual(sorted.map((_, i) => i + 1));
   }
 });
