@@ -1,5 +1,5 @@
 import { TripDoc } from '../models/trip.models';
-import { dayChipDate, dayHeadingDate, dayNote } from './day-heading';
+import { dayChipDate, dayFullDate, dayHeadingDate, dayNote } from './day-heading';
 
 describe('dayHeadingDate', () => {
   it('reads as a short weekday and date', () => {
@@ -16,6 +16,14 @@ describe('dayHeadingDate', () => {
 
   it('gives back an empty string for no date', () => {
     expect(dayHeadingDate('')).toBe('');
+  });
+});
+
+describe('dayFullDate', () => {
+  it('spells the date out, for under a day\'s heading', () => {
+    expect(dayFullDate('2026-11-12')).toBe('Thursday, November 12');
+    expect(dayFullDate('2026-09-30')).toBe('Wednesday, September 30');
+    expect(dayFullDate('')).toBe('');
   });
 });
 

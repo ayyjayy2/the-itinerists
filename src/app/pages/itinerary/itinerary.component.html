@@ -61,18 +61,24 @@
       @for (group of groupedByDay(); track group[0]) {
         <div class="day-group">
 
+          <!-- The day's name (or its stop's city) leads; the full date sits under it. -->
           <div class="day-header">
-            <h3 class="day-date">{{ headingDate(group[0]) }}</h3>
-            <div class="day-header-row">
-              @if (editingLabelDate() === group[0]) {
+            @let note = dayNoteFor(group[0]);
+            @if (editingLabelDate() === group[0]) {
+              <div class="day-label-edit">
                 <input class="day-label-input" [(ngModel)]="draftLabel" [placeholder]="dayCityFor(group[0]) || 'Name this day'" aria-label="Name this day" (keyup.enter)="saveLabelEdit(group[0])" (keyup.escape)="cancelLabelEdit()" />
-                <button class="label-save-btn" (click)="saveLabelEdit(group[0])" aria-label="Save">✓</button>
-                <button class="label-cancel-btn" (click)="cancelLabelEdit()" aria-label="Cancel">✕</button>
-              } @else {
-                <span class="day-note">{{ dayNoteFor(group[0]) }}</span>
+                <div class="day-label-actions">
+                  <button class="btn btn-primary" (click)="saveLabelEdit(group[0])">Save</button>
+                  <button class="btn btn-ghost" (click)="cancelLabelEdit()">Cancel</button>
+                </div>
+              </div>
+            } @else {
+              <div class="day-header-row">
+                <h3 class="day-name">{{ note || fullDate(group[0]) }}</h3>
                 <button class="label-edit-btn" (click)="startLabelEdit(group[0])" title="Name this day" aria-label="Name this day"><app-icon name="edit" [size]="14" /></button>
-              }
-            </div>
+              </div>
+            }
+            @if (note) { <span class="day-date">{{ fullDate(group[0]) }}</span> }
           </div>
 
           <!-- Bookings for the day (flights, transport, stay check-in/out), in time order:
@@ -297,8 +303,8 @@
     <div class="calendar-grid">
       @for (day of calendarDays(); track day.date) {
         <div class="cal-day" [class.selected]="day.isSelected" (click)="openDay(day.date)">
-          <div class="cal-day-label">{{ headingDate(day.date) }}</div>
-          <div class="cal-day-date">{{ day.note }}</div>
+          <div class="cal-day-label">{{ day.note || fullDate(day.date) }}</div>
+          @if (day.note) { <div class="cal-day-date">{{ fullDate(day.date) }}</div> }
           <div class="cal-count">{{ day.count }} event{{ day.count !== 1 ? 's' : '' }}</div>
           <div class="cal-preview">
             <!-- Bookings first (they're fixed), then plans; three in all, then "+N more" -->

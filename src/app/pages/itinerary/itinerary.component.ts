@@ -1,7 +1,7 @@
 import { isOutsideTripDates } from '../../utils/trip-destinations';
 import { bookingsOn, DayBooking } from '../../utils/day-bookings';
 import { stopDateRange } from '../../utils/stop-dates';
-import { dayChipDate, dayHeadingDate, dayNote } from '../../utils/day-heading';
+import { dayChipDate, dayFullDate, dayHeadingDate, dayNote } from '../../utils/day-heading';
 import { CalendarExportService, CalendarExportResult } from '../../services/calendar-export.service';
 import { Component, OnInit, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -129,11 +129,13 @@ export class ItineraryComponent implements OnInit {
     return t ? fallbackWindow() : [];
   });
 
-  /** A day reads by its date ("Thu., Nov. 12"); its chip by "Nov. 12". */
-  readonly headingDate = dayHeadingDate;
+  /** A chip reads "Nov. 12"; under a day's heading, "Thursday, November 12";
+   *  in the add form's title, "Thu., Nov. 12". */
   readonly chipDate    = dayChipDate;
+  readonly fullDate    = dayFullDate;
+  readonly headingDate = dayHeadingDate;
 
-  /** The note under a day's date: the name you gave it, else its stop's city. */
+  /** A day's heading: the name you gave it, else its stop's city. */
   dayNoteFor(date: string): string {
     return dayNote(date, this.tripService.activeTrip(), this.itineraryService.dayLabels()[date]);
   }

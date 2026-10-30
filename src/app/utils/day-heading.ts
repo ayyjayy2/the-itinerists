@@ -18,6 +18,16 @@ export function dayHeadingDate(dateISO: string): string {
   return p ? `${p.weekday}, ${p.month} ${p.day}` : '';
 }
 
+const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const FULL_WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/** The full date under a day's heading: "Thursday, November 12". */
+export function dayFullDate(dateISO: string): string {
+  const [y, m, d] = dateISO.split('-').map(Number);
+  if (!y || !m || !d) return '';
+  return `${FULL_WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]}, ${FULL_MONTHS[m - 1]} ${d}`;
+}
+
 /** A day chip's label: "Nov. 12". */
 export function dayChipDate(dateISO: string): string {
   const p = parts(dateISO);
