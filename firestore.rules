@@ -434,6 +434,25 @@ service cloud.firestore {
           && request.resource.data.entries is map;
       }
 
+      // What the weather was on a past day (#558), keyed by date: saved once by
+      // the first member to load it after it settles (6+ days on), never edited,
+      // so everyone sees the same. Members may delete (trip teardown).
+      match /weather/{date} {
+        allow read, delete: if isMember(tripId);
+        allow create: if isMember(tripId)
+          && date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && timestamp.date(int(date[0:4]), int(date[5:7]), int(date[8:10])) < request.time - duration.value(5, 'd')
+          && request.resource.data.keys().hasOnly(['city', 'minF', 'maxF', 'code', 'savedAt'])
+          && request.resource.data.keys().hasAll(['city', 'minF', 'maxF', 'code', 'savedAt'])
+          && request.resource.data.city is string && request.resource.data.city.size() <= 100
+          && request.resource.data.minF is number && request.resource.data.maxF is number
+          && request.resource.data.minF <= request.resource.data.maxF
+          && request.resource.data.minF > -100 && request.resource.data.maxF < 150
+          && request.resource.data.code is int && request.resource.data.code >= 0 && request.resource.data.code < 100
+          && request.resource.data.savedAt == request.time;
+        allow update: if false;
+      }
+
       // Finance "paid" ticks, shared with the trip (#448): one record per
       // debt item marked paid (from → to, for one expense), saying who ticked
       // it. Unticking deletes it; a tick is never edited.

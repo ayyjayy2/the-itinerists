@@ -372,6 +372,27 @@ await t('non-member reads the paid marks', 'deny', async () => { await testEnv.w
 await t('member unmarks (deletes) a paid mark', 'allow', async () => { await testEnv.withSecurityRulesDisabled(c => setDoc(paid(c.firestore()), { ...mark('alice'), at: new Date() })); return deleteDoc(paid(bob)); });
 await t('member edits a paid mark', 'deny', async () => { await testEnv.withSecurityRulesDisabled(c => setDoc(paid(c.firestore()), { ...mark('bob'), at: new Date() })); return updateDoc(paid(bob), { to: 'Carol' }); });
 
+console.log('\nWhat the weather was (trips/T/weather, #558)');
+const wx = (db, date = '2026-01-10') => doc(db, 'trips', 'T', 'weather', date);
+const day = (extra = {}) => ({ city: 'Chiang Mai', minF: 64, maxF: 88, code: 2, savedAt: serverTimestamp(), ...extra });
+const savedWx = () => testEnv.withSecurityRulesDisabled(c => setDoc(wx(c.firestore()), { ...day(), savedAt: new Date() }));
+await t('member saves a past day\'s weather', 'allow', () => setDoc(wx(bob), day()));
+await t('member reads the saved weather', 'allow', async () => { await savedWx(); return getDocs(collection(bob, 'trips', 'T', 'weather')); });
+await t('non-member reads the saved weather', 'deny', async () => { await savedWx(); return getDocs(collection(carol, 'trips', 'T', 'weather')); });
+await t('non-member saves a day\'s weather', 'deny', () => setDoc(wx(carol), day()));
+await t('member saves a day that is still to come', 'deny', () => setDoc(wx(bob, '2099-01-01'), day()));
+await t('member saves a day from yesterday (not settled yet)', 'deny', () => setDoc(wx(bob, new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)), day()));
+await t('saved under an id that is not a date', 'deny', () => setDoc(wx(bob, 'tomorrow'), day()));
+await t('weather with extra fields', 'deny', () => setDoc(wx(bob), day({ note: 'hot' })));
+await t('weather missing a field', 'deny', () => setDoc(wx(bob), { city: 'Chiang Mai', minF: 64, maxF: 88, savedAt: serverTimestamp() }));
+await t('weather with a low above its high', 'deny', () => setDoc(wx(bob), day({ minF: 90, maxF: 80 })));
+await t('weather with a temperature as text', 'deny', () => setDoc(wx(bob), day({ maxF: 'hot' })));
+await t('weather with a client timestamp', 'deny', () => setDoc(wx(bob), day({ savedAt: new Date(Date.now() - 60_000) })));
+await t('member changes a saved day', 'deny', async () => { await savedWx(); return updateDoc(wx(bob), { maxF: 120 }); });
+await t('member overwrites a saved day', 'deny', async () => { await savedWx(); return setDoc(wx(bob), day({ maxF: 120 })); });
+await t('member deletes a saved day (trip teardown)', 'allow', async () => { await savedWx(); return deleteDoc(wx(alice)); });
+await t('non-member deletes a saved day', 'deny', async () => { await savedWx(); return deleteDoc(wx(carol)); });
+
 console.log('\nAccount deletion records (_deletions, #452)');
 const del = (uid, extra = {}) => ({ uid, at: serverTimestamp(), accountCreatedAt: 1_780_000_000_000, trips: 2, lastTripEnd: '2026-10-09', test: false, ...extra });
 await t('person records their own deletion', 'allow', () => setDoc(doc(carol, '_deletions', 'carol'), del('carol')));
