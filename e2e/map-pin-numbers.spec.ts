@@ -17,12 +17,15 @@ test('a day\'s pins count from 1, skipping places that aren\'t on the map', asyn
   await page.goto('/map');
   await expect(page.locator('.status-chip.status-done')).toBeVisible({ timeout: 60_000 });
 
-  for (const day of ['Nov. 14', 'Nov. 16']) {
+  // Nov 14 has four plans, the first not on the map; Nov 16 has one plan
+  // (its songthaew is a ride, shown with its own icon, not numbered).
+  const expected: Record<string, number[]> = { 'Nov. 14': [1, 2, 3], 'Nov. 16': [1] };
+  for (const [day, numbers] of Object.entries(expected)) {
     await page.getByRole('button', { name: day, exact: true }).click();
     const read = () => page.locator('.map-container .leaflet-marker-pane svg text')
       .evaluateAll(els => els.map(e => Number((e.textContent ?? '').trim())).sort((a, b) => a - b));
-    await expect.poll(async () => (await read()).length, { message: `${day} has numbered pins` }).toBeGreaterThan(1);   // the map has redrawn
-    const sorted = await read();
-    expect(sorted, `${day} counts from 1`).toEqual(sorted.map((_, i) => i + 1));
+    // Wait for the map to redraw for this day, then it must count from 1.
+    await expect.poll(read, { message: `${day} counts from 1` }).toEqual(numbers);
   }
+
 });
