@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import * as L from 'leaflet';
+import { BaseMapService } from '../../services/base-map.service';
 import { IconComponent } from '../icon/icon.component';
 import { ItineraryService } from '../../services/itinerary.service';
 import { TripService } from '../../services/trip.service';
@@ -53,6 +54,8 @@ const GEOCACHE_KEY = 'tripmap_geocache';
     /* position+z-index trap Leaflet's internal panes (z-index up to ~700)
        inside the card's stacking context so menus/drawers stay on top. */
     .mini-map { height: 170px; pointer-events: none; position: relative; z-index: 0; }
+    /* The map's credit line: required, but kept small on this little card. */
+    .mini-map ::ng-deep .leaflet-control-attribution { font-size: 9px; line-height: 1.3; padding: 0 4px; }
   `],
 })
 export class DayMapCardComponent implements AfterViewInit, OnDestroy {
@@ -64,6 +67,8 @@ export class DayMapCardComponent implements AfterViewInit, OnDestroy {
   @ViewChild('mini') miniRef!: ElementRef<HTMLDivElement>;
 
   private map: L.Map | null = null;
+  private baseMap = inject(BaseMapService);
+  private releaseBaseMap = () => {};
   private markerLayer = L.layerGroup();
   private destroyed = false;
   private renderSeq = 0;
@@ -112,16 +117,24 @@ export class DayMapCardComponent implements AfterViewInit, OnDestroy {
         doubleClickZoom: false, boxZoom: false, keyboard: false,
         touchZoom: false, attributionControl: false,
       });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 })
-        .addTo(this.map);
+      // The map's credit line, small, in the corner (required by the map's licence).
+      L.control.attribution({ prefix: false, position: 'bottomright' }).addTo(this.map);
       this.markerLayer.addTo(this.map);
       this.centerFallback();
       void this.renderMarkers();
+      // The same map as the Map page, labels and all (#568); loaded once Home
+      // has drawn, so the page and its pins never wait for it.
+      const map = this.map;
+      afterIdle(() => {
+        if (this.destroyed) return;
+        void this.baseMap.attach(map, () => this.destroyed).then(release => this.releaseBaseMap = release);
+      });
     });
   }
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.releaseBaseMap();
     this.map?.remove();
     this.map = null;
   }
@@ -208,4 +221,10 @@ export class DayMapCardComponent implements AfterViewInit, OnDestroy {
       return data[0] ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
     } catch { return null; }
   }
+}
+
+/** Run after the browser has drawn and gone quiet (or shortly, where it can't say). */
+function afterIdle(fn: () => void): void {
+  const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
+  if (ric) ric(fn, { timeout: 1500 }); else setTimeout(fn, 300);
 }

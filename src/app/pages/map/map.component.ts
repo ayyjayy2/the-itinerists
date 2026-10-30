@@ -22,24 +22,7 @@ import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.c
 //     Brazil); airports come from the bundled table, never from a name search.
 const GEOCACHE_KEY         = 'tripmap_geocache';
 const GEOCODE_MISSES_KEY   = 'tripmap_geocode_misses';
-const LABEL_MODE_KEY       = 'tripmap_label_mode';
-const MAP_STYLE_URL        = 'https://tiles.openfreemap.org/styles/liberty';
-const OFM_ATTRIBUTION      = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> '
-  + '© <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> '
-  + 'Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
-/** The app's language; the map follows it once the app has others. */
-const APP_LANGUAGE         = 'en';
 
-function readLocalNames(): boolean {
-  try { return localStorage.getItem(LABEL_MODE_KEY) === 'local'; } catch { return false; }
-}
-
-function supportsWebGL(): boolean {
-  try {
-    const c = document.createElement('canvas');
-    return !!(c.getContext('webgl2') || c.getContext('webgl'));
-  } catch { return false; }
-}
 const GEOCACHE_VERSION_KEY = 'tripmap_geocache_version';
 const GEOCACHE_VERSION     = '7';
 // Each trip's place lookups live under it (trips/{id}/geocache/places),
@@ -194,7 +177,7 @@ interface LocationEntry {
 
 import { FocusService } from '../../services/focus.service';
 import { RateGate, missIsFresh } from '../../utils/rate-gate';
-import { labelExpression, nameLabelLayers } from '../../utils/map-labels';
+import { BaseMapService } from '../../services/base-map.service';
 @Component({
   selector: 'app-map',
   imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
@@ -342,6 +325,7 @@ export class MapComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.releaseBaseMap();
     this.map?.remove();
     this.map = null;
   }
@@ -388,57 +372,12 @@ export class MapComponent implements OnDestroy {
     });
   }
 
-  // ── Base map ─────────────────────────────────────────────────────────────────
-  // OpenFreeMap, drawn by MapLibre under Leaflet, so labels can show in the
-  // app's language (or the local one) — #568. Phones that can't draw maps
-  // themselves (no WebGL), or a failed load, get OpenStreetMap's tiles as before.
-
+  // ── Base map (shared with Home's day maps, #568) ─────────────────────────────
+  private baseMap = inject(BaseMapService);
+  private releaseBaseMap = () => {};
   /** Labels show local names (as on street signs) instead of the app's language. */
-  localNames = signal(readLocalNames());
-  private glMap: { getStyle(): { layers: { id: string; layout?: Record<string, unknown> }[] } | undefined;
-                   setLayoutProperty(layer: string, name: string, value: unknown): void;
-                   once(type: string, fn: () => void): void } | null = null;
-
-  toggleLocalNames(): void {
-    const local = !this.localNames();
-    this.localNames.set(local);
-    try { localStorage.setItem(LABEL_MODE_KEY, local ? 'local' : 'app'); } catch { /* private mode */ }
-    this.applyLabels();
-  }
-
-  private async addBaseMap(): Promise<void> {
-    if (!supportsWebGL()) { this.addOsmTiles(); return; }
-    try {
-      const [maplibre, { maplibreGL }] = await Promise.all([
-        import('maplibre-gl'), import('@maplibre/maplibre-gl-leaflet'),
-      ]);
-      // Our security policy only runs workers from our own site (worker-src 'self').
-      maplibre.setWorkerUrl(new URL('maplibre/maplibre-gl-worker.mjs', document.baseURI).href);
-      if (this.destroyed || !this.map) return;
-      const layer = maplibreGL({ style: MAP_STYLE_URL, attribution: OFM_ATTRIBUTION } as Parameters<typeof maplibreGL>[0]).addTo(this.map);
-      this.glMap = layer.getMaplibreMap() as unknown as typeof this.glMap;
-      this.glMap!.once('load', () => this.applyLabels());
-    } catch (err) {
-      console.warn('[Map] OpenFreeMap failed; using OpenStreetMap tiles', err);
-      this.addOsmTiles();
-    }
-  }
-
-  private addOsmTiles(): void {
-    if (!this.map) return;
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-      maxZoom: 18,
-    }).addTo(this.map);
-  }
-
-  /** Point every place-name label at the chosen name. */
-  private applyLabels(): void {
-    const layers = this.glMap?.getStyle()?.layers;
-    if (!layers) return;
-    const expr = labelExpression(this.localNames() ? 'local' : 'app', APP_LANGUAGE);
-    for (const id of nameLabelLayers(layers)) this.glMap!.setLayoutProperty(id, 'text-field', expr);
-  }
+  readonly localNames = this.baseMap.localNames;
+  toggleLocalNames(): void { this.baseMap.setLocalNames(!this.localNames()); }
 
   // ── Boot ─────────────────────────────────────────────────────────────────────
 
@@ -448,7 +387,8 @@ export class MapComponent implements OnDestroy {
     this.map.on('dragstart', () => { this.userMovedMap = true; });
     el.addEventListener('wheel', () => { this.userMovedMap = true; }, { passive: true });
     el.addEventListener('touchstart', e => { if (e.touches.length > 1) this.userMovedMap = true; }, { passive: true });
-    void this.addBaseMap();   // pins don't wait for the background
+    // Pins don't wait for the background.
+    void this.baseMap.attach(this.map, () => this.destroyed).then(release => this.releaseBaseMap = release);
     this.flightLayer.addTo(this.map);
     this.routeLayer.addTo(this.map);
     this.accomLayer.addTo(this.map);

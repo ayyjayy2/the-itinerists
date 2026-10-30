@@ -35,3 +35,13 @@ test('the map draws OpenFreeMap with labels in the app\'s language, and remember
   await expect(page).toHaveURL(/\/map/);
   await expect(page.getByRole('button', { name: 'Local names' })).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('Home\'s day map is the same map, with its credit line', async ({ page }) => {
+  const seen = await stubMap(page);
+  await page.goto('/home');
+  const card = page.locator('app-day-map-card');
+  await expect(card).toBeVisible();
+  await expect.poll(() => seen.style, { timeout: 8_000 }).toBeGreaterThan(0);
+  expect(seen.osmTiles).toBe(0);
+  await expect(card.locator('.leaflet-control-attribution')).toContainText('OpenFreeMap');
+});

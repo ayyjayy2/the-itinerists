@@ -70,8 +70,8 @@ import { BrandComponent } from '../../shared/brand/brand.component';
             <tr><td>Google reCAPTCHA (web only)</td><td>Integrity checks</td><td>Browser and interaction signals, under Google's own privacy policy</td></tr>
             <tr><td>Open-Meteo</td><td>Weather on the home screen, and what it was on past trip days</td><td>Your trip destination's coordinates and the trip's dates. Never your own location</td></tr>
             <tr><td>OpenStreetMap Nominatim</td><td>Turns place names into map pins</td><td>Place names and addresses on your trip: destinations, itinerary places, stay addresses, pick-up and drop-off points and map pins, sent from your device. Never notes, booking references or links. Results are kept with your trip, where only its members can see them, so each place is looked up once</td></tr>
-            <tr><td>OpenFreeMap</td><td>The map on the Map page</td><td>A request from your device for the area of the map on screen</td></tr>
-            <tr><td>OpenStreetMap tiles</td><td>The map pictures on day cards, and on the Map page when your device can't draw the map itself</td><td>A request from your device for the area of the map on screen</td></tr>
+            <tr><td>OpenFreeMap</td><td>The maps on the Map page and on Home</td><td>A request from your device for the area of the map on screen</td></tr>
+            <tr><td>OpenStreetMap tiles</td><td>The maps, when your device can't draw them itself</td><td>A request from your device for the area of the map on screen</td></tr>
             <tr><td>Frankfurter</td><td>Currency conversion rates</td><td>Currency codes only</td></tr>
             <tr><td>Google Fonts</td><td>The app's typefaces</td><td>A font request from your device</td></tr>
             <tr><td>Travel partners (eSIMs, travel insurance)</td><td>Optional offers on Tips &amp; Recs when your trip goes abroad</td><td>Nothing from the app. Tapping Open takes you to the partner's own site, under its own privacy policy, and it may know you came from us. We may earn a commission. We count taps per partner, never who bought what</td></tr>
