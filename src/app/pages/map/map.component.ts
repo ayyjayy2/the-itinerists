@@ -181,6 +181,7 @@ import { BaseMapService } from '../../services/base-map.service';
 import { FlightsService } from '../../services/flights.service';
 import { bookingDatesFor, everyDay, tripDayList } from '../../utils/trip-day-list';
 import { dayChipDate } from '../../utils/day-heading';
+import { numberPins } from '../../utils/pin-numbers';
 @Component({
   selector: 'app-map',
   imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
@@ -815,17 +816,15 @@ export class MapComponent implements OnDestroy {
       return true;
     });
 
-    // When a day is selected, assign sequential numbers (1, 2, 3…) to each
-    // unique pin location in the order they first appear in the itinerary.
-    const locationOrder = new Map<string, number>();
-    if (day) {
-      let counter = 1;
-      for (const item of items) {
-        const routeStr = resolveRouteString(item);
-        const pinLoc   = routeStr ? (parseRoute(routeStr)?.[1] ?? null) : item.location;
-        if (pinLoc && !locationOrder.has(pinLoc)) locationOrder.set(pinLoc, counter++);
-      }
-    }
+    // When a day is selected, number its pins 1, 2, 3… in the day's order,
+    // counting only places that are on the map (a place not found yet, or at
+    // all, doesn't use up a number).
+    const locationOrder = day
+      ? numberPins(items.map(item => {
+          const routeStr = resolveRouteString(item);
+          return { loc: routeStr ? (parseRoute(routeStr)?.[1] ?? null) : item.location, sortOrder: item.sortOrder, time: item.time };
+        }), loc => this.geocodedLocations.has(loc))
+      : new Map<string, number>();
 
     const byLoc = new Map<string, ItineraryItem[]>();
     for (const item of items) {
