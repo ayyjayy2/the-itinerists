@@ -422,7 +422,7 @@ export class TripService {
   private static readonly SUBCOLLECTIONS = [
     'members', 'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
     'flights', 'outfits', 'dayLabels', 'packing', 'packingSuggestions',
-    'outfitPhotos', 'invites', 'activityLog', 'events', 'geocache', 'payments',
+    'outfitPhotos', 'invites', 'activityLog', 'events', 'geocache', 'payments', 'weather',
     // Last: packing lists are found through it.
     'removedMembers',
   ];

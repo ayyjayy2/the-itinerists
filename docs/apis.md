@@ -34,7 +34,7 @@ this file whenever a service is added or removed (the privacy policy at
 
 | Service | What it does | Cost / key | Where |
 |---|---|---|---|
-| **Open-Meteo** | Weather for trip destinations on Home | Free, no key | `src/app/services/weather.service.ts` |
+| **Open-Meteo** | Weather for trip destinations on Home and Outfits: the forecast (`api.open-meteo.com`) from today on, and what the weather was (`archive-api.open-meteo.com`, 1940 to today) on past days. Settled past days are saved to the trip (`trips/{trip}/weather/{date}`, #558) | Free, no key | `src/app/services/weather.service.ts`, `utils/forecast-window.ts` |
 | **Nominatim** (OpenStreetMap) | Place names → coordinates; results cached in Firestore `geocache`. Also gives a saved trip leg its coordinates and zone | Free, no key, 1 req/s etiquette | `src/app/pages/map/map.component.ts`, `day-map-card`, `services/geocode.service.ts` |
 | **OpenStreetMap tiles** | Map imagery under Leaflet | Free | `map.component.ts` |
 | **Frankfurter** | Currency conversion rates for Finance | Free, no key | `src/app/services/exchange-rate.service.ts` |
@@ -63,7 +63,7 @@ sees their IP address. **No notes, booking references, links, amounts or names a
 |---|---|---|
 | **Nominatim** | Place names and addresses on the trip: destinations, itinerary places (and route ends), stay addresses, pick-up and drop-off points, a new map pin's address, with the trip's destination as context | Notes, booking references, who is going |
 | **OpenStreetMap tiles** | Which map squares are on screen (so roughly where the map is looking) | Anything typed |
-| **Open-Meteo** | A destination's coordinates | The person's own location |
+| **Open-Meteo** | A destination's coordinates and the trip's dates | The person's own location |
 | **Frankfurter** | Currency codes and dates | Amounts |
 | **Google Analytics** (web) | Screen paths (invite codes are stripped first, #404), account id, open trip's id, platform, time zone, app version, trip created / joined / shared | Names, emails, trip content |
 | **Crashlytics** (iPhone) | Error message and stack, device model, iOS and app version, account id | Names, emails, trip content |
