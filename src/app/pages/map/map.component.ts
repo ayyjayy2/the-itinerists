@@ -125,7 +125,7 @@ function flightPinIcon(): L.DivIcon {
 
 function customPinIcon(color: string): L.DivIcon {
   return L.divIcon({
-    className: '',
+    className: 'custom-pin',   // not tied to a day, so a day's framing leaves it out
     html: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
       <polygon points="14,2 17.5,10.5 27,11.5 20,18 22,27 14,22.5 6,27 8,18 1,11.5 10.5,10.5"
         fill="${color}" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
@@ -720,13 +720,18 @@ export class MapComponent implements OnDestroy {
   private updateAll(): void {
     this.markerByKey.clear();
     const entries: LocationEntry[] = [];
-    this.updateItinMarkers(entries);   // itinerary first — it drives fitBounds
+    this.updateItinMarkers(entries);
     this.updateAccomMarkers(entries);
     this.updateTransportMarkers(entries);
     this.updateFlightMarkers(entries);
     this.updateRouteLines();
     this.updateCustomMarkers(entries);
     this.ngZone.run(() => this.locations.set(entries));
+    // One day frames all of that day's stops (plans, stay, rides, flight arrival);
+    // All Days frames the plans. Custom pins aren't tied to a day, so never count.
+    const day = this.selectedDay();
+    const framed = [...this.markerByKey].filter(([key]) => day ? !key.startsWith('pin:') : key.startsWith('itin:'));
+    this.fitBoundsIfNeeded(framed.map(([, m]) => { const ll = m.getLatLng(); return [ll.lat, ll.lng] as [number, number]; }));
   }
 
   private updateFlightMarkers(entries: LocationEntry[]): void {
@@ -838,7 +843,6 @@ export class MapComponent implements OnDestroy {
       }
     }
 
-    const bounds: [number, number][] = [];
     for (const [location, locItems] of byLoc) {
       const coords = this.geocodedLocations.get(location);
       if (!coords) continue;
@@ -870,9 +874,7 @@ export class MapComponent implements OnDestroy {
         name: location,
         detail: (locItems[0]?.activity ?? cat) + (extra > 0 ? ` +${extra} more` : ''),
       });
-      bounds.push([coords.lat, coords.lng]);
     }
-    this.fitBoundsIfNeeded(bounds);
   }
 
   private updateRouteLines(): void {
