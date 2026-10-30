@@ -18,7 +18,7 @@ test('editing an itinerary item can move it to another day with a date picker', 
   await dateField.fill('2026-11-18');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
 
-  // The item now sits under Wed, Nov 18.
-  const group = page.locator('.day-group', { has: page.locator('.day-date', { hasText: /Nov(ember)? 18/ }) });
+  // The item now sits under Wed., Nov. 18.
+  const group = page.locator('.day-group', { has: page.locator('.day-date', { hasText: 'Nov. 18' }) });
   await expect(group.locator('.item-title', { hasText: title })).toBeVisible();
 });

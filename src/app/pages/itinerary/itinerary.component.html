@@ -45,7 +45,7 @@
     <button class="chip" [class.chip-primary]="selectedDate() === 'All'" (click)="setDate('All')">All Days</button>
     @for (date of visibleDates(); track date) {
       <button class="chip" [class.chip-primary]="selectedDate() === date" (click)="setDate(date)">
-        {{ effectiveDayLabel(date) }}
+        {{ chipDate(date) }}
       </button>
     }
   </div>
@@ -62,16 +62,16 @@
         <div class="day-group">
 
           <div class="day-header">
+            <h3 class="day-date">{{ headingDate(group[0]) }}</h3>
             <div class="day-header-row">
               @if (editingLabelDate() === group[0]) {
-                <input class="day-label-input" [(ngModel)]="draftLabel" (keyup.enter)="saveLabelEdit(group[0])" (keyup.escape)="cancelLabelEdit()" />
-                <button class="label-save-btn" (click)="saveLabelEdit(group[0])">✓</button>
-                <button class="label-cancel-btn" (click)="cancelLabelEdit()">✕</button>
+                <input class="day-label-input" [(ngModel)]="draftLabel" [placeholder]="dayCityFor(group[0]) || 'Name this day'" aria-label="Name this day" (keyup.enter)="saveLabelEdit(group[0])" (keyup.escape)="cancelLabelEdit()" />
+                <button class="label-save-btn" (click)="saveLabelEdit(group[0])" aria-label="Save">✓</button>
+                <button class="label-cancel-btn" (click)="cancelLabelEdit()" aria-label="Cancel">✕</button>
               } @else {
-                <h3>{{ effectiveDayLabel(group[0]) }}</h3>
-                <button class="label-edit-btn" (click)="startLabelEdit(group[0])" title="Edit day label"><app-icon name="edit" [size]="14" /></button>
+                <span class="day-note">{{ dayNoteFor(group[0]) }}</span>
+                <button class="label-edit-btn" (click)="startLabelEdit(group[0])" title="Name this day" aria-label="Name this day"><app-icon name="edit" [size]="14" /></button>
               }
-              <span class="day-date">{{ formatDate(group[0]) }}</span>
             </div>
           </div>
 
@@ -226,7 +226,7 @@
             <!-- ── Add event for this day ── -->
             @if (addingToDate() === group[0]) {
               <div class="add-item-card card">
-                <p class="add-form-title">New event · {{ effectiveDayLabel(group[0]) }}</p>
+                <p class="add-form-title">New event · {{ headingDate(group[0]) }}</p>
 
                 <div class="form-row">
                   <div class="form-group">
@@ -297,8 +297,8 @@
     <div class="calendar-grid">
       @for (day of calendarDays(); track day.date) {
         <div class="cal-day" [class.selected]="day.isSelected" (click)="openDay(day.date)">
-          <div class="cal-day-label">{{ day.label }}</div>
-          <div class="cal-day-date">{{ formatDate(day.date) }}</div>
+          <div class="cal-day-label">{{ headingDate(day.date) }}</div>
+          <div class="cal-day-date">{{ day.note }}</div>
           <div class="cal-count">{{ day.count }} event{{ day.count !== 1 ? 's' : '' }}</div>
           <div class="cal-preview">
             <!-- Bookings first (they're fixed), then plans; three in all, then "+N more" -->

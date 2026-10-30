@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed, NgZone, effect } from '@angular/core';
+import { dayHeadingDate, dayNote } from '../../utils/day-heading';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -151,15 +152,11 @@ export class OutfitsComponent implements OnInit {
     return t ? fallbackWindow() : [];
   });
 
-  effectiveDayLabel(date: string): string {
-    const custom = this.itineraryService.dayLabels()[date];
-    if (custom) return custom;
-    const start = this.tripService.activeTrip()?.startDate;
-    if (!start) return date;
-    const diff = Math.round(
-      (new Date(date + 'T00:00').getTime() - new Date(start + 'T00:00').getTime()) / 86_400_000
-    );
-    return `Day ${diff + 1}`;
+  /** A day reads by its date ("Thu., Nov. 12"), with its name or stop's city under it. */
+  readonly headingDate = dayHeadingDate;
+
+  dayNoteFor(date: string): string {
+    return dayNote(date, this.tripService.activeTrip(), this.itineraryService.dayLabels()[date]);
   }
 
   readonly myOutfitsByDate = computed((): Record<string, OutfitEntry> => {
@@ -367,8 +364,4 @@ export class OutfitsComponent implements OnInit {
   }
 
   dismissPackingNotice(): void { clearTimeout(this.packingNoticeTimer); this.packingNotice.set(null); }
-
-  formatDate(d: string): string {
-    return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  }
 }
