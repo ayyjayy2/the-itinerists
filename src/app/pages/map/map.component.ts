@@ -21,6 +21,7 @@ import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.c
 // v7: lookups bounded to the trip's leg (Alfama was landing in Dublin, Belém in
 //     Brazil); airports come from the bundled table, never from a name search.
 const GEOCACHE_KEY         = 'tripmap_geocache';
+const GEOCODE_MISSES_KEY   = 'tripmap_geocode_misses';
 const GEOCACHE_VERSION_KEY = 'tripmap_geocache_version';
 const GEOCACHE_VERSION     = '7';
 // Each trip's place lookups live under it (trips/{id}/geocache/places),
@@ -174,6 +175,7 @@ interface LocationEntry {
 }
 
 import { FocusService } from '../../services/focus.service';
+import { RateGate, missIsFresh } from '../../utils/rate-gate';
 @Component({
   selector: 'app-map',
   imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
@@ -227,7 +229,6 @@ export class MapComponent implements OnDestroy {
   geocodedCount  = signal(0);
   totalLocations = signal(0);
   mapReady  = signal(false);
-  updating  = signal(false);
 
   categories = CATEGORIES;
 
@@ -287,6 +288,10 @@ export class MapComponent implements OnDestroy {
   private geocache: Record<string, { lat: number; lng: number }> = {};
   private destroyed     = false;
   private geocodingBusy = false;
+  /** True while places are being looked up and their pins dropped in one by one. */
+  private pinning       = false;
+  private userMovedMap  = false;
+  private nominatim     = new RateGate(1100);
 
   constructor() {
     // Start Leaflet as soon as the map's element exists, however late that is.
@@ -343,7 +348,7 @@ export class MapComponent implements OnDestroy {
     if (!this.addForm.address || !this.addForm.name) return;
     this.addSearching.set(true);
     this.addError.set('');
-    const coords = await this.geocodeWithFallback(this.addForm.address, this.tripDestination(), this.nearCoords());
+    const coords = await this.geocodeWithFallback(this.addForm.address, this.tripDestination(), this.nearCoords(), true);
     this.addSearching.set(false);
     if (!coords) { this.addError.set('Location not found — try a more specific address.'); return; }
 
@@ -369,6 +374,9 @@ export class MapComponent implements OnDestroy {
   private async boot(el: HTMLElement): Promise<void> {
     // Neutral starting view; the map fits to the trip's markers once they resolve.
     this.map = L.map(el, { zoomControl: true }).setView([25, 0], 2);
+    this.map.on('dragstart', () => { this.userMovedMap = true; });
+    el.addEventListener('wheel', () => { this.userMovedMap = true; }, { passive: true });
+    el.addEventListener('touchstart', e => { if (e.touches.length > 1) this.userMovedMap = true; }, { passive: true });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
       maxZoom: 18,
@@ -385,8 +393,10 @@ export class MapComponent implements OnDestroy {
     if (this.destroyed) return;
     this.loadCache();
     await this.loadFirestoreCache();
-    await this.geocodeInitial();
+    this.primeFromCache();
     if (this.destroyed) return;
+    // Show the map now with the places already known; the mapReady effect then
+    // looks up the rest, dropping each pin in as it's found.
     this.ngZone.run(() => this.mapReady.set(true));
     // Trip-level destination pins (multi-destination only). Runs after the
     // marker cycle so its fit-all-destinations wins the initial view. Then, if
@@ -511,6 +521,7 @@ export class MapComponent implements OnDestroy {
         const dLat = 1.4, dLng = 1.4 / Math.max(0.2, Math.cos(near.lat * Math.PI / 180));
         url += `&viewbox=${(near.lng - dLng).toFixed(3)},${(near.lat + dLat).toFixed(3)},${(near.lng + dLng).toFixed(3)},${(near.lat - dLat).toFixed(3)}&bounded=1`;
       }
+      await this.nominatim.wait();   // Nominatim: one request a second
       const res  = await fetch(url);
       const data = await res.json();
       return data[0] ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
@@ -524,12 +535,14 @@ export class MapComponent implements OnDestroy {
    * 3. Last 1 comma part (city)
    * Caches successful result under the original key.
    */
-  private async geocodeWithFallback(location: string, context = '', near: { lat: number; lng: number } | null = null): Promise<{ lat: number; lng: number } | null> {
+  private async geocodeWithFallback(location: string, context = '', near: { lat: number; lng: number } | null = null, retryMiss = false): Promise<{ lat: number; lng: number } | null> {
     const key = this.cacheKey(location, context);
     if (this.geocache[key]) {
       this.geocodedLocations.set(location, this.geocache[key]);
       return this.geocache[key];
     }
+    // A place that wasn't found lately isn't looked up again on every visit.
+    if (!retryMiss && this.isKnownMiss(key)) return null;
 
     // An airport code is answered from the bundled table: exact, instant, no network.
     const code = location.trim().toUpperCase();
@@ -574,7 +587,7 @@ export class MapComponent implements OnDestroy {
     const kmFrom = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) =>
       Math.hypot(a.lat - b.lat, (a.lng - b.lng) * Math.cos(b.lat * Math.PI / 180)) * 111;
     for (let i = 0; i < plan.length; i++) {
-      if (i > 0) await new Promise(r => setTimeout(r, 1100));
+      if (this.destroyed) return null;
       let coords = await this.fetchGeocode(plan[i].q, plan[i].near);
       if (coords && near && !plan[i].near && kmFrom(coords, near) > MAX_KM) coords = null;
       if (coords) {
@@ -585,7 +598,24 @@ export class MapComponent implements OnDestroy {
         return coords;
       }
     }
+    this.rememberMiss(key);
     return null;
+  }
+
+  // Places that couldn't be found, by cache key → when (on this device only).
+  private isKnownMiss(key: string): boolean {
+    const at = this.misses()[key];
+    return at !== undefined && missIsFresh(at, Date.now());
+  }
+
+  private rememberMiss(key: string): void {
+    const misses = this.misses();
+    misses[key] = Date.now();
+    try { localStorage.setItem(GEOCODE_MISSES_KEY, JSON.stringify(misses)); } catch { /* storage full */ }
+  }
+
+  private misses(): Record<string, number> {
+    try { return JSON.parse(localStorage.getItem(GEOCODE_MISSES_KEY) ?? '{}'); } catch { return {}; }
   }
 
   /**
@@ -623,42 +653,46 @@ export class MapComponent implements OnDestroy {
     return [...byLoc].map(([loc, ctx]) => ({ loc, ctx }));
   }
 
-  private async geocodeInitial(): Promise<void> {
-    const locs    = this.allNeededLocations();
-    const isCached = (n: { loc: string; ctx: string }) => !!this.geocache[this.cacheKey(n.loc, n.ctx)];
+  /** Before the map shows: put every already-known place on it, and count the rest. */
+  private primeFromCache(): void {
+    let done = 0;
+    const locs = this.allNeededLocations();
+    for (const n of locs) {
+      const key = this.cacheKey(n.loc, n.ctx);
+      const coords = this.geocache[key];
+      if (coords) { this.geocodedLocations.set(n.loc, coords); done++; }
+      else if (this.isKnownMiss(key)) done++;
+    }
     this.ngZone.run(() => {
       this.totalLocations.set(locs.length);
-      this.geocodedCount.set(locs.filter(isCached).length);
+      this.geocodedCount.set(done);
       this.loading.set(false);
     });
-    for (const n of locs) {
-      if (this.destroyed) return;
-      if (!isCached(n)) {
-        await this.geocodeWithFallback(n.loc, n.ctx, this.nearCoords());
-        this.ngZone.run(() => this.geocodedCount.update(c => c + 1));
-        await new Promise(r => setTimeout(r, 1100));
-      } else {
-        // Cache hit — make sure the render map is populated too.
-        await this.geocodeWithFallback(n.loc, n.ctx);
-      }
-    }
   }
 
+  /**
+   * Draw what's known, then look up the places still missing (one request a
+   * second), redrawing as each pin is found rather than after the last one.
+   */
   private async geocodeNewAndUpdateAll(): Promise<void> {
     if (this.geocodingBusy) { this.updateAll(); return; }
     this.geocodingBusy = true;
-    this.ngZone.run(() => this.updating.set(true));
     try {
-      const newLocs = this.allNeededLocations().filter(n => !this.geocodedLocations.has(n.loc));
-      for (const n of newLocs) {
+      this.updateAll();
+      const all  = this.allNeededLocations();
+      const todo = all.filter(n => !this.geocodedLocations.has(n.loc) && !this.isKnownMiss(this.cacheKey(n.loc, n.ctx)));
+      this.ngZone.run(() => { this.totalLocations.set(all.length); this.geocodedCount.set(all.length - todo.length); });
+      this.pinning = true;
+      for (const n of todo) {
         if (this.destroyed) return;
-        await this.geocodeWithFallback(n.loc, n.ctx, this.nearCoords());
-        await new Promise(r => setTimeout(r, 1100));
+        const coords = await this.geocodeWithFallback(n.loc, n.ctx, this.nearCoords());
+        this.ngZone.run(() => this.geocodedCount.update(c => c + 1));
+        if (coords) this.updateAll();
       }
     } finally {
+      this.pinning = false;
       this.geocodingBusy = false;
-      this.updateAll();
-      this.ngZone.run(() => this.updating.set(false));
+      if (!this.destroyed) this.updateAll();
     }
   }
 
@@ -1006,6 +1040,8 @@ export class MapComponent implements OnDestroy {
 
   private fitBoundsIfNeeded(bounds: [number, number][]): void {
     if (!this.map || !bounds.length) return;
+    // While pins are still dropping in, stop re-fitting once the person has moved the map.
+    if (this.pinning && this.userMovedMap) return;
     this.viewFitted = true;
     if (bounds.length > 1)
       this.map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
