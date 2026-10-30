@@ -178,6 +178,9 @@ interface LocationEntry {
 import { FocusService } from '../../services/focus.service';
 import { RateGate, missIsFresh } from '../../utils/rate-gate';
 import { BaseMapService } from '../../services/base-map.service';
+import { FlightsService } from '../../services/flights.service';
+import { bookingDatesFor, everyDay, tripDayList } from '../../utils/trip-day-list';
+import { dayChipDate } from '../../utils/day-heading';
 @Component({
   selector: 'app-map',
   imports: [IconComponent, NoTripStateComponent, CommonModule, FormsModule],
@@ -188,6 +191,7 @@ export class MapComponent implements OnDestroy {
   private dataService = inject(DataService);
   private userService = inject(UserService);
   private tripService = inject(TripService);
+  private flightsService = inject(FlightsService);
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
   private ngZone      = inject(NgZone);
   private focus       = inject(FocusService);
@@ -234,25 +238,21 @@ export class MapComponent implements OnDestroy {
 
   categories = CATEGORIES;
 
+  /** The same days the Itinerary offers (tripDayList), worded the same ("Nov. 12"). */
   availableDays = computed(() => {
-    const data     = this.dataService.data();
-    const userName = this.currentUser()?.name ?? '';
-    if (!data) return [];
-    const items = this.showAll()
-      ? data.itinerary
-      : data.itinerary.filter(i => this.matches(i.forWho, userName));
-    const seen = new Set<string>();
-    const days: { date: string; label: string }[] = [];
-    for (const item of items) {
-      if (!isBlankLoc(item.location) && !seen.has(item.date)) {
-        seen.add(item.date);
-        // Fall back to a compact date when the itinerary day has no label set.
-        const label = item.dayLabel?.trim()
-          || new Date(item.date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        days.push({ date: item.date, label });
-      }
-    }
-    return days.sort((a, b) => a.date.localeCompare(b.date));
+    const data = this.dataService.data();
+    const trip = this.tripService.activeTrip();
+    if (!data || !trip) return [];
+    const me = this.currentUser();
+    const uid = me?.uid ?? '', name = me?.name ?? '';
+    const flights = this.flightsService.flights();
+    return tripDayList({
+      tripDays: trip.startDate && trip.endDate ? everyDay(trip.startDate, trip.endDate) : [],
+      plans: data.itinerary.map(i => ({ date: i.date, mine: this.matches(i.forWho, name) })),
+      bookingDates: bookingDatesFor(flights, data.accommodations ?? [], data.rentalCar ?? [], uid, name),
+      myFlights: flights.filter(f => f.uid === uid),
+      showAll: this.showAll(),
+    }).map(date => ({ date, label: dayChipDate(date) }));
   });
 
   tripUsers = computed((): TripUser[] => this.dataService.data()?.users ?? []);

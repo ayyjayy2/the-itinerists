@@ -2,6 +2,7 @@ import { isOutsideTripDates } from '../../utils/trip-destinations';
 import { bookingsOn, DayBooking } from '../../utils/day-bookings';
 import { stopDateRange } from '../../utils/stop-dates';
 import { dayChipDate, dayFullDate, dayHeadingDate, dayNote } from '../../utils/day-heading';
+import { bookingDatesFor, everyDay, tripDayList } from '../../utils/trip-day-list';
 import { CalendarExportService, CalendarExportResult } from '../../services/calendar-export.service';
 import { Component, OnInit, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -34,15 +35,6 @@ const CATEGORIES = [
   'Food', 'Drink', 'Sightseeing', 'Culture',
   'Transport', 'Accommodation', 'Activity', 'Free',
 ];
-
-/** Inclusive YYYY-MM-DD range builder. */
-function dateRange(start: string, end: string): string[] {
-  const days: string[] = [];
-  const cur = new Date(start + 'T00:00');
-  const end_ = new Date(end + 'T00:00');
-  while (cur <= end_) { days.push(cur.toISOString().slice(0, 10)); cur.setDate(cur.getDate() + 1); }
-  return days;
-}
 
 /** Fallback when a trip has no dates yet: today + the next 6 days, so the plan stays usable. */
 function fallbackWindow(): string[] {
@@ -124,7 +116,7 @@ export class ItineraryComponent implements OnInit {
   // ── Trip days from the active trip ──────────────────────────────────────────
   readonly tripDays = computed((): string[] => {
     const t = this.tripService.activeTrip();
-    if (t?.startDate && t?.endDate) return dateRange(t.startDate, t.endDate);
+    if (t?.startDate && t?.endDate) return everyDay(t.startDate, t.endDate);
     // A trip with no dates yet still gets usable day cards (TP-23); no trip → empty.
     return t ? fallbackWindow() : [];
   });
@@ -269,36 +261,20 @@ export class ItineraryComponent implements OnInit {
     }
   }
 
-  // ── User flight range for "My Trip" ───────────────────────────────────────
-  readonly userFlightRange = computed((): { start: string; end: string } | null => {
-    const uid     = this.currentUser()?.uid ?? '';
-    const flights = this.flightsService.flights().filter(f => f.uid === uid);
-    if (!flights.length) return null;
-
-    const arrivals   = flights.filter(f => f.section === 'ARRIVALS');
-    const departures = flights.filter(f => f.section === 'DEPARTURES');
-    const start = arrivals.length   ? [...arrivals.map(f => f.arrivalDate)].sort().at(-1)!   : '';
-    const end   = departures.length ? [...departures.map(f => f.departureDate)].sort()[0]    : '';
-    return start || end ? { start, end } : null;
-  });
-
   // ── Visible dates (for chip bar) ──────────────────────────────────────────
+  // The same days the Map offers (tripDayList): My Trip runs from the day you
+  // set off to the day you leave, plus any day you have plans.
   readonly visibleDates = computed(() => {
-    const all   = this.showAll();
-    const range = this.userFlightRange();
-    const days  = this.tripDays();
-
-    // Include any dates with items that aren't in the trip days list
-    const itemDates      = new Set(this.allItems().map(i => i.date));
-    const flightDates    = new Set(this.flightEvents().map(e => e.date));
-    const transportDates = new Set(this.transportEvents().map(e => e.date));
-    const stayDates      = new Set(this.stayEvents().map(e => e.date));
-    const allDates   = [...new Set([...days, ...itemDates, ...flightDates, ...transportDates, ...stayDates])].sort();
-
-    if (all || !range) return allDates;
-    return allDates.filter(d =>
-      (!range.start || d >= range.start) && (!range.end || d <= range.end)
-    );
+    const me  = this.currentUser();
+    const uid = me?.uid ?? '', name = me?.name ?? '';
+    const flights = this.flightsService.flights();
+    return tripDayList({
+      tripDays: this.tripDays(),
+      plans: this.allItems().map(i => ({ date: i.date, mine: i.forWho === 'All' || i.forWho.split(',').map(s => s.trim()).includes(name) })),
+      bookingDates: bookingDatesFor(flights, this.dataService.data()?.accommodations ?? [], this.dataService.data()?.rentalCar ?? [], uid, name),
+      myFlights: flights.filter(f => f.uid === uid),
+      showAll: this.showAll(),
+    });
   });
 
   // ── Filtered items ────────────────────────────────────────────────────────
@@ -306,15 +282,13 @@ export class ItineraryComponent implements OnInit {
     const me    = this.currentUser()?.name ?? '';
     const date  = this.selectedDate();
     const all   = this.showAll();
-    const range = this.userFlightRange();
+    const days  = new Set(this.visibleDates());
 
     return this.allItems().filter(item => {
       const dateMatch  = date === 'All' || item.date === date;
       const whoMatch   = all || item.forWho === 'All' ||
         item.forWho.split(',').map(s => s.trim()).includes(me);
-      const rangeMatch = all || !range ||
-        ((!range.start || item.date >= range.start) && (!range.end || item.date <= range.end));
-      return dateMatch && whoMatch && rangeMatch;
+      return dateMatch && whoMatch && days.has(item.date);
     });
   });
 

@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, computed, NgZone, effect } from '@angular/core';
 import { dayFullDate, dayNote } from '../../utils/day-heading';
+import { everyDay } from '../../utils/trip-day-list';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -18,15 +19,6 @@ import { OutfitEntry } from '../../models/trip.models';
 import { userMessage } from '../../utils/user-message';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
-
-/** Inclusive YYYY-MM-DD range builder. */
-function dateRange(start: string, end: string): string[] {
-  const days: string[] = [];
-  const cur = new Date(start + 'T00:00');
-  const end_ = new Date(end + 'T00:00');
-  while (cur <= end_) { days.push(cur.toISOString().slice(0, 10)); cur.setDate(cur.getDate() + 1); }
-  return days;
-}
 
 /** Fallback when a trip has no dates yet: today + the next 6 days, so outfits stay addable. */
 function fallbackWindow(): string[] {
@@ -147,7 +139,7 @@ export class OutfitsComponent implements OnInit {
 
   readonly tripDays = computed((): string[] => {
     const t = this.tripService.activeTrip();
-    if (t?.startDate && t?.endDate) return dateRange(t.startDate, t.endDate);
+    if (t?.startDate && t?.endDate) return everyDay(t.startDate, t.endDate);
     // A trip with no dates yet still gets addable day cards (TP-23); no trip → empty.
     return t ? fallbackWindow() : [];
   });
