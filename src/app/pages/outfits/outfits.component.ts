@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal, computed, NgZone, effect } from '@angular/core';
-import { dayHeadingDate, dayNote } from '../../utils/day-heading';
+import { dayFullDate, dayNote } from '../../utils/day-heading';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -152,8 +152,8 @@ export class OutfitsComponent implements OnInit {
     return t ? fallbackWindow() : [];
   });
 
-  /** A day reads by its date ("Thu., Nov. 12"), with its name or stop's city under it. */
-  readonly headingDate = dayHeadingDate;
+  /** A day leads with its name or stop's city, with the full date ("Thursday, November 12") under it. */
+  readonly fullDate = dayFullDate;
 
   dayNoteFor(date: string): string {
     return dayNote(date, this.tripService.activeTrip(), this.itineraryService.dayLabels()[date]);
