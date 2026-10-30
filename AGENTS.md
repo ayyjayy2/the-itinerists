@@ -34,7 +34,8 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 
 - **Branch, then pull request.** Never commit to `master` directly; it is protected and needs the CI `test` job green.
 - **CI must pass:** unit tests, Pulse tests, the production build, security-rules tests and Playwright end-to-end tests.
-- **Merging to master deploys staging automatically** (https://the-itinerists-staging.web.app); run `npm run test:staging` once it's up. **Production (theitinerists.com) is deployed by hand,** from an up-to-date master, when the owner wants the change live.
+- **Test locally first; staging has a daily limit.** Staging is on Firebase's free plan: 50,000 Firestore reads a day, shared by everyone and every session, reset at midnight Pacific. Repeated `test:staging` runs used it all up on Oct 30, 2026 and staging stopped answering for the rest of the day. Try changes on the demo build (`npm run start:demo`, `npm run test:e2e`) or the emulators (`test:rules`); don't rerun the staging checks to chase a flaky failure, and don't loop scripts against staging.
+- **Merging to master deploys staging automatically** (https://the-itinerists-staging.web.app); run `npm run test:staging` once it's up, **once per deploy**. **Production (theitinerists.com) is deployed by hand,** from an up-to-date master, when the owner wants the change live.
 - **The iPhone app** only changes when a new build is installed: `npm run ios:sync`, then Xcode Run (simulator) or an `xcodebuild` + `devicectl` install (a phone). Commit the version stamp `ios:sync` writes to `ios/App/App.xcodeproj/project.pbxproj` through a pull request.
 - **Phone changes go through staging first:** `npm run ios:staging` installs "Itinerists Staging", a second app on staging data, beside the real one. The order is pull request → staging website and staging app → production website → the real iPhone app.
 - **One change per pull request,** described in plain words: what changed, why, and how it was tested.
@@ -106,7 +107,7 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 | `npm run test:pulse` | Pulse dashboard tests |
 | `PATH="/opt/homebrew/opt/openjdk/bin:$PATH" npm run test:rules` | Security-rules tests on the emulators (needs a JDK; the PERMISSION_DENIED lines are expected) |
 | `npm run test:e2e` | Playwright end-to-end tests (builds and serves the demo) |
-| `npm run test:staging` | After a merge has deployed staging: the after-deploy checks against the real staging site (sign-in, live updates between two test accounts, every page, invites, offline, caching, the API console, phone layout). Needs `scripts/staging-accounts.local.json`; cleans up what it adds. `STAGING_URL=…` points it at a preview channel |
+| `npm run test:staging` | Once per deploy, after a merge has deployed staging (each run spends part of staging's 50,000 free reads a day): the after-deploy checks against the real staging site (sign-in, live updates between two test accounts, every page, invites, offline, caching, the API console, phone layout). Needs `scripts/staging-accounts.local.json`; cleans up what it adds. `STAGING_URL=…` points it at a preview channel |
 | `npm run mobile:build` | Build "Itinerists Demo" (the app shell around the demo build, in-memory data) for the iPhone simulator. Needs the gitignored `ios/App/App/GoogleService-Info.staging.plist`; run `npm run ios:sync` before building the real app again |
 | `npm run test:mobile` | Appium tests on the iPhone simulator (`mobile-tests/`): taps with the on-screen keyboard and reads positions inside the app's page. First time: `cd mobile-tests && npm install && npm run setup`. `IOS_SIM=`, `MOBILE_APP=`, `DEBUG_MOBILE=1` |
 | `npm run deploy:staging` | Build and deploy staging by hand (CI does it after every merge) |
@@ -140,3 +141,4 @@ the web, Crashlytics on iPhone). Owner: Alayna.
   | The page zooms in on a phone and the header seems to move | A form field under 16px: raise it (see 3.2) |
   | An admin script finds no data | Its key points at another project: check `project_id` |
   | `timeout` command not found (macOS) | It isn't installed; don't wrap commands in it |
+  | Staging or `test:staging` fails with `RESOURCE_EXHAUSTED: Quota exceeded` | Staging used up its free daily Firestore reads. Nothing to fix in the code: it comes back at midnight Pacific. Test locally until then |
