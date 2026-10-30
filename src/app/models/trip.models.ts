@@ -285,6 +285,7 @@ export interface ItineraryItem {
   dayLabel: string;    // e.g. "Day 1 – Dublin"
   time: string;        // "H:MM AM/PM [TZ]" or empty
   endTime?: string;    // optional end time, same format
+  sortOrder?: number;  // the day's order on the Itinerary (display only; from ItineraryItemDoc)
   activity: string;
   location: string;
   category: string;    // e.g. "Food", "Sightseeing", "Transport"

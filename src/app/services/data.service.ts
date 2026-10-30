@@ -246,7 +246,7 @@ function blankParts(): Parts {
 /** ItineraryItemDoc → ItineraryItem (display). dayLabel isn't stored per-item. */
 function toItineraryItem(d: ItineraryItemDoc): ItineraryItem {
   return {
-    date: d.date, dayLabel: '', time: d.time, endTime: d.endTime,
+    date: d.date, dayLabel: '', time: d.time, endTime: d.endTime, sortOrder: d.sortOrder,
     activity: d.activity, location: d.location, category: d.category,
     notes: d.notes, forWho: d.forWho,
   };
