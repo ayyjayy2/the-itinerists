@@ -541,9 +541,13 @@
 
 </div>
 
-<!-- ── Floating Add Button ── -->
+<!-- ── Floating Add Button ──
+     Docked to the bottom of the scrolling page, not the screen, so on a phone
+     it sits above the tab bar instead of on top of More. -->
 @if (showFab()) {
-  <button class="fab" (click)="startAdd()" title="Add expense">+</button>
+  <div class="fab-dock">
+    <button class="fab" (click)="startAdd()" title="Add expense" aria-label="Add expense">+</button>
+  </div>
 }
 
 <!-- ── Toast ── -->

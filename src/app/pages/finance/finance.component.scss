@@ -21,10 +21,25 @@
 }
 
 // ── Floating Action Button ─────────────────────────────────────────────────────
-.fab {
-  position: fixed;
+// Sticky inside the page's scroll area (which ends above the tab bar) rather
+// than fixed to the screen, where it covered the tab bar's More button. The
+// dock takes no height, so the button appearing doesn't move the page.
+:host { display: block; }
+
+.fab-dock {
+  position: sticky;
   bottom: 1.5rem;
-  right: 1.5rem;
+  height: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 1.5rem;          // where it sat before, 1.5rem in from the edge
+  z-index: 90;
+  pointer-events: none;
+}
+
+.fab {
+  pointer-events: auto;
+  transform: translateY(-100%);
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -39,13 +54,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 90;
   transition: background 0.15s, transform 0.15s;
 
   &:hover {
     background: var(--primary-dark);
     color: var(--on-primary);
-    transform: scale(1.08);
+    transform: translateY(-100%) scale(1.08);
   }
 }
 
