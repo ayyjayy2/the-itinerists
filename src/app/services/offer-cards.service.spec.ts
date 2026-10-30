@@ -33,8 +33,10 @@ describe('OfferCardsService', () => {
 
   it('offers both cards when the trip is abroad for this phone, naming the country', () => {
     const s = make();
-    expect(titles(s)).toEqual(['Need data abroad?', 'Covered if plans change?']);
+    expect(titles(s)).toEqual(['Need data abroad?', 'Medical cover abroad?']);
     expect(s.cards()[0].subline).toContain('Germany');
+    // The insurance offer is travel medical cover, not trip cancellation (#575)
+    expect(s.cards()[1].subline).toBe('Travel medical insurance for trips abroad');
   });
 
   it('offers nothing when the trip is in the phone\'s own country', () => {

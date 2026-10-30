@@ -9,14 +9,14 @@ test('partner offers: the eSIM card opens with its guide, and the cards stay lik
   const tips = page.locator('.rec-group', { has: page.locator('.rec-group-title', { hasText: 'Tips' }) });
   const card = tips.locator('.offer-card', { hasText: 'Need data abroad?' });
   await expect(card).toBeVisible();
-  await expect(tips.locator('.rec-card').last()).toContainText('Covered if plans change?');
+  await expect(tips.locator('.rec-card').last()).toContainText('Medical cover abroad?');
   await page.getByRole('button', { name: /^Categories:/ }).click();
   await page.getByRole('checkbox', { name: 'Food' }).check();
   await expect(page.locator('.offer-card')).toHaveCount(0);
   await page.getByRole('button', { name: 'Show all' }).click();
   await page.keyboard.press('Escape');
   await expect(card).toContainText('Thailand');
-  await expect(page.locator('.offer-card', { hasText: 'Covered if plans change?' })).toBeVisible();
+  await expect(page.locator('.offer-card', { hasText: 'Medical cover abroad?' })).toBeVisible();
 
   await card.click();
   const dialog = page.getByRole('dialog');
@@ -59,9 +59,11 @@ test('the offer pop-up fits between the header and the tab bar, with the same ga
 test('the commission note shows above the links without scrolling, on a small phone', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   await page.goto('/recs');
-  for (const title of ['Need data abroad?', 'Covered if plans change?']) {
+  for (const title of ['Need data abroad?', 'Medical cover abroad?']) {
+    await expect(page.locator('.offer-card', { hasText: title }).locator('.offer-tag')).toHaveText('Partner offer');   // #575
     await page.locator('.offer-card', { hasText: title }).click();
     const note = page.locator('.offer-disclosure');
+    await expect(note).toContainText(title === 'Need data abroad?' ? 'or use these codes' : 'through these links.');   // codes named only when shown (#575)
     await expect(note).toBeInViewport({ ratio: 1 });
     const noteBox = (await note.boundingBox())!;
     const openBox = (await page.locator('a.offer-open').first().boundingBox())!;
