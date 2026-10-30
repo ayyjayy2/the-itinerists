@@ -1,6 +1,7 @@
 import { isOutsideTripDates } from '../../utils/trip-destinations';
 import { bookingsOn, DayBooking } from '../../utils/day-bookings';
 import { stopDateRange } from '../../utils/stop-dates';
+import { dayChipDate, dayHeadingDate, dayNote } from '../../utils/day-heading';
 import { CalendarExportService, CalendarExportResult } from '../../services/calendar-export.service';
 import { Component, OnInit, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -95,15 +96,16 @@ export class ItineraryComponent implements OnInit {
   draftLabel       = '';
 
   startLabelEdit(date: string): void {
-    this.draftLabel = this.effectiveDayLabel(date);
+    this.draftLabel = this.itineraryService.dayLabels()[date] ?? '';
     this.editingLabelDate.set(date);
   }
 
   saveLabelEdit(date: string): void {
     const uid = this.currentUser()?.uid;
     if (!uid) return;
+    // An empty name clears it, and the day's note goes back to its city.
     const label = this.draftLabel.trim();
-    if (label) this.itineraryService.saveDayLabel(uid, date, label);
+    if (label !== (this.itineraryService.dayLabels()[date] ?? '')) this.itineraryService.saveDayLabel(uid, date, label);
     this.editingLabelDate.set(null);
   }
 
@@ -127,17 +129,18 @@ export class ItineraryComponent implements OnInit {
     return t ? fallbackWindow() : [];
   });
 
-  effectiveDayLabel(date: string): string {
-    const custom = this.itineraryService.dayLabels()[date];
-    if (custom) return custom;
-    const startStr = this.tripService.activeTrip()?.startDate;
-    if (!startStr) return date;
-    // A day outside the trip has no day number ("Day -107"): show its date instead.
-    if (isOutsideTripDates(date, this.tripService.activeTrip())) return stopDateRange(date, date);
-    const start = new Date(startStr + 'T00:00');
-    const d     = new Date(date + 'T00:00');
-    const diff  = Math.round((d.getTime() - start.getTime()) / 86_400_000);
-    return `Day ${diff + 1}`;
+  /** A day reads by its date ("Thu., Nov. 12"); its chip by "Nov. 12". */
+  readonly headingDate = dayHeadingDate;
+  readonly chipDate    = dayChipDate;
+
+  /** The note under a day's date: the name you gave it, else its stop's city. */
+  dayNoteFor(date: string): string {
+    return dayNote(date, this.tripService.activeTrip(), this.itineraryService.dayLabels()[date]);
+  }
+
+  /** The city a day falls in, offered as the hint while naming it. */
+  dayCityFor(date: string): string {
+    return dayNote(date, this.tripService.activeTrip(), undefined);
   }
 
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -341,7 +344,7 @@ export class ItineraryComponent implements OnInit {
       const bookings = this.dayBookings(date);
       return {
         date,
-        label: this.effectiveDayLabel(date),
+        note: this.dayNoteFor(date),
         items,
         bookings,
         previewItems: items.slice(0, Math.max(0, 3 - bookings.length)),   // three in all, bookings first
@@ -485,11 +488,6 @@ export class ItineraryComponent implements OnInit {
   openDay(date: string): void {
     this.selectedDate.set(date);
     this.view.set('list');
-  }
-
-  formatDate(d: string): string {
-    if (!d) return '';
-    return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
 

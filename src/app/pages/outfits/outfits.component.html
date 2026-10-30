@@ -47,8 +47,8 @@
     <div class="day-nav">
       <button class="btn btn-ghost btn-sm" (click)="prevDay()" [disabled]="currentDateIndex() === 0">‹ Prev</button>
       <div class="day-nav-label">
-        <span class="day-title">{{ effectiveDayLabel(day.date) }}</span>
-        <span class="day-date">{{ formatDate(day.date) }}</span>
+        <span class="day-title">{{ headingDate(day.date) }}</span>
+        <span class="day-date">{{ dayNoteFor(day.date) }}</span>
       </div>
       <button class="btn btn-ghost btn-sm" (click)="nextDay()" [disabled]="currentDateIndex() === days().length - 1">Next ›</button>
     </div>
@@ -112,8 +112,8 @@
         <div class="all-day-row">
           <div class="all-day-header" (click)="goToDay(i)">
             <div class="all-day-label">
-              <span class="day-title">{{ effectiveDayLabel(day.date) }}</span>
-              <span class="day-date">{{ formatDate(day.date) }}</span>
+              <span class="day-title">{{ headingDate(day.date) }}</span>
+              <span class="day-date">{{ dayNoteFor(day.date) }}</span>
             </div>
             <div class="all-day-meta">
               @if (day.isTravelDay) {
