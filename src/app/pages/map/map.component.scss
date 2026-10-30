@@ -1,7 +1,11 @@
 :host {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  // The page area keeps 1.5rem of room at its foot for pages that scroll as a
+  // whole; this page scrolls inside .map-page, so that room would sit as a
+  // fixed tan strip above the tab bar. Reach over it to the tab bar instead.
+  height: calc(100% + 1.5rem);
+  margin-bottom: -1.5rem;
   overflow: hidden;
 }
 
