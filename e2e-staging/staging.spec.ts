@@ -228,17 +228,27 @@ test.describe('3. Every page', () => {
     expect(problems, problems.join('\n')).toEqual([]);
   });
 
+  // The map is drawn by MapLibre from OpenFreeMap (#568, #577): it has drawn once a
+  // map tile has come back and the map's canvas is on screen.
+  const mapTile = (page: Page) => page.waitForResponse(
+    r => r.url().startsWith('https://tiles.openfreemap.org/') && /\.pbf(\?|$)/.test(r.url()) && r.ok(), { timeout: 30_000 });
+  const mapCanvas = (page: Page) => page.locator('app-map canvas.maplibregl-canvas').first();
+
   test('Map draws its tiles when reached from another page', async ({ page }) => {
     await page.goto('/home');
     await page.getByRole('navigation').getByRole('button', { name: 'More' }).click();
+    const tile = mapTile(page);
     await page.getByRole('link', { name: /^Map$|Trip Map/ }).first().click();
-    await expect(page.locator('img.leaflet-tile-loaded').first()).toBeVisible({ timeout: 30_000 });
+    await tile;
+    await expect(mapCanvas(page)).toBeVisible({ timeout: 30_000 });
   });
 
   test('Map draws its tiles when opened directly (refresh or link)', async ({ page }) => {
     await page.goto('/home');
+    const tile = mapTile(page);
     await page.goto('/map');
-    await expect(page.locator('img.leaflet-tile-loaded').first()).toBeVisible({ timeout: 30_000 });
+    await tile;
+    await expect(mapCanvas(page)).toBeVisible({ timeout: 30_000 });
   });
 
   test('Finance: add a THB expense, see it, delete it', async ({ page }) => {
