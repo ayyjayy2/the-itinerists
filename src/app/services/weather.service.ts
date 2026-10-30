@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { forecastRange } from '../utils/forecast-window';
 
 export function weatherEmoji(code: number): string {
   if (code === 0) return '☀️';
@@ -19,8 +20,7 @@ export interface LiveWeather {
   code: number;
 }
 
-const CACHE_PREFIX  = 'tripplanner_weather_v3_';
-const FORECAST_DAYS = 16;
+const CACHE_PREFIX = 'tripplanner_weather_v3_';
 
 /** Cache is valid until the next 07:00 UTC after it was saved (a rough daily TTL). */
 function isCacheValid(timestamp: string): boolean {
@@ -72,16 +72,9 @@ export class WeatherService {
 
   /** Load one leg, merging its days into the shared weather map. */
   private loadLeg(dest: string, startDate: string, endDate: string): void {
-    // Open-Meteo free tier: 16-day forecast only. Skip legs too far out.
-    const today       = new Date();
-    const maxForecast = new Date(today);
-    maxForecast.setDate(today.getDate() + FORECAST_DAYS);
-    const tripStart = new Date(startDate + 'T00:00');
-    if (tripStart > maxForecast) return;
-
-    // Clamp the end date to the forecast window.
-    const tripEnd  = new Date(endDate + 'T00:00');
-    const fetchEnd = tripEnd > maxForecast ? maxForecast.toISOString().slice(0, 10) : endDate;
+    // Ask only for the days Open-Meteo serves; skip legs wholly outside them.
+    const range = forecastRange(startDate, endDate, new Date());
+    if (!range) return;
 
     // Serve cached data (keyed by destination + range) if still fresh.
     const cacheKey = CACHE_PREFIX + `${dest}|${startDate}|${endDate}`;
@@ -93,7 +86,7 @@ export class WeatherService {
       }
     } catch { /* ignore */ }
 
-    void this.fetchForDestination(dest, startDate, fetchEnd, cacheKey);
+    void this.fetchForDestination(dest, range.start, range.end, cacheKey);
   }
 
   private async fetchForDestination(dest: string, startDate: string, endDate: string, cacheKey: string): Promise<void> {
