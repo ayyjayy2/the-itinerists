@@ -50,7 +50,22 @@ test('the offer pop-up fits between the header and the tab bar, with the same ga
   // Only the content scrolls: the title and ✕ stay where they are.
   const closeBefore = await page.locator('.offer-close').boundingBox();
   await page.locator('.offer-body').evaluate(el => el.scrollTo(0, el.scrollHeight));
-  await expect(page.locator('.offer-disclosure')).toBeInViewport();          // the end of the pop-up
+  await expect(page.locator('.offer-guide > button.btn')).toBeInViewport();     // the end of the pop-up
   expect((await page.locator('.offer-close').boundingBox())!.y).toBe(closeBefore!.y);
   await expect(page.locator('#offer-title')).toBeInViewport();
+});
+
+// US FTC: the commission note is seen before anyone taps Open, even on a small phone (#571).
+test('the commission note shows above the links without scrolling, on a small phone', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto('/recs');
+  for (const title of ['Need data abroad?', 'Covered if plans change?']) {
+    await page.locator('.offer-card', { hasText: title }).click();
+    const note = page.locator('.offer-disclosure');
+    await expect(note).toBeInViewport({ ratio: 1 });
+    const noteBox = (await note.boundingBox())!;
+    const openBox = (await page.locator('a.offer-open').first().boundingBox())!;
+    expect(noteBox.y + noteBox.height).toBeLessThanOrEqual(openBox.y);
+    await page.locator('.offer-close').click();
+  }
 });

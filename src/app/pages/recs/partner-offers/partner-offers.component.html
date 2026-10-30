@@ -23,6 +23,8 @@
 
       <div class="offer-body" #body>
       @if (card.id === 'insurance' || tab() === 'pick') {
+        <!-- US FTC: the commission note comes before the links, so it's seen before anyone taps Open (#571) -->
+        <p class="offer-disclosure">We may earn a small commission if you buy through these links. It doesn't change your price.</p>
         <ul class="offer-list">
           @for (p of card.partners; track p.id) {
             <li class="offer-row">
@@ -53,11 +55,11 @@
           <ul>
             @for (n of guideNotes; track n) { <li>{{ n }}</li> }
           </ul>
+          <p class="offer-disclosure">We may earn a small commission if you buy through these links. It doesn't change your price.</p>
           <button class="btn btn-primary btn-sm" type="button" (click)="setTab('pick')">Pick an eSIM</button>
         </div>
       }
 
-      <p class="offer-disclosure">We may earn a small commission if you buy through these links. It doesn't change your price.</p>
       </div>
     </div>
   </div>

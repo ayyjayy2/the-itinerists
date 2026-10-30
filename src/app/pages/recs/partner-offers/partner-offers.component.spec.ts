@@ -52,6 +52,30 @@ describe('PartnerOffersComponent', () => {
     expect(el.textContent).toContain('We may earn a small commission');
   });
 
+  // US FTC: the commission note sits before the links, so it's seen before anyone taps Open (#571).
+  it('puts the commission note above the partner links, on both pop-ups', () => {
+    for (const i of [0, 1]) {
+      (el.querySelectorAll('.offer-card')[i] as HTMLElement).click();
+      fixture.detectChanges();
+      const note = el.querySelector('.offer-disclosure')!;
+      const list = el.querySelector('.offer-list')!;
+      expect(note.textContent).toContain('We may earn a small commission');
+      expect(note.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      (el.querySelector('.offer-close') as HTMLButtonElement).click();
+      fixture.detectChanges();
+    }
+  });
+
+  it('on the eSIM guide, puts the commission note just above the Pick an eSIM button', () => {
+    openFirst();
+    (el.querySelector('[data-tab=guide]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const button = el.querySelector('.offer-guide > button.btn')!;
+    expect(button.textContent!.trim()).toBe('Pick an eSIM');
+    expect(button.previousElementSibling!.classList).toContain('offer-disclosure');
+    expect(el.querySelectorAll('.offer-disclosure').length).toBe(1);
+  });
+
   it('counts a tap on Open, under the partner id', () => {
     openFirst();
     const open = el.querySelector('a.offer-open') as HTMLAnchorElement;
