@@ -3,6 +3,8 @@
        (click)="show(card, $event)" (keydown.enter)="show(card, $event)" (keydown.space)="$event.preventDefault(); show(card, $event)">
     <div class="offer-head">
       <span class="offer-title"><span class="offer-icon" aria-hidden="true">{{ card.icon }}</span> <span class="offer-name">{{ card.title }}</span></span>
+      <!-- US FTC: people know it's a paid offer before they tap (#575) -->
+      <span class="chip chip-muted offer-tag">Partner offer</span>
     </div>
     <p class="offer-sub">{{ card.subline }}</p>
   </div>
@@ -24,7 +26,7 @@
       <div class="offer-body" #body>
       @if (card.id === 'insurance' || tab() === 'pick') {
         <!-- US FTC: the commission note comes before the links, so it's seen before anyone taps Open (#571) -->
-        <p class="offer-disclosure">We may earn a small commission if you buy through these links. It doesn't change your price.</p>
+        <p class="offer-disclosure">{{ disclosure() }}</p>
         <ul class="offer-list">
           @for (p of card.partners; track p.id) {
             <li class="offer-row">
@@ -55,7 +57,7 @@
           <ul>
             @for (n of guideNotes; track n) { <li>{{ n }}</li> }
           </ul>
-          <p class="offer-disclosure">We may earn a small commission if you buy through these links. It doesn't change your price.</p>
+          <p class="offer-disclosure">{{ disclosure() }}</p>
           <button class="btn btn-primary btn-sm" type="button" (click)="setTab('pick')">Pick an eSIM</button>
         </div>
       }

@@ -13,6 +13,7 @@
 @media (prefers-reduced-motion: reduce) { .offer-card { transition: none; &:hover { transform: none; } } }
 .offer-head { display: flex; align-items: flex-start; gap: 0.5rem; }
 .offer-title { flex: 1; font-weight: 800; font-size: 0.95rem; color: var(--text); }
+.offer-tag { flex-shrink: 0; padding: 0.15rem 0.6rem; font-size: 0.72rem; }
 .offer-icon { margin-right: 0.15rem; }
 .offer-sub { margin: 0.35rem 0 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
 

@@ -7,7 +7,7 @@ import { UsageService } from '../../../services/usage.service';
 const CARDS: OfferCard[] = [
   { id: 'esim', icon: '📶', title: 'Need data abroad?', subline: 'Skip roaming fees in Germany',
     partners: [{ id: 'esim-a', name: 'eSIM A', offer: '$3 off', code: 'CODE3', url: 'https://example.com/a' }] },
-  { id: 'insurance', icon: '🛡', title: 'Covered if plans change?', subline: 'Travel insurance for trips abroad',
+  { id: 'insurance', icon: '🛡', title: 'Medical cover abroad?', subline: 'Travel medical insurance for trips abroad',
     partners: [{ id: 'cover', name: 'Cover', offer: 'By the week', url: 'https://example.com/c' }] },
 ];
 
@@ -34,8 +34,14 @@ describe('PartnerOffersComponent', () => {
 
   it('shows each card as a rec card, with its title and line', () => {
     const cards = [...el.querySelectorAll('.offer-card.rec-card')];
-    expect(cards.map(c => c.querySelector('.offer-name')!.textContent!.trim())).toEqual(['Need data abroad?', 'Covered if plans change?']);
+    expect(cards.map(c => c.querySelector('.offer-name')!.textContent!.trim())).toEqual(['Need data abroad?', 'Medical cover abroad?']);
     expect(cards[0].textContent).toContain('Skip roaming fees in Germany');
+  });
+
+  // US FTC: people know a card is a paid offer before they tap it (#575)
+  it('tags each card as a partner offer', () => {
+    const tags = [...el.querySelectorAll('.offer-card .offer-tag')].map(t => t.textContent!.trim());
+    expect(tags).toEqual(['Partner offer', 'Partner offer']);
   });
 
   it('has no Hide button: the cards stay, like the other tips (#480)', () => {
@@ -49,7 +55,7 @@ describe('PartnerOffersComponent', () => {
     (el.querySelector('[data-tab=guide]') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(el.textContent).toContain('Pick a plan before you go');
-    expect(el.textContent).toContain('We may earn a small commission');
+    expect(el.textContent).toContain('We earn a commission if you buy through these links or use these codes');
   });
 
   // US FTC: the commission note sits before the links, so it's seen before anyone taps Open (#571).
@@ -59,7 +65,10 @@ describe('PartnerOffersComponent', () => {
       fixture.detectChanges();
       const note = el.querySelector('.offer-disclosure')!;
       const list = el.querySelector('.offer-list')!;
-      expect(note.textContent).toContain('We may earn a small commission');
+      // the eSIM partner shows a code, the insurance one doesn't (#575)
+      expect(note.textContent!.trim()).toBe(i === 0
+        ? "We earn a commission if you buy through these links or use these codes. It doesn't add to your price."
+        : "We earn a commission if you buy through these links. It doesn't add to your price.");
       expect(note.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       (el.querySelector('.offer-close') as HTMLButtonElement).click();
       fixture.detectChanges();

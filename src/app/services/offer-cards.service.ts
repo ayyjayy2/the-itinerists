@@ -33,7 +33,7 @@ export class OfferCardsService {
     if (!cfg || !places.length) return [];
     const all: OfferCard[] = [
       { id: 'esim', icon: '📶', title: 'Need data abroad?', subline: `Skip roaming fees in ${countryList(places)}`, partners: cfg.esim },
-      { id: 'insurance', icon: '🛡', title: 'Covered if plans change?', subline: 'Travel insurance for trips abroad', partners: cfg.insurance },
+      { id: 'insurance', icon: '🛡', title: 'Medical cover abroad?', subline: 'Travel medical insurance for trips abroad', partners: cfg.insurance },
     ];
     return all.filter(c => c.partners.length);
   });
