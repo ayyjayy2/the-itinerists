@@ -6,6 +6,7 @@ import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { EyeButtonDirective } from '../../shared/eye-button.directive';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { canPickLayout, effectiveHomeLayout, HomeLayout } from '../../utils/layout';
@@ -17,7 +18,7 @@ import { userMessage } from '../../utils/user-message';
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, FormsModule, IconComponent, AvatarPickerComponent, AvatarGlyphComponent, RouterLink],
+  imports: [CommonModule, FormsModule, IconComponent, EyeButtonDirective, AvatarPickerComponent, AvatarGlyphComponent, RouterLink],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
