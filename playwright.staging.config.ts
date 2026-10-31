@@ -15,6 +15,8 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: 'list',
+  // #587: refuses to start when staging's free daily reads are nearly used.
+  globalSetup: './e2e-staging/read-limit.ts',
   globalTeardown: './e2e-staging/cleanup.ts',
   use: {
     baseURL: process.env['STAGING_URL'] || 'https://the-itinerists-staging.web.app',
