@@ -229,12 +229,22 @@
   color: var(--text-muted);
 }
 
-.legend-ic {
-  display: inline-flex;
-  align-items: center;
-  &.stay { color: #B96A76; }
-  &.star { color: #B97F35; }
-  &.transport { color: #6E8BA6; }
+// A pin's mark (#601): the list draws it at 22px, the legend smaller.
+.loc-mark {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: grid;
+  place-items: center;
+
+  svg { width: 100%; height: 100%; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.18)); }
+  .mark-flight { font-size: 16px; line-height: 1; }
+}
+
+.map-legend .loc-mark {
+  width: 15px;
+  height: 15px;
+  .mark-flight { font-size: 12px; }
 }
 
 .add-error {
