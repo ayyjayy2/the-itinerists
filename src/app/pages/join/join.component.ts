@@ -41,7 +41,7 @@ export class JoinComponent implements OnInit {
     if (this.userService.hasUser()) {
       if (!code) { this.router.navigate(['/get-started'], { queryParams: { mode: 'code' } }); return; }
       try {
-        await this.tripService.joinByCode(code);
+        await this.tripService.joinByCode(code, 'link');
         this.router.navigate(['/home']);
       } catch (err) {
         if (this.localCache.recoverIfBroken(err)) return;

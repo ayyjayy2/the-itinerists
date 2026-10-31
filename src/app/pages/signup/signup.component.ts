@@ -48,6 +48,8 @@ export class SignupComponent implements OnInit {
    *  empty → Get started (set up a trip, or do it later). A friend's invite
    *  link lands here with ?code= already filled in. */
   inviteCode     = '';
+  /** The code an invite link brought, to tell it from a typed one (Pulse's invite rate, #609). */
+  private linkCode = '';
   inviteError    = signal('');
   inviteChecking = signal(false);
 
@@ -58,7 +60,7 @@ export class SignupComponent implements OnInit {
     const fromLink = this.route.snapshot.queryParamMap.get('code') ?? '';
     if (fromLink) this.location.replaceState('/signup');
     const code = (fromJoin || fromLink).trim().toUpperCase();
-    if (code) { this.inviteCode = code; void this.checkInviteCode(); }
+    if (code) { this.inviteCode = code; this.linkCode = code; void this.checkInviteCode(); }
   }
 
   /** Validate the code on blur (and on arrival from a link). */
@@ -69,7 +71,7 @@ export class SignupComponent implements OnInit {
     if (!code) return;
     this.inviteChecking.set(true);
     try {
-      const tripId = await this.authService.validateInviteCode(code);
+      const tripId = await this.authService.validateInviteCode(code, code === this.linkCode ? 'link' : 'code');
       if (!tripId) this.inviteError.set('This invite code is invalid or has expired.');
     } catch {
       this.inviteError.set("Couldn't check that code. Check your connection and try again.");

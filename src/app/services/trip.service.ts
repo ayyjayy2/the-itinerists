@@ -14,6 +14,7 @@ import { memberEvent, tripChanged } from '../utils/event-text';
 import {
   TripDoc, TripDestination, TripMember, UserTripsDoc, FirestoreUser, ActivityLogEntry, ActivityAction, InviteCode,
 } from '../models/trip.models';
+import { InviteVia } from '../utils/invite-opens';
 
 /** Fields collected by the Create Trip form (TP-13). */
 export interface CreateTripInput {
@@ -273,12 +274,13 @@ export class TripService {
   /**
    * Join a trip from an invite code, for an already-signed-in user (TP-11).
    * Resolves the code → tripId, joins (if not already a member), and records
-   * the user in the invite's `usedBy`. Returns the joined tripId.
+   * the user in the invite's `usedBy`. Returns the joined tripId. `via`: how
+   * the invite was reached, for Pulse's invite-to-join rate (#609).
    */
-  async joinByCode(code: string): Promise<string> {
+  async joinByCode(code: string, via: InviteVia = 'code'): Promise<string> {
     const user      = this.requireUser();
     const trimmed   = code.trim().toUpperCase();
-    const tripId    = await this.authService.validateInviteCode(trimmed);
+    const tripId    = await this.authService.validateInviteCode(trimmed, via);
     if (!tripId) throw new Error('This invite code is invalid or has expired.');
 
     await runInInjectionContext(this.injector, async () => {

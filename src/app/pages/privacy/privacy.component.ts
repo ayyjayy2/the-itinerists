@@ -20,7 +20,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <header class="policy-head">
           <app-brand [mark]="40" [showWordmark]="false" />
           <h1>Privacy Policy</h1>
-          <p class="effective">Effective October 30, 2026</p>
+          <p class="effective">Effective October 31, 2026</p>
           <p class="lede">The Itinerists is a group trip planner. This page says exactly what the app stores, who can see it, and which outside services it talks to. Short version: your trip data is shared only with the people on your trip, your email is private, we don't sell or advertise with anything, and you can delete your account yourself at any time.</p>
         </header>
 
@@ -46,7 +46,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <h3>Technical information</h3>
         <ul>
           <li><strong>Error reports.</strong> If something breaks, the app records the error message, where in the app it happened, the time, and a random session id that is not linked to your account. No personal data is included. In the iOS app, crashes and those same errors also go to Firebase Crashlytics together with your device model, iOS version, app version and your account id, so we can tell how many people a bug affects. Never your name, email or trip content.</li>
-          <li><strong>Usage analytics.</strong> To see how the app is used, we record which screens you open and when, a short "still open" signal every two minutes while the app is on screen, the app version, your device's time zone and whether you're on the web, the installed web app or the iOS app. We also note that you changed something on a trip (which kind of thing and when, never what you wrote). We keep this in our own database, tied to your account and trip. On the website and installed web app, screen views also go to Google Analytics with your account id and the open trip's id, plus a note when a trip is created, joined or shared; Google also estimates your country and device type from your connection. Analytics are used only to improve the app, never for advertising, and are not sold or shared beyond that.</li>
+          <li><strong>Usage analytics.</strong> To see how the app is used, we record which screens you open and when, a short "still open" signal every two minutes while the app is on screen, the app version, your device's time zone and whether you're on the web, the installed web app or the iOS app. We also note that you changed something on a trip (which kind of thing and when, never what you wrote), and that an invite was opened: when you open an invite link or enter an invite code, even before you have an account, we record which trip it was for, whether it came by link or code, your platform and a random id kept on your device, so we can tell how many invited people join. We keep this in our own database, tied to your account and trip. On the website and installed web app, screen views also go to Google Analytics with your account id and the open trip's id, plus a note when a trip is created, joined or shared; Google also estimates your country and device type from your connection. Analytics are used only to improve the app, never for advertising, and are not sold or shared beyond that.</li>
           <li><strong>App integrity checks.</strong> Firebase App Check confirms requests come from the genuine app. On the web this uses Google reCAPTCHA, which analyses browser signals; the iOS app uses a check built into the app. Neither tells us who you are.</li>
         </ul>
         <p>The app does <strong>not</strong> use your device's location, read your contacts, run advertising trackers, or sell any data.</p>
@@ -79,7 +79,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         </table>
 
         <h2>Cookies and storage on your device</h2>
-        <p>The app keeps a copy of your trips on your device so it opens quickly and works offline, and remembers small settings such as your theme, the last currency you used and which reminders you've dismissed. Firebase keeps you signed in the same way. On the website, Google Analytics sets its own cookies to count visits. We use no advertising cookies. Signing out or clearing your browser's site data removes these copies; your trips stay safe on our servers.</p>
+        <p>The app keeps a copy of your trips on your device so it opens quickly and works offline, and remembers small settings such as your theme, a random id for counting invite opens, the last currency you used and which reminders you've dismissed. Firebase keeps you signed in the same way. On the website, Google Analytics sets its own cookies to count visits. We use no advertising cookies. Signing out or clearing your browser's site data removes these copies; your trips stay safe on our servers.</p>
 
         <h2>Your choices</h2>
         <ul>

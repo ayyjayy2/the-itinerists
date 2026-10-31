@@ -359,6 +359,23 @@ await t('app owner deletes an entry', 'deny', () => deleteDoc(doc(owner, '_waitl
 await t('anon edits an entry', 'deny', () => updateDoc(doc(anon, '_waitlist', 'w1'), { email: 'x@y.io' }));
 await t('anon deletes an entry', 'deny', () => deleteDoc(doc(anon, '_waitlist', 'w1')));
 
+console.log('\nInvite opens (_inviteOpens: who reached an invite, for the invite-to-join rate, #609)');
+const io = (o = {}) => ({ tripId: 'T', via: 'link', platform: 'web', visitor: '3f2a9c1e-7b4d-4e8a-9c2f-1a2b3c4d5e6f', at: serverTimestamp(), ...o });
+await t('anon opens an invite link', 'allow', () => setDoc(doc(anon, '_inviteOpens', 'i1'), io()));
+await t('signed-in person types an invite code', 'allow', () => setDoc(doc(bob, '_inviteOpens', 'i2'), io({ via: 'code', platform: 'ios' })));
+await t('record with an unknown route', 'deny', () => setDoc(doc(anon, '_inviteOpens', 'i3'), io({ via: 'email' })));
+await t('record with the invite code in it', 'deny', () => setDoc(doc(anon, '_inviteOpens', 'i3'), io({ code: 'ABC123' })));
+await t('record with a name for the visitor', 'deny', () => setDoc(doc(anon, '_inviteOpens', 'i3'), io({ visitor: 'Maya Lopez' })));
+await t('record with a huge trip id', 'deny', () => setDoc(doc(anon, '_inviteOpens', 'i3'), io({ tripId: 'x'.repeat(65) })));
+await t('record with a client timestamp', 'deny', () => setDoc(doc(anon, '_inviteOpens', 'i3'), io({ at: new Date(Date.now() - 60_000) })));
+await t('anon reads an invite open', 'deny', () => getDoc(doc(anon, '_inviteOpens', 'i1')));
+await t('member lists invite opens', 'deny', () => getDocs(collection(bob, '_inviteOpens')));
+await t('admin lists invite opens', 'deny', () => getDocs(collection(admin, '_inviteOpens')));
+await t('app owner lists invite opens (Pulse)', 'allow', () => getDocs(collection(owner, '_inviteOpens')));
+await t('signed in without the owner claim lists invite opens', 'deny', () => getDocs(collection(fakeOwner, '_inviteOpens')));
+await t('app owner edits an invite open', 'deny', () => updateDoc(doc(owner, '_inviteOpens', 'i1'), { via: 'code' }));
+await t('anon deletes an invite open', 'deny', () => deleteDoc(doc(anon, '_inviteOpens', 'i1')));
+
 console.log('\nShared paid ticks (trips/T/payments, #448)');
 const paid = (db, id = 'Bob__Alice__e1') => doc(db, 'trips', 'T', 'payments', id);
 const mark = (uid, extra = {}) => ({ from: 'Bob', to: 'Alice', itemId: 'e1', markedBy: uid, at: serverTimestamp(), ...extra });

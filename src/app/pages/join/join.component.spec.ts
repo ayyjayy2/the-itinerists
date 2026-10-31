@@ -37,6 +37,12 @@ describe('JoinComponent', () => {
     expect(order).toEqual(['replaceState', 'join']);
   });
 
+  it('signed in: the join counts as reached by the link (#609)', async () => {
+    const { fixture } = setup(true);
+    await fixture.componentInstance.ngOnInit();
+    expect(TestBed.inject(TripService).joinByCode).toHaveBeenCalledWith('ABC123', 'link');
+  });
+
   it('signed out: hands the code to sign-up privately, never in the address', async () => {
     const { fixture, router } = setup(false);
     await fixture.componentInstance.ngOnInit();

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   dayKey, hourIn, startOfDay, stampText, onlineNow, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, offerStats, peopleStats, tripStats,
-  deletionStats, waitlistStats, historyCacheUsable, liveFrom, backfillRange, mergeRows,
+  deletionStats, waitlistStats, historyCacheUsable, liveFrom, backfillRange, mergeRows, planItems, northStar,
 } from '../public/pulse/stats.mjs';
 
 const H = 3_600_000;
@@ -406,4 +406,96 @@ test('mergeRows: one row per id, oldest first', () => {
   const a = [{ id: 'x', at: 3 }, { id: 'y', at: 1 }];
   const b = [{ id: 'x', at: 3 }, { id: 'z', at: 2 }];
   assert.deepEqual(mergeRows(a, b).map(r => r.id), ['y', 'z', 'x']);
+});
+
+// ── North Star (#609) ───────────────────────────────────────────────────────
+const DY = 24 * H;
+const T0 = Date.UTC(2026, 9, 1, 12);          // Oct 1, 2026, noon UTC
+const w = (tripId, kind, action) => ({ tripId, kind, action, at: T0 });
+
+test('planItems counts plan things added minus removed, per trip', () => {
+  const n = planItems([
+    w('A', 'itinerary', 'added'), w('A', 'flight', 'added'), w('A', 'finance', 'added'), w('A', 'rec', 'added'),
+    w('A', 'flight', 'removed'), w('A', 'itinerary', 'changed'), w('A', 'packing', 'added'), w('A', 'member', 'joined'),
+    w('B', 'stay', 'removed'),
+  ]);
+  assert.equal(n.get('A'), 3);
+  assert.equal(n.get('B'), 0);
+});
+
+test('northStar: a live trip has 3+ members (planner included), 10+ items, and has started', () => {
+  const trips = [
+    { id: 'L', createdBy: 'p', createdAt: T0 - 30 * DY, startDate: '2026-10-10' },   // live
+    { id: 'S', createdBy: 'q', createdAt: T0 - 30 * DY, startDate: '2026-10-11' },   // too small
+    { id: 'F', createdBy: 'r', createdAt: T0 - 30 * DY, startDate: '2026-12-01' },   // not started yet
+  ];
+  const three = t => [{ uid: t + '1', joinedAt: T0 }, { uid: t + '2', joinedAt: T0 }, { uid: t + '3', joinedAt: T0 }];
+  const members = new Map([['L', three('l')], ['S', three('s').slice(0, 2)], ['F', three('f')]]);
+  const writes = ['L', 'S', 'F'].flatMap(id => Array.from({ length: 10 }, () => w(id, 'itinerary', 'added')));
+  const ns = northStar({ trips, members, writes, opens: [], rows: [], from: T0, to: T0 + 20 * DY, zone: 'UTC' });
+  assert.equal(ns.live.started, 2);
+  assert.equal(ns.live.live, 1);
+  assert.deepEqual(ns.live.byMonth, [{ month: '2026-10', started: 2, live: 1 }]);
+});
+
+test('northStar: invite-to-join counts each device once per trip, from when the log began', () => {
+  const trips = [{ id: 'A', createdBy: 'p', createdAt: T0 - 10 * DY, startDate: '2027-01-01' }];
+  const members = new Map([['A', [
+    { uid: 'p', joinedAt: T0 - 10 * DY },                              // the planner
+    { uid: 'j1', joinedAt: T0 + DY, inviteCode: 'X' },
+    { uid: 'j0', joinedAt: T0 - DY, inviteCode: 'X' },                  // before the log began
+  ]]]);
+  const opens = [
+    { tripId: 'A', visitor: 'v1', at: T0 + 1 }, { tripId: 'A', visitor: 'v1', at: T0 + 2 },
+    { tripId: 'A', visitor: 'v2', at: T0 + 3 }, { tripId: 'TEST', visitor: 'v3', at: T0 + 4 },
+  ];
+  const ns = northStar({ trips, members, writes: [], opens, rows: [], from: T0 - 5 * DY, to: T0 + 5 * DY, zone: 'UTC', opensSince: T0 });
+  assert.deepEqual(ns.invite, { reached: 2, joined: 1, rate: 0.5, since: T0 });
+  const none = northStar({ trips, members, writes: [], opens: [], rows: [], from: T0, to: T0 + DY, zone: 'UTC' });
+  assert.equal(none.invite.rate, null);
+});
+
+test('northStar: fast adoption is 3+ members within 72 hours; newer trips are pending', () => {
+  const trips = [
+    { id: 'Q', createdBy: 'p', createdAt: T0 },
+    { id: 'Z', createdBy: 'q', createdAt: T0 },
+    { id: 'N', createdBy: 'r', createdAt: T0 + 9 * DY },
+  ];
+  const members = new Map([
+    ['Q', [{ uid: 'p', joinedAt: T0 }, { uid: 'a', joinedAt: T0 + DY }, { uid: 'b', joinedAt: T0 + 2 * DY }]],
+    ['Z', [{ uid: 'q', joinedAt: T0 }, { uid: 'c', joinedAt: T0 + DY }, { uid: 'd', joinedAt: T0 + 4 * DY }]],
+  ]);
+  const ns = northStar({ trips, members, writes: [], opens: [], rows: [], from: T0 - DY, to: T0 + 10 * DY, zone: 'UTC' });
+  assert.deepEqual(ns.fast, { trips: 2, adopted: 1, rate: 0.5, pending: 1 });
+});
+
+test('northStar: planner reuse and joiner-to-planner', () => {
+  const trips = [
+    { id: 'A', createdBy: 'p', createdAt: T0 },
+    { id: 'B', createdBy: 'p', createdAt: T0 + 100 * DY },             // p plans again
+    { id: 'C', createdBy: 'q', createdAt: T0 },                       // q does not
+    { id: 'J', createdBy: 'j', createdAt: T0 + 30 * DY },              // joiner j plans within 90 days
+    { id: 'K', createdBy: 'k', createdAt: T0 + 200 * DY },             // joiner k within a year
+  ];
+  const members = new Map([
+    ['A', [{ uid: 'p', joinedAt: T0 }, { uid: 'j', joinedAt: T0 + DY }, { uid: 'k', joinedAt: T0 + DY }, { uid: 'x', joinedAt: T0 + DY }]],
+    ['C', [{ uid: 'q', joinedAt: T0 }, { uid: 'p', joinedAt: T0 + DY }]],   // p was a planner already
+  ]);
+  const ns = northStar({ trips, members, writes: [], opens: [], rows: [], from: T0 - DY, to: T0 + 10 * DY, zone: 'UTC' });
+  assert.deepEqual(ns.reuse, { planners: 2, again: 1, rate: 0.5 });
+  assert.equal(ns.convert.joiners, 3);
+  assert.equal(ns.convert.in90, 1);
+  assert.equal(ns.convert.in365, 2);
+});
+
+test('northStar: members active in the 7 days before the first day', () => {
+  const trips = [{ id: 'A', createdBy: 'p', createdAt: T0 - 30 * DY, startDate: '2026-10-10' }];
+  const members = new Map([['A', [{ uid: 'p', joinedAt: 0 }, { uid: 'a', joinedAt: 0 }, { uid: 'b', joinedAt: 0 }]]]);
+  const rows = [
+    row({ uid: 'p', at: Date.UTC(2026, 9, 3, 12) }),     // 7 days before: counts
+    row({ uid: 'a', at: Date.UTC(2026, 9, 2, 12) }),     // 8 days before: too early
+    row({ uid: 'b', at: Date.UTC(2026, 9, 10, 12) }),    // on the day: too late
+  ];
+  const ns = northStar({ trips, members, writes: [], opens: [], rows, from: T0, to: T0 + 20 * DY, zone: 'UTC' });
+  assert.deepEqual(ns.weekBefore, { members: 3, active: 1, rate: 1 / 3 });
 });
