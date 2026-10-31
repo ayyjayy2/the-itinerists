@@ -107,7 +107,7 @@ the web, Crashlytics on iPhone). Owner: Alayna.
 | `npm run test:pulse` | Pulse dashboard tests |
 | `PATH="/opt/homebrew/opt/openjdk/bin:$PATH" npm run test:rules` | Security-rules tests on the emulators (needs a JDK; the PERMISSION_DENIED lines are expected) |
 | `npm run test:e2e` | Playwright end-to-end tests (builds and serves the demo) |
-| `npm run test:staging` | Once per deploy, after a merge has deployed staging (each run spends part of staging's 50,000 free reads a day): the after-deploy checks against the real staging site (sign-in, live updates between two test accounts, every page, invites, offline, caching, the API console, phone layout). Needs `scripts/staging-accounts.local.json`; cleans up what it adds. `STAGING_URL=…` points it at a preview channel |
+| `npm run test:staging` | Once per deploy, after a merge has deployed staging (each run spends part of staging's 50,000 free reads a day): the after-deploy checks against the real staging site (sign-in, live updates between two test accounts, every page, invites, offline, caching, the API console, phone layout). Needs `scripts/staging-accounts.local.json` and the owner's `gcloud` sign-in; refuses to start once staging has used 35,000 reads today (`STAGING_READ_LIMIT=…` changes that, `STAGING_READS_OK=1` skips it, only with the owner's say-so); cleans up what it adds. `STAGING_URL=…` points it at a preview channel |
 | `npm run mobile:build` | Build "Itinerists Demo" (the app shell around the demo build, in-memory data) for the iPhone simulator. Needs the gitignored `ios/App/App/GoogleService-Info.staging.plist`; run `npm run ios:sync` before building the real app again |
 | `npm run test:mobile` | Appium tests on the iPhone simulator (`mobile-tests/`): taps with the on-screen keyboard and reads positions inside the app's page. First time: `cd mobile-tests && npm install && npm run setup`. `IOS_SIM=`, `MOBILE_APP=`, `DEBUG_MOBILE=1` |
 | `npm run deploy:staging` | Build and deploy staging by hand (CI does it after every merge) |
@@ -142,3 +142,4 @@ the web, Crashlytics on iPhone). Owner: Alayna.
   | An admin script finds no data | Its key points at another project: check `project_id` |
   | `timeout` command not found (macOS) | It isn't installed; don't wrap commands in it |
   | Staging or `test:staging` fails with `RESOURCE_EXHAUSTED: Quota exceeded` | Staging used up its free daily Firestore reads. Nothing to fix in the code: it comes back at midnight Pacific. Test locally until then |
+  | `test:staging` says "Not running the staging checks" | Staging has used most of today's free reads (or `gcloud` isn't signed in: `gcloud auth login`). Test locally until midnight Pacific |
