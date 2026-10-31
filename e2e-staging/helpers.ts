@@ -32,8 +32,26 @@ export async function signIn(page: Page, user: 'alayna' | 'maya' | 'sam', as: 'u
   await expect(page).not.toHaveURL(/\/login/, { timeout: 30_000 });
 }
 
+/**
+ * Opens a page the way the app's own links do: a route change, no reload, so the open
+ * trip's live listeners stay put and nothing is read from Firestore again (#586).
+ * Staging is on the free plan (50,000 reads a day) and a reload re-reads the whole
+ * trip. A tab that hasn't loaded the app yet loads it once, at `path`.
+ * Use page.goto() only where the reload itself is what's being checked.
+ */
+export async function go(page: Page, path: string) {
+  if (!page.url().startsWith('http')) { await page.goto(path); return; }
+  const from = new URL(page.url()).pathname;
+  if (from === path) return;
+  await page.evaluate(p => {
+    history.pushState(null, '', p);
+    dispatchEvent(new PopStateEvent('popstate', { state: null }));   // the router follows, as it does for Back
+  }, path);
+  await page.waitForURL(u => u.pathname !== from, { timeout: 15_000 });
+}
+
 export async function signOut(page: Page) {
-  await page.goto('/profile');
+  await go(page, '/profile');
   await page.getByRole('button', { name: 'Log Out' }).click();
   await page.getByRole('button', { name: 'Yes' }).click();
   await expect(page).toHaveURL(/\/login/);
@@ -43,7 +61,7 @@ export async function signOut(page: Page) {
 export async function secondPerson(browser: Browser, user: 'alayna' | 'maya', baseURL: string): Promise<{ ctx: BrowserContext; page: Page }> {
   const ctx = await browser.newContext({ ...devices['iPhone 14'], baseURL, storageState: STATE[user] });
   const page = await ctx.newPage();
-  await page.goto('/home');
+  await page.goto('/home');                                   // the one load; move on with go()
   await expect(page).not.toHaveURL(/\/login/);
   return { ctx, page };
 }
@@ -63,7 +81,7 @@ export function watchErrors(page: Page, known: RegExp[] = []): string[] {
 }
 
 export async function addItineraryEvent(page: Page, title: string) {
-  await page.goto('/itinerary');
+  await go(page, '/itinerary');
   await page.getByRole('button', { name: '+ Add event' }).first().click();
   await page.getByPlaceholder("What's happening?").fill(title);
   await page.getByRole('button', { name: 'Add Event', exact: true }).click();
