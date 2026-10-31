@@ -501,3 +501,117 @@ export function waitlistStats(entries, from, to) {
   for (const at of first.values()) if (at >= from && at < to) inRange++;
   return { total: first.size, inRange, lastAt };
 }
+
+// ── North Star and its drivers (#609) ───────────────────────────────────────
+// The MBA plan's measures, from data Pulse already has: trips and their
+// members, the write log (kind and action only), the usage log and the invite
+// log. Counts only; the page passes real trips and members (no tests).
+
+/** Kinds of things written that count as a trip's plan items. */
+export const PLAN_KINDS = ['itinerary', 'flight', 'stay', 'transport', 'finance', 'rec'];
+const YEAR = 365 * DAY;
+
+/** Plan items per trip from the write log: added minus removed, never below 0. */
+export function planItems(writes) {
+  const n = new Map();
+  for (const w of writes) {
+    if (!w.tripId || !PLAN_KINDS.includes(w.kind)) continue;
+    const d = w.action === 'added' ? 1 : w.action === 'removed' ? -1 : 0;
+    if (d) n.set(w.tripId, (n.get(w.tripId) ?? 0) + d);
+  }
+  for (const [k, v] of n) if (v < 0) n.set(k, 0);
+  return n;
+}
+
+const share = (part, whole) => (whole ? part / whole : null);
+
+/**
+ * The North Star (live group trips) and its drivers, for the range [from, to].
+ *  - live: trips whose first day is in the range and has come, with 3+
+ *    members (the planner included) and 10+ plan items; also per month.
+ *  - invite: devices that reached an invite in the range (once per trip)
+ *    against people who joined with an invite in the range, both counted
+ *    from when the invite log began (`opensSince`).
+ *  - fast: trips made in the range (at least 72 hours ago) with 3+ members
+ *    within 72 hours.
+ *  - reuse: planners whose first trip was made in the range who have started
+ *    another within 12 months (so far).
+ *  - convert: people who first joined someone else's trip in the range, not
+ *    a planner before, who started their own within 90 days and 12 months.
+ *  - weekBefore: of each started trip's members, who opened the app in the
+ *    7 days before its first day.
+ */
+export function northStar({ trips, members, writes, opens, rows, from, to, zone, opensSince = null }) {
+  const today = dayKey(to, zone);
+  const fromDay = dayKey(from, zone);
+  const items = planItems(writes);
+  const real = new Map(trips.map(t => [t.id, t]));
+  const membersOf = id => members.get(id) ?? [];
+
+  // Live group trips
+  const started = trips.filter(t => t.startDate && t.startDate >= fromDay && t.startDate <= today);
+  const isLive = t => membersOf(t.id).length >= 3 && (items.get(t.id) ?? 0) >= 10;
+  const months = new Map();
+  for (const t of started) {
+    const m = months.get(t.startDate.slice(0, 7)) ?? months.set(t.startDate.slice(0, 7), { month: t.startDate.slice(0, 7), started: 0, live: 0 }).get(t.startDate.slice(0, 7));
+    m.started++; if (isLive(t)) m.live++;
+  }
+  const live = {
+    started: started.length, live: started.filter(isLive).length,
+    trips: started.map(t => ({ id: t.id, members: membersOf(t.id).length, items: items.get(t.id) ?? 0, live: isLive(t) })),
+    byMonth: [...months.values()].sort((a, b) => a.month.localeCompare(b.month)),
+  };
+
+  // Invite-to-join
+  const since = Math.max(from, opensSince ?? Infinity);
+  const reached = new Set(opens.filter(o => real.has(o.tripId) && o.at >= since && o.at <= to).map(o => `${o.visitor}|${o.tripId}`));
+  let joined = 0;
+  for (const t of trips) for (const m of membersOf(t.id)) if (m.inviteCode && m.uid !== t.createdBy && m.joinedAt >= since && m.joinedAt <= to) joined++;
+  const invite = opensSince == null ? { reached: 0, joined: 0, rate: null, since: null } : { reached: reached.size, joined, rate: share(joined, reached.size), since: opensSince };
+
+  // Fast group adoption (72 hours)
+  const made = trips.filter(t => t.createdAt >= from && t.createdAt <= to);
+  const settled = made.filter(t => t.createdAt + 3 * DAY <= to);
+  const adopted = settled.filter(t => membersOf(t.id).filter(m => (m.joinedAt ?? Infinity) <= t.createdAt + 3 * DAY).length >= 3).length;
+  const fast = { trips: settled.length, adopted, rate: share(adopted, settled.length), pending: made.length - settled.length };
+
+  // Planner reuse and joiner-to-planner, from every trip's planner
+  const plannedAt = new Map();
+  for (const t of trips) if (t.createdBy) (plannedAt.get(t.createdBy) ?? plannedAt.set(t.createdBy, []).get(t.createdBy)).push(t.createdAt);
+  for (const list of plannedAt.values()) list.sort((a, b) => a - b);
+  const cohort = [...plannedAt.values()].filter(l => l[0] >= from && l[0] <= to);
+  const again = cohort.filter(l => l.length > 1 && l[1] <= l[0] + YEAR).length;
+  const reuse = { planners: cohort.length, again, rate: share(again, cohort.length) };
+
+  const firstJoin = new Map();
+  for (const t of trips) for (const m of membersOf(t.id)) {
+    if (m.uid === t.createdBy || m.joinedAt == null) continue;
+    if (!firstJoin.has(m.uid) || m.joinedAt < firstJoin.get(m.uid)) firstJoin.set(m.uid, m.joinedAt);
+  }
+  let joiners = 0, in90 = 0, in365 = 0;
+  for (const [uid, at] of firstJoin) {
+    if (at < from || at > to) continue;
+    const own = plannedAt.get(uid) ?? [];
+    if (own.some(c => c < at)) continue;                 // already a planner
+    joiners++;
+    if (own.some(c => c <= at + 90 * DAY)) in90++;
+    if (own.some(c => c <= at + YEAR)) in365++;
+  }
+  const convert = { joiners, in90, in365, rate90: share(in90, joiners), rate365: share(in365, joiners) };
+
+  // Members active the week before the trip
+  const activeDays = new Map();
+  for (const r of rows) (activeDays.get(r.uid) ?? activeDays.set(r.uid, new Set()).get(r.uid)).add(dayIndex(dayKey(r.at, zone)));
+  let pairs = 0, active = 0;
+  for (const t of started) {
+    const s = dayIndex(t.startDate);
+    for (const m of membersOf(t.id)) {
+      pairs++;
+      const days = activeDays.get(m.uid);
+      if (days && [1, 2, 3, 4, 5, 6, 7].some(k => days.has(s - k))) active++;
+    }
+  }
+  const weekBefore = { members: pairs, active, rate: share(active, pairs) };
+
+  return { items, live, invite, fast, reuse, convert, weekBefore };
+}

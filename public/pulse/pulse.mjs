@@ -31,6 +31,8 @@ const state = {
   showTests: false,       // test trips stay out of the table unless the owner asks to see them
   testUsers: new Set(),   // throwaway accounts (_pulse/prefs.testUsers, set by hand)
   writes: [],             // `_writes` rows in range: who wrote what kind of thing on which trip, when
+  opens: [],              // `_inviteOpens` rows: a device reached a trip's invite (#609)
+  opensSince: null,       // the first invite open: when that log began
   hide: { me: false, testTrips: true, testUsers: true },   // the Hide checkboxes, saved to prefs
   tripSel: null,          // Set of trip ids, or null for all
   firstAt: null,          // the oldest _activity row: when collection began
@@ -131,6 +133,24 @@ async function showFirstEvent() {
     state.firstAt = snap.docs[0]?.data().at?.toMillis?.() ?? null;
     renderStamps();
   } catch { /* cosmetic */ }
+  try {
+    const snap = await getDocs(query(collection(db, '_inviteOpens'), orderBy('at'), limit(1)));
+    state.opensSince = snap.docs[0]?.data().at?.toMillis?.() ?? null;
+    scheduleRender();
+  } catch { /* the invite rate waits for its log */ }
+}
+/**
+ * The North Star needs a little more history than the range shows: a trip's
+ * plan items from its creation, and the week before a trip's first day. Read
+ * just that older stretch of each log, once (it is kept on the device after).
+ */
+const extending = new Set();
+function ensureHistory(log, need) {
+  // Only once the log's own first load is done (its listener is up), so the two never read the same stretch.
+  if (extending.has(log) || !log.unsub || !S.backfillRange(log.loadedFrom, need)) return;
+  extending.add(log);
+  backfill(log, need).catch(err => showError(`${log.label}: ${err.message}`))
+    .finally(() => { extending.delete(log); scheduleRender(); });
 }
 /** New data from any listener: what "Updated …" at the foot of the page reports. */
 function dataArrived() { state.updatedAt = Date.now(); }
@@ -173,6 +193,7 @@ function queryStart() {
 const LOGS = [
   { field: 'rows', col: '_activity', label: 'Activity', key: 'pulse.history.activity', unsub: null, loadedFrom: null },
   { field: 'writes', col: '_writes', label: 'Writes', key: 'pulse.history.writes', unsub: null, loadedFrom: null },
+  { field: 'opens', col: '_inviteOpens', label: 'Invite opens', key: 'pulse.history.inviteOpens', unsub: null, loadedFrom: null },
 ];
 const logRows = snap => snap.docs.map(d => { const r = d.data(); return { ...r, id: d.id, at: r.at?.toMillis?.() }; }).filter(r => r.at);
 const readCoverage = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
@@ -601,6 +622,38 @@ function render() {
     <li>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}</span>
       <span class="sub">${esc(tripName(personTrip(p.uid, p.tripId)))} · ${esc(p.platform)} · ${esc(usedIn(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
       <span class="when">${agoHtml(p.lastSeen)}</span></li>`).join('');
+
+  // North Star and its drivers (#609): real trips, real members, the whole loaded history.
+  const hideUser = uid => hiddenUids.has(uid) && !(state.hide.me && auth.currentUser?.uid === uid);
+  const nsTrips = realTrips.filter(t => !t.isTest && (!state.tripSel || state.tripSel.has(t.id)));
+  const nsMembers = new Map(nsTrips.map(t => [t.id, (state.members.get(t.id) ?? []).filter(m => !m.isTest && !hideUser(m.uid))]));
+  const testTrip = id => state.hide.testTrips && state.testTrips.has(id);
+  const nsWrites = state.writes.filter(x => !hideUser(x.uid) && !testTrip(x.tripId));
+  const nsRows = state.rows.filter(r => !hideUser(r.uid));
+  const ns = S.northStar({ trips: nsTrips, members: nsMembers, writes: nsWrites, opens: state.opens, rows: nsRows, from: start, to: now, zone: state.zone, opensSince: state.opensSince });
+  // History the measures need beyond the range: plan items since each started trip was made, the week before it.
+  const startedMade = nsTrips.filter(t => ns.live.trips.some(x => x.id === t.id)).map(t => t.createdAt).filter(Boolean);
+  if (startedMade.length) ensureHistory(LOGS[1], Math.max(Math.min(...startedMade), now - 2 * 365 * DAY));
+  ensureHistory(LOGS[0], start - 7 * DAY);
+  const rate = (r, n, of) => r == null ? '<span class="muted">—</span>' : `${Math.round(100 * r)}%<span class="muted small"> ${n} of ${of}</span>`;
+  $('nsTiles').innerHTML = [
+    [ns.live.live, `live group ${ns.live.live === 1 ? 'trip' : 'trips'}`],
+    [ns.live.started, `${ns.live.started === 1 ? 'trip' : 'trips'} started`],
+  ].map(([v, l]) => `<div class="tile"><div class="v num">${v}</div><div class="l">${l}</div></div>`).join('');
+  $('nsMonths').innerHTML = ns.live.byMonth.length === 0 ? '' :
+    '<tr><th>Month</th><th class="n">Trips started</th><th class="n">Live group trips</th></tr>' +
+    ns.live.byMonth.map(m => `<tr><td>${esc(new Date(m.month + '-15T12:00:00Z').toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }))}</td><td class="n num">${m.started}</td><td class="n num">${m.live}</td></tr>`).join('');
+  const notLive = ns.live.trips.filter(x => !x.live);
+  $('nsWhy').textContent = notLive.length ? 'Not live: ' + notLive.map(x => `${tripName(x.id)} (${x.members} ${x.members === 1 ? 'member' : 'members'}, ${x.items} plan ${x.items === 1 ? 'item' : 'items'})`).join('; ') + '.' : '';
+  $('nsDrivers').innerHTML = '<tr><th>Measure</th><th>How it is counted</th><th class="n">In this range</th></tr>' + [
+    ['Invite-to-join', state.opensSince ? 'People who joined with an invite ÷ devices that opened an invite link or typed its code (once per trip)' : 'Starts once someone opens an invite with this version of the app', rate(ns.invite.rate, ns.invite.joined, ns.invite.reached)],
+    ['Fast group adoption', `Trips made in the range with 3+ members within 72 hours${ns.fast.pending ? ` (${ns.fast.pending} newer still counting)` : ''}`, rate(ns.fast.rate, ns.fast.adopted, ns.fast.trips)],
+    ['Planner reuse', 'Planners whose first trip was made in the range who started another within 12 months, so far', rate(ns.reuse.rate, ns.reuse.again, ns.reuse.planners)],
+    ['Joiner to planner, 90 days', 'People who first joined a trip in the range and started their own within 90 days', rate(ns.convert.rate90, ns.convert.in90, ns.convert.joiners)],
+    ['Joiner to planner, 12 months', 'The same, within 12 months, so far', rate(ns.convert.rate365, ns.convert.in365, ns.convert.joiners)],
+    ['Members active the week before', 'Members of trips that started in the range who opened the app in the 7 days before the first day', rate(ns.weekBefore.rate, ns.weekBefore.active, ns.weekBefore.members)],
+    ['Revenue per trip', 'All revenue ÷ trips', '<span class="muted">No payments yet</span>'],
+  ].map(([m, how, v]) => `<tr><td><strong>${esc(m)}</strong></td><td class="muted small">${esc(how)}</td><td class="n num">${v}</td></tr>`).join('');
 
   // Return rate
   const cohorts = S.returnCohorts(rows, state.zone);

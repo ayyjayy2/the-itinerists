@@ -17,7 +17,7 @@ Enforced by the security rules, not just the screens.
 | My Expenses | Only its owner |
 | Profile (name, avatar, preferences) | The person; app admins. Trip members see name and avatar through the member list |
 | Sign-in email | Only the person (`users/{uid}/private`); app admins |
-| Usage and edit logs (`_activity`, `_writes`) | Only the app owner |
+| Usage, edit and invite-open logs (`_activity`, `_writes`, `_inviteOpens`) | Only the app owner |
 
 **"For" is a display filter, not a permission.** Marking who an item is for changes what each person's screens
 show; everyone on the trip can still read it. The privacy policy now says so.
