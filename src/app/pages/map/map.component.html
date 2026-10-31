@@ -59,10 +59,10 @@
     <span class="legend-item"><span class="dot" style="background:#B97F35"></span>Food</span>
     <span class="legend-item"><span class="dot" style="background:#C0564A"></span>Activity</span>
     <span class="legend-item"><span class="dot" style="background:#7E6FA8"></span>Drink</span>
-    <span class="legend-item"><app-icon class="legend-ic stay" name="stays" [size]="15" />Stay</span>
-    <span class="legend-item"><app-icon class="legend-ic transport" name="car" [size]="15" />Transport</span>
+    <span class="legend-item"><ng-container *ngTemplateOutlet="mark; context: { $implicit: 'stay', color: '#B96A76' }" />Stay</span>
+    <span class="legend-item"><ng-container *ngTemplateOutlet="mark; context: { $implicit: 'transport', color: '#6E8BA6' }" />Transport</span>
     <span class="legend-item"><span class="legend-flight"></span>Flight</span>
-    <span class="legend-item"><app-icon class="legend-ic star" name="star" [size]="15" />Custom pin</span>
+    <span class="legend-item"><ng-container *ngTemplateOutlet="mark; context: { $implicit: 'pin', color: '#B97F35' }" />Custom pin</span>
   </div>
 
   </div><!-- .map-viewport -->
@@ -75,7 +75,7 @@
     </div>
     @for (loc of locations(); track loc.id) {
       <button class="loc-row" (click)="focusLocation(loc)">
-        <span class="loc-dot" [style.background]="loc.color">{{ loc.num || '' }}</span>
+        <ng-container *ngTemplateOutlet="mark; context: { $implicit: loc.type, color: loc.color, num: loc.num }" />
         <span class="loc-body">
           <span class="loc-name">{{ loc.name }}</span>
           @if (loc.detail) { <span class="loc-detail">{{ loc.detail }}</span> }
@@ -88,6 +88,37 @@
   </div>
 
 </div>
+
+<!-- A pin's mark, drawn the same in the list and the legend as on the map (#601). -->
+<ng-template #mark let-type let-color="color" let-num="num">
+  <span class="loc-mark" [attr.data-mark]="type === 'itinerary' ? (num ? 'num' : 'plan') : type">
+    @switch (type) {
+      @case ('stay') {
+        <svg viewBox="0 0 28 30" aria-hidden="true">
+          <path d="M14 1 L1 13 L4 13 L4 29 L24 29 L24 13 L27 13 Z" [attr.fill]="color"
+                stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+          <rect x="11" y="19" width="6" height="10" fill="white" opacity="0.9" rx="1"/>
+        </svg>
+      }
+      @case ('pin') {
+        <svg viewBox="0 0 28 28" aria-hidden="true">
+          <polygon points="14,2 17.5,10.5 27,11.5 20,18 22,27 14,22.5 6,27 8,18 1,11.5 10.5,10.5"
+                   [attr.fill]="color" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      }
+      @case ('transport') {
+        <svg viewBox="0 0 24 32" aria-hidden="true">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 20 12 20S24 21 24 12C24 5.37 18.63 0 12 0z"
+                [attr.fill]="color" stroke="white" stroke-width="1.5"/>
+          <rect x="7" y="7.5" width="10" height="6.5" rx="1.6" fill="white"/>
+          <circle cx="9.3" cy="15.2" r="1.4" fill="white"/><circle cx="14.7" cy="15.2" r="1.4" fill="white"/>
+        </svg>
+      }
+      @case ('flight') { <span class="mark-flight" aria-hidden="true">✈️</span> }
+      @default { <span class="loc-dot" [style.background]="color">{{ num || '' }}</span> }
+    }
+  </span>
+</ng-template>
 
 <!-- Add Pin modal -->
 @if (showAddForm()) {

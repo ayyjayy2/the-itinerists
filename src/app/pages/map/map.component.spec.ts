@@ -50,6 +50,22 @@ describe('MapComponent', () => {
     fixture.destroy();
   });
 
+  // #601: the trip's shared place cache is a network read; the map and the
+  // places this phone already knows don't wait for it.
+  it('shows the map without waiting for the shared place cache', async () => {
+    activeTrip.set(trip);
+    (TestBed.inject(DataService) as any).data.set({ itinerary: [], accommodations: [], flights: [], rentalCar: [], mapPins: [], users: [] } as any);
+    const fixture = TestBed.createComponent(MapComponent);
+    const map = fixture.componentInstance;
+    spyOn(map as any, 'loadFirestoreCache').and.returnValue(new Promise(() => {}));   // never answers
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(map.mapReady()).toBeTrue();
+    fixture.destroy();
+  });
+
   it('starts the map straight away when the trip is already loaded', async () => {
     activeTrip.set(trip);
     const fixture = TestBed.createComponent(MapComponent);

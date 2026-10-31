@@ -295,6 +295,8 @@ export class MapComponent implements OnDestroy {
   private pinning       = false;
   private userMovedMap  = false;
   private nominatim     = new RateGate(1100);
+  /** This trip's shared place cache, loading in the background. */
+  private sharedCache: Promise<void> = Promise.resolve();
 
   constructor() {
     // Start Leaflet as soon as the map's element exists, however late that is.
@@ -401,9 +403,10 @@ export class MapComponent implements OnDestroy {
     await this.waitForData();
     if (this.destroyed) return;
     this.loadCache();
-    await this.loadFirestoreCache();
+    // The trip's shared cache is a network read: show what this device already
+    // knows at once, and let the lookups below wait for it instead (#601).
+    this.sharedCache = this.loadFirestoreCache();
     this.primeFromCache();
-    if (this.destroyed) return;
     // Show the map now with the places already known; the mapReady effect then
     // looks up the rest, dropping each pin in as it's found.
     this.ngZone.run(() => this.mapReady.set(true));
@@ -688,7 +691,14 @@ export class MapComponent implements OnDestroy {
     this.geocodingBusy = true;
     try {
       this.updateAll();
+      // Places a fellow member already found come from the shared cache, not Nominatim.
+      await this.sharedCache;
+      if (this.destroyed) return;
       const all  = this.allNeededLocations();
+      for (const n of all) {
+        const cached = this.geocache[this.cacheKey(n.loc, n.ctx)];
+        if (cached) this.geocodedLocations.set(n.loc, cached);
+      }
       const todo = all.filter(n => !this.geocodedLocations.has(n.loc) && !this.isKnownMiss(this.cacheKey(n.loc, n.ctx)));
       this.ngZone.run(() => { this.totalLocations.set(all.length); this.geocodedCount.set(all.length - todo.length); });
       this.pinning = true;
@@ -842,6 +852,7 @@ export class MapComponent implements OnDestroy {
       }
     }
 
+    const rowsFrom = entries.length;
     for (const [location, locItems] of byLoc) {
       const coords = this.geocodedLocations.get(location);
       if (!coords) continue;
@@ -873,6 +884,11 @@ export class MapComponent implements OnDestroy {
         name: location,
         detail: (locItems[0]?.activity ?? cat) + (extra > 0 ? ` +${extra} more` : ''),
       });
+    }
+    // A day's plans are listed in their numbered order, like the pins.
+    if (day) {
+      const rows = entries.splice(rowsFrom).sort((a, b) => (a.num ?? Infinity) - (b.num ?? Infinity));
+      entries.push(...rows);
     }
   }
 
