@@ -755,7 +755,8 @@ export class MapComponent implements OnDestroy {
 
     const flights: Flight[] = (data.flights ?? []).filter(f => {
       if (!this.showAll() && f.person !== userName) return false;
-      if (day && f.departureDate !== day && f.arrivalDate !== day) return false;
+      // Like the Itinerary: a flight in is on the day it lands, a flight home on the day it leaves (#603).
+      if (day && (f.section === 'ARRIVALS' ? f.arrivalDate : f.departureDate) !== day) return false;
       return true;
     });
 
@@ -908,7 +909,8 @@ export class MapComponent implements OnDestroy {
     const day = this.selectedDay();
     const accoms = (data.accommodations ?? []).filter(a => {
       if (!this.showAll() && !this.matches(a.forWho, userName)) return false;
-      if (day && !(a.checkIn <= day && day < a.checkOut)) return false;
+      // Like the Itinerary: a stay is on its check-in and check-out days (#603).
+      if (day && a.checkIn !== day && a.checkOut !== day) return false;
       return true;
     });
 
@@ -939,7 +941,8 @@ export class MapComponent implements OnDestroy {
       entries.push({
         id: key, type: 'stay', color: '#B96A76',
         name: acc.name || acc.address,
-        detail: acc.checkIn ? `Check-in ${this.formatDate(acc.checkIn)}` : 'Stay',
+        detail: day && day === acc.checkOut ? `Check-out ${this.formatDate(acc.checkOut)}`
+          : acc.checkIn ? `Check-in ${this.formatDate(acc.checkIn)}` : 'Stay',
       });
     }
   }
@@ -962,7 +965,7 @@ export class MapComponent implements OnDestroy {
       ];
       for (const leg of legs) {
         if (!leg.loc) continue;
-        if (day && leg.date && leg.date !== day) continue;
+        if (day && leg.date !== day) continue;   // an undated leg isn't on any day's Itinerary
         const coords = this.geocodedLocations.get(leg.loc);
         if (!coords) continue;
 
@@ -998,7 +1001,8 @@ export class MapComponent implements OnDestroy {
     const data     = this.dataService.data();
     const userName = this.currentUser()?.name ?? '';
     const users    = data?.users ?? [];
-    const pins     = (data?.mapPins ?? []).filter(p =>
+    // Custom pins have no date, so they're on All Days only, never a single day (#603).
+    const pins     = this.selectedDay() ? [] : (data?.mapPins ?? []).filter(p =>
       this.showAll() || this.matches(p.forWho, userName)
     );
 
