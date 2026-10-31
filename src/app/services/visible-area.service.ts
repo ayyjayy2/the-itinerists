@@ -57,6 +57,15 @@ export class VisibleAreaService implements OnDestroy {
     vv.addEventListener('resize', () => { this.update(); this.revealFocusedField(); }, listen);
     vv.addEventListener('scroll', () => this.update(), listen);
     if (this.native) this.focusWithoutScrolling(listen);
+    // The keyboard's next and previous arrows move focus with the keyboard
+    // already up: nothing resizes, and the phone's own page scroll is taken
+    // back below, so the next field (the sign-in password) stayed behind the
+    // keyboard (#516). Show it once the move has settled.
+    if (this.native) document.addEventListener('focusin', () => requestAnimationFrame(() => {
+      if (this.stop.signal.aborted) return;
+      this.update();
+      this.revealFocusedField();
+    }), listen);
     if (this.native) addEventListener('scroll', () => {
       if (!scrollX && !scrollY) return;
       scrollTo(0, 0);
@@ -165,7 +174,12 @@ export class VisibleAreaService implements OnDestroy {
     const c = card.getBoundingClientRect(), f = field.getBoundingClientRect();
     const bottom = Math.min(c.bottom, this.seen());
     const margin = 16;
-    if (f.bottom > bottom - margin) card.scrollTop += f.bottom - bottom + margin;
+    // The phone ignores the keyboard's next arrow while the next field is
+    // behind the keyboard (#516: the sign-in password), so in the app show
+    // that one too when both fit.
+    const next = this.native ? nextTextField(field, card)?.getBoundingClientRect() : undefined;
+    const end = next && next.bottom - f.top <= bottom - c.top - 2 * margin ? next.bottom : f.bottom;
+    if (end > bottom - margin) card.scrollTop += end - bottom + margin;
     else if (f.top < c.top + margin) card.scrollTop -= c.top + margin - f.top;
   }
 }
@@ -176,6 +190,12 @@ function scrollerOf(el: Element): HTMLElement | null {
     if (/(auto|scroll)/.test(getComputedStyle(p).overflowY)) return p;
   }
   return null;
+}
+
+/** The text field after `field` inside `within`, where the keyboard's next arrow goes. */
+function nextTextField(field: Element, within: Element): HTMLElement | null {
+  const fields = [...within.querySelectorAll<HTMLElement>('input, textarea')].filter(isTextField);
+  return fields[fields.indexOf(field as HTMLElement) + 1] ?? null;
 }
 
 /** Fields typed into with the keyboard (not pickers, boxes or buttons). */
