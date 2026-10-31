@@ -24,10 +24,12 @@ test('the list under the map shows each pin\'s own mark', async ({ page }) => {
   expect(await marks()).toContain('flight');   // and the flight that lands that night
   await expect(page.locator('.loc-row .loc-mark[data-mark="stay"] svg')).toHaveCount(1);
 
-  // Nov 14 has four plans and nothing booked: a night mid-stay isn't on the
-  // Itinerary, and custom pins aren't tied to a day.
+  // Nov 14 has four plans, and the house for where the group is staying: a
+  // stay shows every day from check-in to check-out. Custom pins aren't tied
+  // to a day, so they aren't on it.
   await page.getByRole('button', { name: 'Nov. 14', exact: true }).click();
-  await expect.poll(marks).toEqual(['1', '2', '3', '4']);
+  await expect.poll(marks).toEqual(['1', '2', '3', '4', 'stay']);
+  await expect(page.locator('.loc-row', { has: page.locator('[data-mark="stay"]') })).toContainText('Until');
 
   // Nov 12 is the day the flights in take off; the Itinerary has them on Nov 13, when they land.
   await page.getByRole('button', { name: 'Nov. 12', exact: true }).click();
