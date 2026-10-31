@@ -8,6 +8,7 @@ import { UserService } from '../../services/user.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { EyeButtonDirective } from '../../shared/eye-button.directive';
 import { AvatarPickerComponent } from '../../shared/avatar-picker/avatar-picker.component';
 import { passwordRules } from '../../utils/password';
 import { SignupFormState, SignupField, SignupValues } from '../../utils/signup-form';
@@ -20,7 +21,7 @@ import { LocalCacheService } from '../../services/local-cache.service';
  */
 @Component({
   selector: 'app-signup',
-  imports: [BrandComponent, IconComponent, CommonModule, FormsModule, RouterLink, AvatarPickerComponent],
+  imports: [BrandComponent, IconComponent, EyeButtonDirective, CommonModule, FormsModule, RouterLink, AvatarPickerComponent],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.scss',
 })

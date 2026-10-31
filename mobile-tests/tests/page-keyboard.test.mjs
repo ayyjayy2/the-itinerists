@@ -67,3 +67,24 @@ test('the keyboard bar\'s next arrow moves from the email to the password (#516)
   assert.equal(m.id, 'password', 'the next arrow moved to the password');
   assert.ok(m.bottom <= m.visible, `the password ends at ${Math.round(m.bottom)}px, the visible part at ${Math.round(m.visible)}px`);
 });
+
+test('tapping the eye shows the password and keeps the keyboard up (#645)', async () => {
+  const { driver } = app;
+  await app.page();
+  await driver.execute(() => { document.activeElement?.blur(); location.assign('/login'); });
+  await app.native();
+  const password = await driver.$('-ios predicate string:placeholderValue == "Enter your password"');
+  await password.waitForDisplayed({ timeout: 20000 });
+  await password.click();
+  await driver.waitUntil(() => driver.isKeyboardShown(), { timeout: 10000, timeoutMsg: 'the keyboard never came up' });
+  await driver.pause(1000);
+  await password.addValue('Secret12');
+  await driver.$('-ios predicate string:type == "XCUIElementTypeButton" AND label == "Show password"').click();
+  await driver.pause(1000);
+  await app.shot('eye-shown');
+  assert.ok(await driver.isKeyboardShown(), 'the keyboard stayed up');
+  await app.page();
+  const m = await driver.execute(() => ({ id: document.activeElement?.id, type: document.getElementById('password')?.getAttribute('type') }));
+  assert.equal(m.type, 'text', 'the password is shown');
+  assert.equal(m.id, 'password', 'the password field kept focus');
+});

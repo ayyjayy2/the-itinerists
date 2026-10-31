@@ -8,13 +8,14 @@ import { TripService } from '../../services/trip.service';
 import { APP_VERSION, APP_BUILD_DATE } from '../../../version';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { EyeButtonDirective } from '../../shared/eye-button.directive';
 import { userMessage, isBrokenLocalCacheError, isTooManyAttempts, TOO_MANY_ATTEMPTS_MESSAGE } from '../../utils/user-message';
 import { LocalCacheService } from '../../services/local-cache.service';
 import { SESSION_EXPIRED_MESSAGE } from '../../utils/session';
 
 @Component({
   selector: 'app-login',
-  imports: [BrandComponent, IconComponent, CommonModule, FormsModule, RouterLink],
+  imports: [BrandComponent, IconComponent, EyeButtonDirective, CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
