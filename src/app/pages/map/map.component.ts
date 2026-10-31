@@ -909,8 +909,9 @@ export class MapComponent implements OnDestroy {
     const day = this.selectedDay();
     const accoms = (data.accommodations ?? []).filter(a => {
       if (!this.showAll() && !this.matches(a.forWho, userName)) return false;
-      // Like the Itinerary: a stay is on its check-in and check-out days (#603).
-      if (day && a.checkIn !== day && a.checkOut !== day) return false;
+      // A stay is home base every day from check-in to check-out, so its house
+      // stays on the map; the list says which of those days it is.
+      if (day && !(a.checkIn <= day && day <= a.checkOut)) return false;
       return true;
     });
 
@@ -941,8 +942,10 @@ export class MapComponent implements OnDestroy {
       entries.push({
         id: key, type: 'stay', color: '#B96A76',
         name: acc.name || acc.address,
-        detail: day && day === acc.checkOut ? `Check-out ${this.formatDate(acc.checkOut)}`
-          : acc.checkIn ? `Check-in ${this.formatDate(acc.checkIn)}` : 'Stay',
+        detail: !day ? (acc.checkIn ? `Check-in ${this.formatDate(acc.checkIn)}` : 'Stay')
+          : day === acc.checkIn ? `Check-in ${this.formatDate(acc.checkIn)}`
+          : day === acc.checkOut ? `Check-out ${this.formatDate(acc.checkOut)}`
+          : acc.checkOut ? `Until ${this.formatDate(acc.checkOut)}` : 'Stay',
       });
     }
   }
