@@ -56,21 +56,44 @@ export function stampText(ms, zone, { seconds = false } = {}) {
   return `${day} at ${time}`;
 }
 
-/** Midnight at the start of the calendar day containing `ms` in `zone`. */
-/**
- * The live feed is queried from the window's start. The window slides with the
- * clock; once its start crosses into a new hour (or a new day, for Today) the
- * feed is re-queried so it neither grows forever nor misses a new day.
- */
-export function windowMoved(subscribedStart, start) {
-  return Math.floor(start / HOUR) !== Math.floor(subscribedStart / HOUR);
+// ── history kept on the device (#596) ─────────────────────────────────────
+// `_activity` and `_writes` are append-only (the rules allow no update or
+// delete), so rows already read never change. Pulse keeps them in Firestore's
+// on-device cache and records how far back that copy is complete
+// ({ from, at, n } in localStorage); the server is asked only for newer rows,
+// and for the older part when a wider range is picked.
+const CACHE_MAX_AGE = 7 * 24 * HOUR;   // then read everything again, in case an admin script removed rows
+const OVERLAP = 10 * 60_000;           // rows are stamped at commit; listen a little early to catch stragglers
+
+/** Whether the device's copy can be trusted: recorded, under a week old, and not cleared by the browser. */
+export function historyCacheUsable(coverage, now, cachedCount) {
+  if (!coverage || now - coverage.at > CACHE_MAX_AGE) return false;
+  return !(coverage.n > 0 && cachedCount === 0);
 }
 
-/** Rows inside the window. Between re-queries the feed holds a few extra minutes at the start. */
+/** Where the live listener starts: just before the newest kept row, never before the window. */
+export function liveFrom(newestKept, need) {
+  return newestKept == null ? need : Math.max(need, newestKept - OVERLAP);
+}
+
+/** The older stretch a wider range still needs from the server, as [from, to), or null. */
+export function backfillRange(loadedFrom, need) {
+  return loadedFrom != null && need < loadedFrom ? [need, loadedFrom] : null;
+}
+
+/** Rows from both lists, one per id, oldest first. */
+export function mergeRows(a, b) {
+  const byId = new Map(a.map(r => [r.id, r]));
+  for (const r of b) byId.set(r.id, r);
+  return [...byId.values()].sort((x, y) => x.at - y.at);
+}
+
+/** Rows inside the window. The loaded logs reach further back; the window slides over them in memory. */
 export function inWindow(rows, start) {
   return rows.filter(r => r.at >= start);
 }
 
+/** Midnight at the start of the calendar day containing `ms` in `zone`. */
 export function startOfDay(ms, zone) {
   const day = dayKey(ms, zone);
   let t = ms;
