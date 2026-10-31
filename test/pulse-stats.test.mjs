@@ -2,8 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  dayKey, hourIn, startOfDay, stampText, onlineNow, windowMoved, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, offerStats, peopleStats, tripStats,
-  deletionStats, waitlistStats,
+  dayKey, hourIn, startOfDay, stampText, onlineNow, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, offerStats, peopleStats, tripStats,
+  deletionStats, waitlistStats, historyCacheUsable, liveFrom, backfillRange, mergeRows,
 } from '../public/pulse/stats.mjs';
 
 const H = 3_600_000;
@@ -279,13 +279,6 @@ test('activityTimeline merges visits and writes per day with the hover details',
   assert.deepEqual(t[0].pages, []);
 });
 
-test('the window re-queries when its start crosses an hour, not every minute', () => {
-  const t = Date.UTC(2026, 9, 2, 14, 10);
-  assert.equal(windowMoved(t, t + 30 * 60_000), false);   // 14:10 → 14:40, same hour
-  assert.equal(windowMoved(t, t + 55 * 60_000), true);    // 14:10 → 15:05, next hour
-  assert.equal(windowMoved(t, t + 24 * H), true);         // a new day for Today
-});
-
 test('rows outside the sliding window are left out', () => {
   const rows = [{ at: 100 }, { at: 200 }, { at: 300 }];
   assert.deepEqual(inWindow(rows, 200).map(r => r.at), [200, 300]);
@@ -382,4 +375,35 @@ test('waitlistStats: unique emails (case and spaces ignored), first sign-up deci
   assert.equal(s.lastAt, at('2026-10-14T18:30:00Z'));
   assert.deepEqual(Object.keys(s).sort(), ['inRange', 'lastAt', 'total']); // counts only: no emails come back
   assert.deepEqual(waitlistStats([], 0, 1), { total: 0, inRange: 0, lastAt: null });
+});
+
+// #596: the usage and write logs are append-only, so Pulse keeps them on the
+// device and only asks the server for what it doesn't have.
+test('historyCacheUsable: a recorded, recent cache that still holds rows', () => {
+  const now = NOON;
+  assert.equal(historyCacheUsable(null, now, 5), false);                               // never loaded here
+  assert.equal(historyCacheUsable({ from: now - 30 * 24 * H, at: now - H, n: 40 }, now, 40), true);
+  assert.equal(historyCacheUsable({ from: now - 30 * 24 * H, at: now - 8 * 24 * H, n: 40 }, now, 40), false); // a week old: read it all again
+  assert.equal(historyCacheUsable({ from: now - 30 * 24 * H, at: now - H, n: 40 }, now, 0), false);  // the browser cleared it
+  assert.equal(historyCacheUsable({ from: now - 30 * 24 * H, at: now - H, n: 0 }, now, 0), true);    // nothing to hold yet
+});
+
+test('liveFrom: listen from a little before the newest kept row, else from the window', () => {
+  const need = NOON - 24 * H;
+  assert.equal(liveFrom(NOON - H, need), NOON - H - 10 * 60_000);  // overlap catches rows committed out of order
+  assert.equal(liveFrom(null, need), need);
+  assert.equal(liveFrom(need - H, need), need);                     // never before the window itself
+});
+
+test('backfillRange: only the older part a wider range is missing', () => {
+  const loaded = NOON - 24 * H;
+  assert.equal(backfillRange(loaded, NOON - 2 * H), null);          // narrower: filter what's loaded
+  assert.deepEqual(backfillRange(loaded, NOON - 7 * 24 * H), [NOON - 7 * 24 * H, loaded]);
+  assert.deepEqual(backfillRange(null, NOON - 7 * 24 * H), null);   // nothing loaded yet: the first load reads it
+});
+
+test('mergeRows: one row per id, oldest first', () => {
+  const a = [{ id: 'x', at: 3 }, { id: 'y', at: 1 }];
+  const b = [{ id: 'x', at: 3 }, { id: 'z', at: 2 }];
+  assert.deepEqual(mergeRows(a, b).map(r => r.id), ['y', 'z', 'x']);
 });

@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app-check.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, query, where, orderBy, limit, onSnapshot, Timestamp, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocs, getDocsFromCache, getDocsFromServer, setDoc, query, where, orderBy, limit, onSnapshot, Timestamp, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js';
 import { firebaseConfig, recaptchaSiteKey } from './config.mjs';
 import * as S from './stats.mjs';
 import { ZONES } from './zones.mjs';
@@ -19,7 +19,8 @@ if (location.hostname === 'localhost' && !self.FIREBASE_APPCHECK_DEBUG_TOKEN) se
 const app = initializeApp(firebaseConfig, 'pulse');
 if (recaptchaSiteKey) initializeAppCheck(app, { provider: new ReCaptchaV3Provider(recaptchaSiteKey), isTokenAutoRefreshEnabled: true });
 const auth = getAuth(app);
-const db = getFirestore(app);
+// Kept on the device, so the append-only logs are read from the server once (#596).
+const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
 
 // ── state ──────────────────────────────────────────────────────────────────
 const viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -35,7 +36,7 @@ const state = {
   firstAt: null,          // the oldest _activity row: when collection began
   updatedAt: null,        // when live data last arrived (any listener), shown as "Updated …"
 };
-let unsubRows = null, unsubWrites = null, unsubTrips = null, unsubUsers = null, unsubPrefs = null, unsubDeletions = null, unsubWaitlist = null;
+let unsubTrips = null, unsubUsers = null, unsubPrefs = null, unsubDeletions = null, unsubWaitlist = null;
 const memberSubs = new Map(); // tripId → unsubscribe
 /** The owner's dashboard preferences: test trips (kept out of every number) and the display zone. */
 const prefsRef = () => doc(db, '_pulse', 'prefs');
@@ -117,10 +118,10 @@ function start() {
     dataArrived();
     state.hide = { me: false, testTrips: true, testUsers: true, ...(p.hide ?? {}) };
     for (const [k, v] of Object.entries(state.hide)) { const el = document.querySelector(`#hide input[name="${k}"]`); if (el) el.checked = !!v; }
-    if (p.zone && p.zone !== state.zone) { state.zone = p.zone; if (state.range === 'today') subscribeRows(); }
+    if (p.zone && p.zone !== state.zone) { state.zone = p.zone; if (state.range === 'today') widenLogs(); }
     render();
   }, err => showError('Preferences: ' + err.message));
-  subscribeRows();
+  openLogs();
   showFirstEvent();
 }
 /** The oldest row in the event log, once: the exact moment collection began. */
@@ -152,7 +153,9 @@ function syncMemberSubs() {
   }
 }
 function stop() {
-  unsubRows?.(); unsubWrites?.(); unsubTrips?.(); unsubUsers?.(); unsubPrefs?.(); unsubDeletions?.(); unsubWaitlist?.(); unsubRows = unsubWrites = unsubTrips = unsubUsers = unsubPrefs = unsubDeletions = unsubWaitlist = null;
+  logSession++;
+  for (const log of LOGS) { log.unsub?.(); log.unsub = null; log.loadedFrom = null; }
+  unsubTrips?.(); unsubUsers?.(); unsubPrefs?.(); unsubDeletions?.(); unsubWaitlist?.(); unsubTrips = unsubUsers = unsubPrefs = unsubDeletions = unsubWaitlist = null;
   for (const unsub of memberSubs.values()) unsub();
   memberSubs.clear();
   $('dot').classList.remove('on');
@@ -163,36 +166,71 @@ function queryStart() {
   const a = state.now;
   return { today: S.startOfDay(a, state.zone), '24h': a - DAY, '7d': a - 7 * DAY, '30d': a - 30 * DAY, '60d': a - 60 * DAY, '180d': a - 180 * DAY, '1y': a - 365 * DAY }[state.range];
 }
-let subscribedStart = 0;
-/** `quiet`: a re-query because the window slid; keep showing the data meanwhile. */
-function subscribeRows(quiet = false) {
-  subscribedStart = queryStart();
-  if (!quiet) state.loading = true;   // until the first snapshot of the new range lands
-  unsubWrites?.();
-  const qw = query(collection(db, '_writes'), where('at', '>=', Timestamp.fromMillis(queryStart())), orderBy('at'));
-  unsubWrites = onSnapshot(qw, snap => {
-    state.writes = snap.docs.map(d => { const w = d.data(); return { ...w, at: w.at?.toMillis?.() ?? 0 }; }).filter(w => w.at);
+// ── the usage and write logs (#596) ────────────────────────────────────────
+// Both are append-only, so rows already read are kept on the device and the
+// server is asked only for newer ones. The window slides in memory (render
+// filters with S.inWindow); a wider range reads only the older part it lacks.
+const LOGS = [
+  { field: 'rows', col: '_activity', label: 'Activity', key: 'pulse.history.activity', unsub: null, loadedFrom: null },
+  { field: 'writes', col: '_writes', label: 'Writes', key: 'pulse.history.writes', unsub: null, loadedFrom: null },
+];
+const logRows = snap => snap.docs.map(d => { const r = d.data(); return { ...r, id: d.id, at: r.at?.toMillis?.() }; }).filter(r => r.at);
+const readCoverage = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
+const saveCoverage = (key, c) => { try { localStorage.setItem(key, JSON.stringify(c)); } catch { /* the cache is a saving, not a need */ } };
+
+let logSession = 0;   // bumped on sign-out, so a load still in flight doesn't start a listener afterwards
+function openLogs() {
+  const session = ++logSession;
+  state.loading = true;
+  $('dot').classList.remove('on');
+  for (const log of LOGS) openLog(log, session).catch(err => showError(`${log.label}: ${err.message}`));
+}
+async function openLog(log, session) {
+  const need = queryStart(), now = Date.now();
+  let coverage = readCoverage(log.key), kept = [];
+  if (coverage) {
+    try { kept = logRows(await getDocsFromCache(query(collection(db, log.col), where('at', '>=', Timestamp.fromMillis(coverage.from)), orderBy('at')))); } catch { kept = []; }
+  }
+  if (!S.historyCacheUsable(coverage, now, kept.length)) { coverage = null; kept = []; }
+  state[log.field] = kept;
+  log.loadedFrom = coverage ? coverage.from : need;
+  const fullReadAt = coverage ? coverage.at : now;
+  if (kept.length) {
+    if (log.field === 'rows') state.loading = false;   // draw from the device at once; the server only adds
+    scheduleRender();
+  }
+  await backfill(log, need);
+  if (session !== logSession) return;
+  const from = S.liveFrom(kept.length ? kept[kept.length - 1].at : null, log.loadedFrom);
+  log.unsub = onSnapshot(query(collection(db, log.col), where('at', '>=', Timestamp.fromMillis(from)), orderBy('at')), { includeMetadataChanges: true }, snap => {
+    state[log.field] = S.mergeRows(state[log.field], logRows(snap));
+    if (snap.metadata.fromCache) return;
+    // The server has answered: everything from loadedFrom up to now is on the device.
+    saveCoverage(log.key, { from: log.loadedFrom, at: fullReadAt, n: state[log.field].length });
+    if (log.field === 'rows') { state.loading = false; $('dot').classList.add('on'); showError(''); }
     dataArrived();
     scheduleRender();
-  }, err => showError('Writes: ' + err.message));
-  unsubRows?.();
-  if (!quiet) $('dot').classList.remove('on');
-  const q = query(collection(db, '_activity'), where('at', '>=', Timestamp.fromMillis(queryStart())), orderBy('at'));
-  unsubRows = onSnapshot(q, snap => {
-    const rows = [];
-    for (const d of snap.docs) {
-      const e = d.data();
-      const at = e.at?.toMillis?.();
-      if (at === undefined) continue; // pending local write
-      rows.push({ ...e, at });
-    }
-    state.rows = rows;
-    state.loading = false;
-    dataArrived();
-    $('dot').classList.add('on');
-    showError('');
-    scheduleRender();
-  }, err => { showError('Activity: ' + err.message); $('dot').classList.remove('on'); });
+  }, err => { showError(`${log.label}: ${err.message}`); if (log.field === 'rows') $('dot').classList.remove('on'); });
+}
+/** A wider range than the device holds: read only the older stretch, once. */
+async function backfill(log, need) {
+  const gap = S.backfillRange(log.loadedFrom, need);
+  if (!gap) return;
+  const snap = await getDocsFromServer(query(collection(db, log.col),
+    where('at', '>=', Timestamp.fromMillis(gap[0])), where('at', '<', Timestamp.fromMillis(gap[1])), orderBy('at')));
+  state[log.field] = S.mergeRows(state[log.field], logRows(snap));
+  log.loadedFrom = need;
+  const coverage = readCoverage(log.key);
+  if (coverage) saveCoverage(log.key, { ...coverage, from: need, n: state[log.field].length });
+}
+/** After a range or zone change: narrower ranges are already loaded; wider ones fetch the gap. */
+function widenLogs() {
+  const need = queryStart();
+  const wider = LOGS.filter(log => S.backfillRange(log.loadedFrom, need));
+  if (!wider.length) { scheduleRender(); return; }
+  state.loading = true; scheduleRender();
+  Promise.all(wider.map(log => backfill(log, need).catch(err => showError(`${log.label}: ${err.message}`))))
+    .then(() => { state.loading = false; dataArrived(); scheduleRender(); });
 }
 // Events arrive by push the moment they are written; this clock only keeps
 // "x s ago" and the online window moving between them.
@@ -211,17 +249,13 @@ setInterval(() => {
   if ($('dash').hidden) return;
   for (const el of document.querySelectorAll('[data-ago]')) el.textContent = ago(Number(el.dataset.ago));
   const clock = $('clock'); if (clock) clock.textContent = clockText();
-  if (state.now - lastFull > 60_000) { lastFull = state.now; slideWindow(); render(); }
+  if (state.now - lastFull > 60_000) { lastFull = state.now; render(); }
 }, 1000);
 
-function slideWindow() {
-  if (S.windowMoved(subscribedStart, queryStart())) subscribeRows(true);
-}
 // Back to a tab that slept (laptop lid, another tab): catch up at once, not within the minute.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible' || $('dash').hidden) return;
   state.now = Date.now();
-  slideWindow();
   render();
 });
 
@@ -230,7 +264,7 @@ $('range').addEventListener('click', ev => {
   const b = ev.target.closest('button[data-range]'); if (!b) return;
   state.range = b.dataset.range; state.now = Date.now();
   for (const x of $('range').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
-  subscribeRows(); scheduleRender();
+  widenLogs();
 });
 $('tripList').addEventListener('change', () => {
   const boxes = [...document.querySelectorAll('#tripList input')];
@@ -245,7 +279,7 @@ $('hide').addEventListener('change', ev => {
 });
 $('zone').addEventListener('change', ev => {
   state.zone = ev.target.value;
-  if (state.range === 'today') subscribeRows();
+  if (state.range === 'today') widenLogs();
   render();
   savePrefs({ zone: state.zone });
 });
