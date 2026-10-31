@@ -111,6 +111,7 @@ rules are what protect the data.
 | `set-account-flags.js` | Grants the `owner` claim (Pulse, `isAppOwner()` in the rules) and `layoutPicker` on users from the gitignored `scripts/account-flags.local.json`, so no real uid is in the code. Dry run by default, `--run` writes, `--staging` for staging |
 | `waitlist.js` | The iPhone app launch list ("Notify me" on the welcome page, `_waitlist`): count (default), `export` to the gitignored `scripts/waitlist.local.csv`, `clear --run` to delete the whole list (the privacy policy promises launch news and occasional updates, no spam, an unsubscribe link in every email, and deleting an address on request). Pulse shows the count only; the rules let the owner claim read `_waitlist` and nobody else. `--staging` for staging |
 | `check-balances.js`, `compare-to-spreadsheet.js`, `fix-makaela-entries.js`, `apply-v6-fixes.js` | One-off finance checks and fixes |
+| `db-counts.js` | Documents per collection (counts only, no content) and today's reads, writes and deletes from Cloud Monitoring (needs the owner's `gcloud` sign-in). Uses `count()`, about 35 reads for the whole database, so use it rather than reading every document to size things (#595). `--staging` for staging |
 | `stats.js` *(gitignored)* | Read-only headcount of real users and trips; feeds the private Headcount artifact. Never commit its output |
 | `verify-outfit-storage.local.mjs` *(gitignored)* | Playwright check of the photo upload path, signed in as the `photoprobe` test account |
 
