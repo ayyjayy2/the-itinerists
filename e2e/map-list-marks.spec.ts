@@ -14,15 +14,28 @@ test('the list under the map shows each pin\'s own mark', async ({ page }) => {
   await page.goto('/map');
   await expect(page.locator('.status-chip.status-done')).toBeVisible({ timeout: 60_000 });
 
-  // Demo Nov 14: four plans, the stay the group is in that night, and the
-  // trip's three custom pins (not tied to a day, so they show on every day).
-  await page.getByRole('button', { name: 'Nov. 14', exact: true }).click();
   const marks = () => page.locator('.loc-row .loc-mark').evaluateAll(els =>
     els.map(e => e.getAttribute('data-mark') === 'num' ? (e.textContent ?? '').trim() : e.getAttribute('data-mark')));
-  await expect.poll(marks).toEqual(['1', '2', '3', '4', 'stay', 'pin', 'pin', 'pin']);
 
-  // The stay's row draws the house the map uses, not a plain dot.
+  // #603: a day's map shows what that day's Itinerary shows. Demo Nov 13 is
+  // check-in day: the stay is on it, drawn as the house the map uses.
+  await page.getByRole('button', { name: 'Nov. 13', exact: true }).click();
+  await expect.poll(marks).toContain('stay');
+  expect(await marks()).toContain('flight');   // and the flight that lands that night
   await expect(page.locator('.loc-row .loc-mark[data-mark="stay"] svg')).toHaveCount(1);
+
+  // Nov 14 has four plans and nothing booked: a night mid-stay isn't on the
+  // Itinerary, and custom pins aren't tied to a day.
+  await page.getByRole('button', { name: 'Nov. 14', exact: true }).click();
+  await expect.poll(marks).toEqual(['1', '2', '3', '4']);
+
+  // Nov 12 is the day the flights in take off; the Itinerary has them on Nov 13, when they land.
+  await page.getByRole('button', { name: 'Nov. 12', exact: true }).click();
+  await expect.poll(marks).not.toContain('flight');
+
+  // All Days still has the trip's three custom pins, as stars.
+  await page.getByRole('button', { name: 'All Days', exact: true }).click();
+  await expect.poll(async () => (await marks()).filter(m => m === 'pin').length).toBe(3);
   // So does the legend.
   await expect(page.locator('.map-legend .loc-mark[data-mark="stay"] svg')).toHaveCount(1);
   await expect(page.locator('.map-legend .loc-mark[data-mark="pin"] svg')).toHaveCount(1);
