@@ -121,6 +121,34 @@ describe('VisibleAreaService (#470)', () => {
       TestBed.resetTestingModule();                                    // stops the app-only listeners
     });
 
+    it('in the iPhone app, shows a field reached with the keyboard\'s next arrow (#516)', async () => {
+      const vv = new FakeViewport(330);                                // the keyboard is already up
+      TestBed.configureTestingModule({ providers: [{ provide: IS_NATIVE_APP, useValue: true }] });
+      start(vv);
+      focusedField(false);                                             // focus moves, nothing resizes
+      await new Promise(done => requestAnimationFrame(done));
+      expect(inView()).toBeTrue();
+      TestBed.resetTestingModule();
+    });
+
+    it('in the iPhone app, keeps the next field in view too, so the keyboard\'s next arrow reaches it (#516)', () => {
+      // The phone ignores the next arrow while the next field is behind the keyboard.
+      const vv = new FakeViewport(664);
+      TestBed.configureTestingModule({ providers: [{ provide: IS_NATIVE_APP, useValue: true }] });
+      start(vv);
+      focusedField(false);
+      const gap = document.createElement('div');
+      gap.style.height = '20px';
+      const next = document.createElement('input');
+      input.after(gap, next);
+      card.style.height = '200px';                                     // room for both
+      vv.move(330);
+      const c = card.getBoundingClientRect();
+      expect(inView()).toBeTrue();
+      expect(next.getBoundingClientRect().bottom).toBeLessThanOrEqual(c.bottom);
+      TestBed.resetTestingModule();
+    });
+
     it('does not pull the form back while the person scrolls it', () => {
       const vv = new FakeViewport(330);
       start(vv);

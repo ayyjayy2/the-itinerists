@@ -40,3 +40,30 @@ test('tapping the password on the sign-in page shows it above the keyboard (#513
   assert.ok(m.top >= 0 && m.bottom <= m.visible,
     `the password is at ${Math.round(m.top)}–${Math.round(m.bottom)}px, the visible part ends at ${Math.round(m.visible)}px`);
 });
+
+test('the keyboard bar\'s next arrow moves from the email to the password (#516)', async () => {
+  const { driver } = app;
+  await app.page();
+  await driver.execute(() => { document.activeElement?.blur(); location.assign('/login'); });
+  await app.native();
+  const email = await driver.$('-ios predicate string:placeholderValue == "you@example.com"');
+  await email.waitForDisplayed({ timeout: 20000 });
+  await email.click();
+  await driver.waitUntil(() => driver.isKeyboardShown(), { timeout: 10000, timeoutMsg: 'the keyboard never came up' });
+  await driver.pause(1000);
+  await email.addValue('maya@example.com');                    // typed first, as people do (#516)
+  await driver.pause(800);
+  if (process.env.DEBUG_MOBILE) console.log('bar', JSON.stringify(await driver.execute('mobile: source', { format: 'description' })).match(/Button[^\n]{0,120}/g)?.slice(0, 12));
+  const next = await driver.$('-ios predicate string:type == "XCUIElementTypeButton" AND (name == "Next" OR label == "Next" OR name == "Next Field")');
+  await next.click();
+  await driver.pause(1200);
+  await app.shot('next-arrow');
+  await app.page();
+  const m = await driver.execute(() => {
+    const b = document.activeElement?.getBoundingClientRect();
+    return { id: document.activeElement?.id, bottom: b?.bottom, visible: window.visualViewport?.height ?? innerHeight };
+  });
+  if (process.env.DEBUG_MOBILE) console.log('after next', JSON.stringify(m));
+  assert.equal(m.id, 'password', 'the next arrow moved to the password');
+  assert.ok(m.bottom <= m.visible, `the password ends at ${Math.round(m.bottom)}px, the visible part at ${Math.round(m.visible)}px`);
+});
