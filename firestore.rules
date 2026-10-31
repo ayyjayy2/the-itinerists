@@ -115,6 +115,23 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── Invite opens (#609): a device reached a live invite ─────────────────
+    // Pulse's invite-to-join rate: "people invited" is every device that opens
+    // an invite link or types its code, signed in or not (an invite is a
+    // shareable link, not a list of people). Counts only: the trip, link or
+    // code, the platform and a random per-device id; never the code or a name.
+    match /_inviteOpens/{open} {
+      allow create: if request.resource.data.keys().hasOnly(['tripId', 'via', 'platform', 'visitor', 'at'])
+        && shortString(request.resource.data.tripId, 64)
+        && request.resource.data.via in ['link', 'code']
+        && request.resource.data.platform in ['web', 'pwa', 'ios']
+        && request.resource.data.visitor is string
+        && request.resource.data.visitor.matches('^[0-9a-fA-F-]{8,64}$')
+        && request.resource.data.at == request.time;
+      allow read: if isAppOwner();
+      allow update, delete: if false;
+    }
+
     // ── Usage events: append-only by the signed-in user, read by the owner ─
     // One doc per page view / session / ping (see UsageService). A user may
     // only record events as themselves, with exactly the expected fields and

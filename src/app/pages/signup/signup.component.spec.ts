@@ -75,3 +75,36 @@ describe('SignupComponent invite code from a link', () => {
     expect(replaceState).toHaveBeenCalledWith('/signup');
   });
 });
+
+/** #609: Pulse's invite-to-join rate counts who reached an invite, by link or by typing the code. */
+describe('SignupComponent counts how an invite was reached', () => {
+  function setup(state?: string) {
+    const validateInviteCode = jasmine.createSpy('validateInviteCode').and.returnValue(Promise.resolve('t1'));
+    TestBed.configureTestingModule({
+      imports: [SignupComponent],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: { validateInviteCode } },
+        { provide: UserService, useValue: {} },
+        { provide: LocalCacheService, useValue: { recoverIfBroken: () => false } },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
+        { provide: Location, useValue: { replaceState: () => {}, getState: () => (state ? { inviteCode: state } : {}) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(SignupComponent);
+    fixture.detectChanges();
+    return { comp: fixture.componentInstance, validateInviteCode };
+  }
+
+  it('a code from an invite link counts as the link', () => {
+    const { validateInviteCode } = setup('abc123');
+    expect(validateInviteCode).toHaveBeenCalledWith('ABC123', 'link');
+  });
+
+  it('a typed code counts as a code, even after arriving from a link', async () => {
+    const { comp, validateInviteCode } = setup('abc123');
+    comp.inviteCode = 'xyz789';
+    await comp.checkInviteCode();
+    expect(validateInviteCode).toHaveBeenCalledWith('XYZ789', 'code');
+  });
+});

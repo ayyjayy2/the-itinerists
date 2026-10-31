@@ -37,6 +37,8 @@ import { normalizeUsername } from '../utils/signup-form';
 import { UserService } from './user.service';
 import { randomCode } from '../utils/invite-code';
 import { TripEventsService } from './trip-events.service';
+import { InviteLogService } from './invite-log.service';
+import { InviteVia } from '../utils/invite-opens';
 import { ExpensesService } from './expenses.service';
 import { deletionRecord } from '../utils/account-deletion';
 
@@ -89,6 +91,7 @@ export class AuthService {
   private injector    = inject(Injector);   // TripService is resolved lazily: it injects AuthService itself
   private userService = inject(UserService);
   private events      = inject(TripEventsService);
+  private inviteLog   = inject(InviteLogService);
 
   /**
    * Sign in with the account's email. Accounts made before sign-up asked for
@@ -173,7 +176,7 @@ export class AuthService {
   ): Promise<void> {
     requireSignupEmail(email);
     // Resolve & validate the invite (code → trip).
-    const tripId = await this.validateInviteCode(inviteCode);
+    const tripId = await this.validateInviteCode(inviteCode, 'code');
     if (!tripId) throw new Error('This invite code is invalid or has expired.');
 
     // The invite doc itself is members-only (it names the owner and who joined);
@@ -300,13 +303,15 @@ export class AuthService {
 
   /**
    * Resolve an invite code to its tripId if it exists and hasn't expired,
-   * else `null`. Reads the global `/inviteIndex` (TP-11).
+   * else `null`. Reads the global `/inviteIndex` (TP-11). With `via`, a live
+   * invite is also counted as reached (by its link or its typed code, #609).
    */
-  async validateInviteCode(code: string): Promise<string | null> {
+  async validateInviteCode(code: string, via?: InviteVia): Promise<string | null> {
     const snap = await getDoc(doc(this.firestore, 'inviteIndex', code.trim().toUpperCase()));
     if (!snap.exists()) return null;
     const entry = snap.data() as InviteIndexEntry;
     if (!entry.expiresAt || entry.expiresAt < Date.now()) return null;
+    if (via) this.inviteLog.opened(entry.tripId, via);
     return entry.tripId;
   }
 
