@@ -373,6 +373,29 @@ service cloud.firestore {
         && (resource == null || isOwner(resource.data.tripId) || isAdmin());
     }
 
+    // ── Shared trip views (#611) ───────────────────────────────────────────
+    // The read-only page a member shares with people at home: /view/<token>.
+    // Anyone with the link may read that one doc (never list them); it holds
+    // only the display copy the app builds (dates, places, plan, flights,
+    // stays by town, first names). Members who can edit keep it up to date,
+    // and only for the token the trip currently names, so turning sharing off
+    // (or making a new link) stops the old one for good.
+    function sharesTrip(token, tripId) {
+      return tripId is string
+        && get(/databases/$(database)/documents/trips/$(tripId)).data.get('shareToken', '') == token;
+    }
+    match /shares/{token} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if canEdit(request.resource.data.tripId)
+        && sharesTrip(token, request.resource.data.tripId)
+        && request.resource.data.keys().hasOnly(['tripId', 'view', 'updatedAt'])
+        && request.resource.data.view is map
+        && request.resource.data.updatedAt == request.time
+        && (resource == null || resource.data.tripId == request.resource.data.tripId);
+      allow delete: if canEdit(resource.data.tripId);
+    }
+
     // The old shared place cache held every trip's place names, readable by any
     // signed-in account (#356). Closed: each trip keeps its own (below).
     match /geocache/{docId} {

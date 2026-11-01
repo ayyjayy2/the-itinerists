@@ -149,6 +149,8 @@ export interface TripDoc {
   createdBy: string;            // uid of the trip creator
   createdAt: number;            // unix ms
   memberCount: number;          // denormalized count, for plan/limit checks
+  /** The live read-only link for people at home (#611): /view/<shareToken>. Absent = not shared. */
+  shareToken?: string;
   archived?: boolean;           // set true by archiveTrip()
   /** A trip used for testing: tester activity shows in its feed (it is hidden on real trips). */
   isTest?: boolean;
