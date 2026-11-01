@@ -35,6 +35,8 @@ import { NotificationBellComponent } from './shared/notification-bell/notificati
 import { CdkDrag, CdkDropList, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AvatarGlyphComponent } from './shared/avatar-glyph/avatar-glyph.component';
 import { SurveyPopupComponent } from './shared/survey-popup/survey-popup.component';
+import { AccountSheetComponent } from './shared/account-sheet/account-sheet.component';
+import { AccountPromptService } from './services/account-prompt.service';
 
 interface NavItem {
   path: string;
@@ -44,7 +46,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent, NotificationBellComponent, CdkDrag, CdkDropList, AvatarGlyphComponent, LoadingComponent, BusyBarComponent, SurveyPopupComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, IconComponent, BrandComponent, NotificationBellComponent, CdkDrag, CdkDropList, AvatarGlyphComponent, LoadingComponent, BusyBarComponent, SurveyPopupComponent, AccountSheetComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -68,6 +70,7 @@ export class AppComponent implements OnInit {
   private firestoreResume = inject(FirestoreResumeService);
   private diagnostics = inject(DiagnosticsService);
   private visibleArea = inject(VisibleAreaService);
+  private accountPrompt = inject(AccountPromptService);
   private readonly appHeader = viewChild<ElementRef<HTMLElement>>('appHeader');
   private readonly tabBar = viewChild<ElementRef<HTMLElement>>('tabBar');
 
@@ -218,6 +221,7 @@ export class AppComponent implements OnInit {
   constructor() {
     this.usage.start();
     this.visibleArea.start();   // pop-ups size to the part above the keyboard (#470)
+    this.accountPrompt.start(); // a guest's tap on an edit control asks them to create an account (#610)
     // …and sit between the header and the tab bar, whichever are on screen (#497).
     effect(() => this.visibleArea.setChrome(this.appHeader()?.nativeElement ?? null, this.tabBar()?.nativeElement ?? null));
 

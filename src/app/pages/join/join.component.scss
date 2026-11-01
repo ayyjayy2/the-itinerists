@@ -89,6 +89,22 @@
 
     &:hover { text-decoration: underline; }
   }
+
+  // "Create an account instead" (#610): a link-styled button, a full tap target.
+  .linkish {
+    background: none;
+    border: 0;
+    font: inherit;
+    color: var(--primary-dark);
+    font-weight: 700;
+    cursor: pointer;
+    min-height: 44px;
+    padding: 0 0.5rem;
+
+    &:hover { text-decoration: underline; }
+  }
+
+  p { margin: 0.25rem 0; }
 }
 
 .input-wrap {

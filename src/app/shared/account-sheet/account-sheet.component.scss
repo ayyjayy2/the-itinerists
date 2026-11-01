@@ -1,0 +1,18 @@
+.modal-backdrop {
+  z-index: 310;   // where it sits: the shared .modal-backdrop rule (#492); above the survey pop-up
+  display: flex; align-items: center; justify-content: center;
+  padding-inline: 1.5rem;
+  background: rgba(0, 0, 0, 0.45);
+}
+.account-sheet {
+  width: 100%; max-width: 420px;
+  display: flex; flex-direction: column; gap: 0.75rem;
+  padding: 1.75rem 1.5rem 1.5rem;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+}
+h2 { margin: 0; }
+p { margin: 0; line-height: 1.5; }
+.hint { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.3rem; }
+.actions { display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap; margin-top: 0.5rem; }
+.actions .btn { min-height: 44px; justify-content: center; }

@@ -283,8 +283,10 @@ service cloud.firestore {
       allow get:  if isSignedIn() && (userId == uid() || isAdmin());
       allow list: if isAdmin();
       // You may create only your own doc, and NOT pre-set privileged fields.
+      // A guest (#610) gets a profile too (name and avatar, marked isGuest), so
+      // the app treats them as signed in; they have no email until they make an account.
       allow create: if isSignedIn() && userId == uid()
-                 && signedUpWithEmail()
+                 && (signedUpWithEmail() || (isGuest() && request.resource.data.get('isGuest', false) == true))
                  && hasNoEmailFields(request.resource.data)
                  && request.resource.data.get('isAdmin', false) == false
                  && request.resource.data.get('isDisabled', false) == false

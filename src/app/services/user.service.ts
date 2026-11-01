@@ -47,6 +47,8 @@ export class UserService {
   });
 
   readonly isAdmin = computed(() => this._firestoreUser()?.isAdmin ?? false);
+  /** A guest (#610): reads the trip from an invite link; adding or changing anything asks them to create an account. */
+  readonly isGuest = computed(() => this._firestoreUser()?.isGuest ?? false);
 
   hasUser(): boolean { return this._firestoreUser() !== null; }
 

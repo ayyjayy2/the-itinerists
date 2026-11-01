@@ -11,6 +11,8 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
   deleteUser,
+  signInAnonymously,
+  linkWithCredential,
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -25,6 +27,7 @@ import {
   increment,
   deleteDoc,
   writeBatch,
+  deleteField,
 } from '@angular/fire/firestore';
 import {
   FirestoreUser, InviteCode, InviteIndexEntry, TripMember, PrivateAccount, UsernameEntry,
@@ -39,6 +42,7 @@ import { randomCode } from '../utils/invite-code';
 import { TripEventsService } from './trip-events.service';
 import { InviteLogService } from './invite-log.service';
 import { InviteVia } from '../utils/invite-opens';
+import { guestAvatar, guestName } from '../utils/guest';
 import { ExpensesService } from './expenses.service';
 import { deletionRecord } from '../utils/account-deletion';
 
@@ -179,11 +183,6 @@ export class AuthService {
     const tripId = await this.validateInviteCode(inviteCode, 'code');
     if (!tripId) throw new Error('This invite code is invalid or has expired.');
 
-    // The invite doc itself is members-only (it names the owner and who joined);
-    // the index has already confirmed the code is live, and the rules check the
-    // invite again when the member doc is written.
-    const inviteRef  = doc(this.firestore, 'trips', tripId, 'invites', inviteCode);
-
     // The Auth account is created with the person's real email: how they sign
     // in, and where password resets go. Legacy accounts used a synthetic
     // username address instead.
@@ -204,7 +203,19 @@ export class AuthService {
     };
     await this.writeNewAccount(cred, userDoc, authEmail);
 
-    // Join the invited trip: member doc + trips index + member count + usedBy.
+    await this.joinInvitedTrip(userDoc, tripId, inviteCode, now);
+    this.tripContext.switchTrip(tripId);
+  }
+
+  /** Join the invited trip as a new account or guest: member doc + trips index + member count + usedBy. */
+  private async joinInvitedTrip(userDoc: FirestoreUser, tripId: string, inviteCode: string, now: number): Promise<void> {
+    const uid = userDoc.uid;
+    const { avatarEmoji, color } = userDoc;
+    const letterColor = userDoc.avatarLetterColor ?? '';
+    // The invite doc itself is members-only (it names the owner and who joined);
+    // the index has already confirmed the code is live, and the rules check the
+    // invite again when the member doc is written.
+    const inviteRef = doc(this.firestore, 'trips', tripId, 'invites', inviteCode);
     const member: TripMember = {
       uid, role: 'member',
       displayName: userDoc.displayName,
@@ -229,8 +240,60 @@ export class AuthService {
       timestamp: now,
     }).catch(err => console.warn('[AuthService] activity log failed:', err));
     this.events.emit({ kind: 'member', action: 'joined', itemId: '', path: '/trip-settings', summary: 'joined the trip', audience: 'all' }, tripId);
+  }
 
+  /**
+   * Open an invite link without an account (#610): sign in as a guest, with
+   * just a name, and join the trip to read it. A guest changes nothing until
+   * they create an account (`upgradeGuest`), which keeps this same sign-in
+   * and membership. The rules hold guests to reading (isGuest / canEdit).
+   */
+  async joinAsGuest(inviteCode: string, name: string): Promise<void> {
+    const code = inviteCode.trim().toUpperCase();
+    const displayName = guestName(name);
+    if (!displayName) throw new Error('Enter your name so the group knows who you are.');
+    const tripId = await this.validateInviteCode(code, 'link');
+    if (!tripId) throw new Error('This invite code is invalid or has expired.');
+    const cred = await signInAnonymously(this.auth);
+    const now = Date.now();
+    const userDoc: FirestoreUser = {
+      uid: cred.user.uid, displayName, ...guestAvatar(displayName),
+      isAdmin: false, isDisabled: false, isGuest: true, createdAt: now,
+    };
+    try {
+      await setDoc(doc(this.firestore, 'users', userDoc.uid), userDoc);
+    } catch (err) {
+      await deleteUser(cred.user).catch(() => {/* best effort */});
+      throw err;
+    }
+    await this.joinInvitedTrip(userDoc, tripId, code, now);
     this.tripContext.switchTrip(tripId);
+  }
+
+  /**
+   * A guest creates their account (#610): the guest sign-in becomes an email
+   * and password one, keeping the same account id, so every trip they joined
+   * stays theirs and they can add and change things straight away.
+   */
+  async upgradeGuest(email: string, password: string): Promise<void> {
+    requireSignupEmail(email);
+    const user = this.auth.currentUser;
+    if (!user?.isAnonymous) throw new Error('You already have an account.');
+    const authEmail = email.toLowerCase().trim();
+    try {
+      await linkWithCredential(user, EmailAuthProvider.credential(authEmail, password));
+    } catch (err) {
+      const code = (err as { code?: string })?.code;
+      if (code === 'auth/email-already-in-use' || code === 'auth/credential-already-in-use') {
+        throw new Error('That email already has an account. Sign in with it, then open the invite link again to join.');
+      }
+      throw describeAuthError(err);
+    }
+    // The rules read the sign-in method from the token: refresh it so they see the account now.
+    await user.getIdToken(true);
+    await setDoc(this.accountRef(user.uid), { authEmail } satisfies PrivateAccount);
+    await updateDoc(doc(this.firestore, 'users', user.uid), { isGuest: deleteField() });
+    void this.injector.get(EmailConfirmService).send();
   }
 
   /**

@@ -12,6 +12,33 @@
       </div>
     }
 
+    @if (step() === 'guest') {
+      <div class="auth-header">
+        <app-brand [mark]="48" [showWordmark]="false" />
+        <h1>You're invited</h1>
+        <p class="auth-sub">See the trip plan now. You'll only need an account to add or change things.</p>
+      </div>
+      <form class="auth-form" (ngSubmit)="seeTheTrip()">
+        <div class="form-group">
+          <label for="guest-name">What should the group call you?</label>
+          <input id="guest-name" type="text" name="guestName" [(ngModel)]="guestName"
+                 placeholder="e.g. Maya" autocomplete="given-name" maxlength="40" required
+                 [class.invalid]="!!nameError()" [attr.aria-invalid]="nameError() ? true : null"
+                 [attr.aria-describedby]="nameError() ? 'guest-name-err' : null" />
+          @if (nameError(); as err) {
+            <p class="field-error" id="guest-name-err">{{ err }}</p>
+          }
+        </div>
+        <button type="submit" class="btn btn-primary auth-btn" [disabled]="joining()">
+          {{ joining() ? 'Opening the trip…' : 'See the trip' }}
+        </button>
+      </form>
+      <div class="auth-footer">
+        <p><button type="button" class="linkish" (click)="createAccount()">Create an account instead</button></p>
+        <p class="muted">Already have one? <a routerLink="/login">Sign in</a>, then open this link again.</p>
+      </div>
+    }
+
     @if (step() === 'invalid') {
       <div class="auth-header">
         <app-brand [mark]="48" [showWordmark]="false" />
