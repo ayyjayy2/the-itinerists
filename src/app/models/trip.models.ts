@@ -1,3 +1,5 @@
+import type { PayHandles } from '../utils/pay-links';
+
 // ── User ──────────────────────────────────────────────────────────────────────
 
 export interface TripUser {
@@ -40,6 +42,8 @@ export interface FirestoreUser {
   /** A guest (#610): signed in from an invite link without an account, to read the
    *  trip. Removed when they create one (AuthService.upgradeGuest). */
   isGuest?: boolean;
+  /** Payment app handles (#532), copied to the person's member doc on each trip so the group can pay them back. */
+  payHandles?: PayHandles;
   createdAt: number;   // unix ms
   /** Email the Auth account signs in with. NOT stored on the profile doc —
    *  it lives in users/{uid}/private/account and UserService merges it in for
@@ -161,6 +165,7 @@ export interface TripMember {
   joinedAt: number;             // unix ms
   isTest?: boolean;             // throwaway tester (see FirestoreUser.isTest)
   inviteCode?: string;          // the invite this member joined with (self-joins; required by the rules)
+  payHandles?: PayHandles;      // their payment app handles, from their profile (#532)
   travelMode?: TravelMode | null;
   arrivalDate?: string;         // YYYY-MM-DD (derived from travel entries or set manually)
   arrivalTime?: string;         // e.g. "3:00 PM"
@@ -195,7 +200,8 @@ export type TripEventKind =
 export type TripEventAction =
   | 'added' | 'changed' | 'removed'
   | 'joined' | 'left' | 'kicked' | 'restored'
-  | 'suggested' | 'accepted' | 'declined';
+  | 'suggested' | 'accepted' | 'declined'
+  | 'reminded';   // a gentle nudge to pay someone back (#532): shown without the sender's name
 
 /** Stored at `/trips/{tripId}/events/{id}`. Display line = `${actorName} ${summary}`. */
 export interface TripEvent {

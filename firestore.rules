@@ -276,6 +276,17 @@ service cloud.firestore {
     function signedUpWithEmail() {
       return isRealEmail(request.auth.token.get('email', ''));
     }
+    // Payment app handles (#532): only the three known apps, each a plain handle.
+    function isHandle(v) {
+      return v is string && v.matches('^[A-Za-z0-9._-]{1,40}$');
+    }
+    function validPayHandles(data) {
+      return !('payHandles' in data) || (data.payHandles is map
+        && data.payHandles.keys().hasOnly(['venmo', 'paypal', 'cashapp'])
+        && (!('venmo' in data.payHandles) || isHandle(data.payHandles.venmo))
+        && (!('paypal' in data.payHandles) || isHandle(data.payHandles.paypal))
+        && (!('cashapp' in data.payHandles) || isHandle(data.payHandles.cashapp)));
+    }
     function hasNoEmailFields(data) {
       return !('authEmail' in data) && !('pendingEmail' in data);
     }
@@ -288,6 +299,7 @@ service cloud.firestore {
       allow create: if isSignedIn() && userId == uid()
                  && (signedUpWithEmail() || (isGuest() && request.resource.data.get('isGuest', false) == true))
                  && hasNoEmailFields(request.resource.data)
+                 && validPayHandles(request.resource.data)
                  && request.resource.data.get('isAdmin', false) == false
                  && request.resource.data.get('isDisabled', false) == false
                  && request.resource.data.get('layoutPicker', false) == false;
@@ -296,6 +308,7 @@ service cloud.firestore {
       allow update: if isAdmin()
                  || (userId == uid()
                      && hasNoEmailFields(request.resource.data)
+                     && validPayHandles(request.resource.data)
                      && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
                      && request.resource.data.get('isDisabled', false) == resource.data.get('isDisabled', false)
                      && request.resource.data.get('layoutPicker', false) == resource.data.get('layoutPicker', false));
@@ -414,8 +427,9 @@ service cloud.firestore {
                        );
         // Owners/admins manage roles; you may edit your own member doc but NOT
         // change your own role (no self-promotion to owner).
-        allow update: if isOwner(tripId) || isAdmin()
-                   || (memberId == uid() && request.resource.data.role == resource.data.role);
+        allow update: if (isOwner(tripId) || isAdmin()
+                   || (memberId == uid() && request.resource.data.role == resource.data.role))
+                   && validPayHandles(request.resource.data);
         allow delete: if memberId == uid() || isOwner(tripId) || isAdmin();
       }
 
@@ -506,6 +520,21 @@ service cloud.firestore {
           && request.resource.data.from is string && request.resource.data.to is string
           && request.resource.data.itemId is string;
         allow update: if false;
+      }
+
+      // "Remind" (#532): the person who is owed nudges the person who owes,
+      // at most once a day for each pair. One doc per pair, {from}_{to}, written
+      // by `from`; the reminder itself is a line on `to`'s bell (events).
+      match /reminders/{pair} {
+        allow read: if isMember(tripId);
+        allow create, update: if canEdit(tripId)
+          && request.resource.data.keys().hasOnly(['from', 'to', 'at'])
+          && request.resource.data.from == uid()
+          && request.resource.data.to is string
+          && pair == uid() + '_' + request.resource.data.to
+          && request.resource.data.at == request.time
+          && (resource == null || resource.data.at < request.time - duration.value(20, 'h'));
+        allow delete: if canEdit(tripId);
       }
 
       match /packing/{ownerUid} {
