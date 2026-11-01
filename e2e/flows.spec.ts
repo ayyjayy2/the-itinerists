@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { test, expect, Page } from '@playwright/test';
 
 /**
@@ -194,4 +195,18 @@ test('share a read-only trip page, open it, then stop sharing', async ({ page })
   await expect(page.getByRole('button', { name: 'Share a read-only page' })).toBeVisible();
   await go(path);
   await expect(page.getByRole('heading', { name: "This link isn't working" })).toBeVisible();
+});
+
+/** #332: download a file of my data from Profile. */
+test('download my data from Profile', async ({ page }) => {
+  await page.goto('/profile');
+  const downloading = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download my data' }).click();
+  const file = await downloading;
+  expect(file.suggestedFilename()).toMatch(/^the-itinerists-data-\d{4}-\d{2}-\d{2}\.json$/);
+  const data = JSON.parse(readFileSync(await file.path(), 'utf8'));
+  expect(data.profile.displayName).toBe('Alayna');
+  expect(data.trips[0].name).toBe('Chiang Mai, November');
+  expect(data.trips[0].otherMembers).toEqual(expect.arrayContaining(['Maya', 'Theo', 'Jo']));
+  expect(JSON.stringify(data)).not.toContain('maya@the-itinerists.local');   // nobody else's sign-in
 });

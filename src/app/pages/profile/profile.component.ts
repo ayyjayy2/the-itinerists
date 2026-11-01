@@ -17,6 +17,7 @@ import { isDevMode } from '@angular/core';
 import { APP_VERSION, APP_BUILD, APP_BUILD_DATE } from '../../../version';
 import { userMessage } from '../../utils/user-message';
 import { PAY_APPS, PayApp, normalizeHandle } from '../../utils/pay-links';
+import { DataExportService } from '../../services/data-export.service';
 
 @Component({
   selector: 'app-profile',
@@ -27,6 +28,7 @@ import { PAY_APPS, PayApp, normalizeHandle } from '../../utils/pay-links';
 export class ProfileComponent implements OnInit {
   private userService  = inject(UserService);
   private accountPrompt = inject(AccountPromptService);
+  private dataExport = inject(DataExportService);
   private tripService  = inject(TripService);
   private authService  = inject(AuthService);
   private router       = inject(Router);
@@ -147,6 +149,18 @@ export class ProfileComponent implements OnInit {
     } finally {
       this.paySaving.set(false);
     }
+  }
+
+  // ── Download my data (#332) ──
+  readonly dataBusy = signal(false);
+  readonly dataError = signal('');
+  async downloadData(): Promise<void> {
+    if (this.dataBusy()) return;
+    this.dataBusy.set(true);
+    this.dataError.set('');
+    try { await this.dataExport.download(); }
+    catch (err) { this.dataError.set(userMessage(err, "Couldn't gather your data. Check your connection and try again.")); }
+    finally { this.dataBusy.set(false); }
   }
 
   /** A guest's "Create account" (#610): the same sheet a guest gets when they try to change something. */
