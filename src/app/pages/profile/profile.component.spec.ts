@@ -1,10 +1,14 @@
+import { DataExportService } from '../../services/data-export.service';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { ProfileComponent } from './profile.component';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
+
+/** Download my data (#332) stand-in: the file itself is tested in utils/data-export.spec.ts. */
+const dataExport = { download: jasmine.createSpy('download').and.resolveTo() };
 
 function firebaseError(code: string): Error {
   const err = new Error(code) as Error & { code: string };
@@ -27,6 +31,7 @@ describe('ProfileComponent recovery-email modal', () => {
         { provide: UserService,  useValue: { firestoreUser: user } },
         { provide: TripService, useValue: { activeMembers: signal([]) } },
         { provide: AuthService,  useValue: auth },
+        { provide: DataExportService, useValue: dataExport },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
     });
@@ -100,6 +105,7 @@ describe('ProfileComponent delete-account modal', () => {
         { provide: UserService,  useValue: { firestoreUser: user } },
         { provide: TripService, useValue: { activeMembers: signal([]) } },
         { provide: AuthService,  useValue: auth },
+        { provide: DataExportService, useValue: dataExport },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
     });
@@ -171,6 +177,7 @@ describe('ProfileComponent without usernames', () => {
         { provide: UserService,  useValue: { firestoreUser: user } },
         { provide: TripService, useValue: { activeMembers: signal([]) } },
         { provide: AuthService,  useValue: {} },
+        { provide: DataExportService, useValue: dataExport },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
     });
@@ -200,6 +207,7 @@ describe('ProfileComponent show-password eye', () => {
         { provide: UserService,  useValue: { firestoreUser: user } },
         { provide: TripService, useValue: { activeMembers: signal([]) } },
         { provide: AuthService,  useValue: {} },
+        { provide: DataExportService, useValue: dataExport },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
     });
@@ -253,5 +261,32 @@ describe('ProfileComponent show-password eye', () => {
     fixture.componentInstance.openDeleteModal();
     fixture.detectChanges();
     expect(fields()[0].type).toBe('password');
+  });
+});
+
+describe('ProfileComponent download my data (#332)', () => {
+  it('shows a busy label while gathering, and a way forward if it fails', async () => {
+    TestBed.resetTestingModule();
+    let finish!: () => void;
+    const stub = { download: jasmine.createSpy('download').and.returnValue(new Promise<void>(r => { finish = r; })) };
+    TestBed.configureTestingModule({
+      imports: [ProfileComponent],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: {} },
+        { provide: DataExportService, useValue: stub },
+        { provide: UserService, useValue: { firestoreUser: signal({ uid: 'u', displayName: 'Maya', avatarEmoji: '🌸', color: '#fff', isAdmin: false, createdAt: 0 }), currentUser: signal(null), isGuest: signal(false), updateHomeLayout: () => {} } },
+        { provide: TripService, useValue: { activeMembers: signal([]) } },
+      ],
+    });
+    const comp = TestBed.createComponent(ProfileComponent).componentInstance;
+    const run = comp.downloadData();
+    expect(comp.dataBusy()).toBeTrue();
+    finish();
+    await run;
+    expect(comp.dataBusy()).toBeFalse();
+    stub.download.and.rejectWith(new Error('offline'));
+    await comp.downloadData();
+    expect(comp.dataError()).toBeTruthy();
   });
 });

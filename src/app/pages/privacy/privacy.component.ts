@@ -87,12 +87,13 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <h2>Your choices</h2>
         <ul>
           <li><strong>Edit</strong> your name, avatar, email and password on the Profile page.</li>
+          <li><strong>Download your data</strong> from the Profile page: one file of everything we hold about you.</li>
           <li><strong>Leave a trip</strong> from Trip Settings. Your personal lists and photos for that trip go with you.</li>
           <li><strong>Delete your account</strong> from the Profile page. This removes your profile, email, personal lists and photos, takes you off every trip, and deletes your sign-in. A trip you owned passes to its longest-standing member; a trip you were the only member of is deleted, with everything in it. Shared things you added to a trip with others, such as itinerary events and expenses, stay with the trip for them, and usage records are kept (see How long we keep data). This cannot be undone.</li>
         </ul>
 
         <h2>Your rights</h2>
-        <p>Wherever you live, you can see, correct and delete your information using the app, and you can email us to ask for a copy of everything we hold about you or for anything the app doesn't let you do yourself. We answer within 30 days.</p>
+        <p>Wherever you live, you can see, correct and delete your information using the app, and download a copy of it as a file (Profile → Download my data: your profile, sign-in email, trips, lists, expenses, outfits and the shared things you added or are part of). You can email us for a copy of the usage records too, or for anything the app doesn't let you do yourself. We answer within 30 days.</p>
         <h3>In the European Economic Area and the United Kingdom</h3>
         <ul>
           <li>We use your account and trip content to provide the app you signed up for (performance of a contract). We use error reports, usage analytics and integrity checks because we have a legitimate interest in keeping the app secure, working and improving. You may object to that use by emailing us.</li>

@@ -83,6 +83,7 @@
         <div class="account-exit">
           <button class="btn btn-ghost btn-ghost-warn" (click)="showLogoutConfirm.set(true)">Log Out</button>
         </div>
+        <ng-container *ngTemplateOutlet="dataLink" />
       </div>
     } @else {
     <div class="card section-card">
@@ -97,8 +98,19 @@
         <button class="btn btn-ghost btn-ghost-warn" (click)="showLogoutConfirm.set(true)">Log Out</button>
         <button class="btn btn-ghost btn-ghost-danger" (click)="openDeleteModal()">Delete Account</button>
       </div>
+      <ng-container *ngTemplateOutlet="dataLink" />
     </div>
     }
+    <!-- Download my data (#332): a quiet link, the rights the privacy policy promises -->
+    <ng-template #dataLink>
+      <p class="data-link">
+        <button type="button" class="linkish" (click)="downloadData()" [disabled]="dataBusy()">
+          {{ dataBusy() ? 'Gathering your data…' : 'Download my data' }}
+        </button>
+        <span class="input-hint">A file of everything we hold about you: your profile, trips, lists and the things you added.</span>
+      </p>
+      @if (dataError()) {<div class="alert alert-error">{{ dataError() }}</div>}
+    </ng-template>
 
     <!-- Home layout (picker accounts only — see canPickLayout) -->
     @if (canPickLayout()) {
