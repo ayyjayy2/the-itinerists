@@ -18,6 +18,7 @@ import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.com
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 import { userMessage } from '../../utils/user-message';
 import { ShareViewService } from '../../services/share-view.service';
+import { publicLink } from '../../shared/public-link';
 
 interface CurrencyOption { code: string; label: string; }
 interface HideablePage { key: string; label: string; icon: string; }
@@ -217,7 +218,7 @@ export class TripSettingsComponent {
     this.inviteNotice.set('');
     try {
       const code = await this.tripService.generateInvite(t.id);
-      await navigator.clipboard.writeText(`${window.location.origin}/join?code=${code}`).catch(() => {/* panel still shows it */});
+      await navigator.clipboard.writeText(publicLink(`/join?code=${code}`)).catch(() => {/* panel still shows it */});
       this.inviteState.set('copied');
       setTimeout(() => this.inviteState.set('idle'), 2500);
     } catch {

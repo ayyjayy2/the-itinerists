@@ -2,6 +2,7 @@ import { Component, DestroyRef, computed, inject, input, output, signal } from '
 import { TitleCasePipe } from '@angular/common';
 import { IconComponent } from '../icon/icon.component';
 import { AnalyticsService } from '../../services/analytics.service';
+import { publicLink } from '../public-link';
 
 /**
  * Everything a trip owner needs to hand out one invite: the code (typed on
@@ -89,7 +90,7 @@ export class InvitePanelComponent {
   readonly closing = input(false);
   /** Emits the code when the owner taps Close invite; the host revokes it. */
   readonly close = output<string>();
-  readonly link = computed(() => `${window.location.origin}/join?code=${this.code()}`);
+  readonly link = computed(() => publicLink(`/join?code=${this.code()}`));
   readonly expiresIn = computed(() => {
     const at = this.expiresAt();
     if (!at) return '';

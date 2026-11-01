@@ -45,6 +45,7 @@ import { InviteVia } from '../utils/invite-opens';
 import { guestAvatar, guestName } from '../utils/guest';
 import { ExpensesService } from './expenses.service';
 import { deletionRecord } from '../utils/account-deletion';
+import { publicLink } from '../shared/public-link';
 
 const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
 
@@ -433,7 +434,7 @@ export class AuthService {
       const cred = EmailAuthProvider.credential(user.email, currentPassword);
       await reauthenticateWithCredential(user, cred);
     }
-    await verifyBeforeUpdateEmail(user, email, { url: `${window.location.origin}/profile`, handleCodeInApp: false });
+    await verifyBeforeUpdateEmail(user, email, { url: publicLink('/profile'), handleCodeInApp: false });
     // Private to this person; the public username index never holds a real address.
     await setDoc(this.accountRef(user.uid), { pendingEmail: email }, { merge: true });
   }
