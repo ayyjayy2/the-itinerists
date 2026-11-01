@@ -485,6 +485,35 @@ function render() {
   const modes = [{ mode: 'local', label: "Each person's clock" }, ...seenZones.map(z => ({ mode: z, label: zoneAbbr(z) }))];
   $('hourMode').innerHTML = modes.map(m => `<button type="button" data-mode="${esc(m.mode)}" aria-pressed="${state.hourMode === m.mode}">${esc(m.label)}</button>`).join('');
 
+  // North Star and its drivers (#609): real trips, real members, the whole loaded history.
+  const hideUser = uid => hiddenUids.has(uid) && !(state.hide.me && auth.currentUser?.uid === uid);
+  const nsTrips = realTrips.filter(t => !t.isTest && (!state.tripSel || state.tripSel.has(t.id)));
+  const nsMembers = new Map(nsTrips.map(t => [t.id, (state.members.get(t.id) ?? []).filter(m => !m.isTest && !hideUser(m.uid))]));
+  const testTrip = id => state.hide.testTrips && state.testTrips.has(id);
+  const nsWrites = state.writes.filter(x => !hideUser(x.uid) && !testTrip(x.tripId));
+  const nsRows = state.rows.filter(r => !hideUser(r.uid));
+  const ns = S.northStar({ trips: nsTrips, members: nsMembers, writes: nsWrites, opens: state.opens, rows: nsRows, from: start, to: now, zone: state.zone, opensSince: state.opensSince });
+  // History the measures need beyond the range: plan items since each started trip was made, the week before it.
+  const startedMade = nsTrips.filter(t => ns.live.trips.some(x => x.id === t.id)).map(t => t.createdAt).filter(Boolean);
+  if (startedMade.length) ensureHistory(LOGS[1], Math.max(Math.min(...startedMade), now - 2 * 365 * DAY));
+  ensureHistory(LOGS[0], start - 7 * DAY);
+  const rate = (r, n, of) => r == null ? '<span class="muted">—</span>' : `${Math.round(100 * r)}%<span class="muted small"> ${n} of ${of}</span>`;
+  $('nsSub').textContent = `${ns.live.started} ${ns.live.started === 1 ? 'trip' : 'trips'} started in the range, ${ns.live.live} live`;
+  $('nsMonths').innerHTML = ns.live.byMonth.length === 0 ? '' :
+    '<tr><th>Month</th><th class="n">Trips started</th><th class="n">Live group trips</th></tr>' +
+    ns.live.byMonth.map(m => `<tr><td>${esc(new Date(m.month + '-15T12:00:00Z').toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }))}</td><td class="n num">${m.started}</td><td class="n num">${m.live}</td></tr>`).join('');
+  const notLive = ns.live.trips.filter(x => !x.live);
+  $('nsWhy').textContent = notLive.length ? 'Not live: ' + notLive.map(x => `${tripName(x.id)} (${x.members} ${x.members === 1 ? 'member' : 'members'}, ${x.items} plan ${x.items === 1 ? 'item' : 'items'})`).join('; ') + '.' : '';
+  $('nsDrivers').innerHTML = '<tr><th>Measure</th><th>How it is counted</th><th class="n">In this range</th></tr>' + [
+    ['Invite-to-join', state.opensSince ? 'People who joined with an invite ÷ devices that opened an invite link or typed its code (once per trip)' : 'Starts once someone opens an invite with this version of the app', rate(ns.invite.rate, ns.invite.joined, ns.invite.reached)],
+    ['Fast group adoption', `Trips made in the range with 3+ members within 72 hours${ns.fast.pending ? ` (${ns.fast.pending} newer still counting)` : ''}`, rate(ns.fast.rate, ns.fast.adopted, ns.fast.trips)],
+    ['Planner reuse', 'Planners whose first trip was made in the range who started another within 12 months, so far', rate(ns.reuse.rate, ns.reuse.again, ns.reuse.planners)],
+    ['Joiner to planner, 90 days', 'People who first joined a trip in the range and started their own within 90 days', rate(ns.convert.rate90, ns.convert.in90, ns.convert.joiners)],
+    ['Joiner to planner, 12 months', 'The same, within 12 months, so far', rate(ns.convert.rate365, ns.convert.in365, ns.convert.joiners)],
+    ['Members active the week before', 'Members of trips that started in the range who opened the app in the 7 days before the first day', rate(ns.weekBefore.rate, ns.weekBefore.active, ns.weekBefore.members)],
+    ['Revenue per trip', 'All revenue ÷ trips', '<span class="muted">No payments yet</span>'],
+  ].map(([m, how, v]) => `<tr><td><strong>${esc(m)}</strong></td><td class="muted small">${esc(how)}</td><td class="n num">${v}</td></tr>`).join('');
+
   // Totals
   const users = new Set(rows.map(r => r.uid)).size;
   const views = rows.filter(r => r.type === 'page').length;
@@ -494,6 +523,7 @@ function render() {
   const liveTrips = realTrips.filter(t => tripPhase(t, today)[0] === 'live').length;
   $('tiles').innerHTML = [
     [users, 'people'], [sessions, 'app opens'], [views, 'page views'], [online.length, 'online now'], [liveTrips, 'trips happening now'],
+    [ns.live.live, `live group ${ns.live.live === 1 ? 'trip' : 'trips'}`],
   ].map(([v, l]) => `<div class="tile"><div class="v num">${v}</div><div class="l">${l}</div></div>`).join('');
   const rangeLabel = { today: 'today', '24h': 'the last 24 hours', '7d': 'the last 7 days', '30d': 'the last 30 days', '60d': 'the last 60 days', '180d': 'the last 180 days', '1y': 'the last year' }[state.range];
   const selLabel = !state.tripSel ? '' : state.tripSel.size === 1 ? ', ' + tripName([...state.tripSel][0]) + ' only' : `, ${state.tripSel.size} trips only`;
@@ -622,38 +652,6 @@ function render() {
     <li>${avatar(p.uid)}<span class="main"><span class="name">${esc(userName(p.uid))}</span>
       <span class="sub">${esc(tripName(personTrip(p.uid, p.tripId)))} · ${esc(p.platform)} · ${esc(usedIn(p.tz))} · ${p.views} views · ${p.sessions} opens · ${p.daysActive} ${p.daysActive === 1 ? 'day' : 'days'}</span></span>
       <span class="when">${agoHtml(p.lastSeen)}</span></li>`).join('');
-
-  // North Star and its drivers (#609): real trips, real members, the whole loaded history.
-  const hideUser = uid => hiddenUids.has(uid) && !(state.hide.me && auth.currentUser?.uid === uid);
-  const nsTrips = realTrips.filter(t => !t.isTest && (!state.tripSel || state.tripSel.has(t.id)));
-  const nsMembers = new Map(nsTrips.map(t => [t.id, (state.members.get(t.id) ?? []).filter(m => !m.isTest && !hideUser(m.uid))]));
-  const testTrip = id => state.hide.testTrips && state.testTrips.has(id);
-  const nsWrites = state.writes.filter(x => !hideUser(x.uid) && !testTrip(x.tripId));
-  const nsRows = state.rows.filter(r => !hideUser(r.uid));
-  const ns = S.northStar({ trips: nsTrips, members: nsMembers, writes: nsWrites, opens: state.opens, rows: nsRows, from: start, to: now, zone: state.zone, opensSince: state.opensSince });
-  // History the measures need beyond the range: plan items since each started trip was made, the week before it.
-  const startedMade = nsTrips.filter(t => ns.live.trips.some(x => x.id === t.id)).map(t => t.createdAt).filter(Boolean);
-  if (startedMade.length) ensureHistory(LOGS[1], Math.max(Math.min(...startedMade), now - 2 * 365 * DAY));
-  ensureHistory(LOGS[0], start - 7 * DAY);
-  const rate = (r, n, of) => r == null ? '<span class="muted">—</span>' : `${Math.round(100 * r)}%<span class="muted small"> ${n} of ${of}</span>`;
-  $('nsTiles').innerHTML = [
-    [ns.live.live, `live group ${ns.live.live === 1 ? 'trip' : 'trips'}`],
-    [ns.live.started, `${ns.live.started === 1 ? 'trip' : 'trips'} started`],
-  ].map(([v, l]) => `<div class="tile"><div class="v num">${v}</div><div class="l">${l}</div></div>`).join('');
-  $('nsMonths').innerHTML = ns.live.byMonth.length === 0 ? '' :
-    '<tr><th>Month</th><th class="n">Trips started</th><th class="n">Live group trips</th></tr>' +
-    ns.live.byMonth.map(m => `<tr><td>${esc(new Date(m.month + '-15T12:00:00Z').toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }))}</td><td class="n num">${m.started}</td><td class="n num">${m.live}</td></tr>`).join('');
-  const notLive = ns.live.trips.filter(x => !x.live);
-  $('nsWhy').textContent = notLive.length ? 'Not live: ' + notLive.map(x => `${tripName(x.id)} (${x.members} ${x.members === 1 ? 'member' : 'members'}, ${x.items} plan ${x.items === 1 ? 'item' : 'items'})`).join('; ') + '.' : '';
-  $('nsDrivers').innerHTML = '<tr><th>Measure</th><th>How it is counted</th><th class="n">In this range</th></tr>' + [
-    ['Invite-to-join', state.opensSince ? 'People who joined with an invite ÷ devices that opened an invite link or typed its code (once per trip)' : 'Starts once someone opens an invite with this version of the app', rate(ns.invite.rate, ns.invite.joined, ns.invite.reached)],
-    ['Fast group adoption', `Trips made in the range with 3+ members within 72 hours${ns.fast.pending ? ` (${ns.fast.pending} newer still counting)` : ''}`, rate(ns.fast.rate, ns.fast.adopted, ns.fast.trips)],
-    ['Planner reuse', 'Planners whose first trip was made in the range who started another within 12 months, so far', rate(ns.reuse.rate, ns.reuse.again, ns.reuse.planners)],
-    ['Joiner to planner, 90 days', 'People who first joined a trip in the range and started their own within 90 days', rate(ns.convert.rate90, ns.convert.in90, ns.convert.joiners)],
-    ['Joiner to planner, 12 months', 'The same, within 12 months, so far', rate(ns.convert.rate365, ns.convert.in365, ns.convert.joiners)],
-    ['Members active the week before', 'Members of trips that started in the range who opened the app in the 7 days before the first day', rate(ns.weekBefore.rate, ns.weekBefore.active, ns.weekBefore.members)],
-    ['Revenue per trip', 'All revenue ÷ trips', '<span class="muted">No payments yet</span>'],
-  ].map(([m, how, v]) => `<tr><td><strong>${esc(m)}</strong></td><td class="muted small">${esc(how)}</td><td class="n num">${v}</td></tr>`).join('');
 
   // Return rate
   const cohorts = S.returnCohorts(rows, state.zone);
