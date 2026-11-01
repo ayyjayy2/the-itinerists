@@ -546,6 +546,52 @@
   }
 }
 
+// Paying back (#532): low-key links under a balance, never a big button (hand-offs stay quiet).
+.pay-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.4rem;
+  margin: -0.35rem 0 0.1rem;
+}
+.pay-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.pay-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.3rem;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  &:hover { color: var(--primary-dark); }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+.pay-check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.pay-check-actions { display: flex; gap: 0.4rem; }
+
 .banner-settled-text {
   font-size: 1rem;
   font-weight: 700;

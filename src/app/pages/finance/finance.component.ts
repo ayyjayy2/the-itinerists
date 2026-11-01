@@ -22,6 +22,7 @@ import { FocusService } from '../../services/focus.service';
 import { safeLink } from '../../utils/safe-link';
 import { leftOutOfSplit, splitPatch } from '../../utils/split-gaps';
 import { paidKey } from '../../utils/paid-marks';
+import { PAY_APPS, canRemind, payLink } from '../../utils/pay-links';
 
 /**
  * How the working under each balance shows (#519): 'tap' shows it with a
@@ -315,6 +316,62 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       query:         this.searchQuery().trim().toLowerCase(),
       isPaid:        (from, to, id) => this.isItemPaid(from, to, id),
     }));
+
+  // ── Paying back (#532) ────────────────────────────────────────────────────────
+  // A low-key hand-off: "Pay" opens the other person's payment app with the
+  // amount filled in; the app never handles money. The person owed can send
+  // one gentle reminder a day. After a Pay tap the page asks whether to mark
+  // it paid, and never assumes.
+  private memberByName = computed(() => new Map(this.tripService.activeMembers().map(m => [m.displayName, m])));
+
+  /** The payment apps `name` has added, as links paying them `amount` (trip currency). */
+  payOptions(name: string, amount: number): { label: string; href: string }[] {
+    const handles = this.memberByName().get(name)?.payHandles ?? {};
+    const note = this.tripService.activeTrip()?.name ?? '';
+    return PAY_APPS.filter(a => handles[a.app])
+      .map(a => ({ label: a.label, href: payLink(a.app, handles[a.app]!, amount, this.homeCurrency(), note) }));
+  }
+
+  /** Who the page is asking "did you pay?" about, after a Pay tap. */
+  readonly pendingPay = signal<{ name: string; amount: number } | null>(null);
+  onPay(name: string, amount: number): void { this.pendingPay.set({ name, amount }); }
+
+  /** Settle up with `name`: every unpaid item between us, both ways, ticked paid. */
+  settleWith(name: string): void {
+    const me = this.currentUser()?.name ?? '';
+    const keys = this.directDebts()
+      .filter(d => (d.from === me && d.to === name) || (d.from === name && d.to === me))
+      .flatMap(d => d.items.filter(i => !this.isItemPaid(d.from, d.to, i.id)).map(i => this.paidKey(d.from, d.to, i.id)));
+    this.financeService.markAllPaid(keys);
+    this.pendingPay.set(null);
+  }
+
+  /** Whether I can remind `name` today (they're on the trip, and no reminder in the last day). */
+  canRemind(name: string): boolean {
+    const me = this.currentUser()?.uid, them = this.memberByName().get(name)?.uid;
+    if (!me || !them) return false;
+    return canRemind(this.financeService.reminders().get(`${me}_${them}`), Date.now());
+  }
+  /** I reminded `name` within the last day (the rules allow one a day). */
+  remindedToday(name: string): boolean {
+    const me = this.currentUser()?.uid, them = this.memberByName().get(name)?.uid;
+    return !!me && !!them && !canRemind(this.financeService.reminders().get(`${me}_${them}`), Date.now());
+  }
+  readonly reminding = signal('');
+  readonly remindError = signal('');
+  async remind(name: string, amount: number): Promise<void> {
+    const them = this.memberByName().get(name);
+    if (!them || this.reminding()) return;
+    this.reminding.set(name);
+    this.remindError.set('');
+    try {
+      await this.financeService.remind({ uid: them.uid }, amount);
+    } catch {
+      this.remindError.set("Couldn't send the reminder. Check your connection and try again.");
+    } finally {
+      this.reminding.set('');
+    }
+  }
 
   // ── Paid tracking ─────────────────────────────────────────────────────────────
   paidKey(from: string, to: string, id: string): string { return paidKey(from, to, id); }

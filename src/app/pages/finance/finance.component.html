@@ -65,8 +65,19 @@
                 <span class="net-working">({{ w }})</span>
               </div>
             }
+            <!-- A gentle nudge, once a day (#532) -->
+            @if (canRemind(p.name)) {
+              <div class="pay-row">
+                <button type="button" class="pay-link" data-needs-account (click)="remind(p.name, p.amountHome)" [disabled]="reminding() === p.name">
+                  {{ reminding() === p.name ? 'Sending a reminder…' : 'Remind ' + p.name }}
+                </button>
+              </div>
+            } @else if (remindedToday(p.name)) {
+              <div class="pay-row"><span class="pay-note">Reminded today</span></div>
+            }
           }
         </div>
+        @if (remindError()) {<p class="field-error" role="alert">{{ remindError() }}</p>}
       </div>
     }
 
@@ -94,8 +105,27 @@
                 <span class="net-working">({{ w }})</span>
               </div>
             }
+            <!-- Pay them back in their payment app: a low-key hand-off (#532) -->
+            @let pays = payOptions(p.name, p.amountHome);
+            @if (pays.length) {
+              <div class="pay-row">
+                <span class="pay-note">Pay with</span>
+                @for (o of pays; track o.label) {
+                  <a class="pay-link" [href]="o.href" target="_blank" rel="noopener" (click)="onPay(p.name, p.amountHome)">{{ o.label }}</a>
+                }
+              </div>
+            }
           }
         </div>
+        @if (pendingPay(); as pp) {
+          <div class="pay-check" role="status">
+            <span>Did you pay {{ pp.name }} {{ pp.amount | number:'1.2-2' }} {{ homeCurrency() }}?</span>
+            <span class="pay-check-actions">
+              <button type="button" class="btn btn-primary btn-sm" data-needs-account (click)="settleWith(pp.name)">Mark as paid</button>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="pendingPay.set(null)">Not yet</button>
+            </span>
+          </div>
+        }
       </div>
     }
 

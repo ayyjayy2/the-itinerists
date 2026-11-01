@@ -401,6 +401,24 @@ await t('outsider guest reads the trip', 'deny', () => getDoc(doc(testEnv.authen
 await t('guest, after making an account, adds an itinerary item', 'allow', () => setDoc(doc(gusUpgraded, 'trips', 'T', 'itinerary', 'g2'), { title: 'Now I can' }));
 await t('guest, after making an account, starts a packing list', 'allow', () => setDoc(doc(gusUpgraded, 'trips', 'T', 'packing', 'gus'), { items: [] }));
 
+console.log('\nPaying back (#532): payment handles and once-a-day reminders');
+await t('member adds payment handles to their own member doc', 'allow', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'bob'), { payHandles: { venmo: 'bob-b', paypal: 'BobB', cashapp: 'bobb' } }));
+await t('member adds an unknown payment app', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'bob'), { payHandles: { zelle: 'bob' } }));
+await t('member adds a handle with a space or a link', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'bob'), { payHandles: { venmo: 'javascript:alert(1)' } }));
+await t('member sets someone else\'s payment handles', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'alice'), { payHandles: { venmo: 'bob-b' } }));
+await t('person saves payment handles on their profile', 'allow', () => updateDoc(doc(bob, 'users', 'bob'), { payHandles: { paypal: 'BobB' } }));
+await t('person saves a bad handle on their profile', 'deny', () => updateDoc(doc(bob, 'users', 'bob'), { payHandles: { paypal: 'Bob B' } }));
+await t('owed member reminds the member who owes', 'allow', () => setDoc(doc(alice, 'trips', 'T', 'reminders', 'alice_bob'), { from: 'alice', to: 'bob', at: serverTimestamp() }));
+const earlierReminder = hoursAgo => testEnv.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'trips', 'T', 'reminders', 'alice_bob'), { from: 'alice', to: 'bob', at: new Date(Date.now() - hoursAgo * 60 * 60 * 1000) }));
+await t('reminding again the same day', 'deny', async () => { await earlierReminder(2); return setDoc(doc(alice, 'trips', 'T', 'reminders', 'alice_bob'), { from: 'alice', to: 'bob', at: serverTimestamp() }); });
+await t('reminding again a day later', 'allow', async () => { await earlierReminder(21); return setDoc(doc(alice, 'trips', 'T', 'reminders', 'alice_bob'), { from: 'alice', to: 'bob', at: serverTimestamp() }); });
+await t('reminder in someone else\'s name', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'reminders', 'alice_carol'), { from: 'alice', to: 'carol', at: serverTimestamp() }));
+await t('reminder stored under the wrong pair', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'reminders', 'bob_x'), { from: 'bob', to: 'alice', at: serverTimestamp() }));
+await t('reminder with a client time', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'reminders', 'bob_alice'), { from: 'bob', to: 'alice', at: new Date(0) }));
+await t('member reads when a reminder was sent', 'allow', async () => { await earlierReminder(2); return getDoc(doc(bob, 'trips', 'T', 'reminders', 'alice_bob')); });
+await t('outsider sends a reminder', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'reminders', 'carol_bob'), { from: 'carol', to: 'bob', at: serverTimestamp() }));
+await t('guest sends a reminder', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'reminders', 'gus_bob'), { from: 'gus', to: 'bob', at: serverTimestamp() }));
+
 console.log('\nInvite opens (_inviteOpens: who reached an invite, for the invite-to-join rate, #609)');
 const io = (o = {}) => ({ tripId: 'T', via: 'link', platform: 'web', visitor: '3f2a9c1e-7b4d-4e8a-9c2f-1a2b3c4d5e6f', at: serverTimestamp(), ...o });
 await t('anon opens an invite link', 'allow', () => setDoc(doc(anon, '_inviteOpens', 'i1'), io()));

@@ -7,6 +7,7 @@ import { TripService } from './trip.service';
 import { TripEventsService } from './trip-events.service';
 import { financeAdded, financeChanged, financeRemoved } from '../utils/event-text';
 import { markId, paidKey, parsePaidKey, ticksToShare } from '../utils/paid-marks';
+import { reminderText } from '../utils/pay-links';
 
 // Where ticks lived before they were shared with the trip (#448); moved to the trip once, then removed.
 const PAID_PREFIX = 'tripplanner_paid_items_';
@@ -28,6 +29,9 @@ export class FinanceService {
 
   private _entries   = signal<FinanceEntryDoc[]>([]);
   private _paidItems = signal<Set<string>>(new Set());
+  /** When each pay-back reminder was last sent (#532), by pair "{from}_{to}" uids. */
+  private _reminders = signal<ReadonlyMap<string, number>>(new Map());
+  readonly reminders = this._reminders.asReadonly();
 
   readonly entries   = this._entries.asReadonly();
   readonly paidItems = this._paidItems.asReadonly();
@@ -39,12 +43,14 @@ export class FinanceService {
 
   private unsub?: Unsubscribe;
   private unsubPaid?: Unsubscribe;
+  private unsubReminders?: Unsubscribe;
 
   constructor() {
     effect(() => {
       const tripId = this.signedInTripId();
       this.subscribe(tripId);
       this.subscribePaid(tripId);
+      this.subscribeReminders(tripId);
     });
   }
 
@@ -156,6 +162,39 @@ export class FinanceService {
       wasPaid ? undo.add(key) : undo.delete(key);
       this._paidItems.set(undo);
     });
+  }
+
+  /** Tick every one of these debt items paid that isn't yet: settling up with someone after paying them (#532). */
+  markAllPaid(keys: readonly string[]): void {
+    for (const key of keys) if (!this._paidItems().has(key)) this.togglePaidItem(key);
+  }
+
+  private subscribeReminders(tripId: string | null): void {
+    this.unsubReminders?.(); this.unsubReminders = undefined;
+    this._reminders.set(new Map());
+    if (!tripId) return;
+    runInInjectionContext(this.injector, () => {
+      this.unsubReminders = onSnapshot(collection(this.firestore, 'trips', tripId, 'reminders'), snap => {
+        this._reminders.set(new Map(snap.docs.map(d => [d.id, (d.data()['at']?.toMillis?.() as number | undefined) ?? Date.now()])));
+      }, err => console.warn('[FinanceService] reminders:', err.message));
+    });
+  }
+
+  /**
+   * "Remind" (#532): a gentle line on the bell of someone who owes me, worded
+   * from their side ("Don't forget to pay Maya: $40"). The rules allow one a
+   * day for each pair; the bell line follows only once that's recorded.
+   */
+  async remind(to: { uid: string }, amount: number): Promise<void> {
+    const tid = this.requireTrip();
+    const me = this.userService.currentUser();
+    if (!me?.uid) throw new Error('Sign in to send a reminder.');
+    await runInInjectionContext(this.injector, () =>
+      setDoc(doc(this.firestore, 'trips', tid, 'reminders', `${me.uid}_${to.uid}`), { from: me.uid, to: to.uid, at: serverTimestamp() }));
+    this.events.emit({
+      kind: 'finance', action: 'reminded', itemId: `remind-${to.uid}`, path: '/finance', targetUid: to.uid,
+      summary: reminderText(me.name, amount, this.currency()), audience: [to.uid],
+    }, tid);
   }
 
   private requireTrip(): string {

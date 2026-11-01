@@ -25,7 +25,7 @@ describe('FinanceComponent: expenses that leave people out', () => {
     finance = {
       entries: signal(entries), loaded: signal(true), paidItems: signal(new Set<string>()),
       updateEntry: jasmine.createSpy('updateEntry').and.resolveTo(), addEntry: jasmine.createSpy().and.resolveTo(),
-      deleteEntry: jasmine.createSpy().and.resolveTo(), togglePaidItem: jasmine.createSpy(),
+      deleteEntry: jasmine.createSpy().and.resolveTo(), togglePaidItem: jasmine.createSpy(), reminders: signal(new Map()),
     };
     TestBed.configureTestingModule({
       imports: [FinanceComponent],
@@ -34,7 +34,7 @@ describe('FinanceComponent: expenses that leave people out', () => {
         { provide: FinanceService, useValue: finance },
         { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), isAdmin: () => false } },
         { provide: UsersService, useValue: { tripUsers: () => people } },
-        { provide: TripService, useValue: { activeTrip: signal({ id: 't', name: 'Trip', currency: 'USD' }), ready: signal(true) } },
+        { provide: TripService, useValue: { activeTrip: signal({ id: 't', name: 'Trip', currency: 'USD' }), ready: signal(true), activeMembers: signal([]) } },
         { provide: ExchangeRateService, useValue: { ratesFor: () => Promise.resolve(null) } },
         { provide: FocusService, useValue: { id: signal(null), clear: () => {} } },
       ],

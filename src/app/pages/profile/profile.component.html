@@ -44,6 +44,33 @@
       </button>
     </div>
 
+    <!-- Payment apps (#532): so people on your trips can pay you back -->
+    <div class="card section-card">
+      <h2>Payment apps</h2>
+      <div class="input-hint">Add the apps you use, so people on your trips can pay you back from Finance in a tap. Only people on your trips see these. We never handle money.</div>
+      @for (a of payApps; track a.app) {
+        <div class="form-group">
+          <label [for]="'pay-' + a.app">{{ a.label }}</label>
+          <input [id]="'pay-' + a.app" type="text" [(ngModel)]="payHandles[a.app]" [name]="'pay-' + a.app" [placeholder]="a.hint"
+                 autocapitalize="off" autocomplete="off" spellcheck="false" maxlength="80"
+                 [class.invalid]="!!payProblem(a.app)" [attr.aria-invalid]="payProblem(a.app) ? true : null"
+                 [attr.aria-describedby]="payProblem(a.app) ? 'pay-err-' + a.app : null" />
+          @if (payProblem(a.app); as err) {
+            <p class="field-error" [id]="'pay-err-' + a.app">{{ err }}</p>
+          }
+        </div>
+      }
+      @if (payError()) {
+        <div class="alert alert-error">{{ payError() }}</div>
+      }
+      @if (paySaved()) {
+        <div class="alert alert-success">Payment apps saved.</div>
+      }
+      <button class="btn btn-primary" data-needs-account (click)="savePayHandles()" [disabled]="paySaving()">
+        {{ paySaving() ? 'Saving…' : 'Save payment apps' }}
+      </button>
+    </div>
+
     <!-- Account actions -->
     @if (user.isGuest) {
       <!-- A guest (#610): no email or password yet -->
