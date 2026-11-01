@@ -4,7 +4,7 @@
 <div class="page-container">
   <div class="page-header">
     <h2><app-icon name="stays" [size]="22" /> Stays</h2>
-    <button class="btn btn-primary btn-sm" (click)="startAdd()">+ Add Stay</button>
+    <button data-needs-account class="btn btn-primary btn-sm" (click)="startAdd()">+ Add Stay</button>
   </div>
 
   <!-- ── Scope tabs ── -->
@@ -80,7 +80,7 @@
 
       <div class="form-actions">
         <button class="btn btn-ghost btn-sm" (click)="cancelAdd()">Cancel</button>
-        <button class="btn btn-primary btn-sm" (click)="saveAdd()" [disabled]="!!dateRangeProblem(newDraft.checkIn, newDraft.checkOut)">Save Stay</button>
+        <button data-needs-account class="btn btn-primary btn-sm" (click)="saveAdd()" [disabled]="!!dateRangeProblem(newDraft.checkIn, newDraft.checkOut)">Save Stay</button>
       </div>
     </div>
   }
@@ -112,7 +112,7 @@
                     <span class="nights-label">nights</span>
                   </div>
                 }
-                <button class="edit-btn" (click)="startEdit(stay)" title="Edit"><app-icon name="edit" [size]="16" /></button>
+                <button data-needs-account class="edit-btn" (click)="startEdit(stay)" title="Edit"><app-icon name="edit" [size]="16" /></button>
               </div>
             </div>
 
@@ -213,10 +213,10 @@
             </div>
 
             <div class="form-actions">
-              <button class="btn btn-danger btn-sm" (click)="deleteStay(stay)">Delete</button>
+              <button data-needs-account class="btn btn-danger btn-sm" (click)="deleteStay(stay)">Delete</button>
               <span class="actions-spacer"></span>
               <button class="btn btn-ghost btn-sm"   (click)="cancelEdit()">Cancel</button>
-              <button class="btn btn-primary btn-sm" (click)="saveEdit(stay)" [disabled]="!!dateRangeProblem(draft.checkIn, draft.checkOut)">Save</button>
+              <button data-needs-account class="btn btn-primary btn-sm" (click)="saveEdit(stay)" [disabled]="!!dateRangeProblem(draft.checkIn, draft.checkOut)">Save</button>
             </div>
           </div>
         }

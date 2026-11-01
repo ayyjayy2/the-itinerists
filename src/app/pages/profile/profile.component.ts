@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
+import { AccountPromptService } from '../../services/account-prompt.service';
 import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
 import { IconComponent } from '../../shared/icon/icon.component';
@@ -24,6 +25,7 @@ import { userMessage } from '../../utils/user-message';
 })
 export class ProfileComponent implements OnInit {
   private userService  = inject(UserService);
+  private accountPrompt = inject(AccountPromptService);
   private tripService  = inject(TripService);
   private authService  = inject(AuthService);
   private router       = inject(Router);
@@ -110,6 +112,9 @@ export class ProfileComponent implements OnInit {
       this.avatarLetterColor = u.avatarLetterColor ?? '';
     }
   }
+
+  /** A guest's "Create account" (#610): the same sheet a guest gets when they try to change something. */
+  createAccount(): void { this.accountPrompt.ask(); }
 
   openPasswordModal(): void {
     this.shownFields.set(new Set());

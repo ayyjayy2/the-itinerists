@@ -4,7 +4,7 @@
  * production services read (`src/app/models/trip.models.ts`).
  */
 import { MemoryStore, DocData } from './memory-store';
-import { DEMO_UID, DEMO_TRIP_ID } from './seed-constants';
+import { DEMO_UID, DEMO_TRIP_ID, DEMO_INVITE_CODE } from './seed-constants';
 import type {
   FirestoreUser, TripDoc, TripMember, UserTripsDoc, ActivityLogEntry,
   ItineraryItemDoc, FlightDoc, AccommodationDoc, FinanceEntryDoc, RecDoc,
@@ -58,6 +58,11 @@ export function seedDemo(store: MemoryStore): void {
     createdBy: ALAYNA.uid, createdAt: at(10), memberCount: PEOPLE.length,
   };
   store.set(trip(), tripDoc as unknown as DocData);
+
+  // A standing invite (#610): open /join?code=DEMOJOIN signed out to try joining as a guest.
+  const inviteExpires = Date.UTC(2099, 0, 1);
+  store.set(trip('invites', DEMO_INVITE_CODE), { code: DEMO_INVITE_CODE, tripId: DEMO_TRIP_ID, createdBy: ALAYNA.uid, createdAt: at(10), expiresAt: inviteExpires, usedBy: [] });
+  store.set(`inviteIndex/${DEMO_INVITE_CODE}`, { tripId: DEMO_TRIP_ID, expiresAt: inviteExpires });
 
   PEOPLE.forEach((p, i) => {
     const member: TripMember = {

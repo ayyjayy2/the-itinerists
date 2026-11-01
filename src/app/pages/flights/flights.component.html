@@ -5,7 +5,7 @@
 
   <div class="page-header">
     <h2><app-icon name="flights" [size]="22" /> Flights</h2>
-    <button class="btn btn-primary btn-sm" (click)="openAddModal()">+ Add Flight</button>
+    <button data-needs-account class="btn btn-primary btn-sm" (click)="openAddModal()">+ Add Flight</button>
   </div>
 
   <!-- Filters -->
@@ -26,7 +26,7 @@
     <div class="empty-state">
       <span class="empty-icon"><app-icon name="flights" [size]="40" /></span>
       <p>No flights yet.</p>
-      <button class="btn btn-primary" (click)="openAddModal()">Add your first flight</button>
+      <button data-needs-account class="btn btn-primary" (click)="openAddModal()">Add your first flight</button>
     </div>
   }
 
@@ -65,7 +65,7 @@
         <span class="section-badge" [class.dep]="journey.section === 'DEPARTURES'">
           {{ journey.section === 'ARRIVALS' ? '↓ Arrival' : '↑ Departure' }}
         </span>
-        <button class="edit-btn" title="Edit" (click)="openEditModal(journey)"><app-icon name="edit" [size]="16" /></button>
+        <button data-needs-account class="edit-btn" title="Edit" (click)="openEditModal(journey)"><app-icon name="edit" [size]="16" /></button>
       </div>
     </div>
 
@@ -123,7 +123,7 @@
 
       <div class="modal-actions">
         <button class="btn btn-ghost" (click)="closeAddModal()" [disabled]="addSaving()">Cancel</button>
-        <button class="btn btn-primary" (click)="saveAdd()" [disabled]="addSaving()">
+        <button data-needs-account class="btn btn-primary" (click)="saveAdd()" [disabled]="addSaving()">
           {{ addSaving() ? 'Saving…' : 'Add Flight' }}
         </button>
       </div>
@@ -140,10 +140,10 @@
       <ng-container *ngTemplateOutlet="flightFormFields; context: { form: editForm, saving: editSaving(), error: editError(), isEdit: true }"></ng-container>
 
       <div class="modal-actions modal-actions--split">
-        <button class="btn btn-danger" (click)="deleteJourney()" [disabled]="editSaving()">Delete</button>
+        <button data-needs-account class="btn btn-danger" (click)="deleteJourney()" [disabled]="editSaving()">Delete</button>
         <div class="modal-actions-right">
           <button class="btn btn-ghost" (click)="closeEditModal()" [disabled]="editSaving()">Cancel</button>
-          <button class="btn btn-primary" (click)="saveEdit()" [disabled]="editSaving()">
+          <button data-needs-account class="btn btn-primary" (click)="saveEdit()" [disabled]="editSaving()">
             {{ editSaving() ? 'Saving…' : 'Save Changes' }}
           </button>
         </div>

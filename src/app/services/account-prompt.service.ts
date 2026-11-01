@@ -23,6 +23,8 @@ export class AccountPromptService {
     for (const type of ['click', 'submit'] as const) {
       document.addEventListener(type, e => this.intercept(e), true);
     }
+    // Enter in a field that adds on Enter (a packing item, a category).
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') this.intercept(e); }, true);
   }
 
   /** Open the sheet from code (a page that knows the person is a guest). */

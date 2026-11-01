@@ -89,7 +89,7 @@
 
       <div class="form-actions">
         @if (savedOk()) { <span class="saved-tag"><app-icon name="check" [size]="14" /> Saved</span> }
-        <button class="btn btn-primary" (click)="saveDetails()" [disabled]="saving()">
+        <button data-needs-account class="btn btn-primary" (click)="saveDetails()" [disabled]="saving()">
           {{ saving() ? 'Saving…' : 'Save changes' }}
         </button>
       </div>
@@ -100,7 +100,7 @@
       <div class="section-head">
         <h2>Members ({{ members().length }})</h2>
         @if (isOwner()) {
-        <button class="btn btn-ghost btn-sm" (click)="copyInvite()" [disabled]="inviteState() === 'copying'">
+        <button data-needs-account class="btn btn-ghost btn-sm" (click)="copyInvite()" [disabled]="inviteState() === 'copying'">
           @if (inviteState() === 'copied') { <app-icon name="check" [size]="15" /> Link copied }
           @else if (inviteState() === 'copying') { Generating… }
           @else { <app-icon name="link" [size]="15" /> Invite }
@@ -123,7 +123,7 @@
               @if (m.role === 'owner') { <span class="tag tag-owner">Owner</span> }
             </span>
             @if (canRemove(m)) {
-              <button class="btn btn-danger btn-sm" (click)="remove(m)" [disabled]="busyMember() === m.uid">
+              <button data-needs-account class="btn btn-danger btn-sm" (click)="remove(m)" [disabled]="busyMember() === m.uid">
                 Remove
               </button>
             }
@@ -142,7 +142,7 @@
               <span class="activity-dot" [class]="activityTone(e)"></span>
               <span class="activity-text">{{ activityText(e) }}</span>
               @if (canRestore(e)) {
-                <button class="btn btn-ghost btn-sm" (click)="restore(e)" [disabled]="busyMember() === e.targetUid">
+                <button data-needs-account class="btn btn-ghost btn-sm" (click)="restore(e)" [disabled]="busyMember() === e.targetUid">
                   Restore
                 </button>
               }
@@ -199,7 +199,7 @@
           <strong>{{ trip()!.archived ? 'Archived' : 'Active' }}</strong>
           <p class="muted">{{ trip()!.archived ? 'Restore to move it back to your active trips.' : 'Archive to tuck it away without deleting anything.' }}</p>
         </div>
-        <button class="btn btn-ghost btn-sm" (click)="toggleArchive()">
+        <button data-needs-account class="btn btn-ghost btn-sm" (click)="toggleArchive()">
           {{ trip()!.archived ? 'Restore' : 'Archive' }}
         </button>
       </div>
@@ -217,7 +217,7 @@
                 <option [value]="m.uid">{{ m.displayName }}</option>
               }
             </select>
-            <button class="btn btn-ghost btn-sm" (click)="transfer()" [disabled]="!transferTarget">Transfer</button>
+            <button data-needs-account class="btn btn-ghost btn-sm" (click)="transfer()" [disabled]="!transferTarget">Transfer</button>
           </div>
         </div>
       }

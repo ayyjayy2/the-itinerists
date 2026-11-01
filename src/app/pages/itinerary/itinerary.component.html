@@ -68,14 +68,14 @@
               <div class="day-label-edit">
                 <input class="day-label-input" [(ngModel)]="draftLabel" [placeholder]="dayCityFor(group[0]) || 'Name this day'" aria-label="Name this day" (keyup.enter)="saveLabelEdit(group[0])" (keyup.escape)="cancelLabelEdit()" />
                 <div class="day-label-actions">
-                  <button class="btn btn-primary" (click)="saveLabelEdit(group[0])">Save</button>
+                  <button data-needs-account class="btn btn-primary" (click)="saveLabelEdit(group[0])">Save</button>
                   <button class="btn btn-ghost" (click)="cancelLabelEdit()">Cancel</button>
                 </div>
               </div>
             } @else {
               <div class="day-header-row">
                 <h3 class="day-name">{{ note || fullDate(group[0]) }}</h3>
-                <button class="label-edit-btn" (click)="startLabelEdit(group[0])" title="Name this day" aria-label="Name this day"><app-icon name="edit" [size]="14" /></button>
+                <button data-needs-account class="label-edit-btn" (click)="startLabelEdit(group[0])" title="Name this day" aria-label="Name this day"><app-icon name="edit" [size]="14" /></button>
               </div>
             }
             @if (note) { <span class="day-date">{{ fullDate(group[0]) }}</span> }
@@ -112,6 +112,7 @@
           <div class="items-list"
                cdkDropList
                [cdkDropListData]="group[1]"
+               [cdkDropListDisabled]="userService.isGuest()"
                (cdkDropListDropped)="onDrop($event, group[0])">
             @for (item of group[1]; track item.id) {
 
@@ -128,7 +129,7 @@
                       @if (item.endTime) {
                         <span class="item-time item-time-end">– {{ item.endTime | time12 }}@if (itemZone(item, item.endTime); as z) {&nbsp;<span class="item-zone">{{ z }}</span> }</span>
                         @if (timeRangeProblem(item.time, item.endTime)) {
-                          <button type="button" class="chip chip-gap check-times" (click)="startEdit(item)" title="This ends before it starts">Check the times</button>
+                          <button data-needs-account type="button" class="chip chip-gap check-times" (click)="startEdit(item)" title="This ends before it starts">Check the times</button>
                         }
                       }
                     }
@@ -155,7 +156,7 @@
                         <span class="chip chip-highlight">{{ item.forWho }}</span>
                       }
                     </div>
-                    <button class="edit-btn" (click)="startEdit(item)" title="Edit"><app-icon name="edit" [size]="16" /></button>
+                    <button data-needs-account class="edit-btn" (click)="startEdit(item)" title="Edit"><app-icon name="edit" [size]="16" /></button>
                   </div>
 
                 } @else {
@@ -217,10 +218,10 @@
                     </div>
 
                     <div class="edit-actions">
-                      <button class="btn btn-danger btn-sm" (click)="deleteItem(item)">Delete</button>
+                      <button data-needs-account class="btn btn-danger btn-sm" (click)="deleteItem(item)">Delete</button>
                       <span class="actions-spacer"></span>
                       <button class="btn btn-ghost btn-sm"   (click)="cancelEdit()">Cancel</button>
-                      <button class="btn btn-primary btn-sm" (click)="saveEdit(item)" [disabled]="!!timeRangeProblem(draft.time, draft.endTime)">Save</button>
+                      <button data-needs-account class="btn btn-primary btn-sm" (click)="saveEdit(item)" [disabled]="!!timeRangeProblem(draft.time, draft.endTime)">Save</button>
                     </div>
                   </div>
                 }
@@ -283,11 +284,11 @@
 
                 <div class="edit-actions">
                   <button class="btn btn-ghost btn-sm" (click)="cancelAdd()">Cancel</button>
-                  <button class="btn btn-primary btn-sm" (click)="saveAdd()" [disabled]="!!timeRangeProblem(newDraft.time, newDraft.endTime)">Add Event</button>
+                  <button data-needs-account class="btn btn-primary btn-sm" (click)="saveAdd()" [disabled]="!!timeRangeProblem(newDraft.time, newDraft.endTime)">Add Event</button>
                 </div>
               </div>
             } @else {
-              <button class="add-day-btn" (click)="startAdd(group[0])">
+              <button data-needs-account class="add-day-btn" (click)="startAdd(group[0])">
                 <span>+</span> Add event
               </button>
             }

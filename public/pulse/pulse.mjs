@@ -697,7 +697,8 @@ function render() {
     versions.map(v => `<tr><td>${esc(v.version)}</td><td class="n num" ${who(v.uids)}>${v.uids.length}</td><td class="n">${agoHtml(v.lastSeen)}</td></tr>`).join('');
 
   // Sign-ups per day (every account carries its creation date), under the Hide rules
-  const visibleUsers = new Map([...state.users.entries()].filter(([uid]) => !hiddenUids.has(uid)));
+  // Guests (#610) joined from an invite link without signing up: not sign-ups until they make an account.
+  const visibleUsers = new Map([...state.users.entries()].filter(([uid, u]) => !hiddenUids.has(uid) && !u.isGuest));
   const signups = S.signupsPerDay(visibleUsers, queryStart(), now + DAY, state.zone);
   $('signupsSub').textContent = signups.length ? `${signups.reduce((n, d) => n + d.uids.length, 0)} in ${rangeLabel}` : `none in ${rangeLabel}`;
   bars('signups', signups.map(d => ({

@@ -1027,7 +1027,7 @@ export class MapComponent implements OnDestroy {
           ${canDelete
             ? html`<button id="${popupId}" style="background:#fee2e2;border:none;border-radius:6px;
                 padding:4px 10px;font-size:11px;font-weight:700;color:#991b1b;cursor:pointer;
-                font-family:'Nunito',sans-serif;">Remove pin</button>`
+                font-family:'Nunito',sans-serif;" data-needs-account>Remove pin</button>`
             : ''}
         </div>`;
 

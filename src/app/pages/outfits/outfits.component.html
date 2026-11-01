@@ -101,7 +101,7 @@
       } @else if (myOutfitsByDate()[day.date]) {
         <ng-container *ngTemplateOutlet="outfitDisplayTpl; context: { date: day.date }"></ng-container>
       } @else {
-        <button class="btn btn-ghost add-outfit-btn" (click)="startEdit(day.date)">+ Plan My Outfit</button>
+        <button data-needs-account class="btn btn-ghost add-outfit-btn" (click)="startEdit(day.date)">+ Plan My Outfit</button>
       }
     </div>
   }
@@ -178,7 +178,7 @@
             } @else if (myOutfitsByDate()[day.date]) {
               <ng-container *ngTemplateOutlet="outfitDisplayTpl; context: { date: day.date }"></ng-container>
             } @else {
-              <button class="btn btn-ghost add-outfit-btn" (click)="startEdit(day.date)">+ Plan My Outfit</button>
+              <button data-needs-account class="btn btn-ghost add-outfit-btn" (click)="startEdit(day.date)">+ Plan My Outfit</button>
             }
           </div>
         </div>
@@ -199,7 +199,7 @@
             } @else {
               <div class="photo-tile-loading"></div>
             }
-            <button type="button" class="remove-photo" (click)="removeEditPhoto(id, date)" aria-label="Remove photo">✕</button>
+            <button data-needs-account type="button" class="remove-photo" (click)="removeEditPhoto(id, date)" aria-label="Remove photo">✕</button>
           </div>
         }
       </div>
@@ -226,15 +226,15 @@
     </div>
     <div class="items-label">Outfit Items</div>
     <div class="item-input-row">
-      <input type="text" [(ngModel)]="editForm.newItem" placeholder="e.g. Flowy sundress" (keydown.enter)="addItem(date)">
-      <button class="btn btn-ghost btn-sm" (click)="addItem(date)">+ Add</button>
+      <input data-needs-account type="text" [(ngModel)]="editForm.newItem" placeholder="e.g. Flowy sundress" (keydown.enter)="addItem(date)">
+      <button data-needs-account class="btn btn-ghost btn-sm" (click)="addItem(date)">+ Add</button>
     </div>
     @if (editForm.items.length > 0) {
       <ul class="items-list">
         @for (item of editForm.items; track item; let i = $index) {
           <li>
             <span>{{ item }}</span>
-            <button class="remove-item" (click)="removeItem(i, date)">✕</button>
+            <button data-needs-account class="remove-item" (click)="removeItem(i, date)">✕</button>
           </li>
         }
       </ul>
@@ -245,13 +245,13 @@
     </div>
     <div class="form-actions">
       @if (myOutfitsByDate()[date]) {
-        <button class="btn btn-danger btn-sm" (click)="deleteOutfit(date)"><app-icon name="trash" [size]="15" /> Delete</button>
+        <button data-needs-account class="btn btn-danger btn-sm" (click)="deleteOutfit(date)"><app-icon name="trash" [size]="15" /> Delete</button>
       }
       <div class="form-actions-right">
         <span class="save-state" [class.visible]="saveState() !== 'idle'" aria-live="polite">
           @if (saveState() === 'saving') { Saving… } @else if (saveState() === 'saved') { <app-icon name="check" [size]="14" /> Saved }
         </span>
-        <button class="btn btn-primary" (click)="closeEdit(date)">Done</button>
+        <button data-needs-account class="btn btn-primary" (click)="closeEdit(date)">Done</button>
       </div>
     </div>
   </div>
@@ -282,7 +282,7 @@
     @if (outfit.notes) {
       <p class="outfit-notes">{{ outfit.notes }}</p>
     }
-    <button class="btn btn-ghost btn-sm edit-outfit-btn" (click)="startEdit(date)"><app-icon name="edit" [size]="15" /> Edit</button>
+    <button data-needs-account class="btn btn-ghost btn-sm edit-outfit-btn" (click)="startEdit(date)"><app-icon name="edit" [size]="15" /> Edit</button>
   </div>
 </ng-template>
 } @else {

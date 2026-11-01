@@ -45,6 +45,19 @@
     </div>
 
     <!-- Account actions -->
+    @if (user.isGuest) {
+      <!-- A guest (#610): no email or password yet -->
+      <div class="card section-card">
+        <h2>Account</h2>
+        <p class="input-hint">You're seeing your trips as a guest. Create an account to add and change things, and to sign in on another device. You'll keep your trips.</p>
+        <div class="account-actions">
+          <button class="btn btn-primary" (click)="createAccount()">Create account</button>
+        </div>
+        <div class="account-exit">
+          <button class="btn btn-ghost btn-ghost-warn" (click)="showLogoutConfirm.set(true)">Log Out</button>
+        </div>
+      </div>
+    } @else {
     <div class="card section-card">
       <h2>Account</h2>
       <div class="account-actions">
@@ -58,6 +71,7 @@
         <button class="btn btn-ghost btn-ghost-danger" (click)="openDeleteModal()">Delete Account</button>
       </div>
     </div>
+    }
 
     <!-- Home layout (picker accounts only — see canPickLayout) -->
     @if (canPickLayout()) {
@@ -90,7 +104,11 @@
   <div class="modal-backdrop" (click)="showLogoutConfirm.set(false)">
     <div class="modal-box" (click)="$event.stopPropagation()">
       <h2>Do you want to log out?</h2>
-      <p class="modal-hint">You'll be taken to the sign-in screen.</p>
+      @if (firestoreUser()?.isGuest) {
+        <p class="modal-hint">You're a guest, so once you log out you can only get back to your trips through a new invite link. Create an account first to keep them.</p>
+      } @else {
+        <p class="modal-hint">You'll be taken to the sign-in screen.</p>
+      }
       <div class="modal-actions">
         <button class="btn btn-ghost" (click)="showLogoutConfirm.set(false)">No</button>
         <button class="btn btn-danger" (click)="confirmLogout()">Yes</button>
