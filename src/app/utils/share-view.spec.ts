@@ -47,6 +47,13 @@ describe('share view (#611)', () => {
     }]);
   });
 
+  it('puts flights in time order, not text order', () => {
+    const late = { ...flights[0], id: 'g', uid: 'b', departureTime: '11:10 PM' };
+    const early = { ...flights[0], id: 'h', uid: 'b', departureTime: '3:50 PM' };
+    const v = buildShareView({ trip, members, itinerary: [], flights: [late, early], stays: [], airportZone: () => 'Asia/Bangkok' });
+    expect(v.flights.map(f => f.departs)).toEqual(['Nov 12, 3:50 PM ICT', 'Nov 12, 11:10 PM ICT']);
+  });
+
   it('shows where people stay by town, never the address', () => {
     expect(view.stays).toEqual([{ name: 'Baan Nimman Guesthouse', where: 'Chiang Mai', dates: 'Nov 12 – 15' }]);
   });

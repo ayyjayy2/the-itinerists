@@ -1,0 +1,111 @@
+:host { display: block; }
+// The app keeps the page itself still (the header and tab bar never move), so
+// this page scrolls on its own, like the sign-in screens.
+.view-scroll {
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.view-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: max(1.5rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: var(--text);
+}
+.view-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0.25rem 0.75rem;
+  h1 { margin: 0; font-size: 1.8rem; line-height: 1.15; overflow-wrap: anywhere; }
+}
+.view-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary-dark);
+}
+.view-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.9rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.view-people {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  li { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; }
+}
+.view-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+}
+.view-pdf { align-self: flex-start; min-height: 44px; }
+.view-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.1rem;
+  min-width: 0;
+  h2 { margin: 0 0 0.6rem; font-size: 1.1rem; }
+  h3 { margin: 0.9rem 0 0.35rem; font-size: 0.85rem; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.06em; }
+  h3:first-of-type { margin-top: 0; }
+}
+.view-missing {
+  margin-top: 15vh;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+  h1 { margin: 0; font-size: 1.4rem; }
+  p { margin: 0; color: var(--text-muted); max-width: 40ch; }
+}
+.view-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  li { min-width: 0; overflow-wrap: anywhere; }
+}
+.view-plan { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 0.6rem; }
+.view-time { color: var(--text-muted); font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+.view-row-title { font-weight: 700; }
+.view-muted { color: var(--text-muted); font-size: 0.9rem; }
+.view-foot {
+  margin-top: 0.5rem;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+  p { margin: 0; }
+}
+.view-made {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  min-height: 44px;
+  font-weight: 800;
+  color: var(--primary-dark);
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+@media (max-width: 480px) {
+  .view-plan { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
+}
+// "Save as PDF": the browser's print-to-PDF; no buttons, plain paper.
+@media print {
+  .view-pdf { display: none; }
+  .view-scroll { height: auto; overflow: visible; }
+  .view-page { padding: 0; max-width: none; }
+  .view-card { break-inside: avoid-page; }
+}

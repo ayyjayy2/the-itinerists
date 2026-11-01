@@ -17,6 +17,7 @@ import { CurrencySelectComponent } from '../../shared/currency-select/currency-s
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 import { userMessage } from '../../utils/user-message';
+import { ShareViewService } from '../../services/share-view.service';
 
 interface CurrencyOption { code: string; label: string; }
 interface HideablePage { key: string; label: string; icon: string; }
@@ -41,6 +42,7 @@ export class TripSettingsComponent {
   readonly dateRangeProblem = dateRangeProblem;
 
   private tripService = inject(TripService);
+  protected shareView = inject(ShareViewService);
   private geocode = inject(GeocodeService);
   private userService = inject(UserService);
   private themeService = inject(ThemeService);
@@ -343,5 +345,31 @@ export class TripSettingsComponent {
     } catch (e: unknown) {
       this.error.set(userMessage(e, 'Could not update the trip.'));
     }
+  }
+
+  // ── Share with people at home (#611): a live read-only page, no account needed ──
+  readonly shareBusy = signal(false);
+  readonly shareCopied = signal(false);
+  readonly shareError = signal('');
+  async createShare(): Promise<void> {
+    await this.shareAction(async () => { await this.copyShare(await this.shareView.share()); });
+  }
+  async copyShare(url = this.shareView.url()): Promise<void> {
+    if (!url) return;
+    await navigator.clipboard.writeText(url).then(() => {
+      this.shareCopied.set(true);
+      setTimeout(() => this.shareCopied.set(false), 2500);
+    }).catch(() => {/* the link is on screen to copy by hand */});
+  }
+  async stopShare(): Promise<void> {
+    await this.shareAction(() => this.shareView.stop());
+  }
+  private async shareAction(run: () => Promise<void>): Promise<void> {
+    if (this.shareBusy()) return;
+    this.shareBusy.set(true);
+    this.shareError.set('');
+    try { await run(); }
+    catch (err) { this.shareError.set(userMessage(err, "Couldn't change sharing. Check your connection and try again.")); }
+    finally { this.shareBusy.set(false); }
   }
 }

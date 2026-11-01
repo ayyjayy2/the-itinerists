@@ -95,6 +95,28 @@
       </div>
     </section>
 
+    <!-- Share with people at home (#611) -->
+    <section class="card share-card">
+      <div class="section-head"><h2>Share with people at home</h2></div>
+      <p class="share-hint">A read-only page of the plan for family and friends who aren't coming: dates and places, the day-by-day plan, flights, where you're staying (the town, not the address) and who's going. No notes, bookings or money. It stays up to date, and anyone with the link can see it without an account.</p>
+      @if (shareView.url(); as url) {
+        <p class="share-url"><a [href]="url" target="_blank" rel="noopener">{{ url }}</a></p>
+        <div class="share-actions">
+          <button class="btn btn-primary btn-sm" (click)="copyShare()">
+            @if (shareCopied()) { <app-icon name="check" [size]="15" /> Link copied } @else { <app-icon name="link" [size]="15" /> Copy link }
+          </button>
+          <button data-needs-account class="btn btn-ghost btn-sm" (click)="createShare()" [disabled]="shareBusy()">Make a new link</button>
+          <button data-needs-account class="btn btn-ghost btn-sm" (click)="stopShare()" [disabled]="shareBusy()">Stop sharing</button>
+        </div>
+        <p class="share-hint">A new link, or stopping, turns the old link off straight away.</p>
+      } @else {
+        <button data-needs-account class="btn btn-primary btn-sm" (click)="createShare()" [disabled]="shareBusy()">
+          {{ shareBusy() ? 'Making the link…' : 'Share a read-only page' }}
+        </button>
+      }
+      @if (shareError()) {<div class="alert alert-error">{{ shareError() }}</div>}
+    </section>
+
     <!-- Members -->
     <section class="card">
       <div class="section-head">

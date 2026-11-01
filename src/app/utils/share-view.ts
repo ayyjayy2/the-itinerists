@@ -1,12 +1,13 @@
 import { AccommodationDoc, FlightDoc, ItineraryItemDoc, TripDoc, TripMember } from '../models/trip.models';
 import { stopDateRange } from './stop-dates';
 import { normalizeTime } from './time-format';
+import { parseTimeString } from './first-up';
 import { activeLeg, tripDestinations } from './trip-destinations';
 import { planZoneLabel, zoneLabelAt } from './time-zone-label';
 
 /**
  * The read-only page a trip's members can share with people at home (#611),
- * at /view/<token>. It holds only what the owner chose for it, already
+ * at /view#<token> (after the #, so the secret never reaches a server or the page log). It holds only what the owner chose for it, already
  * worded for display: the trip's dates and places, the day-by-day plan,
  * flights, where people stay (the town, never the address) and who's going
  * (first names). Never notes, booking references, links, money, packing or
@@ -27,6 +28,8 @@ const dayLabel = (iso: string) =>
   new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 const shortDay = (iso: string) =>
   new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+/** Minutes after midnight for "3:50 PM"; times that don't parse sort last. */
+const minutes = (t: string) => { const p = parseTimeString(t); return p ? p.h * 60 + p.min : 24 * 60; };
 const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? '';
 const town = (destination: string) => destination.split(',')[0]?.trim() ?? '';
 
@@ -80,7 +83,7 @@ export function buildShareView(input: {
     })),
     days,
     flights: [...flights]
-      .sort((a, b) => (a.departureDate + a.departureTime).localeCompare(b.departureDate + b.departureTime))
+      .sort((a, b) => a.departureDate.localeCompare(b.departureDate) || minutes(a.departureTime) - minutes(b.departureTime))
       .map(f => ({
         who: nameOf.get(f.uid) ?? '',
         flight: [f.airline, f.flightNumber].filter(Boolean).join(' '),

@@ -168,3 +168,30 @@ test('pay back from Finance, mark it paid, and remind someone who owes you', asy
   await remind.click();
   await expect(owed.getByText('Reminded today').first()).toBeVisible();
 });
+
+/** #611: a read-only page for people at home, live, that a member can turn off. */
+test('share a read-only trip page, open it, then stop sharing', async ({ page }) => {
+  const go = (path: string) => page.evaluate(p => { history.pushState({}, '', p); dispatchEvent(new PopStateEvent('popstate')); }, path);
+  await page.goto('/trip-settings');
+  await page.getByRole('button', { name: 'Share a read-only page' }).click();
+  const link = page.locator('.share-url a');
+  await expect(link).toHaveText(/\/view#[A-Za-z0-9]{22}$/);
+  const shared = new URL(await link.innerText());
+  const path = shared.pathname + shared.hash;
+
+  await go(path);
+  await expect(page.getByRole('heading', { level: 1, name: 'Chiang Mai, November' })).toBeVisible();
+  await expect(page.getByText('Day by day')).toBeVisible();
+  const made = page.getByRole('link', { name: /Made with The Itinerists/ });
+  await made.scrollIntoViewIfNeeded();
+  await expect(made).toBeInViewport();                                       // the page scrolls to its end
+  await expect(page.getByRole('button', { name: 'Save as PDF' })).toBeVisible();
+  await expect(page.locator('nav')).toHaveCount(0);                          // no app menus for people at home
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+  await go('/trip-settings');
+  await page.getByRole('button', { name: 'Stop sharing' }).click();
+  await expect(page.getByRole('button', { name: 'Share a read-only page' })).toBeVisible();
+  await go(path);
+  await expect(page.getByRole('heading', { name: "This link isn't working" })).toBeVisible();
+});

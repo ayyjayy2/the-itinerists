@@ -26,6 +26,7 @@ export const APP_PAGES = [
   { path: '/join',           label: 'Join a trip' },
   { path: '/privacy',        label: 'Privacy policy' },
   { path: '/terms',          label: 'Terms' },
+  { path: '/view',           label: 'Shared trip page' },
 ];
 
 /** Seen only while signed out, when no visits are recorded: listing them would always read 0. */

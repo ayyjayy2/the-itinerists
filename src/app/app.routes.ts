@@ -20,6 +20,13 @@ export const routes: Routes = [
     path: 'forgot-password',
     loadComponent: () => import('./pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
   },
+  // The read-only trip page for people at home (#611): no account, no app chrome.
+  // Its secret is after the # (/view#<token>), so it never reaches a server,
+  // the page log or analytics, which record the path only.
+  {
+    path: 'view',
+    loadComponent: () => import('./pages/view/view.component').then(m => m.ViewComponent)
+  },
   {
     path: 'join',
     loadComponent: () => import('./pages/join/join.component').then(m => m.JoinComponent)
