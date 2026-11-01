@@ -24,7 +24,8 @@ describe('AccountPromptService', () => {
     clicked = jasmine.createSpy('clicked');
     host.querySelectorAll('button').forEach(b => b.addEventListener('click', clicked));
   });
-  afterEach(() => host.remove());
+  // The listener is on the whole page and outlives this spec: leave it a non-guest so later specs' taps go through.
+  afterEach(() => { host.remove(); isGuest.set(false); });
 
   it('stops a guest’s tap on a marked control and opens the sheet', () => {
     isGuest.set(true);

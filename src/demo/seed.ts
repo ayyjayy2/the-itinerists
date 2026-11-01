@@ -69,6 +69,9 @@ export function seedDemo(store: MemoryStore): void {
       uid: p.uid, role: i === 0 ? 'owner' : 'member',
       displayName: p.name, avatarEmoji: p.emoji, color: p.color, joinedAt: at(10 + i),
       travelMode: 'flying',
+      // Payment apps (#532), so "Pay with" shows on Finance.
+      ...(p === MAYA ? { payHandles: { venmo: 'maya-demo', paypal: 'mayademo' } } : {}),
+      ...(p === THEO ? { payHandles: { cashapp: 'theodemo' } } : {}),
     };
     store.set(trip('members', p.uid), member as unknown as DocData);
   });

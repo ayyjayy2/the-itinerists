@@ -2,7 +2,7 @@ import { DiagnosticsService } from './diagnostics.service';
 import { Injectable, inject, Injector, runInInjectionContext, signal, computed, effect } from '@angular/core';
 import {
   Firestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot,
-  writeBatch, arrayUnion, arrayRemove, increment, Unsubscribe, query, where,
+  writeBatch, arrayUnion, arrayRemove, increment, Unsubscribe, query, where, deleteField,
 } from '@angular/fire/firestore';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
@@ -15,6 +15,7 @@ import {
   TripDoc, TripDestination, TripMember, UserTripsDoc, FirestoreUser, ActivityLogEntry, ActivityAction, InviteCode,
 } from '../models/trip.models';
 import { InviteVia } from '../utils/invite-opens';
+import { PayHandles } from '../utils/pay-links';
 
 /** Fields collected by the Create Trip form (TP-13). */
 export interface CreateTripInput {
@@ -611,7 +612,25 @@ export class TripService {
       color: user.color,
       avatarLetterColor: user.avatarLetterColor ?? '',
       joinedAt: now,
+      ...(user.payHandles ? { payHandles: user.payHandles } : {}),
     };
+  }
+
+  /**
+   * Save the signed-in person's payment app handles (#532): on their profile,
+   * and on their member doc in every trip they're on, which is where the rest
+   * of each group reads them (profiles are private). Empty handles are removed.
+   */
+  async updatePayHandles(handles: PayHandles): Promise<void> {
+    const user = this.requireUser();
+    const value = Object.keys(handles).length ? handles : deleteField();
+    await runInInjectionContext(this.injector, async () => {
+      await updateDoc(doc(this.firestore, 'users', user.uid), { payHandles: value });
+      const idx = await getDoc(doc(this.firestore, 'userTrips', user.uid));
+      const tripIds = idx.exists() ? ((idx.data() as UserTripsDoc).tripIds ?? []) : [];
+      await Promise.all(tripIds.map(id =>
+        updateDoc(this.memberRef(id, user.uid), { payHandles: value }).catch(() => {/* a trip they've left */})));
+    });
   }
 
   /** Append the trip to the user's trips index and mark it as last active. */

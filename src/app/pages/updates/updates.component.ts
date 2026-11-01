@@ -18,12 +18,13 @@ import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.com
 
       <div class="card">
         @for (a of feed(); track a.event.id) {
-          <a class="feed-row" [class.mine]="a.mine" [routerLink]="a.event.path" [queryParams]="a.event.itemId ? { focus: a.event.itemId } : null">
+          <a class="feed-row" [class.mine]="a.mine" [routerLink]="a.event.path" [queryParams]="a.event.itemId && a.event.action !== 'reminded' ? { focus: a.event.itemId } : null">
             <div class="avatar-sm" [style.background]="a.member?.color ?? 'var(--surface-2, #eee)'">
               <app-avatar-glyph [emoji]="a.member?.avatarEmoji ?? '👤'" [letterColor]="a.member?.avatarLetterColor" />
             </div>
             <span class="feed-text">
-              <b>{{ a.mine ? 'You' : a.event.actorName }}</b> {{ a.event.summary }} <span class="feed-ago">· {{ ago(a.event.timestamp) }}</span>
+              @if (a.event.action === 'reminded' && a.mine) {<b>You</b> sent {{ a.target }} a reminder to pay you back}
+              @else {@if (a.event.action !== 'reminded') {<b>{{ a.mine ? 'You' : a.event.actorName }}</b> }{{ a.event.summary }}} <span class="feed-ago">· {{ ago(a.event.timestamp) }}</span>
             </span>
           </a>
         } @empty {
@@ -58,7 +59,8 @@ export class UpdatesComponent implements OnInit, OnDestroy {
     const showTest = !!this.tripService.activeTrip()?.isTest;   // tester activity is part of a test trip
     return this.eventsService.events()
       .filter(e => (showTest || !e.test) && (e.actorUid === me || e.audience === 'all' || e.audience.includes(me)))
-      .map(event => ({ event, member: byUid.get(event.actorUid), mine: event.actorUid === me }));
+      .map(event => ({ event, member: byUid.get(event.actorUid), mine: event.actorUid === me,
+        target: event.targetUid ? byUid.get(event.targetUid)?.displayName ?? 'someone' : '' }));
   });
 
   ago = (ts: number) => timeAgo(ts, this.now());

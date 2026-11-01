@@ -56,6 +56,16 @@ app, so they need no Content-Security-Policy entry. The links, referral codes an
 Firestore `_config/partners` (written by `scripts/set-partners.js`), never in the repo. Taps are
 counted in `_activity` as `type: 'offer'` with the partner id, shown in Pulse → Partner taps.
 
+### Payment app links (not APIs)
+
+Finance's "Pay with" (#532) opens Venmo (`venmo.com/u/<name>?txn=pay&amount=…`, US dollars), PayPal
+(`paypal.me/<name>/<amount><currency>`) or Cash App (`cash.app/$<name>/<amount>`, dollars or pounds)
+with the amount filled in where the app takes that currency. Plain links that leave the app, so no
+Content-Security-Policy entry; the app never calls them and never handles money. Each person's
+handles live on their profile and their member doc on each trip (`payHandles`, checked by the rules,
+built by `src/app/utils/pay-links.ts`). "Remind" writes `trips/{id}/reminders/{from}_{to}` (one a
+day per pair, by the rules) and a line on the other person's bell.
+
 ### What each outside service receives
 
 Checked against the code on 2026-10-13 (#408). Requests go **from the person's device**, so each service also

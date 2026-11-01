@@ -16,6 +16,7 @@ import { recoveryEmailErrorMessage } from '../../utils/email';
 import { isDevMode } from '@angular/core';
 import { APP_VERSION, APP_BUILD, APP_BUILD_DATE } from '../../../version';
 import { userMessage } from '../../utils/user-message';
+import { PAY_APPS, PayApp, normalizeHandle } from '../../utils/pay-links';
 
 @Component({
   selector: 'app-profile',
@@ -110,6 +111,41 @@ export class ProfileComponent implements OnInit {
       this.avatarEmoji = u.avatarEmoji;
       this.color       = u.color;
       this.avatarLetterColor = u.avatarLetterColor ?? '';
+      this.payHandles = { venmo: '', paypal: '', cashapp: '', ...(u.payHandles ?? {}) };
+    }
+  }
+
+  // ── Payment apps (#532): so people on your trips can pay you back ──
+  readonly payApps = PAY_APPS;
+  payHandles: Record<PayApp, string> = { venmo: '', paypal: '', cashapp: '' };
+  readonly paySaving = signal(false);
+  readonly paySaved = signal(false);
+  readonly payError = signal('');
+  /** A handle that was typed but isn't one the app can link to. */
+  payProblem(app: PayApp): string {
+    const raw = this.payHandles[app].trim();
+    if (!raw || normalizeHandle(app, raw)) return '';
+    const label = PAY_APPS.find(a => a.app === app)!.label;
+    return `That doesn't look like a ${label} name. Use letters, numbers, dots, dashes or underscores.`;
+  }
+  async savePayHandles(): Promise<void> {
+    if (this.payApps.some(a => this.payProblem(a.app))) return;
+    const clean: Partial<Record<PayApp, string>> = {};
+    for (const { app } of this.payApps) {
+      const h = normalizeHandle(app, this.payHandles[app]);
+      if (h) clean[app] = h;
+      this.payHandles[app] = h;
+    }
+    this.paySaving.set(true);
+    this.payError.set('');
+    try {
+      await this.tripService.updatePayHandles(clean);
+      this.paySaved.set(true);
+      setTimeout(() => this.paySaved.set(false), 3000);
+    } catch {
+      this.payError.set("Couldn't save your payment apps. Check your connection and try again.");
+    } finally {
+      this.paySaving.set(false);
     }
   }
 

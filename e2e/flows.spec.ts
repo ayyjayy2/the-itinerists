@@ -139,3 +139,32 @@ test('join from an invite link as a guest, then create an account to add somethi
   await page.getByRole('button', { name: '+ Add event' }).first().click();
   await expect(page.getByPlaceholder("What's happening?")).toBeVisible();
 });
+
+/** #532: pay someone back in their payment app, then mark it paid; remind someone who owes you, once a day. */
+test('pay back from Finance, mark it paid, and remind someone who owes you', async ({ page }) => {
+  await page.context().route(/venmo\.com|paypal\.me|cash\.app/, route => route.abort());   // never leave for the real apps
+  await page.goto('/finance');
+  // Maya pays a big dinner for everyone, so I owe her overall.
+  await page.getByRole('button', { name: '+ Add' }).click();
+  await page.getByPlaceholder('e.g. The Grey').fill('Big dinner');
+  await page.getByPlaceholder('0.00').first().fill('40000');
+  await page.locator('.modal-card select').filter({ has: page.locator('option', { hasText: 'Maya' }) }).first().selectOption('Maya');
+  await page.getByRole('button', { name: 'Add Expense' }).click();
+  const owe = page.locator('.banner-negative');
+  await expect(owe.getByText('You still owe')).toBeVisible();
+  const venmo = owe.getByRole('link', { name: 'Venmo' }).first();
+  await expect(venmo).toHaveAttribute('href', /^https:\/\/venmo\.com\/u\/maya-demo\?txn=pay/);
+  await expect(venmo).toHaveAttribute('target', '_blank');
+  const popup = page.waitForEvent('popup');
+  await venmo.click();
+  await (await popup).close();
+  await expect(page.getByText(/Did you pay Maya/)).toBeVisible();
+  await page.getByRole('button', { name: 'Mark as paid' }).click();
+  await expect(page.getByText(/Did you pay Maya/)).toHaveCount(0);
+  await expect(owe.locator('.banner-person-name', { hasText: 'Maya' })).toHaveCount(0);
+
+  const owed = page.locator('.banner-positive');
+  const remind = owed.getByRole('button', { name: /^Remind / }).first();
+  await remind.click();
+  await expect(owed.getByText('Reminded today').first()).toBeVisible();
+});
