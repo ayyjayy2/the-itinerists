@@ -42,6 +42,17 @@ service cloud.firestore {
       return isSignedIn()
         && exists(/databases/$(database)/documents/trips/$(tripId)/members/$(uid()));
     }
+    // A guest (#610) opened an invite link without an account: signed in
+    // anonymously and joined the trip to read it. Guests read what members
+    // read and change nothing until they create an account; creating one turns
+    // the same sign-in into an email account, so this is false from then on.
+    function isGuest() {
+      return isSignedIn() && request.auth.token.get('firebase', {}).get('sign_in_provider', '') == 'anonymous';
+    }
+    // A member who may change the trip's shared things: anyone on it but a guest.
+    function canEdit(tripId) {
+      return isMember(tripId) && !isGuest();
+    }
     function isOwner(tripId) {
       return isMember(tripId)
         && get(/databases/$(database)/documents/trips/$(tripId)/members/$(uid())).data.role == 'owner';
@@ -357,7 +368,8 @@ service cloud.firestore {
     // Keyed by uid; only the signed-in owner may read/write (same pattern as
     // userTrips). The shared trip finance lives at trips/{tripId}/finance.
     match /userExpenses/{userId} {
-      allow read, write: if isSignedIn() && userId == uid();
+      allow read:  if isSignedIn() && userId == uid();
+      allow write: if isSignedIn() && !isGuest() && userId == uid();
     }
 
     // ── Trips and their sub-collections ────────────────────────────────────
@@ -367,14 +379,19 @@ service cloud.firestore {
       // else under the trip, and no writes.
       allow read:   if isMember(tripId) || isAppOwner();
       // A new trip counts against the creator's daily allowance.
-      allow create: if isSignedIn() && request.resource.data.createdBy == uid()
+      allow create: if isSignedIn() && !isGuest() && request.resource.data.createdBy == uid()
                     && countsAgainstQuota('trips');
       // Members maintain shared trip fields (memberCount, dates, name). Only
       // the owner may change createdBy (ownership transfer): it is what lets
       // someone seed themselves as owner, so a member must never set it.
       allow update: if isOwner(tripId)
-                    || (isMember(tripId)
-                        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdBy', 'id']));
+                    || (canEdit(tripId)
+                        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdBy', 'id']))
+                    // A guest joining or leaving moves the member count by one, and changes nothing else.
+                    || (isMember(tripId) && isGuest()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount'])
+                        && (request.resource.data.memberCount == resource.data.memberCount + 1
+                            || request.resource.data.memberCount == resource.data.memberCount - 1));
       // Deletion is the purge when the last member (always the owner) leaves.
       allow delete: if isOwner(tripId);
 
@@ -429,10 +446,10 @@ service cloud.firestore {
       }
       match /outfitPhotos/{photoId} {
         allow read:   if isMember(tripId) && resource.data.ownerUid == uid();
-        allow create: if isMember(tripId) && request.resource.data.ownerUid == uid()
+        allow create: if canEdit(tripId) && request.resource.data.ownerUid == uid()
                                           && isPhotoDoc(request.resource.data)
                                           && countsAgainstQuota('photos');
-        allow update: if isMember(tripId) && resource.data.ownerUid == uid()
+        allow update: if canEdit(tripId) && resource.data.ownerUid == uid()
                                           && request.resource.data.ownerUid == uid()
                                           && isPhotoDoc(request.resource.data);
         allow delete: if isMember(tripId) && resource.data.ownerUid == uid();
@@ -445,7 +462,9 @@ service cloud.firestore {
       // Place lookups for this trip's map (#356): place name → coordinates,
       // shared by the trip's members only. Removed with the trip.
       match /geocache/{docId} {
-        allow read, delete: if isMember(tripId);
+        // Looked-up places are a cache any member fills as they view the map, guests too.
+        allow read: if isMember(tripId);
+        allow delete: if canEdit(tripId);
         allow create, update: if isMember(tripId)
           && request.resource.data.keys().hasOnly(['entries'])
           && request.resource.data.entries is map;
@@ -455,7 +474,9 @@ service cloud.firestore {
       // the first member to load it after it settles (6+ days on), never edited,
       // so everyone sees the same. Members may delete (trip teardown).
       match /weather/{date} {
-        allow read, delete: if isMember(tripId);
+        // Saved by whoever views it first, guests too; it is never edited.
+        allow read: if isMember(tripId);
+        allow delete: if canEdit(tripId);
         allow create: if isMember(tripId)
           && date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
           && timestamp.date(int(date[0:4]), int(date[5:7]), int(date[8:10])) < request.time - duration.value(5, 'd')
@@ -474,8 +495,9 @@ service cloud.firestore {
       // debt item marked paid (from → to, for one expense), saying who ticked
       // it. Unticking deletes it; a tick is never edited.
       match /payments/{markId} {
-        allow read, delete: if isMember(tripId);
-        allow create: if isMember(tripId)
+        allow read: if isMember(tripId);
+        allow delete: if canEdit(tripId);
+        allow create: if canEdit(tripId)
           && request.resource.data.keys().hasOnly(['from', 'to', 'itemId', 'markedBy', 'at'])
           && request.resource.data.markedBy == uid()
           && request.resource.data.at == request.time
@@ -485,18 +507,26 @@ service cloud.firestore {
       }
 
       match /packing/{ownerUid} {
-        allow read, write: if isMember(tripId) && ownerUid == uid();
-        allow delete:      if isMember(tripId) && (ownerUid == uid() || isOwner(tripId));
+        allow read:   if isMember(tripId) && ownerUid == uid();
+        allow create, update: if canEdit(tripId) && ownerUid == uid();
+        allow delete: if isMember(tripId) && (ownerUid == uid() || isOwner(tripId));
       }
 
       // Collaborative + per-user trip data. Enumerated so the wildcard can't
       // over-grant on the members/invites sub-collections above.
-      match /{sub}/{doc} {
-        allow read, write: if isMember(tripId) && sub in [
+      function isSharedSub(sub) {
+        return sub in [
           'itinerary', 'finance', 'stays', 'recs', 'cars', 'pins',
           'flights', 'outfits', 'dayLabels', 'packingSuggestions',
           'activityLog', 'removedMembers', 'events'
         ];
+      }
+      match /{sub}/{doc} {
+        allow read:  if isMember(tripId) && isSharedSub(sub);
+        allow write: if canEdit(tripId) && isSharedSub(sub);
+        // A guest joining (or leaving) adds the "joined" line to the trip's
+        // update feed and log, and writes nothing else under the trip.
+        allow create: if isMember(tripId) && isGuest() && sub in ['activityLog', 'events'];
       }
     }
 

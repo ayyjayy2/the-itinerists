@@ -19,6 +19,7 @@ const alice = testEnv.authenticatedContext('alice', FRESH).storage();
 const aliceStale = testEnv.authenticatedContext('alice', STALE).storage();
 const bob   = testEnv.authenticatedContext('bob', FRESH).storage();
 const anon  = testEnv.unauthenticatedContext().storage();
+const guest = testEnv.authenticatedContext('gus', { ...FRESH, firebase: { sign_in_provider: 'anonymous' } }).storage(); // #610
 
 const jpeg = (kb) => new Uint8Array(kb * 1024);
 const JPEG = { contentType: 'image/jpeg' };
@@ -40,6 +41,8 @@ await t('owner can upload the thumbnail too', () =>
   assertSucceeds(uploadBytes(ref(alice, ALICE_THUMB), jpeg(20), JPEG)));
 await t('owner can read her own photo back', () =>
   assertSucceeds(getBytes(ref(alice, ALICE_PHOTO))));
+await t('a guest (no account yet) cannot upload a photo, even under their own uid', () =>
+  assertFails(uploadBytes(ref(guest, 'outfitPhotos/gus/tripT/2026-10-01_gus_abc.jpg'), jpeg(20), JPEG)));
 await t('another member cannot read it', () =>
   assertFails(getBytes(ref(bob, ALICE_PHOTO))));
 await t('another member cannot overwrite it', () =>

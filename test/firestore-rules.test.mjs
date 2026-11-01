@@ -36,6 +36,10 @@ const admin = testEnv.authenticatedContext('admin', FRESH).firestore(); // app a
 const owner = testEnv.authenticatedContext('appowner', { ...FRESH, owner: true }).firestore(); // app owner (the `owner` claim), not a member of T
 const fakeOwner = testEnv.authenticatedContext('faker', { ...FRESH, email: 'faker@example.com' }).firestore(); // signed in, no owner claim
 const anon  = testEnv.unauthenticatedContext().firestore();      // logged out
+const ANON = { ...FRESH, firebase: { sign_in_provider: 'anonymous' } };
+const gus  = testEnv.authenticatedContext('gus', ANON).firestore();   // a guest already on trip T (#610)
+const gina = testEnv.authenticatedContext('gina', ANON).firestore();  // a guest opening T's invite link
+const gusUpgraded = testEnv.authenticatedContext('gus', { ...FRESH, email: 'gus@example.com', firebase: { sign_in_provider: 'password' } }).firestore(); // gus after creating an account
 const bobStale = testEnv.authenticatedContext('bob', STALE).firestore();  // bob, last signed in 91 days ago
 
 async function seed() {
@@ -53,6 +57,8 @@ async function seed() {
       setDoc(doc(db, 'trips', 'T'), { name: 'Trip', createdBy: 'alice', memberCount: 2 }),
       setDoc(doc(db, 'trips', 'T', 'members', 'alice'), { uid: 'alice', role: 'owner' }),
       setDoc(doc(db, 'trips', 'T', 'members', 'bob'),   { uid: 'bob',   role: 'member' }),
+      setDoc(doc(db, 'trips', 'T', 'members', 'gus'),   { uid: 'gus',   role: 'member', inviteCode: 'CODE1' }),
+      setDoc(doc(db, 'userTrips', 'gus'), { tripIds: ['T'] }),
       setDoc(doc(db, 'trips', 'T', 'itinerary', 'i1'), { title: 'Day 1' }),
       setDoc(doc(db, 'trips', 'T', 'packing', 'bob'),  { items: [] }),
       setDoc(doc(db, 'trips', 'T', 'packingSuggestions', 's1'), { from: 'bob', to: 'alice' }),
@@ -358,6 +364,39 @@ await t('app owner edits an entry', 'deny', () => updateDoc(doc(owner, '_waitlis
 await t('app owner deletes an entry', 'deny', () => deleteDoc(doc(owner, '_waitlist', 'w1')));
 await t('anon edits an entry', 'deny', () => updateDoc(doc(anon, '_waitlist', 'w1'), { email: 'x@y.io' }));
 await t('anon deletes an entry', 'deny', () => deleteDoc(doc(anon, '_waitlist', 'w1')));
+
+console.log('\nGuests (#610): read the trip from an invite link, change nothing until they make an account');
+await t('guest reads the trip', 'allow', () => getDoc(doc(gus, 'trips', 'T')));
+await t('guest reads the members', 'allow', () => getDocs(collection(gus, 'trips', 'T', 'members')));
+await t('guest reads the itinerary', 'allow', () => getDocs(collection(gus, 'trips', 'T', 'itinerary')));
+await t('guest reads the shared expenses', 'allow', () => getDocs(collection(gus, 'trips', 'T', 'finance')));
+await t('guest adds an itinerary item', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'itinerary', 'g1'), { title: 'Guest stop' }));
+await t('guest edits an itinerary item', 'deny', () => updateDoc(doc(gus, 'trips', 'T', 'itinerary', 'i1'), { title: 'Changed' }));
+await t('guest deletes an itinerary item', 'deny', () => deleteDoc(doc(gus, 'trips', 'T', 'itinerary', 'i1')));
+await t('guest adds an expense', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'finance', 'f1'), { amount: 10 }));
+await t('guest ticks a payment', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'payments', 'p1'), { from: 'gus', to: 'alice', itemId: 'f1', markedBy: 'gus', at: serverTimestamp() }));
+await t('guest renames the trip', 'deny', () => updateDoc(doc(gus, 'trips', 'T'), { name: 'Guest trip' }));
+await t('guest bumps the member count by one (joining)', 'allow', () => updateDoc(doc(gus, 'trips', 'T'), { memberCount: increment(1) }));
+await t('guest sets the member count to anything', 'deny', () => updateDoc(doc(gus, 'trips', 'T'), { memberCount: 99 }));
+await t('guest posts to the update feed (joined)', 'allow', () => setDoc(doc(gus, 'trips', 'T', 'events', 'gj1'), { action: 'joined' }));
+await t('guest edits the update feed', 'deny', () => updateDoc(doc(gus, 'trips', 'T', 'events', 'gj1'), { action: 'changed' }));
+await t('guest starts a packing list', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'packing', 'gus'), { items: [] }));
+await t('guest adds an outfit photo', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'outfitPhotos', '2026-01-01_gus'), { dataUrl: 'data:image/jpeg;base64,x', ownerUid: 'gus', date: '2026-01-01' }));
+await t('guest writes My Expenses', 'deny', () => setDoc(doc(gus, 'userExpenses', 'gus'), { items: [] }));
+await t('guest creates a trip', 'deny', () => setDoc(doc(gus, 'trips', 'TG'), { name: 'Mine', createdBy: 'gus', memberCount: 0 }));
+await t('guest creates a profile', 'deny', () => setDoc(doc(gus, 'users', 'gus'), { uid: 'gus', displayName: 'Gus' }));
+await t('guest fills the map place cache', 'allow', () => setDoc(doc(gus, 'trips', 'T', 'geocache', 'c1'), { entries: {} }));
+await t('guest clears the map place cache', 'deny', () => deleteDoc(doc(gus, 'trips', 'T', 'geocache', 'c1')));
+await t('guest changes their own name on the trip', 'allow', () => updateDoc(doc(gus, 'trips', 'T', 'members', 'gus'), { displayName: 'Gus' }));
+await t('guest makes themselves owner', 'deny', () => updateDoc(doc(gus, 'trips', 'T', 'members', 'gus'), { role: 'owner' }));
+await t('guest makes an invite', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'invites', 'GUEST1'), { tripId: 'T', usedBy: [], expiresAt: 9999999999999 }));
+await t('guest records a page view', 'allow', () => setDoc(doc(gus, '_activity', 'ge1'), { uid: 'gus', tripId: 'T', type: 'page', page: '/home', at: serverTimestamp(), localHour: 9, tz: 'Europe/Berlin', tzOffsetMin: 60, platform: 'web', sessionId: 's', appVersion: '1' }));
+await t('new guest joins with a live invite', 'allow', () => setDoc(doc(gina, 'trips', 'T', 'members', 'gina'), { uid: 'gina', role: 'member', inviteCode: 'CODE1', displayName: 'Gina' }));
+await t('new guest joins with an expired invite', 'deny', () => setDoc(doc(gina, 'trips', 'T', 'members', 'gina2'), { uid: 'gina', role: 'member', inviteCode: 'OLD1' }));
+await t('new guest joins as owner', 'deny', () => setDoc(doc(gina, 'trips', 'TC', 'members', 'gina'), { uid: 'gina', role: 'owner', inviteCode: 'CODE1' }));
+await t('outsider guest reads the trip', 'deny', () => getDoc(doc(testEnv.authenticatedContext('stranger', ANON).firestore(), 'trips', 'T')));
+await t('guest, after making an account, adds an itinerary item', 'allow', () => setDoc(doc(gusUpgraded, 'trips', 'T', 'itinerary', 'g2'), { title: 'Now I can' }));
+await t('guest, after making an account, starts a packing list', 'allow', () => setDoc(doc(gusUpgraded, 'trips', 'T', 'packing', 'gus'), { items: [] }));
 
 console.log('\nInvite opens (_inviteOpens: who reached an invite, for the invite-to-join rate, #609)');
 const io = (o = {}) => ({ tripId: 'T', via: 'link', platform: 'web', visitor: '3f2a9c1e-7b4d-4e8a-9c2f-1a2b3c4d5e6f', at: serverTimestamp(), ...o });
