@@ -9,6 +9,7 @@ import { TripDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { InvitePanelComponent } from '../../shared/invite-panel/invite-panel.component';
 import { userMessage } from '../../utils/user-message';
+import { publicLink } from '../../shared/public-link';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -73,7 +74,7 @@ export class MyTripsComponent implements OnInit {
     try {
       const code = await this.tripService.generateInvite(trip.id);
       this.openInvite.set({ tripId: trip.id, code });
-      const url  = `${window.location.origin}/join?code=${code}`;
+      const url  = publicLink(`/join?code=${code}`);
       await navigator.clipboard.writeText(url).catch(() => {/* panel still shows it */});
       this.copiedId.set(trip.id);
       setTimeout(() => this.copiedId.set(null), 2500);

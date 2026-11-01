@@ -8,12 +8,7 @@ import { StaysService } from './stays.service';
 import { AirportZoneService } from './airport-zone.service';
 import { ShareView, buildShareView, newShareToken } from '../utils/share-view';
 import { DEMO } from '../demo-flag';
-import { Capacitor } from '@capacitor/core';
-import { environment } from '../../environments/environment';
-import { publicOrigin } from '../utils/public-origin';
-
-/** Where a shared page lives: this site, or the public one when this is the iPhone app. */
-const origin = () => publicOrigin(location.origin, Capacitor.isNativePlatform(), environment.firebase.projectId);
+import { publicLink } from '../shared/public-link';
 
 /**
  * The read-only page a trip's members can share with people at home (#611),
@@ -38,7 +33,7 @@ export class ShareViewService {
   /** The active trip's share link, or '' when it isn't shared. */
   readonly token = computed(() => this.tripService.activeTrip()?.shareToken ?? '');
   /** The full address to send people. */
-  readonly url = computed(() => (this.token() ? `${origin()}/view#${this.token()}` : ''));
+  readonly url = computed(() => (this.token() ? publicLink(`/view#${this.token()}`) : ''));
 
   /** What the page should show now, from the plan this device has. */
   private view = computed<ShareView | null>(() => {
@@ -112,7 +107,7 @@ export class ShareViewService {
       airportZone: code => this.airportZones.zoneFor(code),
     });
     await this.publish(token, view, JSON.stringify(view));
-    return `${origin()}/view#${token}`;
+    return publicLink(`/view#${token}`);
   }
 
   /** Stop sharing: the link stops working at once. */
