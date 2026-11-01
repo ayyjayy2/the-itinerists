@@ -66,6 +66,19 @@ handles live on their profile and their member doc on each trip (`payHandles`, c
 built by `src/app/utils/pay-links.ts`). "Remind" writes `trips/{id}/reminders/{from}_{to}` (one a
 day per pair, by the rules) and a line on the other person's bell.
 
+### Shared trip pages (#611)
+
+A member can share a read-only page of the trip with people at home: `/view#<token>` (Trip settings
+→ Share with people at home). The secret is after the `#`, so it never reaches a server, our page
+log or analytics. The trip names its live link (`trips/{id}.shareToken`); `shares/<token>`
+holds the display copy built by `src/app/utils/share-view.ts` (dates and places, the plan, flights,
+stays by town, first names; never notes, booking references, links, money, packing or outfits).
+Anyone with the link reads that one doc, signed out; nobody can list them. Any member who can edit
+keeps it current: `ShareViewService` republishes when the plan their app sees differs from the
+published copy (3 s after the last change). "Stop sharing" or "Make a new link" deletes it, so the old
+link stops at once; trip teardown deletes it too. In the iPhone app the link uses the public site
+(`src/app/utils/public-origin.ts`). "Save as PDF" is the browser's own print-to-PDF.
+
 ### What each outside service receives
 
 Checked against the code on 2026-10-13 (#408). Requests go **from the person's device**, so each service also

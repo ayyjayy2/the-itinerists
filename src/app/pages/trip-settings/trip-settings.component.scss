@@ -269,3 +269,14 @@
   }
 }
 .add-dest { width: 100%; justify-content: center; gap: 0.4rem; }
+
+// Share with people at home (#611)
+.share-card { display: flex; flex-direction: column; gap: 0.6rem; }
+.share-hint { margin: 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.45; }
+.share-url {
+  margin: 0;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+  a { color: var(--primary-dark); font-weight: 700; }
+}
+.share-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; .btn { min-height: 44px; } }

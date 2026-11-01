@@ -419,6 +419,24 @@ await t('member reads when a reminder was sent', 'allow', async () => { await ea
 await t('outsider sends a reminder', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'reminders', 'carol_bob'), { from: 'carol', to: 'bob', at: serverTimestamp() }));
 await t('guest sends a reminder', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'reminders', 'gus_bob'), { from: 'gus', to: 'bob', at: serverTimestamp() }));
 
+console.log('\nShared trip views (#611): a read-only page for people at home');
+const shareOn = (token = 'TOK1') => testEnv.withSecurityRulesDisabled(ctx => updateDoc(doc(ctx.firestore(), 'trips', 'T'), { shareToken: token }));
+const shareDoc = (o = {}) => ({ tripId: 'T', view: { v: 1, tripName: 'Trip' }, updatedAt: serverTimestamp(), ...o });
+const sharePublished = () => testEnv.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'shares', 'TOK1'), { tripId: 'T', view: { v: 1 }, updatedAt: new Date() }));
+await t('member publishes the view for the trip\'s link', 'allow', async () => { await shareOn(); return setDoc(doc(bob, 'shares', 'TOK1'), shareDoc()); });
+await t('member publishes under a token the trip doesn\'t name', 'deny', async () => { await shareOn(); return setDoc(doc(bob, 'shares', 'OTHER'), shareDoc()); });
+await t('member publishes for a trip that isn\'t shared', 'deny', () => setDoc(doc(bob, 'shares', 'TOK1'), shareDoc()));
+await t('outsider publishes a view of the trip', 'deny', async () => { await shareOn(); return setDoc(doc(carol, 'shares', 'TOK1'), shareDoc()); });
+await t('guest publishes the view', 'deny', async () => { await shareOn(); return setDoc(doc(gus, 'shares', 'TOK1'), shareDoc()); });
+await t('view with extra fields', 'deny', async () => { await shareOn(); return setDoc(doc(bob, 'shares', 'TOK1'), shareDoc({ notes: 'x' })); });
+await t('view with a client time', 'deny', async () => { await shareOn(); return setDoc(doc(bob, 'shares', 'TOK1'), shareDoc({ updatedAt: new Date() })); });
+await t('anyone with the link reads the view, signed out', 'allow', async () => { await sharePublished(); return getDoc(doc(anon, 'shares', 'TOK1')); });
+await t('nobody lists shared views', 'deny', () => getDocs(collection(anon, 'shares')));
+await t('member turns sharing off (deletes the view)', 'allow', async () => { await sharePublished(); return deleteDoc(doc(bob, 'shares', 'TOK1')); });
+await t('outsider deletes a shared view', 'deny', async () => { await sharePublished(); return deleteDoc(doc(carol, 'shares', 'TOK1')); });
+await t('member sets the trip\'s share link', 'allow', () => updateDoc(doc(bob, 'trips', 'T'), { shareToken: 'NEW1' }));
+await t('guest sets the trip\'s share link', 'deny', () => updateDoc(doc(gus, 'trips', 'T'), { shareToken: 'NEW1' }));
+
 console.log('\nInvite opens (_inviteOpens: who reached an invite, for the invite-to-join rate, #609)');
 const io = (o = {}) => ({ tripId: 'T', via: 'link', platform: 'web', visitor: '3f2a9c1e-7b4d-4e8a-9c2f-1a2b3c4d5e6f', at: serverTimestamp(), ...o });
 await t('anon opens an invite link', 'allow', () => setDoc(doc(anon, '_inviteOpens', 'i1'), io()));

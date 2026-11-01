@@ -5,6 +5,7 @@ describe('usagePage', () => {
     expect(usagePage('/itinerary')).toBe('/itinerary');
     expect(usagePage('/get-started?mode=code')).toBe('/get-started');
     expect(usagePage('/join?code=ABC123')).toBe('/join');
+    expect(usagePage('/view#Ab3dE5fG7hJ9kL1mN3pQ5r')).toBe('/view');   // a shared page's secret is never logged (#611)
     expect(usagePage('/finance#totals')).toBe('/finance');
   });
 

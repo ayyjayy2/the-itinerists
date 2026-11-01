@@ -1,0 +1,85 @@
+<div class="view-scroll">
+<div class="view-page">
+  @switch (state()) {
+    @case ('loading') {
+      <app-loading label="Opening the trip…" />
+    }
+    @case ('missing') {
+      <div class="view-card view-missing">
+        <app-brand [mark]="44" [showWordmark]="false" />
+        <h1>This link isn't working</h1>
+        <p>The trip's planners may have stopped sharing it, or made a new link. Ask them to send it again.</p>
+      </div>
+    }
+    @case ('shown') {
+      @if (view(); as v) {
+        <header class="view-head">
+          <p class="view-kicker">A trip plan</p>
+          <h1>{{ v.tripName }}</h1>
+          <p class="view-meta">
+            @if (v.dates) {<span>{{ v.dates }}</span>}
+            @for (p of v.places; track p) {<span>{{ p }}</span>}
+          </p>
+          @if (v.people.length) {
+            <ul class="view-people" aria-label="Who's going">
+              @for (p of v.people; track $index) {
+                <li><span class="view-avatar" [style.background]="p.color"><app-avatar-glyph [emoji]="p.avatarEmoji" [letterColor]="p.avatarLetterColor" /></span>{{ p.name }}</li>
+              }
+            </ul>
+          }
+          <button type="button" class="btn btn-ghost btn-sm view-pdf" (click)="savePdf()">Save as PDF</button>
+        </header>
+
+        @if (v.flights.length) {
+          <section class="view-card">
+            <h2>Flights</h2>
+            <ul class="view-list">
+              @for (f of v.flights; track $index) {
+                <li>
+                  <div class="view-row-title">{{ f.who ? f.who + ' · ' : '' }}{{ f.flight }} <span class="view-muted">{{ f.route }}</span></div>
+                  <div class="view-muted">Departs {{ f.departs }} · arrives {{ f.arrives }}</div>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        @if (v.stays.length) {
+          <section class="view-card">
+            <h2>Where they're staying</h2>
+            <ul class="view-list">
+              @for (s of v.stays; track $index) {
+                <li><div class="view-row-title">{{ s.name }}</div><div class="view-muted">{{ s.where }}{{ s.where && s.dates ? ' · ' : '' }}{{ s.dates }}</div></li>
+              }
+            </ul>
+          </section>
+        }
+
+        @if (v.days.length) {
+          <section class="view-card">
+            <h2>Day by day</h2>
+            @for (d of v.days; track d.date) {
+              <h3>{{ d.label }}</h3>
+              <ul class="view-list">
+                @for (i of d.items; track $index) {
+                  <li class="view-plan">
+                    <span class="view-time">{{ i.time || 'Any time' }}</span>
+                    <span><span class="view-row-title">{{ i.title }}</span>@if (i.place) {<span class="view-muted"> · {{ i.place }}</span>}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        } @else {
+          <section class="view-card"><p class="view-muted">The day-by-day plan isn't filled in yet.</p></section>
+        }
+
+        <footer class="view-foot">
+          <a routerLink="/welcome" class="view-made"><app-brand [mark]="22" [showWordmark]="false" /> Made with The Itinerists</a>
+          <p class="view-muted">Plan your own group trip together.</p>
+        </footer>
+      }
+    }
+  }
+</div>
+</div>

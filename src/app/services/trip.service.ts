@@ -517,6 +517,9 @@ export class TripService {
       if (name === 'outfitPhotos') { await this.deleteOwnOutfitPhotos(tripId, this.requireUser().uid); continue; }
       await deleteCollection(name);
     }
+    // A shared view for people at home (#611) goes with the trip.
+    const shareToken = (await getDoc(doc(this.firestore, 'trips', tripId))).data()?.['shareToken'];
+    if (shareToken) await deleteDoc(doc(this.firestore, 'shares', shareToken)).catch(() => {/* already gone */});
     await deleteDoc(doc(this.firestore, 'trips', tripId));
     // Members last: removing our own member doc revokes our own access.
     await deleteCollection('members');

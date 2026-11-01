@@ -1,3 +1,4 @@
+import { ShareViewService } from './services/share-view.service';
 import { DiagnosticsService } from './services/diagnostics.service';
 import { TestBed } from '@angular/core/testing';
 import { signal, WritableSignal } from '@angular/core';
@@ -71,6 +72,7 @@ describe('AppComponent', () => {
         { provide: FirestoreResumeService, useValue: { start: () => {} } },
         { provide: DiagnosticsService, useValue: { startupTick: () => {} } },
         { provide: UsageService, useValue: { start: () => {} } },
+        { provide: ShareViewService, useValue: { start: () => {} } },
         { provide: SurveyService, useValue: { popupOpen: signal(false), config: signal(null) } },
       ],
     }).compileComponents();

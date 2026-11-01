@@ -37,6 +37,7 @@ import { AvatarGlyphComponent } from './shared/avatar-glyph/avatar-glyph.compone
 import { SurveyPopupComponent } from './shared/survey-popup/survey-popup.component';
 import { AccountSheetComponent } from './shared/account-sheet/account-sheet.component';
 import { AccountPromptService } from './services/account-prompt.service';
+import { ShareViewService } from './services/share-view.service';
 
 interface NavItem {
   path: string;
@@ -71,6 +72,7 @@ export class AppComponent implements OnInit {
   private diagnostics = inject(DiagnosticsService);
   private visibleArea = inject(VisibleAreaService);
   private accountPrompt = inject(AccountPromptService);
+  private shareView = inject(ShareViewService);
   private readonly appHeader = viewChild<ElementRef<HTMLElement>>('appHeader');
   private readonly tabBar = viewChild<ElementRef<HTMLElement>>('tabBar');
 
@@ -222,6 +224,7 @@ export class AppComponent implements OnInit {
     this.usage.start();
     this.visibleArea.start();   // pop-ups size to the part above the keyboard (#470)
     this.accountPrompt.start(); // a guest's tap on an edit control asks them to create an account (#610)
+    this.shareView.start();     // keeps a shared trip page for people at home up to date (#611)
     // …and sit between the header and the tab bar, whichever are on screen (#497).
     effect(() => this.visibleArea.setChrome(this.appHeader()?.nativeElement ?? null, this.tabBar()?.nativeElement ?? null));
 
@@ -299,7 +302,7 @@ export class AppComponent implements OnInit {
   isAuthPage(): boolean {
     const url = this.router.url;
     // Full-screen, no-nav layout for the auth + onboarding screens (TP-25).
-    return ['/welcome', '/login', '/join', '/signup', '/get-started', '/privacy', '/terms', '/forgot-password'].some(p => url.startsWith(p));
+    return ['/welcome', '/login', '/join', '/view', '/signup', '/get-started', '/privacy', '/terms', '/forgot-password'].some(p => url.startsWith(p));
   }
 
   hardRefresh(): void {
