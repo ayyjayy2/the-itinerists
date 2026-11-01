@@ -291,8 +291,12 @@ test.describe('4. Joining a trip', () => {
     try {
       const p = await stranger.newPage();
       await p.goto(href);
-      // Signed out, the link lands on sign-up with the invite code filled in,
-      // and the code is taken out of the address bar (#404).
+      // Signed out, the link offers the trip without an account (#610), and the
+      // code is taken out of the address bar (#404).
+      await expect(p.getByRole('heading', { name: "You're invited" })).toBeVisible();
+      await expect(p).toHaveURL(/\/join$/);
+      // Creating an account straight away still works, with the code filled in.
+      await p.getByRole('button', { name: 'Create an account instead' }).click();
       await expect(p.getByRole('heading', { name: 'Create your account' })).toBeVisible();
       await expect(p.locator('input[name="inviteCode"]')).toHaveValue(href.split('=')[1]);
       await expect(p).toHaveURL(/\/signup$/);

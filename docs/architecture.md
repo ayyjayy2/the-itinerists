@@ -135,7 +135,8 @@ Maya adds "Sunset at the Miradouro" to Day 2 on her phone. What happens:
 3. **Email:** people sign in with their email. A username still works only for old accounts whose `usernames` entry holds a placeholder address; anyone else who types one is asked for their email.
 4. **Sign in** with Firebase Authentication; the route guard waits for the profile in `users/{uid}`.
 5. **Sessions last 90 days** from the last password sign-in: the rules refuse older ones (`auth_time`), and the app signs the person out first and says why (`utils/session.ts`), at launch and whenever it comes back to the screen.
-6. **The open trip** comes from the device, or the person's last trip in `userTrips`; its listeners start and Home appears. Measured: 1.3 s median from tap to Home on 4G.
+6. **Guests (#610):** someone who opens an invite link signed out can see the trip with just a name. They sign in anonymously, get a profile marked `isGuest` and join as a member. The rules let a guest read what members read and change nothing (`isGuest()` / `canEdit()` read the sign-in method from the token). Every control that changes the trip carries `data-needs-account`, and `AccountPromptService` turns a guest's tap there into the "Create your account" sheet. Creating one links an email and password to the same sign-in (`AuthService.upgradeGuest`), so the uid and trips stay.
+7. **The open trip** comes from the device, or the person's last trip in `userTrips`; its listeners start and Home appears. Measured: 1.3 s median from tap to Home on 4G.
 
 ## Time zones
 
