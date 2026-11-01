@@ -16,7 +16,9 @@ service firebase.storage {
     match /outfitPhotos/{ownerUid}/{tripId}/{file} {
       allow read:   if isOwnerWithFreshSession(ownerUid);
       allow delete: if isOwnerWithFreshSession(ownerUid);
+      // A guest (#610, signed in without an account) adds no photos until they make one.
       allow write:  if isOwnerWithFreshSession(ownerUid)
+                    && request.auth.token.get('firebase', {}).get('sign_in_provider', '') != 'anonymous'
                     && request.resource.contentType == 'image/jpeg'
                     && request.resource.size <= 4 * 1024 * 1024;
     }

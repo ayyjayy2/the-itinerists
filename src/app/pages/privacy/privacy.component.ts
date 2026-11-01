@@ -20,7 +20,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <header class="policy-head">
           <app-brand [mark]="40" [showWordmark]="false" />
           <h1>Privacy Policy</h1>
-          <p class="effective">Effective October 31, 2026</p>
+          <p class="effective">Effective November 1, 2026</p>
           <p class="lede">The Itinerists is a group trip planner. This page says exactly what the app stores, who can see it, and which outside services it talks to. Short version: your trip data is shared only with the people on your trip, your email is private, we don't sell or advertise with anything, and you can delete your account yourself at any time.</p>
         </header>
 
@@ -31,6 +31,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
           <li><strong>Email address.</strong> Used to sign in, to reset a forgotten password, and to verify a recovery email. It is never shown to other members.</li>
           <li><strong>Password.</strong> Stored by Firebase Authentication in hashed form. We never see it.</li>
           <li><strong>Preferences</strong> such as your home layout and pinned shortcuts.</li>
+          <li><strong>Joining as a guest.</strong> If you open an invite link without an account, you can see the trip by giving just a name. We sign you in as a guest, without an email or password, and make a letter avatar from your name. Members of the trip see your name and avatar. Creating an account later keeps the same trips; until then, logging out or clearing your browser's site data leaves you no way back except a new invite link.</li>
         </ul>
         <h3>Trip content you add</h3>
         <ul>

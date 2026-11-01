@@ -4,7 +4,7 @@
 <div class="page-container">
   <div class="page-header">
     <h2><app-icon name="recs" [size]="22" /> Tips & Recs</h2>
-    <button class="btn btn-primary btn-sm" (click)="openForm()">+ Add Rec</button>
+    <button data-needs-account class="btn btn-primary btn-sm" (click)="openForm()">+ Add Rec</button>
   </div>
 
   <!-- ── Add form ── -->
@@ -60,7 +60,7 @@
 
       <div class="form-actions">
         <button class="btn btn-ghost" (click)="showForm.set(false)">Cancel</button>
-        <button class="btn btn-primary" (click)="addRec()" [disabled]="!form.title.trim()">Add</button>
+        <button data-needs-account class="btn btn-primary" (click)="addRec()" [disabled]="!form.title.trim()">Add</button>
       </div>
     </div>
   }
@@ -135,7 +135,7 @@
 
                   <div class="form-actions">
                     <button class="btn btn-ghost btn-sm" (click)="cancelEdit()">Cancel</button>
-                    <button class="btn btn-primary btn-sm" (click)="saveEdit()" [disabled]="!editForm.title.trim()">Save</button>
+                    <button data-needs-account class="btn btn-primary btn-sm" (click)="saveEdit()" [disabled]="!editForm.title.trim()">Save</button>
                   </div>
                 </div>
               } @else {
@@ -143,8 +143,8 @@
                   <div class="rec-title">{{ rec.title }}</div>
                   @if (canEdit(rec)) {
                     <div class="rec-card-actions">
-                      <button class="rec-icon-btn" (click)="startEdit(rec)" title="Edit" aria-label="Edit rec"><app-icon name="edit" [size]="14" /></button>
-                      <button class="rec-icon-btn rec-delete-btn" (click)="deleteRec(rec.id!)" title="Delete" aria-label="Delete rec">✕</button>
+                      <button data-needs-account class="rec-icon-btn" (click)="startEdit(rec)" title="Edit" aria-label="Edit rec"><app-icon name="edit" [size]="14" /></button>
+                      <button data-needs-account class="rec-icon-btn rec-delete-btn" (click)="deleteRec(rec.id!)" title="Delete" aria-label="Delete rec">✕</button>
                     </div>
                   }
                 </div>
@@ -184,7 +184,7 @@
       <div class="recs-empty-icon"><app-icon name="recs" [size]="40" /></div>
       <h3>No recs yet</h3>
       <p>Share the spots, eats, and tips you're excited about — they'll show up here for everyone on the trip.</p>
-      <button class="btn btn-primary" (click)="openForm()">+ Add the first rec</button>
+      <button data-needs-account class="btn btn-primary" (click)="openForm()">+ Add the first rec</button>
     </div>
   } @else if (filtered().length === 0 && !showOffers()) {
     <div class="recs-empty">

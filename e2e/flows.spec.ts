@@ -111,3 +111,31 @@ test('generate an invite code and link from Admin', async ({ page }) => {
   await expect(page.getByText(/^[A-Z0-9]{8}$/)).toBeVisible();                 // the code itself
   await expect(page.getByText(/\/join\?code=[A-Z0-9]{8}/)).toBeVisible();   // and the link
 });
+
+/** #610: an invite link opens the trip without an account; changing something asks for one. */
+test('join from an invite link as a guest, then create an account to add something', async ({ page }) => {
+  // The demo trip has a standing invite, DEMOJOIN.
+  await signOut(page);
+  await page.goto('/join?code=DEMOJOIN');
+  await expect(page.getByRole('heading', { name: "You're invited" })).toBeVisible();
+  await page.getByRole('button', { name: 'See the trip' }).click();
+  await expect(page.getByText('Enter your name so the group knows who you are.')).toBeVisible();
+  await page.getByLabel('What should the group call you?').fill('Robin');
+  await page.getByRole('button', { name: 'See the trip' }).click();
+  await expect(page).toHaveURL(/\/home/);
+
+  // Reading works; adding asks for an account first.
+  await page.getByRole('navigation').getByText('Itinerary', { exact: true }).first().click();
+  await page.getByRole('button', { name: '+ Add event' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
+  await expect(page.getByPlaceholder("What's happening?")).toHaveCount(0);
+  await page.getByLabel('Email').fill('robin@example.com');
+  await page.getByLabel('Password', { exact: true }).fill('Sunshine2026');
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await expect(page.getByRole('heading', { name: "You're all set" })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to the trip' }).click();
+
+  // Now the same button opens the form.
+  await page.getByRole('button', { name: '+ Add event' }).first().click();
+  await expect(page.getByPlaceholder("What's happening?")).toBeVisible();
+});

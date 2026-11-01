@@ -24,8 +24,8 @@
             {{ peopleList(gap.missing) }} joined, so {{ peopleList(gap.missing) }} {{ gap.missing.length === 1 ? 'owes' : 'owe' }} nothing for it.
           </p>
           <div class="split-gap-actions">
-            <button class="btn btn-primary btn-sm" (click)="splitEquallyWithEveryone(gap.entry)">Split equally with everyone</button>
-            <button class="btn btn-ghost btn-sm" (click)="editLeftOut(gap.entry)">Set amounts</button>
+            <button data-needs-account class="btn btn-primary btn-sm" (click)="splitEquallyWithEveryone(gap.entry)">Split equally with everyone</button>
+            <button data-needs-account class="btn btn-ghost btn-sm" (click)="editLeftOut(gap.entry)">Set amounts</button>
           </div>
         </div>
       }
@@ -176,7 +176,7 @@
     <button [class.active]="settlementsScope() === 'mine'" (click)="settlementsScope.set('mine')">My Trip</button>
     <button [class.active]="settlementsScope() === 'all'"  (click)="settlementsScope.set('all')">All</button>
     <div class="scope-tabs-actions">
-      <button #addBtnRef class="btn btn-primary btn-sm" (click)="startAdd()">+ Add</button>
+      <button data-needs-account #addBtnRef class="btn btn-primary btn-sm" (click)="startAdd()">+ Add</button>
     </div>
   </div>
 
@@ -272,7 +272,7 @@
         </div>
         <div class="form-actions">
           <button class="btn btn-ghost" (click)="cancelAdd()">Cancel</button>
-          <button class="btn btn-primary" (click)="saveAdd()" [disabled]="!splitIsValid">Add Expense</button>
+          <button data-needs-account class="btn btn-primary" (click)="saveAdd()" [disabled]="!splitIsValid">Add Expense</button>
         </div>
       </div>
     </div>
@@ -359,7 +359,7 @@
                 <span class="di-amount">{{ item.origAmount | number:'1.2-2' }} {{ item.origCurrency }}/pp</span>
                 <button class="di-check"
                   [class.is-checked]="isItemPaid(d.from, d.to, item.id)"
-                  (click)="toggleItemPaid(d.from, d.to, item.id)"
+                  data-needs-account (click)="toggleItemPaid(d.from, d.to, item.id)"
                   [title]="isItemPaid(d.from, d.to, item.id) ? 'Mark unpaid' : 'Mark paid'">
                   {{ isItemPaid(d.from, d.to, item.id) ? '✓' : '○' }}
                 </button>
@@ -422,7 +422,7 @@
                   <span class="pp-tbd">TBD</span>
                 }
               </span>
-              <button class="edit-row-btn" (click)="startEditEntry(entry)" title="Edit">✏️</button>
+              <button data-needs-account class="edit-row-btn" (click)="startEditEntry(entry)" title="Edit">✏️</button>
             </div>
 
             @if (isEditingEntry(entry)) {
@@ -502,10 +502,10 @@
                   <div class="form-field form-field-full"><label>Notes</label><input type="text" [(ngModel)]="editEntryDraft.notes" /></div>
                 </div>
                 <div class="form-actions">
-                  <button class="btn btn-danger btn-sm" (click)="deleteEntry(entry)">🗑 Delete</button>
+                  <button data-needs-account class="btn btn-danger btn-sm" (click)="deleteEntry(entry)">🗑 Delete</button>
                   <div class="form-actions-right">
                     <button class="btn btn-ghost" (click)="cancelEditEntry()">Cancel</button>
-                    <button class="btn btn-primary" (click)="saveEditEntry(entry.id)" [disabled]="!editSplitIsValid">Save</button>
+                    <button data-needs-account class="btn btn-primary" (click)="saveEditEntry(entry.id)" [disabled]="!editSplitIsValid">Save</button>
                   </div>
                 </div>
               </div>
@@ -546,7 +546,7 @@
      it sits above the tab bar instead of on top of More. -->
 @if (showFab()) {
   <div class="fab-dock">
-    <button class="fab" (click)="startAdd()" title="Add expense" aria-label="Add expense">+</button>
+    <button data-needs-account class="fab" (click)="startAdd()" title="Add expense" aria-label="Add expense">+</button>
   </div>
 }
 

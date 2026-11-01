@@ -7,7 +7,7 @@
 
   <div class="map-header">
     <h2><app-icon name="map" [size]="22" /> Trip Map</h2>
-    <button class="btn btn-primary btn-sm add-pin-btn" (click)="openAddForm()">+ Add Pin</button>
+    <button data-needs-account class="btn btn-primary btn-sm add-pin-btn" (click)="openAddForm()">+ Add Pin</button>
   </div>
 
   <div class="map-subhead">
@@ -176,7 +176,7 @@
 
       <div class="form-actions">
         <button class="btn btn-ghost" (click)="closeAddForm()" [disabled]="addSearching()">Cancel</button>
-        <button class="btn btn-primary" (click)="savePin()"
+        <button data-needs-account class="btn btn-primary" (click)="savePin()"
                 [disabled]="!addForm.address || !addForm.name || addSearching()">
           {{ addSearching() ? 'Finding location…' : 'Save Pin' }}
         </button>

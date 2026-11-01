@@ -18,6 +18,13 @@ export interface User {
   emailVerified?: boolean;
   /** Absent in the demo, so its session never counts as expired (utils/session.ts). */
   metadata?: { lastSignInTime?: string };
+  /** A guest (#610): signed in from an invite link without an account. */
+  isAnonymous: boolean;
+  getIdToken(forceRefresh?: boolean): Promise<string>;
+}
+
+function demoUser(uid: string, email: string | null, isAnonymous = false): User {
+  return { uid, email, isAnonymous, getIdToken: async () => 'demo-token' };
 }
 
 export interface UserCredential {
@@ -36,7 +43,7 @@ function signedOutInThisTab(): boolean {
 }
 
 export class Auth {
-  private readonly subject = new BehaviorSubject<User | null>(signedOutInThisTab() ? null : { uid: DEMO_UID, email: DEMO_EMAIL });
+  private readonly subject = new BehaviorSubject<User | null>(signedOutInThisTab() ? null : demoUser(DEMO_UID, DEMO_EMAIL));
 
   get currentUser(): User | null { return this.subject.value; }
   get user$(): Observable<User | null> { return this.subject.asObservable(); }
@@ -58,15 +65,28 @@ export function provideAuth(factory: () => Auth): EnvironmentProviders {
 export function authState(auth: Auth): Observable<User | null> { return auth.user$; }
 
 export async function signInWithEmailAndPassword(auth: Auth, _email: string, _password: string): Promise<UserCredential> {
-  const user: User = { uid: DEMO_UID, email: DEMO_EMAIL };
+  const user = demoUser(DEMO_UID, DEMO_EMAIL);
   auth.setUser(user);
   return { user };
 }
 
 export async function createUserWithEmailAndPassword(auth: Auth, email: string, _password: string): Promise<UserCredential> {
-  const user: User = { uid: demoStore.autoId(), email };
+  const user = demoUser(demoStore.autoId(), email);
   auth.setUser(user);
   return { user };
+}
+
+export async function signInAnonymously(auth: Auth): Promise<UserCredential> {
+  const user = demoUser(demoStore.autoId(), null, true);
+  auth.setUser(user);
+  return { user };
+}
+
+/** A guest's sign-in becomes an email one, keeping the same account id (#610). */
+export async function linkWithCredential(user: User, cred: AuthCredential): Promise<UserCredential> {
+  const linked = demoUser(user.uid, cred.email);
+  demoAuth.setUser(linked);
+  return { user: linked };
 }
 
 export async function signOut(auth: Auth): Promise<void> { auth.setUser(null); }

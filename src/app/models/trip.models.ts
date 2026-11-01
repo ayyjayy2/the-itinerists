@@ -37,6 +37,9 @@ export interface FirestoreUser {
   isDisabled?: boolean;
   /** Throwaway account used for testing: its actions never reach other people's feeds. */
   isTest?: boolean;
+  /** A guest (#610): signed in from an invite link without an account, to read the
+   *  trip. Removed when they create one (AuthService.upgradeGuest). */
+  isGuest?: boolean;
   createdAt: number;   // unix ms
   /** Email the Auth account signs in with. NOT stored on the profile doc —
    *  it lives in users/{uid}/private/account and UserService merges it in for

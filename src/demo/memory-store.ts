@@ -34,13 +34,15 @@ export type BatchOp =
 /** Sentinel for server-side field transforms (`increment`, `arrayUnion`, `arrayRemove`). */
 export class FieldTransform {
   private constructor(
-    readonly kind: 'increment' | 'arrayUnion' | 'arrayRemove',
+    readonly kind: 'increment' | 'arrayUnion' | 'arrayRemove' | 'delete',
     readonly value: unknown,
   ) {}
 
   static increment(n: number): FieldTransform { return new FieldTransform('increment', n); }
   static arrayUnion(...values: unknown[]): FieldTransform { return new FieldTransform('arrayUnion', values); }
   static arrayRemove(...values: unknown[]): FieldTransform { return new FieldTransform('arrayRemove', values); }
+  /** `deleteField()`: the field is removed (applied by the writers below, never stored). */
+  static delete(): FieldTransform { return new FieldTransform('delete', null); }
 
   apply(current: unknown): unknown {
     switch (this.kind) {
@@ -58,6 +60,8 @@ export class FieldTransform {
         const drop = this.value as unknown[];
         return list.filter(x => !drop.some(v => deepEqual(x, v)));
       }
+      case 'delete':
+        return undefined;
     }
   }
 }
@@ -96,7 +100,8 @@ function deepMerge(base: DocData, patch: DocData): DocData {
   const out: DocData = { ...base };
   for (const [k, v] of Object.entries(patch)) {
     const existing = out[k];
-    if (v instanceof FieldTransform) out[k] = v.apply(existing);
+    if (v instanceof FieldTransform && v.kind === 'delete') delete out[k];
+    else if (v instanceof FieldTransform) out[k] = v.apply(existing);
     else if (isPlainObject(v)) out[k] = deepMerge(isPlainObject(existing) ? existing : {}, v);
     else out[k] = v;
   }
@@ -197,7 +202,8 @@ export class MemoryStore {
         at = at[key] as DocData;
       }
       const last = keys[keys.length - 1];
-      at[last] = materialize(v, at[last]);
+      if (v instanceof FieldTransform && v.kind === 'delete') delete at[last];
+      else at[last] = materialize(v, at[last]);
     }
     this.docs.set(path, clone(next));
     this.markDirty(path);

@@ -1,0 +1,51 @@
+@if (prompt.open()) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal-card account-sheet" role="dialog" aria-modal="true" aria-labelledby="account-sheet-title" (click)="$event.stopPropagation()">
+      @if (done()) {
+        <h2 id="account-sheet-title">You're all set</h2>
+        <p>Your account is ready, and you're still on the trip. Go ahead and add or change things.</p>
+        <p class="hint">We sent a link to {{ email }} to confirm it's yours.</p>
+        <div class="actions"><button type="button" class="btn btn-primary" (click)="close()">Back to the trip</button></div>
+      } @else {
+        <h2 id="account-sheet-title">Create your account</h2>
+        <p>You're seeing this trip as a guest. Create an account to add and change things. You'll stay on the trip.</p>
+        <form (ngSubmit)="create()" novalidate>
+          <div class="form-group">
+            <label for="account-email">Email</label>
+            <input id="account-email" type="email" name="email" [(ngModel)]="email" autocomplete="email" required
+                   [class.invalid]="!!fieldError('email')" [attr.aria-invalid]="fieldError('email') ? true : null"
+                   [attr.aria-describedby]="fieldError('email') ? 'account-email-err' : 'account-email-hint'" />
+            @if (fieldError('email'); as err) {
+              <p class="field-error" id="account-email-err">{{ err }}</p>
+            } @else {
+              <p class="hint" id="account-email-hint">You sign in with it, and it's where password resets go. Only you can see it.</p>
+            }
+          </div>
+          <div class="form-group">
+            <label for="account-password">Password</label>
+            <div class="input-wrap">
+              <input id="account-password" [type]="showPassword() ? 'text' : 'password'" name="password" [(ngModel)]="password"
+                     placeholder="At least 8 characters" autocomplete="new-password" required
+                     [class.invalid]="!!fieldError('password')" [attr.aria-invalid]="fieldError('password') ? true : null"
+                     [attr.aria-describedby]="fieldError('password') ? 'account-password-err' : null" />
+              <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())" tabindex="-1"
+                      [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+                <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
+              </button>
+            </div>
+            @if (fieldError('password'); as err) {
+              <p class="field-error" id="account-password-err">{{ err }}</p>
+            }
+          </div>
+          @if (error()) {
+            <p class="field-error" role="alert">{{ error() }}</p>
+          }
+          <div class="actions">
+            <button type="button" class="btn btn-ghost" (click)="close()">Not now</button>
+            <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ busy() ? 'Creating your account…' : 'Create account' }}</button>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+}

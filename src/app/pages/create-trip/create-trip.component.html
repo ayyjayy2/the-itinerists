@@ -91,7 +91,7 @@
 
     <div class="form-actions">
       <button class="btn btn-ghost" (click)="cancel()" [disabled]="saving()">Cancel</button>
-      <button class="btn btn-primary" (click)="create()" [disabled]="saving()">
+      <button data-needs-account class="btn btn-primary" (click)="create()" [disabled]="saving()">
         {{ saving() ? 'Creating…' : 'Create Trip' }}
       </button>
     </div>

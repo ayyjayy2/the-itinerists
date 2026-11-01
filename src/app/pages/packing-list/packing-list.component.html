@@ -36,10 +36,10 @@
             [ngModel]="newCategoryName()"
             (ngModelChange)="newCategoryName.set($event)"
             placeholder="Category name…"
-            (keydown.enter)="addCategory()"
+            data-needs-account (keydown.enter)="addCategory()"
             autofocus
           >
-          <button class="btn btn-primary btn-sm" (click)="addCategory()" [disabled]="!newCategoryName().trim()">Add</button>
+          <button data-needs-account class="btn btn-primary btn-sm" (click)="addCategory()" [disabled]="!newCategoryName().trim()">Add</button>
           <button class="btn btn-ghost btn-sm" (click)="cancelAddCategory()">✕</button>
         </div>
       } @else {
@@ -63,9 +63,9 @@
         [ngModel]="newItem()"
         (ngModelChange)="newItem.set($event)"
         placeholder="Add an item…"
-        (keydown.enter)="addItem()"
+        data-needs-account (keydown.enter)="addItem()"
       >
-      <button class="btn btn-primary" (click)="addItem()" [disabled]="!newItem().trim()">Add</button>
+      <button data-needs-account class="btn btn-primary" (click)="addItem()" [disabled]="!newItem().trim()">Add</button>
     </div>
 
     @if (filteredItems().length === 0 && items().length === 0) {
@@ -89,14 +89,14 @@
         @for (item of filteredItems(); track item.id) {
           @if (!item.packed) {
             <div class="packing-item">
-              <button class="check-btn" (click)="toggle(item.id)" aria-label="Mark as packed">
+              <button data-needs-account class="check-btn" (click)="toggle(item.id)" aria-label="Mark as packed">
                 <span class="check-circle"></span>
               </button>
               <span class="item-label">{{ item.label }}</span>
               @if (selectedCategory() === 'All' && item.category) {
                 <span class="item-category">{{ item.category }}</span>
               }
-              <button class="remove-btn" (click)="remove(item.id)" aria-label="Remove">✕</button>
+              <button data-needs-account class="remove-btn" (click)="remove(item.id)" aria-label="Remove">✕</button>
             </div>
           }
         }
@@ -107,14 +107,14 @@
           @for (item of filteredItems(); track item.id) {
             @if (item.packed) {
               <div class="packing-item packed">
-                <button class="check-btn packed" (click)="toggle(item.id)">
+                <button data-needs-account class="check-btn packed" (click)="toggle(item.id)">
                   <span class="check-circle packed"><app-icon name="check" [size]="13" /></span>
                 </button>
                 <span class="item-label">{{ item.label }}</span>
                 @if (selectedCategory() === 'All' && item.category) {
                   <span class="item-category">{{ item.category }}</span>
                 }
-                <button class="remove-btn" (click)="remove(item.id)">✕</button>
+                <button data-needs-account class="remove-btn" (click)="remove(item.id)">✕</button>
               </div>
             }
           }
@@ -141,8 +141,8 @@
             </div>
             <div class="sug-item">{{ s.item }}</div>
             <div class="sug-actions">
-              <button class="btn btn-primary btn-sm" (click)="accept(s.id)">✓ Add to list</button>
-              <button class="btn btn-ghost btn-sm" (click)="decline(s.id)">✕ Decline</button>
+              <button data-needs-account class="btn btn-primary btn-sm" (click)="accept(s.id)">✓ Add to list</button>
+              <button data-needs-account class="btn btn-ghost btn-sm" (click)="decline(s.id)">✕ Decline</button>
             </div>
           </div>
         }
@@ -173,13 +173,13 @@
           [ngModel]="sendItem()"
           (ngModelChange)="sendItem.set($event)"
           placeholder="e.g. rain jacket"
-          (keydown.enter)="sendSuggestion()"
+          data-needs-account (keydown.enter)="sendSuggestion()"
         >
       </div>
 
       <button
         class="btn btn-primary"
-        (click)="sendSuggestion()"
+        data-needs-account (click)="sendSuggestion()"
         [disabled]="!sendToUser() || !sendItem().trim() || sending()"
       >
         @if (sending()) { Sending… } @else { Send Suggestion }

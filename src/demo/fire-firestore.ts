@@ -190,6 +190,7 @@ export function serverTimestamp(): any { return new Date(); }
 export function increment(n: number): any { return FieldTransform.increment(n); }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function arrayUnion(...values: unknown[]): any { return FieldTransform.arrayUnion(...values); }
+export function deleteField(): any { return FieldTransform.delete(); }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function arrayRemove(...values: unknown[]): any { return FieldTransform.arrayRemove(...values); }
 
