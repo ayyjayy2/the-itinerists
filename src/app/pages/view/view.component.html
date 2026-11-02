@@ -16,10 +16,12 @@
         <header class="view-head">
           <p class="view-kicker">A trip plan</p>
           <h1>{{ v.tripName }}</h1>
-          <p class="view-meta">
-            @if (v.dates) {<span>{{ v.dates }}</span>}
-            @for (p of v.places; track p) {<span>{{ p }}</span>}
-          </p>
+          @if (v.dates) {<p class="view-meta">{{ v.dates }}</p>}
+          @if (v.places.length) {
+            <ul class="view-places" aria-label="Where the trip goes">
+              @for (p of v.places; track p) {<li class="view-pill">{{ p }}</li>}
+            </ul>
+          }
           @if (v.people.length) {
             <ul class="view-people" aria-label="Who's going">
               @for (p of v.people; track $index) {
@@ -30,17 +32,23 @@
           <button type="button" class="btn btn-ghost btn-sm view-pdf" (click)="savePdf()">Save as PDF</button>
         </header>
 
-        @if (v.flights.length) {
+        @if (v.flights.departures.length || v.flights.returns.length) {
           <section class="view-card">
             <h2>Flights</h2>
-            <ul class="view-list">
-              @for (f of v.flights; track $index) {
-                <li>
-                  <div class="view-row-title">{{ f.who ? f.who + ' · ' : '' }}{{ f.flight }} <span class="view-muted">{{ f.route }}</span></div>
-                  <div class="view-muted">Departs {{ f.departs }} · arrives {{ f.arrives }}</div>
-                </li>
+            @for (group of [{ title: 'Departures', list: v.flights.departures }, { title: 'Returns', list: v.flights.returns }]; track group.title) {
+              @if (group.list.length) {
+                <h3>{{ group.title }}</h3>
+                <ul class="view-list">
+                  @for (f of group.list; track $index) {
+                    <li class="view-flight">
+                      <div class="view-row-title">{{ f.who ? f.who + ' · ' : '' }}{{ f.flight }} <span class="view-muted">{{ f.route }}</span></div>
+                      <div class="view-muted">Departs {{ f.departs }}</div>
+                      <div class="view-muted">Arrives {{ f.arrives }}</div>
+                    </li>
+                  }
+                </ul>
               }
-            </ul>
+            }
           </section>
         }
 
@@ -49,7 +57,15 @@
             <h2>Where they're staying</h2>
             <ul class="view-list">
               @for (s of v.stays; track $index) {
-                <li><div class="view-row-title">{{ s.name }}</div><div class="view-muted">{{ s.where }}{{ s.where && s.dates ? ' · ' : '' }}{{ s.dates }}</div></li>
+                <li class="view-stay">
+                  <div class="view-row-title">{{ s.name }}</div>
+                  @if (s.dates) {<div class="view-muted">{{ s.dates }}</div>}
+                  @if (s.address) {<div>{{ s.address }}</div>}
+                  @if (s.phone) {
+                    <div><a class="view-phone" [href]="'tel:' + s.tel">{{ s.phone }}</a></div>
+                    <div class="view-note">{{ s.callNote }}</div>
+                  }
+                </li>
               }
             </ul>
           </section>

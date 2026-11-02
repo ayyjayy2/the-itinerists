@@ -339,6 +339,7 @@ export interface AccommodationDoc {
   id: string;
   name: string;
   address: string;
+  phone?: string;      // the place's phone number, as typed (shared page for people at home, #611)
   checkIn: string;     // YYYY-MM-DD
   checkOut: string;
   checkInTime?: string;   // e.g. "3:00 PM" — optional, shown on the itinerary

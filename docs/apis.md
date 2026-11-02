@@ -72,12 +72,12 @@ A member can share a read-only page of the trip with people at home: `/view#<tok
 → Share with people at home). The secret is after the `#`, so it never reaches a server, our page
 log or analytics. The trip names its live link (`trips/{id}.shareToken`); `shares/<token>`
 holds the display copy built by `src/app/utils/share-view.ts` (dates and places, the plan, flights,
-stays by town, first names; never notes, booking references, links, money, packing or outfits).
+flights split into departures and returns, stays with address and phone and the app to call from abroad (`utils/calling-app.ts`: LINE in Thailand, Japan and Taiwan; KakaoTalk, WeChat, Zalo; WhatsApp elsewhere), first names; never notes, booking references, links, money, packing or outfits).
 Anyone with the link reads that one doc, signed out; nobody can list them. Any member who can edit
 keeps it current: `ShareViewService` republishes when the plan their app sees differs from the
 published copy (3 s after the last change). "Stop sharing" or "Make a new link" deletes it, so the old
 link stops at once; trip teardown deletes it too. In the iPhone app the link uses the public site
-(`src/app/utils/public-origin.ts`). "Save as PDF" is the browser's own print-to-PDF.
+(`src/app/utils/public-origin.ts`). "Save as PDF" is the browser's own print-to-PDF; in print the page frame grows to hold the whole page (`styles.scss`).
 
 ### What each outside service receives
 

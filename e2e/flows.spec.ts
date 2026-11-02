@@ -240,3 +240,23 @@ test('My Expenses keeps each currency and adds a converted total', async ({ page
   await expect(page.locator('.total-converted')).toContainText(/≈ .* in all/);
   await expect(page.locator('.total-converted')).toContainText('converted to THB');
 });
+
+/** #611: "Save as PDF" prints the whole shared page, not just its first screen. */
+test('the shared trip page prints in full', async ({ page }) => {
+  const go = (path: string) => page.evaluate(p => { history.pushState({}, '', p); dispatchEvent(new PopStateEvent('popstate')); }, path);
+  await page.goto('/trip-settings');
+  await page.getByRole('button', { name: 'Share a read-only page' }).click();
+  const shared = new URL(await page.locator('.share-url a').innerText());
+  await go(shared.pathname + shared.hash);
+  await expect(page.getByText('Day by day')).toBeVisible();
+  await page.emulateMedia({ media: 'print' });
+  // In print, the page grows to hold everything down to the footer (nothing is cut off by the app's fixed frame).
+  const fits = await page.evaluate(() => {
+    const foot = document.querySelector('.view-foot')!.getBoundingClientRect();
+    return document.documentElement.scrollHeight >= foot.bottom - 1 && getComputedStyle(document.body).overflow === 'visible';
+  });
+  expect(fits).toBe(true);
+  const pdf = await page.pdf({ format: 'A4' });
+  const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
+  expect(pages).toBeGreaterThan(1);                                         // it printed one page before the fix
+});
