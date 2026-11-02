@@ -141,8 +141,8 @@ test('join from an invite link as a guest, then create an account to add somethi
   await expect(page.getByPlaceholder("What's happening?")).toBeVisible();
 });
 
-/** #532: pay someone back in their payment app, then mark it paid; remind someone who owes you, once a day. */
-test('pay back from Finance, mark it paid, and remind someone who owes you', async ({ page }) => {
+/** #532: pay someone back in their payment app, then mark it paid. Remind waits for the trip's last day (#664). */
+test('pay back from Finance and mark it paid; no Remind before the trip ends', async ({ page }) => {
   await page.context().route(/venmo\.com|paypal\.me|cash\.app/, route => route.abort());   // never leave for the real apps
   await page.goto('/finance');
   // Maya pays a big dinner for everyone, so I owe her overall.
@@ -164,6 +164,16 @@ test('pay back from Finance, mark it paid, and remind someone who owes you', asy
   await expect(page.getByText(/Did you pay Maya/)).toHaveCount(0);
   await expect(owe.locator('.banner-person-name', { hasText: 'Maya' })).toHaveCount(0);
 
+  // Before the trip's last day there's no Remind, only when it opens (#664).
+  const owed = page.locator('.banner-positive');
+  await expect(owed.getByRole('button', { name: /^Remind / })).toHaveCount(0);
+  await expect(owed.getByText('You can send reminders from the last day, Nov 19.')).toBeVisible();
+});
+
+/** #664: reminding someone who owes you opens on the trip's last day. */
+test('remind someone who owes you, once the trip ends', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-11-19T12:00:00+07:00'));   // the demo trip's last day, in Chiang Mai
+  await page.goto('/finance');
   const owed = page.locator('.banner-positive');
   const remind = owed.getByRole('button', { name: /^Remind / }).first();
   await remind.click();

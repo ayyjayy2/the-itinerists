@@ -22,7 +22,8 @@ import { FocusService } from '../../services/focus.service';
 import { safeLink } from '../../utils/safe-link';
 import { leftOutOfSplit, splitPatch } from '../../utils/split-gaps';
 import { paidKey } from '../../utils/paid-marks';
-import { PAY_APPS, canRemind, payLink } from '../../utils/pay-links';
+import { PAY_APPS, canRemind, payLink, remindersOpen } from '../../utils/pay-links';
+import { localTodayISO, tripZone } from '../../utils/trip-destinations';
 
 /**
  * How the working under each balance shows (#519): 'tap' shows it with a
@@ -347,9 +348,15 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /** Whether I can remind `name` today (they're on the trip, and no reminder in the last day). */
+  /** Before the trip's last day: that day, as "Nov 19", for the note saying when reminders open (#664). */
+  readonly remindOpensOn = computed(() => {
+    const trip = this.tripService.activeTrip();
+    if (!trip || remindersOpen(trip.endDate, localTodayISO(new Date(), tripZone(trip)))) return '';
+    return new Date(trip.endDate + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
   canRemind(name: string): boolean {
     const me = this.currentUser()?.uid, them = this.memberByName().get(name)?.uid;
-    if (!me || !them) return false;
+    if (!me || !them || this.remindOpensOn()) return false;
     return canRemind(this.financeService.reminders().get(`${me}_${them}`), Date.now());
   }
   /** I reminded `name` within the last day (the rules allow one a day). */

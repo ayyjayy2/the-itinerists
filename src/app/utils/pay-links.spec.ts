@@ -1,4 +1,4 @@
-import { canRemind, cleanHandles, normalizeHandle, payLink, reminderText, REMINDER_GAP_MS } from './pay-links';
+import { canRemind, cleanHandles, remindersOpen, normalizeHandle, payLink, reminderText, REMINDER_GAP_MS } from './pay-links';
 
 describe('pay-links (#532)', () => {
   it('tidies typed handles and pasted profile links', () => {
@@ -34,5 +34,13 @@ describe('pay-links (#532)', () => {
     expect(canRemind(undefined, now)).toBeTrue();
     expect(canRemind(now - 60_000, now)).toBeFalse();
     expect(canRemind(now - REMINDER_GAP_MS, now)).toBeTrue();
+  });
+
+  it('opens reminders on the trip’s last day, not before (#664)', () => {
+    expect(remindersOpen('2026-11-19', '2026-11-02')).toBeFalse();
+    expect(remindersOpen('2026-11-19', '2026-11-18')).toBeFalse();
+    expect(remindersOpen('2026-11-19', '2026-11-19')).toBeTrue();
+    expect(remindersOpen('2026-11-19', '2026-12-01')).toBeTrue();
+    expect(remindersOpen(undefined, '2026-11-02')).toBeTrue();   // no dates: nothing to wait for
   });
 });
