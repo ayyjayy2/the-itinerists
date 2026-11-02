@@ -76,7 +76,7 @@ A group trip is planned across a group chat, a shared spreadsheet, a notes app a
 | Sign in with email (old username-only accounts keep their username); reset the password by email | Must | Built |
 | Get started: set up a trip, or do it later — every page offers "Set up a trip" and "I have an invite code" until there is one | Must | Built |
 | Delete my account — Apple requires it for apps with sign-up | Must | Built |
-| Download my data | Must | Not started — phase 5 |
+| Download my data — on Profile, one JSON file of everything (the usual format, and what privacy law asks for); no readable version for now (a CSV of expenses in Finance is the likely next step if people ask) | Must | Built — Nov 1 (#332) |
 | Confirm the email address at sign-up, gently — a link is emailed at sign-up; nothing waits on it; Home reminds with "Send link" until it is tapped | Should | Built — Oct 2 |
 | **Trips and sharing** |
 | Create a trip: name, one or more stops with dates, currency — each stop's time zone is found automatically; picking a start date moves to the end date | Must | Built |
