@@ -29,6 +29,8 @@ export class UserService {
   /** Set when the app signed the person out because their session passed
    *  90 days (utils/session.ts); the sign-in page says so, then clears it. */
   readonly sessionEnded = signal(false);
+  /** Sign-in gave up waiting for the profile (#703): the sign-in page says so. */
+  readonly signInStalled = signal(false);
 
   /** Sign out a session older than the limit, before the rules start refusing
    *  it. Returns true when it did. Checked at sign-in and whenever the app returns

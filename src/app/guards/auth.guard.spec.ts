@@ -4,12 +4,16 @@ import { Auth } from '@angular/fire/auth';
 import { authGuard, welcomeGuard } from './auth.guard';
 import { NATIVE_PLATFORM } from '../native-platform';
 import { UserService } from '../services/user.service';
+import { FirestoreResumeService } from '../services/firestore-resume.service';
+import { signal } from '@angular/core';
 
 describe('authGuard', () => {
   let hasUser: boolean;
   let currentUser: object | null;
   let waitForUser: jasmine.Spy;
   let native: boolean;
+  let restart: jasmine.Spy;
+  let signInStalled: ReturnType<typeof signal<boolean>>;
 
   function run() {
     return TestBed.runInInjectionContext(() => authGuard());
@@ -19,6 +23,8 @@ describe('authGuard', () => {
     hasUser = false;
     native = false;
     currentUser = null;
+    restart = jasmine.createSpy('restart').and.resolveTo();
+    signInStalled = signal(false);
     waitForUser = jasmine.createSpy('waitForUser').and.callFake(() => { hasUser = true; return Promise.resolve({}); });
     TestBed.configureTestingModule({
       providers: [
@@ -27,7 +33,9 @@ describe('authGuard', () => {
           authReadyPromise: Promise.resolve(),
           hasUser: () => hasUser,
           waitForUser: () => waitForUser(),
+          signInStalled,
         } },
+        { provide: FirestoreResumeService, useValue: { restart } },
         { provide: Auth, useValue: { get currentUser() { return currentUser; } } },
         { provide: NATIVE_PLATFORM, useFactory: () => native },
       ],
@@ -67,6 +75,32 @@ describe('authGuard', () => {
     const result = await run();
     expect(result instanceof UrlTree).toBeTrue();
     expect(TestBed.inject(Router).serializeUrl(result as UrlTree)).toBe('/login');
+  });
+  // #703: in the iPhone app the profile could take forever when the connection stalled.
+  describe('when the profile is slow to come', () => {
+    beforeEach(() => { jasmine.clock().install(); currentUser = { uid: 'u1' }; });
+    afterEach(() => jasmine.clock().uninstall());
+
+    it('restarts the connection after a few seconds, then lets them in when it comes', async () => {
+      let arrive!: () => void;
+      waitForUser.and.returnValue(new Promise(r => { arrive = () => r({}); }));
+      const result = run();
+      await Promise.resolve();
+      jasmine.clock().tick(6001);
+      expect(restart).toHaveBeenCalledTimes(1);
+      arrive();
+      expect(await result).toBeTrue();
+    });
+
+    it('stops waiting and says so on the sign-in page', async () => {
+      waitForUser.and.returnValue(new Promise(() => {}));
+      const result = run();
+      await Promise.resolve();
+      jasmine.clock().tick(20001);
+      const tree = await result;
+      expect(TestBed.inject(Router).serializeUrl(tree as UrlTree)).toBe('/login');
+      expect(signInStalled()).toBeTrue();
+    });
   });
 });
 

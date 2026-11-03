@@ -39,6 +39,9 @@ export class FirestoreResumeService {
     document.removeEventListener('visibilitychange', this.onVisibility);
   }
 
+  /** Turn the connection off and on now: every listener catches up (#703: a stalled sign-in). */
+  restart(): Promise<void> { return this.reconnect(); }
+
   private async reconnect(): Promise<void> {
     try { await this.goOffline(); }
     catch (err) { console.warn('[FirestoreResume] pausing the connection failed:', (err as Error).message); }
