@@ -55,7 +55,7 @@ describe('PartnerOffersComponent', () => {
     (el.querySelector('[data-tab=guide]') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(el.textContent).toContain('Pick a plan before you go');
-    expect(el.textContent).toContain('We earn a commission if you buy through these links or use these codes');
+    expect(el.textContent).toContain('We may earn a small credit if you buy through these links or use these codes');
   });
 
   // US FTC: the commission note sits before the links, so it's seen before anyone taps Open (#571).
@@ -67,8 +67,8 @@ describe('PartnerOffersComponent', () => {
       const list = el.querySelector('.offer-list')!;
       // the eSIM partner shows a code, the insurance one doesn't (#575)
       expect(note.textContent!.trim()).toBe(i === 0
-        ? "We earn a commission if you buy through these links or use these codes. It doesn't add to your price."
-        : "We earn a commission if you buy through these links. It doesn't add to your price.");
+        ? "We may earn a small credit if you buy through these links or use these codes. It doesn't add to your price."
+        : "We may earn a small credit if you buy through these links. It doesn't add to your price.");
       expect(note.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       (el.querySelector('.offer-close') as HTMLButtonElement).click();
       fixture.detectChanges();

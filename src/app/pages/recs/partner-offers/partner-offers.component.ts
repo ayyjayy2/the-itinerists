@@ -37,9 +37,9 @@ export class PartnerOffersComponent {
 
   readonly open = computed(() => this.cards().find(c => c.id === this.openCard()) ?? null);
 
-  /** The commission note (US FTC, #575): it names the codes only when the pop-up shows some. */
+  /** The referral note (US FTC, #575; "credit", not "commission": partners reward us in credit, #689): it names the codes only when the pop-up shows some. */
   readonly disclosure = computed(() =>
-    `We earn a commission if you buy through these links${this.open()?.partners.some(p => p.code) ? ' or use these codes' : ''}. It doesn't add to your price.`);
+    `We may earn a small credit if you buy through these links${this.open()?.partners.some(p => p.code) ? ' or use these codes' : ''}. It doesn't add to your price.`);
 
   /** The room between the app's header and its tab bar (#478): the pop-up sits in it
    *  with the same gap at both ends, and scrolls inside rather than running under a bar. */
