@@ -1,4 +1,4 @@
-import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText, lockRate, rateDay, needsNewRate } from './currency';
+import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText, lockRate, rateDay, needsNewRate, inOwnCurrency } from './currency';
 
 // Frankfurter-style rates table: base = the "to" currency (here EUR), so
 // rates[X] = how many X per 1 EUR. EUR itself is implicitly 1.
@@ -161,5 +161,19 @@ describe('needsNewRate', () => {
   it('is null for any other edit, or when nothing really changed', () => {
     expect(needsNewRate(before, { amount: 50 } as never)).toBeNull();
     expect(needsNewRate(before, { date: '2026-11-02', currency: 'USD' })).toBeNull();
+  });
+});
+
+// #429: each person sees what's owed in their own currency too, converted from the trip's at today's rate.
+describe('inOwnCurrency', () => {
+  const latest = { GBP: 0.022, USD: 0.03 }; // base THB: 1 THB = 0.022 GBP
+  it('converts a trip-currency amount into the person\'s own', () => {
+    expect(inOwnCurrency(1000, 'THB', 'GBP', latest)).toEqual({ amount: 22, currency: 'GBP' });
+  });
+  it('is null with no currency of their own, the trip\'s own, or no rate yet', () => {
+    expect(inOwnCurrency(1000, 'THB', undefined, latest)).toBeNull();
+    expect(inOwnCurrency(1000, 'THB', 'THB', latest)).toBeNull();
+    expect(inOwnCurrency(1000, 'THB', 'JPY', latest)).toBeNull();
+    expect(inOwnCurrency(1000, 'THB', 'GBP', null)).toBeNull();
   });
 });

@@ -2,7 +2,7 @@ import { DiagnosticsService } from './diagnostics.service';
 import { Injectable, inject, Injector, runInInjectionContext, signal, computed, effect } from '@angular/core';
 import {
   Firestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot,
-  writeBatch, arrayUnion, arrayRemove, increment, Unsubscribe, query, where, deleteField,
+  writeBatch, arrayUnion, arrayRemove, increment, Unsubscribe, query, where, deleteField, UpdateData, DocumentData,
 } from '@angular/fire/firestore';
 import { UserService } from './user.service';
 import { TripContextService } from './trip-context.service';
@@ -616,6 +616,7 @@ export class TripService {
       avatarLetterColor: user.avatarLetterColor ?? '',
       joinedAt: now,
       ...(user.payHandles ? { payHandles: user.payHandles } : {}),
+      ...(user.ownCurrency ? { ownCurrency: user.ownCurrency } : {}),
     };
   }
 
@@ -625,14 +626,22 @@ export class TripService {
    * of each group reads them (profiles are private). Empty handles are removed.
    */
   async updatePayHandles(handles: PayHandles): Promise<void> {
+    await this.updateProfileAndTrips({ payHandles: Object.keys(handles).length ? handles : deleteField() });
+  }
+
+  /** Save the signed-in person's own currency (#429) the same way; null goes back to each trip's. */
+  async updateOwnCurrency(code: string | null): Promise<void> {
+    await this.updateProfileAndTrips({ ownCurrency: code ?? deleteField() });
+  }
+
+  private async updateProfileAndTrips(patch: UpdateData<DocumentData>): Promise<void> {
     const user = this.requireUser();
-    const value = Object.keys(handles).length ? handles : deleteField();
     await runInInjectionContext(this.injector, async () => {
-      await updateDoc(doc(this.firestore, 'users', user.uid), { payHandles: value });
+      await updateDoc(doc(this.firestore, 'users', user.uid), patch);
       const idx = await getDoc(doc(this.firestore, 'userTrips', user.uid));
       const tripIds = idx.exists() ? ((idx.data() as UserTripsDoc).tripIds ?? []) : [];
       await Promise.all(tripIds.map(id =>
-        updateDoc(this.memberRef(id, user.uid), { payHandles: value }).catch(() => {/* a trip they've left */})));
+        updateDoc(this.memberRef(id, user.uid), patch).catch(() => {/* a trip they've left */})));
     });
   }
 

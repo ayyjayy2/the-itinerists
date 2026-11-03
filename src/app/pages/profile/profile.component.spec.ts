@@ -290,3 +290,48 @@ describe('ProfileComponent download my data (#332)', () => {
     expect(comp.dataError()).toBeTruthy();
   });
 });
+
+// #429: each person picks their own currency once, on Profile.
+describe('ProfileComponent my currency (#429)', () => {
+  function create(ownCurrency?: string) {
+    TestBed.resetTestingModule();
+    const trips = { activeMembers: signal([]), updateOwnCurrency: jasmine.createSpy('updateOwnCurrency').and.resolveTo() };
+    TestBed.configureTestingModule({
+      imports: [ProfileComponent],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: {} },
+        { provide: DataExportService, useValue: dataExport },
+        { provide: UserService, useValue: { firestoreUser: signal({ uid: 'u', displayName: 'Maya', avatarEmoji: '🌸', color: '#fff', isAdmin: false, createdAt: 0, ownCurrency }), currentUser: signal(null), isGuest: signal(false), updateHomeLayout: () => {} } },
+        { provide: TripService, useValue: trips },
+      ],
+    });
+    const fixture = TestBed.createComponent(ProfileComponent);
+    fixture.detectChanges();
+    return { comp: fixture.componentInstance, el: fixture.nativeElement as HTMLElement, trips, fixture };
+  }
+
+  it('saves the currency you pick', async () => {
+    const { comp, el, trips } = create();
+    expect(el.querySelector('#my-currency')!.textContent).toContain('My currency');
+    await comp.saveOwnCurrency('GBP');
+    expect(trips.updateOwnCurrency).toHaveBeenCalledWith('GBP');
+    expect(comp.ownSaved()).toBeTrue();
+  });
+
+  it('shows the one you have, and goes back to each trip\'s', async () => {
+    const { comp, el, trips } = create('GBP');
+    expect(comp.ownCurrency).toBe('GBP');
+    const back = Array.from(el.querySelectorAll('#my-currency button')).find(b => b.textContent!.includes("each trip's currency")) as HTMLButtonElement;
+    back.click();
+    await Promise.resolve();
+    expect(trips.updateOwnCurrency).toHaveBeenCalledWith(null);
+  });
+
+  it('says what went wrong when it can\'t save', async () => {
+    const { comp, trips } = create();
+    trips.updateOwnCurrency.and.rejectWith(new Error('offline'));
+    await comp.saveOwnCurrency('GBP');
+    expect(comp.ownError()).toContain('connection');
+  });
+});
