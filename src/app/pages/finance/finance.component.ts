@@ -22,7 +22,8 @@ import { FocusService } from '../../services/focus.service';
 import { safeLink } from '../../utils/safe-link';
 import { leftOutOfSplit, splitPatch } from '../../utils/split-gaps';
 import { paidKey } from '../../utils/paid-marks';
-import { PAY_APPS, canRemind, payLink } from '../../utils/pay-links';
+import { PAY_APPS, canRemind, payLink, remindersOpen } from '../../utils/pay-links';
+import { localTodayISO, tripZone } from '../../utils/trip-destinations';
 
 /**
  * How the working under each balance shows (#519): 'tap' shows it with a
@@ -347,9 +348,14 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /** Whether I can remind `name` today (they're on the trip, and no reminder in the last day). */
+  /** Remind waits for the trip's last day, in the trip's zone (#664). */
+  readonly remindOpen = computed(() => {
+    const trip = this.tripService.activeTrip();
+    return !trip || remindersOpen(trip.endDate, localTodayISO(new Date(), tripZone(trip)));
+  });
   canRemind(name: string): boolean {
     const me = this.currentUser()?.uid, them = this.memberByName().get(name)?.uid;
-    if (!me || !them) return false;
+    if (!me || !them || !this.remindOpen()) return false;
     return canRemind(this.financeService.reminders().get(`${me}_${them}`), Date.now());
   }
   /** I reminded `name` within the last day (the rules allow one a day). */

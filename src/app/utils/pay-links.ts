@@ -79,3 +79,8 @@ export const REMINDER_GAP_MS = 20 * 60 * 60 * 1000;
 export function canRemind(lastAt: number | undefined, now: number): boolean {
   return !lastAt || now - lastAt >= REMINDER_GAP_MS;
 }
+
+/** Reminders open on the trip's last day (#664): asking to be paid back is for the end of the trip. */
+export function remindersOpen(tripEndISO: string | undefined, todayISO: string): boolean {
+  return !tripEndISO || todayISO >= tripEndISO;
+}
