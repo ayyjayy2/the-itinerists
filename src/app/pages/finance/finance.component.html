@@ -47,6 +47,7 @@
         <div class="banner-amounts">
           <span class="banner-amount">{{ approxPrefix() }}{{ totalOwedToMeHome() | number:'1.2-2' }}<span class="b-code"> {{ homeCurrency() }}</span></span>
         </div>
+        @if (inOwn(totalOwedToMeHome()); as own) { <div class="banner-own">{{ own }}</div> }
         <div class="banner-persons">
           @for (p of personNetBreakdown().owed; track p.name) {
             @let w = working(p);
@@ -97,6 +98,7 @@
         <div class="banner-amounts">
           <span class="banner-amount">{{ approxPrefix() }}{{ totalIOweHome() | number:'1.2-2' }}<span class="b-code"> {{ homeCurrency() }}</span></span>
         </div>
+        @if (inOwn(totalIOweHome()); as own) { <div class="banner-own">{{ own }}</div> }
         <div class="banner-persons">
           @for (p of personNetBreakdown().owing; track p.name) {
             @let w = working(p);

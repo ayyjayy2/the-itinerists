@@ -199,3 +199,6 @@
   margin: -0.25rem 0 1rem; font-weight: 800; color: var(--text);
   .total-note { display: block; font-size: 0.78rem; font-weight: 400; color: var(--text-muted); }
 }
+
+// The total again in my own currency (#429).
+.total-own { margin: -0.5rem 0 1rem; font-size: 0.9rem; color: var(--text-muted); }

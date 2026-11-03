@@ -21,7 +21,9 @@ describe('ExpensesComponent currencies', () => {
     paidBy: 'Maya', splitAmong: 'All', category: 'Lodging', addedByUid: 'u1', createdAt: 1,
   };
 
+  let me: ReturnType<typeof signal<any>>;
   beforeEach(() => {
+    me = signal<any>({ uid: 'u1' });
     entries = signal<any[]>([hotel]);
     personal = signal<any[]>([]);
     expenses = {
@@ -35,11 +37,11 @@ describe('ExpensesComponent currencies', () => {
         provideRouter([]),
         { provide: ExpensesService, useValue: expenses },
         { provide: FinanceService, useValue: finance },
-        { provide: UserService, useValue: { currentUser: signal({ uid: 'u1', name: 'Maya' }) } },
+        { provide: UserService, useValue: { currentUser: signal({ uid: 'u1', name: 'Maya' }), firestoreUser: me } },
         { provide: UsersService, useValue: { tripUsers: () => [{ name: 'Maya' }] } },
         { provide: TripService, useValue: { activeTrip: signal({ id: 't1', currency: 'EUR' }), ready: signal(true) } },
         // 1 EUR = 1.25 USD on every date: $12 is €9.60.
-        { provide: ExchangeRateService, useValue: { ratesByDate: (_home: string, dates: string[]) => Promise.resolve(Object.fromEntries(dates.map(d => [d, { USD: 1.25 }]))) } },
+        { provide: ExchangeRateService, useValue: { ratesByDate: (_home: string, dates: string[]) => Promise.resolve(Object.fromEntries(dates.map(d => [d, { USD: 1.25 }]))), ratesFor: () => Promise.resolve({ USD: 1.25 }) } },
       ],
     });
   });
@@ -101,6 +103,21 @@ describe('ExpensesComponent currencies', () => {
     const converted = el.querySelector('.total-converted')!.textContent!;
     expect(converted).toContain('≈ €309.60');                         // 300 + 12 / 1.25
     expect(converted).toContain("converted to EUR at each expense's date rate");
+  });
+
+  // #429: the total also shows in my own currency, from the trip's at today's rate.
+  it('adds the total in my own currency', async () => {
+    me.set({ uid: 'u1', ownCurrency: 'USD' });
+    const { fixture, el } = render();
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(el.querySelector('.total-own')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('≈ $375.00 in USD, at today\'s rate');
+  });
+
+  it('adds nothing when my currency is the trip\'s', async () => {
+    me.set({ uid: 'u1', ownCurrency: 'EUR' });
+    const { fixture, el } = render();
+    await fixture.whenStable(); fixture.detectChanges();
+    expect(el.querySelector('.total-own')).toBeNull();
   });
 
   it('shows no converted line when everything is in one currency', async () => {

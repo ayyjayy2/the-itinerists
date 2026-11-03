@@ -12,6 +12,8 @@ import { MemoryStore, FieldTransform, WhereFilter, WhereOp, StoredDoc } from './
 // the app's `snap.data() as Foo` casts compiling.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DocumentData = { [field: string]: any };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type UpdateData<T> = Partial<T> & { [field: string]: any };
 export type Unsubscribe = () => void;
 
 /** The one store every `Firestore` instance in the demo reads from. Seeded by `main.demo.ts`. */

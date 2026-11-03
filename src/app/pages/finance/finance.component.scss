@@ -1290,6 +1290,11 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+.banner-own {
+  margin-top: -0.15rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
 .working-arrow {
   display: inline-block;
   width: 1.6rem;
