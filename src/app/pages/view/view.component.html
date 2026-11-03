@@ -29,7 +29,10 @@
               }
             </ul>
           }
-          <button type="button" class="btn btn-ghost btn-sm view-pdf" (click)="savePdf()">Save as PDF</button>
+          <button type="button" class="btn btn-ghost btn-sm view-pdf" (click)="savePdf()" [disabled]="pdfBusy()" [attr.aria-busy]="pdfBusy()">
+            @if (pdfBusy()) {<span class="view-pdf-spinner" aria-hidden="true"></span> Preparing PDF…} @else {Save as PDF}
+          </button>
+          @if (pdfBusy()) {<p class="view-pdf-note" role="status">On a phone this can take a minute. The save and print options open by themselves.</p>}
         </header>
 
         @if (v.flights.departures.length || v.flights.returns.length) {
