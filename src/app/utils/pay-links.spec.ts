@@ -18,15 +18,21 @@ describe('pay-links (#532)', () => {
   });
 
   it('fills in the amount where the app takes that currency', () => {
-    expect(payLink('venmo', 'maya', 40, 'USD', 'Chiang Mai')).toBe('https://venmo.com/u/maya?txn=pay&amount=40.00&note=Chiang+Mai');
+    expect(payLink('venmo', 'maya', 40, 'USD', 'Chiang Mai')).toBe('https://venmo.com/u/maya?txn=pay&amount=40.00&note=Chiang%20Mai');
     expect(payLink('venmo', 'maya', 40, 'EUR')).toBe('https://venmo.com/u/maya?txn=pay');
     expect(payLink('paypal', 'maya', 12.5, 'EUR')).toBe('https://paypal.me/maya/12.50EUR');
     expect(payLink('cashapp', 'maya', 40, 'GBP')).toBe('https://cash.app/$maya/40.00');
     expect(payLink('cashapp', 'maya', 40, 'THB')).toBe('https://cash.app/$maya');
   });
 
+  // #676: Venmo showed "Chiang+Mai,+November": it doesn't read '+' as a space.
+  it('writes spaces in the Venmo note as %20, keeping a real + as %2B', () => {
+    expect(payLink('venmo', '', 40, 'USD', 'Chiang Mai, November')).toBe('https://venmo.com/?txn=pay&amount=40.00&note=Chiang%20Mai%2C%20November');
+    expect(payLink('venmo', 'maya', 40, 'USD', 'Jo + Sam')).toBe('https://venmo.com/u/maya?txn=pay&amount=40.00&note=Jo%20%2B%20Sam');
+  });
+
   it('opens the app’s own pay screen when the friend has no handle saved (#666)', () => {
-    expect(payLink('venmo', '', 40, 'USD', 'Chiang Mai')).toBe('https://venmo.com/?txn=pay&amount=40.00&note=Chiang+Mai');
+    expect(payLink('venmo', '', 40, 'USD', 'Chiang Mai')).toBe('https://venmo.com/?txn=pay&amount=40.00&note=Chiang%20Mai');
     expect(payLink('paypal', '', 40, 'EUR')).toBe('https://www.paypal.com/myaccount/transfer/homepage/pay');
     expect(payLink('cashapp', '', 40, 'USD')).toBe('https://cash.app/');
   });

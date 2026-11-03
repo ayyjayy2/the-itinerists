@@ -159,7 +159,7 @@ test('pay back from Finance, then the person owed confirms', async ({ page }) =>
   const sheet = page.getByRole('dialog', { name: 'Pay Maya' });
   await expect(sheet.getByText('Chiang Mai, November')).toBeVisible();
   const venmo = sheet.getByRole('link', { name: 'Venmo' });
-  await expect(venmo).toHaveAttribute('href', /^https:\/\/venmo\.com\/u\/maya-demo\?txn=pay.*note=Chiang\+Mai/);
+  await expect(venmo).toHaveAttribute('href', /^https:\/\/venmo\.com\/u\/maya-demo\?txn=pay.*note=Chiang%20Mai/);
   await expect(sheet.getByRole('link', { name: 'PayPal' })).toHaveAttribute('href', /^https:\/\/paypal\.me\/mayademo\//);
   await expect(sheet.getByRole('link', { name: 'Cash App' })).toHaveAttribute('href', 'https://cash.app/');   // no $cashtag saved
   const popup = page.waitForEvent('popup');
