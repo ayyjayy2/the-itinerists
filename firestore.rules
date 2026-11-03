@@ -287,6 +287,10 @@ service cloud.firestore {
         && (!('paypal' in data.payHandles) || isHandle(data.payHandles.paypal))
         && (!('cashapp' in data.payHandles) || isHandle(data.payHandles.cashapp)));
     }
+    // Each person's own currency (#429): a 3-letter code like GBP.
+    function validOwnCurrency(data) {
+      return !('ownCurrency' in data) || (data.ownCurrency is string && data.ownCurrency.matches('^[A-Z]{3}$'));
+    }
     function hasNoEmailFields(data) {
       return !('authEmail' in data) && !('pendingEmail' in data);
     }
@@ -300,6 +304,7 @@ service cloud.firestore {
                  && (signedUpWithEmail() || (isGuest() && request.resource.data.get('isGuest', false) == true))
                  && hasNoEmailFields(request.resource.data)
                  && validPayHandles(request.resource.data)
+                 && validOwnCurrency(request.resource.data)
                  && request.resource.data.get('isAdmin', false) == false
                  && request.resource.data.get('isDisabled', false) == false
                  && request.resource.data.get('layoutPicker', false) == false;
@@ -309,6 +314,7 @@ service cloud.firestore {
                  || (userId == uid()
                      && hasNoEmailFields(request.resource.data)
                      && validPayHandles(request.resource.data)
+                     && validOwnCurrency(request.resource.data)
                      && request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false)
                      && request.resource.data.get('isDisabled', false) == resource.data.get('isDisabled', false)
                      && request.resource.data.get('layoutPicker', false) == resource.data.get('layoutPicker', false));
@@ -452,7 +458,8 @@ service cloud.firestore {
         // change your own role (no self-promotion to owner).
         allow update: if (isOwner(tripId) || isAdmin()
                    || (memberId == uid() && request.resource.data.role == resource.data.role))
-                   && validPayHandles(request.resource.data);
+                   && validPayHandles(request.resource.data)
+                   && validOwnCurrency(request.resource.data);
         allow delete: if memberId == uid() || isOwner(tripId) || isAdmin();
       }
 
