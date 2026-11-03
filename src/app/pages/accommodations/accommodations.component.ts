@@ -16,6 +16,7 @@ import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 
 import { FocusTargetDirective } from '../../shared/focus-target.directive';
 import { safeLink } from '../../utils/safe-link';
+import { telTarget } from '../../utils/calling-app';
 
 @Component({
   selector: 'app-accommodations',
@@ -121,7 +122,7 @@ export class AccommodationsComponent {
   startAdd(): void {
     this.cancelEdit();
     this.adding.set(true);
-    this.newDraft = { name: '', address: '', checkIn: '', checkOut: '', checkInTime: '', checkOutTime: '', notes: '', bookingRef: '', link: '' };
+    this.newDraft = { name: '', address: '', phone: '', checkIn: '', checkOut: '', checkInTime: '', checkOutTime: '', notes: '', bookingRef: '', link: '' };
     this.addForWhoMap = this.parseForWhoToMap('All');
   }
 
@@ -133,6 +134,7 @@ export class AccommodationsComponent {
     await this.staysService.addStay({
       name:       this.newDraft.name       ?? '',
       address:    this.newDraft.address    ?? '',
+      phone:      (this.newDraft.phone ?? '').trim(),
       checkIn:    this.newDraft.checkIn    ?? '',
       checkOut:   this.newDraft.checkOut   ?? '',
       checkInTime:  this.newDraft.checkInTime  ?? '',
@@ -148,6 +150,9 @@ export class AccommodationsComponent {
   }
 
   // ── Utility ─────────────────────────────────────────────────────────────────
+  /** A typed phone number as a tel: target: digits and a leading +, nothing else. */
+  telHref(phone: string): string { return telTarget(phone); }
+
   formatDate(d: string): string {
     if (!d) return '';
     return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });

@@ -21,7 +21,7 @@ describe('share view (#611)', () => {
   }] as FlightDoc[];
   const stays = [{
     id: 's', name: 'Baan Nimman Guesthouse', address: '12 Nimman Soi 7, Chiang Mai', checkIn: '2026-11-12', checkOut: '2026-11-15',
-    notes: 'door code 9876', bookingRef: 'ABC123', link: 'https://example.com', forWho: 'All',
+    phone: '+66 53 123 456', notes: 'door code 9876', bookingRef: 'ABC123', link: 'https://example.com', forWho: 'All',
   }] as AccommodationDoc[];
   const view = buildShareView({ trip, members, itinerary, flights, stays, airportZone: () => 'Asia/Bangkok' });
 
@@ -41,26 +41,39 @@ describe('share view (#611)', () => {
     ]);
   });
 
-  it('gives flights with who, route and zoned times', () => {
-    expect(view.flights).toEqual([{
+  it('gives flights with who, route and zoned times, getting there apart from coming home', () => {
+    expect(view.flights.departures).toEqual([{
       who: 'Maya', flight: 'Thai Airways TG110', route: 'BKK → CNX', departs: 'Nov 12, 8:30 AM ICT', arrives: 'Nov 12, 9:45 AM ICT',
     }]);
+    expect(view.flights.returns).toEqual([]);
+    const home = { ...flights[0], id: 'r', section: 'DEPARTURES', from: 'CNX', to: 'BKK', departureDate: '2026-11-19', arrivalDate: '2026-11-19' } as FlightDoc;
+    const v = buildShareView({ trip, members, itinerary: [], flights: [home, flights[0]], stays: [], airportZone: () => 'Asia/Bangkok' });
+    expect(v.flights.departures.map(f => f.route)).toEqual(['BKK → CNX']);
+    expect(v.flights.returns.map(f => f.route)).toEqual(['CNX → BKK']);
   });
 
   it('puts flights in time order, not text order', () => {
     const late = { ...flights[0], id: 'g', uid: 'b', departureTime: '11:10 PM' };
     const early = { ...flights[0], id: 'h', uid: 'b', departureTime: '3:50 PM' };
     const v = buildShareView({ trip, members, itinerary: [], flights: [late, early], stays: [], airportZone: () => 'Asia/Bangkok' });
-    expect(v.flights.map(f => f.departs)).toEqual(['Nov 12, 3:50 PM ICT', 'Nov 12, 11:10 PM ICT']);
+    expect(v.flights.departures.map(f => f.departs)).toEqual(['Nov 12, 3:50 PM ICT', 'Nov 12, 11:10 PM ICT']);
   });
 
-  it('shows where people stay by town, never the address', () => {
-    expect(view.stays).toEqual([{ name: 'Baan Nimman Guesthouse', where: 'Chiang Mai', dates: 'Nov 12 – 15' }]);
+  it('shows each stay with its address, phone and the app to call it with from abroad', () => {
+    expect(view.stays).toEqual([{
+      name: 'Baan Nimman Guesthouse', address: '12 Nimman Soi 7, Chiang Mai', phone: '+66 53 123 456', tel: '+6653123456',
+      callNote: 'Calling from abroad? Try LINE, which most people in Thailand use.', dates: 'Nov 12 – 15',
+    }]);
   });
 
-  it('never carries notes, booking references, links or addresses', () => {
+  it('adds no calling note for a stay without a phone', () => {
+    const v = buildShareView({ trip, members, itinerary: [], flights: [], stays: [{ ...stays[0], phone: '' }], airportZone: () => undefined });
+    expect(v.stays[0].callNote).toBe('');
+  });
+
+  it('never carries notes, booking references or links', () => {
     const text = JSON.stringify(view);
-    for (const secret of ['code 4412', 'seat 4A', 'door code', 'ABC123', 'example.com', 'Soi 7']) expect(text).not.toContain(secret);
+    for (const secret of ['code 4412', 'seat 4A', 'door code', 'ABC123', 'example.com']) expect(text).not.toContain(secret);
   });
 
   it('makes long random tokens', () => {

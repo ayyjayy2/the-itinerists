@@ -426,3 +426,6 @@
 :host:has(.demo-banner) .app-shell {
   padding-top: 1.85rem;
 }
+
+// Not on paper (a shared trip page's "Save as PDF", #611).
+@media print { .demo-banner { display: none; } }

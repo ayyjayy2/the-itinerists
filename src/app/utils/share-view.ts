@@ -4,24 +4,28 @@ import { normalizeTime } from './time-format';
 import { parseTimeString } from './first-up';
 import { activeLeg, tripDestinations } from './trip-destinations';
 import { planZoneLabel, zoneLabelAt } from './time-zone-label';
+import { callingNote, countryOf, telTarget } from './calling-app';
 
 /**
  * The read-only page a trip's members can share with people at home (#611),
  * at /view#<token> (after the #, so the secret never reaches a server or the page log). It holds only what the owner chose for it, already
  * worded for display: the trip's dates and places, the day-by-day plan,
- * flights, where people stay (the town, never the address) and who's going
- * (first names). Never notes, booking references, links, money, packing or
+ * flights (departures and returns), where people stay (name, address,
+ * phone, and the app to call it with from abroad) and who's going (first
+ * names). Never notes, booking references, links, money, packing or
  * outfits. A member's device rebuilds it when the plan changes.
  */
+export interface ShareFlight { who: string; flight: string; route: string; departs: string; arrives: string }
 export interface ShareView {
-  v: 1;
+  v: 2;
   tripName: string;
   dates: string;                 // "Nov 12 – 19"
   places: string[];              // each stop: "Chiang Mai, Thailand"
   people: { name: string; avatarEmoji: string; color: string; avatarLetterColor: string }[];
   days: { date: string; label: string; items: { time: string; title: string; place: string }[] }[];
-  flights: { who: string; flight: string; route: string; departs: string; arrives: string }[];
-  stays: { name: string; where: string; dates: string }[];
+  /** Getting there (the app's "Arrivals") and coming home (its "Departures"). */
+  flights: { departures: ShareFlight[]; returns: ShareFlight[] };
+  stays: { name: string; address: string; phone: string; tel: string; callNote: string; dates: string }[];
 }
 
 const dayLabel = (iso: string) =>
@@ -31,7 +35,6 @@ const shortDay = (iso: string) =>
 /** Minutes after midnight for "3:50 PM"; times that don't parse sort last. */
 const minutes = (t: string) => { const p = parseTimeString(t); return p ? p.h * 60 + p.min : 24 * 60; };
 const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? '';
-const town = (destination: string) => destination.split(',')[0]?.trim() ?? '';
 
 /** "7:00 PM – 9:00 PM ICT", "7:00 PM ICT", or '' for a plan with no time. */
 function timeText(time: string, end: string | undefined, zone: string): string {
@@ -73,8 +76,18 @@ export function buildShareView(input: {
   const at = (date: string, time: string, code: string) =>
     [shortDay(date), normalizeTime(time), zoneLabelAt(airportZone(code), date, time)].filter(Boolean).join(', ').replace(/, (?=[A-Z+-]{2,5}$)/, ' ');
 
+  const flightRow = (f: FlightDoc): ShareFlight => ({
+    who: nameOf.get(f.uid) ?? '',
+    flight: [f.airline, f.flightNumber].filter(Boolean).join(' '),
+    route: `${f.from} → ${f.to}`,
+    departs: at(f.departureDate, f.departureTime, f.from),
+    arrives: at(f.arrivalDate, f.arrivalTime, f.to),
+  });
+  const byTime = (a: FlightDoc, b: FlightDoc) =>
+    a.departureDate.localeCompare(b.departureDate) || minutes(a.departureTime) - minutes(b.departureTime);
+
   return {
-    v: 1,
+    v: 2,
     tripName: trip.name,
     dates: stopDateRange(trip.startDate, trip.endDate),
     places: legs.map(l => l.destination).filter(Boolean),
@@ -82,22 +95,24 @@ export function buildShareView(input: {
       name: firstName(m.displayName), avatarEmoji: m.avatarEmoji, color: m.color, avatarLetterColor: m.avatarLetterColor ?? '',
     })),
     days,
-    flights: [...flights]
-      .sort((a, b) => a.departureDate.localeCompare(b.departureDate) || minutes(a.departureTime) - minutes(b.departureTime))
-      .map(f => ({
-        who: nameOf.get(f.uid) ?? '',
-        flight: [f.airline, f.flightNumber].filter(Boolean).join(' '),
-        route: `${f.from} → ${f.to}`,
-        departs: at(f.departureDate, f.departureTime, f.from),
-        arrives: at(f.arrivalDate, f.arrivalTime, f.to),
-      })),
+    flights: {
+      departures: flights.filter(f => f.section !== 'DEPARTURES').sort(byTime).map(flightRow),
+      returns: flights.filter(f => f.section === 'DEPARTURES').sort(byTime).map(flightRow),
+    },
     stays: [...stays]
       .sort((a, b) => a.checkIn.localeCompare(b.checkIn))
-      .map(s => ({
-        name: s.name,
-        where: s.checkIn && legs.length ? town(activeLeg(legs, s.checkIn).destination) : '',
-        dates: stopDateRange(s.checkIn, s.checkOut),
-      })),
+      .map(s => {
+        const phone = (s.phone ?? '').trim();
+        const country = s.checkIn && legs.length ? countryOf(activeLeg(legs, s.checkIn).destination) : '';
+        return {
+          name: s.name,
+          address: s.address ?? '',
+          phone,
+          tel: phone ? telTarget(phone) : '',
+          callNote: phone ? callingNote(country) : '',
+          dates: stopDateRange(s.checkIn, s.checkOut),
+        };
+      }),
   };
 }
 

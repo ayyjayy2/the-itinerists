@@ -140,6 +140,12 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+// Printing (a shared trip page's "Save as PDF", #611): the page grows to hold
+// everything, or only the first screen would print.
+@media print {
+  html, body { height: auto; overflow: visible; }
+}
+
 // The strip behind the status bar (and any edge Safari shows) takes the header's
 // colour, not the page's: in tinted themes the page colour framed the cream
 // header from above (#464). The body still fills the screen with --bg.
