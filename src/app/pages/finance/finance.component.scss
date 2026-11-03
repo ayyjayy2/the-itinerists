@@ -489,7 +489,8 @@
 .banner-amounts {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
   margin-bottom: 0.25rem;
 }
 
@@ -1290,9 +1291,9 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.banner-own {
-  margin-top: -0.15rem;
+.banner-own, .pay-own {
   font-size: 0.95rem;
+  font-weight: 400;
   color: var(--text-muted);
 }
 .working-arrow {

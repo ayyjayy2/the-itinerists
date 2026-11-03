@@ -213,6 +213,16 @@ describe('FinanceComponent: settling up', () => {
       const { el } = await render('GBP', 'Maya');
       expect(el.querySelector('.banner-positive .banner-own')!.textContent!.trim()).toBe('≈ £24.00');
     });
+    it('sits on the same line as the trip amount', async () => {
+      const { el } = await render('GBP');
+      expect(el.querySelector('.banner-negative .banner-amounts .banner-own')).not.toBeNull();
+    });
+    it('shows in the Pay now pop-up beside the amount', async () => {
+      const { comp, fixture, el } = await render('GBP');
+      comp.openPay('Theo', 30);
+      fixture.detectChanges();
+      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ')).toContain('30.00 USD ≈ £24.00');
+    });
     it('shows nothing extra without a currency of my own, or when it is the trip\'s', async () => {
       expect((await render(undefined)).el.querySelector('.banner-own')).toBeNull();
       TestBed.resetTestingModule();
