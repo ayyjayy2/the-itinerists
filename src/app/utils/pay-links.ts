@@ -79,7 +79,9 @@ export function payLink(app: PayApp, handle: string, amount: number, currency: s
       const q = new URLSearchParams({ txn: 'pay' });
       if (amt && cur === 'USD') q.set('amount', amt);
       if (note) q.set('note', note);
-      return handle ? `https://venmo.com/u/${h}?${q}` : `https://venmo.com/?${q}`;
+      // Spaces as %20: Venmo shows URLSearchParams' '+' literally (#676). A real '+' is already %2B.
+      const qs = q.toString().replace(/\+/g, '%20');
+      return handle ? `https://venmo.com/u/${h}?${qs}` : `https://venmo.com/?${qs}`;
     }
     case 'paypal':
       if (!handle) return 'https://www.paypal.com/myaccount/transfer/homepage/pay';
