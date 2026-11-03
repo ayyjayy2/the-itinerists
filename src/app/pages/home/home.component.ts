@@ -38,7 +38,7 @@ import { pickFirstUp } from '../../utils/first-up';
 import { normalizeTime } from '../../utils/time-format';
 import { weatherLabel } from '../../utils/weather-label';
 import { needsRecoveryEmail, maskEmail } from '../../utils/email';
-import { stopDateRange } from '../../utils/stop-dates';
+import { stopDateRange, tripDateRange } from '../../utils/stop-dates';
 import { heroLine } from '../../utils/hero-line';
 import { EmailConfirmService } from '../../services/email-confirm.service';
 import { SurveyService } from '../../services/survey.service';
@@ -303,10 +303,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   readonly dateRangeLabel = computed(() => {
     const t = this.activeTrip();
-    if (!t?.startDate || !t?.endDate) return '';
-    const fmt = (s: string) => new Date(s + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const year = new Date(t.endDate + 'T00:00').getFullYear();
-    return `${fmt(t.startDate)} – ${fmt(t.endDate)}, ${year}`;
+    return tripDateRange(t?.startDate ?? '', t?.endDate ?? '');
   });
 
   /**
