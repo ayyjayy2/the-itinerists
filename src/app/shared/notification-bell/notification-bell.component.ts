@@ -6,6 +6,7 @@ import { timeAgo } from '../../utils/activity';
 import { eventsForMe, unseenEvents, seenMarkFor } from '../../utils/trip-events';
 import { TripEventsService } from '../../services/trip-events.service';
 import { TripService } from '../../services/trip.service';
+import { TripContextService } from '../../services/trip-context.service';
 import { TripEvent } from '../../models/trip.models';
 import { SurveyService } from '../../services/survey.service';
 
@@ -79,6 +80,7 @@ export class NotificationBellComponent {
   private eventsService = inject(TripEventsService);
   private userService   = inject(UserService);
   private tripService   = inject(TripService);
+  private tripContext   = inject(TripContextService);
   readonly survey       = inject(SurveyService);
 
   /** A survey is on and meant for them (a finished trip): its notice stays listed, tapped or not. */
@@ -92,14 +94,16 @@ export class NotificationBellComponent {
 
   private me      = computed(() => this.userService.firestoreUser());
   /** Events for me newer than my high-water mark (own actions never count). Nothing counts until
-   *  my user doc has loaded: without it every event looks new, and the badge flashed on refresh (#685). */
+   *  my user doc has loaded: without it every event looks new, and the badge flashed on refresh (#685).
+   *  "Seen" is read for the trip the events come from (the context's id, known at once), not the trip's
+   *  details, which load a moment later; meanwhile the older account-wide mark made seen events count (#694). */
   private unseenList = computed(() => {
-    const me = this.me();
-    if (!me) return [];
-    return unseenEvents(this.eventsService.events(), me.uid, seenMarkFor(me, this.tripService.activeTrip()?.id), this.showTest());
+    const me = this.me(), tripId = this.tripContext.activeTripId();
+    if (!me || !tripId) return [];
+    return unseenEvents(this.eventsService.events(), me.uid, seenMarkFor(me, tripId), this.showTest());
   });
-  /** Unseen trip updates, plus the survey notice until the bell is next opened. */
-  readonly unseen = computed(() => this.unseenList().length + (this.survey.noticeUnseen() ? 1 : 0));
+  /** Unseen trip updates, plus the survey notice until the bell is next opened (once my user doc says so, #694). */
+  readonly unseen = computed(() => this.unseenList().length + (this.me() && this.survey.noticeUnseen() ? 1 : 0));
   /** What the dropdown lists: the unseen ones, else the latest few for me. */
   readonly recent = computed<TripEvent[]>(() => {
     const unseen = this.unseenList();
@@ -123,7 +127,7 @@ export class NotificationBellComponent {
       const btn = ev?.currentTarget as HTMLElement | undefined;
       if (btn) this.dropTop.set(btn.getBoundingClientRect().bottom + 6);
       this.shown.set(this.recent());
-      if (this.unseenList().length > 0) void this.userService.markActivitySeen(this.tripService.activeTrip()?.id);
+      if (this.unseenList().length > 0) void this.userService.markActivitySeen(this.tripContext.activeTripId());
       this.survey.markNoticeSeen();
     }
     this.open.update(v => !v);
