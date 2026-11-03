@@ -24,7 +24,7 @@ import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.com
             </div>
             <span class="feed-text">
               @if (a.event.action === 'reminded' && a.mine) {<b>You</b> sent {{ a.target }} a reminder to pay you back}
-              @else {@if (a.event.action !== 'reminded') {<b>{{ a.mine ? 'You' : a.event.actorName }}</b> }{{ a.event.summary }}} <span class="feed-ago">· {{ ago(a.event.timestamp) }}</span>
+              @else {@if (a.event.action !== 'reminded') {<b>{{ a.mine ? 'You' : a.event.actorName }}</b>&ngsp;}{{ a.event.summary }}} <span class="feed-ago"> · {{ ago(a.event.timestamp) }}</span>
             </span>
           </a>
         } @empty {

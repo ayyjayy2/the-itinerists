@@ -173,6 +173,18 @@ describe('event-text: finance', () => {
   it('removed', () => {
     expect(financeRemoved(entry(), 'EUR', members).summary).toBe('removed €84.00 for Dinner');
   });
+  // #665: an expense with only a vendor read "for ," in Updates.
+  it('names the vendor when there is no description, and leaves "for" out when there is neither', () => {
+    const vendorOnly = entry({ description: '', vendor: 'Thai Airways' });
+    const bare = entry({ description: '  ', vendor: '' });
+    expect(financeAdded(vendorOnly, 'Maya', 'EUR', members).summary).toBe('added €84.00 for Thai Airways, split between all of you');
+    expect(financeAdded(bare, 'Maya', 'EUR', members).summary).toBe('added €84.00, split between all of you');
+    expect(financeRemoved(vendorOnly, 'EUR', members).summary).toBe('removed €84.00 for Thai Airways');
+    expect(financeRemoved(bare, 'EUR', members).summary).toBe('removed €84.00');
+    expect(financeChanged(bare, { ...bare, amount: 90 }, 'EUR', members)!.summary).toBe('changed an expense to €90.00 (was €84.00)');
+    expect(financeChanged(vendorOnly, { ...vendorOnly, splitAmong: 'Sam' }, 'EUR', members)!.summary).toBe('changed who splits Thai Airways');
+    expect(financeChanged(bare, { ...bare, date: '2026-10-04' }, 'EUR', members)!.summary).toBe('updated an expense (date)');
+  });
 });
 
 describe('event-text: recs and pins', () => {
