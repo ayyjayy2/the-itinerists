@@ -1,4 +1,4 @@
-import { canRemind, cleanHandles, remindersOpen, normalizeHandle, payAmount, payLink, reminderText, REMINDER_GAP_MS } from './pay-links';
+import { canRemind, cleanHandles, remindersOpen, normalizeHandle, payAmount, payLink, payAppLink, reminderText, REMINDER_GAP_MS } from './pay-links';
 
 describe('pay-links (#532)', () => {
   it('tidies typed handles and pasted profile links', () => {
@@ -29,6 +29,18 @@ describe('pay-links (#532)', () => {
   it('writes spaces in the Venmo note as %20, keeping a real + as %2B', () => {
     expect(payLink('venmo', '', 40, 'USD', 'Chiang Mai, November')).toBe('https://venmo.com/?txn=pay&amount=40.00&note=Chiang%20Mai%2C%20November');
     expect(payLink('venmo', 'maya', 40, 'USD', 'Jo + Sam')).toBe('https://venmo.com/u/maya?txn=pay&amount=40.00&note=Jo%20%2B%20Sam');
+  });
+
+  // #681: the venmo.com link went through Safari (a prompt, and '+' back in the note); the app link opens Venmo directly.
+  it('builds the Venmo app link, with the friend when they have a handle', () => {
+    expect(payAppLink('venmo', 'maya', 40, 'USD', 'Chiang Mai, November'))
+      .toBe('venmo://paycharge?txn=pay&recipients=maya&amount=40.00&note=Chiang%20Mai%2C%20November');
+    expect(payAppLink('venmo', '', 40, 'USD', 'Lisbon')).toBe('venmo://paycharge?txn=pay&amount=40.00&note=Lisbon');
+    expect(payAppLink('venmo', 'maya', 40, 'EUR')).toBe('venmo://paycharge?txn=pay&recipients=maya');
+  });
+  it('has no app link for PayPal or Cash App (neither fills anything in)', () => {
+    expect(payAppLink('paypal', 'maya', 40, 'USD')).toBeNull();
+    expect(payAppLink('cashapp', 'maya', 40, 'USD')).toBeNull();
   });
 
   it('opens the app’s own pay screen when the friend has no handle saved (#666)', () => {

@@ -233,7 +233,7 @@
         </div>
         <div class="pay-with">Pay with</div>
         @for (o of payOptions(pf.name, pf.amount); track o.app) {
-          <a class="btn btn-ghost pay-app" [href]="o.href" target="_blank" rel="noopener" (click)="choosePay(o.app)">
+          <a class="btn btn-ghost pay-app" [href]="o.href" target="_blank" rel="noopener" (click)="openPayApp($event, o)">
             <span>{{ o.label }}</span><span aria-hidden="true">›</span>
           </a>
         }

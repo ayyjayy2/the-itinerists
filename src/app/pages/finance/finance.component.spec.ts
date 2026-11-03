@@ -9,6 +9,7 @@ import { TripService } from '../../services/trip.service';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FocusService } from '../../services/focus.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
+import { NATIVE_PLATFORM } from '../../native-platform';
 
 // #447: an "Everyone" expense with individual amounts typed before two people
 // joined used to count them as owing nothing, silently.
@@ -89,7 +90,7 @@ describe('FinanceComponent: settling up', () => {
   } as FinanceEntryDoc);
   let finance: Record<string, any>;
 
-  function create(paidBy: string, claims = new Map<string, unknown>(), opts: { endDate?: string; reminders?: Map<string, number> } = {}) {
+  function create(paidBy: string, claims = new Map<string, unknown>(), opts: { endDate?: string; reminders?: Map<string, number>; native?: boolean } = {}) {
     finance = {
       entries: signal([entry(paidBy)]), loaded: signal(true), paidItems: signal(new Set<string>()),
       updateEntry: jasmine.createSpy().and.resolveTo(), addEntry: jasmine.createSpy().and.resolveTo(),
@@ -110,12 +111,53 @@ describe('FinanceComponent: settling up', () => {
         } },
         { provide: ExchangeRateService, useValue: { ratesFor: () => Promise.resolve(null) } },
         { provide: FocusService, useValue: { id: signal(null), clear: () => {} } },
+        { provide: NATIVE_PLATFORM, useValue: !!opts.native },
       ],
     });
     const fixture = TestBed.createComponent(FinanceComponent);
     fixture.detectChanges();
     return { fixture, comp: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
   }
+
+  // #681: in the iPhone app, Venmo opens with its own app link, not through Safari.
+  describe('opening Venmo', () => {
+    function tapVenmo(native: boolean) {
+      const { fixture, comp, el } = create('Theo', new Map(), { native });
+      const go = spyOn(comp, 'goTo');
+      const web = spyOn(window, 'open');
+      comp.openPay('Theo', 30);
+      fixture.detectChanges();
+      const venmo = el.querySelector<HTMLAnchorElement>('.pay-sheet a.pay-app')!;
+      const ev = new MouseEvent('click', { cancelable: true });
+      if (!native) venmo.addEventListener('click', e => e.defaultPrevented || e.preventDefault(), { once: true }); // keep the test page here
+      venmo.dispatchEvent(ev);
+      return { comp, go, web };
+    }
+    afterEach(() => jasmine.clock().uninstall());
+
+    it('in the iPhone app: the Venmo app link, then the web link only if Venmo did not open', () => {
+      jasmine.clock().install();
+      const { comp, go, web } = tapVenmo(true);
+      expect(go).toHaveBeenCalledWith('venmo://paycharge?txn=pay&amount=30.00&note=Lisbon');
+      expect(comp.pendingPay()?.app).toBe('venmo');
+      jasmine.clock().tick(1600);                                   // still here: Venmo isn't installed
+      expect(web).toHaveBeenCalledWith('https://venmo.com/?txn=pay&amount=30.00&note=Lisbon', '_blank');
+    });
+
+    it('in the iPhone app: no web link once Venmo has opened', () => {
+      jasmine.clock().install();
+      const { comp, web } = tapVenmo(true);
+      comp.leftForApp();                                            // the app went to the background
+      jasmine.clock().tick(1600);
+      expect(web).not.toHaveBeenCalled();
+    });
+
+    it('on the website: the plain web link', () => {
+      const { comp, go } = tapVenmo(false);
+      expect(go).not.toHaveBeenCalled();
+      expect(comp.pendingPay()?.app).toBe('venmo');
+    });
+  });
 
   it('offers Pay now even when the person owed has no payment app, with every app in the pop-up', () => {
     const { fixture, el } = create('Theo');
