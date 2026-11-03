@@ -627,7 +627,7 @@
 }
 .pay-summary-row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
 .pay-summary-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
-.pay-summary-amount { font-size: 1.35rem; font-weight: 800; .b-code { font-size: 0.8rem; } }
+.pay-summary-amount { font-size: 1.35rem; font-weight: 800; text-align: right; .b-code { font-size: 0.8rem; } }
 .pay-summary-note { font-weight: 700; text-align: right; overflow-wrap: anywhere; }
 .pay-with { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
 .pay-app {
@@ -1296,6 +1296,8 @@
   font-weight: 400;
   color: var(--text-muted);
 }
+// In the Pay now pop-up the conversions go on their own line under the amount (#688).
+.pay-summary-amount .pay-own { display: block; margin-top: 0.15rem; }
 .working-arrow {
   display: inline-block;
   width: 1.6rem;

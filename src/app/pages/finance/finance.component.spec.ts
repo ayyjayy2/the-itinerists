@@ -90,7 +90,7 @@ describe('FinanceComponent: settling up', () => {
   } as FinanceEntryDoc);
   let finance: Record<string, any>;
 
-  function create(paidBy: string, claims = new Map<string, unknown>(), opts: { endDate?: string; reminders?: Map<string, number>; native?: boolean; own?: string; latest?: Record<string, number> } = {}) {
+  function create(paidBy: string, claims = new Map<string, unknown>(), opts: { endDate?: string; reminders?: Map<string, number>; native?: boolean; own?: string; theirs?: string; latest?: Record<string, number> } = {}) {
     finance = {
       entries: signal([entry(paidBy)]), loaded: signal(true), paidItems: signal(new Set<string>()),
       updateEntry: jasmine.createSpy().and.resolveTo(), addEntry: jasmine.createSpy().and.resolveTo(),
@@ -107,7 +107,7 @@ describe('FinanceComponent: settling up', () => {
         { provide: UsersService, useValue: { tripUsers: () => people } },
         { provide: TripService, useValue: {
           activeTrip: signal({ id: 't', name: 'Lisbon', currency: 'USD', endDate: opts.endDate }), ready: signal(true),
-          activeMembers: signal([{ uid: 'Maya', displayName: 'Maya' }, { uid: 'Theo', displayName: 'Theo' }]),
+          activeMembers: signal([{ uid: 'Maya', displayName: 'Maya' }, { uid: 'Theo', displayName: 'Theo', ownCurrency: opts.theirs }]),
         } },
         { provide: ExchangeRateService, useValue: { ratesFor: (_: string, d: string) => Promise.resolve(d === 'latest' ? opts.latest ?? null : null) } },
         { provide: FocusService, useValue: { id: signal(null), clear: () => {} } },
@@ -198,8 +198,8 @@ describe('FinanceComponent: settling up', () => {
 
   // #429: what's owed also shows in my own currency, worked out from the trip's.
   describe('in my own currency', () => {
-    async function render(own: string | undefined, paidBy = 'Theo') {
-      const r = create(paidBy, new Map(), { own, latest: { GBP: 0.8 } });
+    async function render(own: string | undefined, paidBy = 'Theo', theirs?: string) {
+      const r = create(paidBy, new Map(), { own, theirs, latest: { GBP: 0.8, EUR: 0.9 } });
       await r.fixture.whenStable();
       r.fixture.detectChanges();
       return r;
@@ -222,6 +222,25 @@ describe('FinanceComponent: settling up', () => {
       comp.openPay('Theo', 30);
       fixture.detectChanges();
       expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ')).toContain('30.00 USD ≈ £24.00');
+    });
+    // #688: the pop-up also shows the payee's own currency, when it differs from mine.
+    it('the Pay now pop-up shows the trip amount, then mine, then theirs', async () => {
+      const { comp, fixture, el } = await render('GBP', 'Theo', 'EUR');
+      comp.openPay('Theo', 30);
+      fixture.detectChanges();
+      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('30.00 USD ≈ £24.00 (you) ≈ €27.00 (Theo)');
+    });
+    it('shows one converted amount when we share a currency', async () => {
+      const { comp, fixture, el } = await render('GBP', 'Theo', 'GBP');
+      comp.openPay('Theo', 30);
+      fixture.detectChanges();
+      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('30.00 USD ≈ £24.00');
+    });
+    it('shows theirs even when I have none of my own', async () => {
+      const { comp, fixture, el } = await render(undefined, 'Theo', 'EUR');
+      comp.openPay('Theo', 30);
+      fixture.detectChanges();
+      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('30.00 USD ≈ €27.00 (Theo)');
     });
     it('shows nothing extra without a currency of my own, or when it is the trip\'s', async () => {
       expect((await render(undefined)).el.querySelector('.banner-own')).toBeNull();

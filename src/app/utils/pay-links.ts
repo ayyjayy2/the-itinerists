@@ -50,17 +50,22 @@ export function cleanHandles(raw: Partial<Record<PayApp, string>>): PayHandles {
 const APP_CURRENCIES: Record<PayApp, readonly string[]> = { venmo: ['USD'], paypal: [], cashapp: ['USD', 'GBP'] };
 
 /**
- * What to send with `app` (#666): the trip's own amount when the app takes
- * that currency, else the amount converted to the app's currency with `rates`
- * (base = the trip's currency, so rates[X] = X per 1 trip unit). Null when
- * there's no rate yet: the app then opens without an amount.
+ * What to send with `app` (#666): the payer's own currency (#688) when they have
+ * one, the app takes it and there's a rate; else the trip's own amount when the
+ * app takes that currency; else the amount converted to the app's currency with
+ * `rates` (base = the trip's currency, so rates[X] = X per 1 trip unit). Null
+ * when there's no rate yet: the app then opens without an amount.
  */
-export function payAmount(app: PayApp, amount: number, currency: string, rates: Rates | null): { amount: number; currency: string } | null {
+export function payAmount(app: PayApp, amount: number, currency: string, rates: Rates | null, own?: string): { amount: number; currency: string } | null {
   const cur = currency.toUpperCase();
   const takes = APP_CURRENCIES[app];
+  const convert = (to: string) => rates?.[to] ? { amount: Math.round(amount * rates[to] * 100) / 100, currency: to } : null;
+  if (own && own !== cur && (!takes.length || takes.includes(own))) {
+    const mine = convert(own);
+    if (mine) return mine;
+  }
   if (!takes.length || takes.includes(cur)) return { amount, currency: cur };
-  const to = takes[0], rate = rates?.[to];
-  return rate ? { amount: Math.round(amount * rate * 100) / 100, currency: to } : null;
+  return convert(takes[0]);
 }
 
 /**

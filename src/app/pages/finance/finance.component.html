@@ -230,7 +230,7 @@
           <button class="modal-close" (click)="payFor.set(null)" aria-label="Close">✕</button>
         </div>
         <div class="pay-summary">
-          <div class="pay-summary-row"><span class="pay-summary-label">Amount</span><span class="pay-summary-amount">{{ pf.amount | number:'1.2-2' }} <span class="b-code">{{ homeCurrency() }}</span>@if (inOwn(pf.amount); as own) {<span class="pay-own"> {{ own }}</span>}</span></div>
+          <div class="pay-summary-row"><span class="pay-summary-label">Amount</span><span class="pay-summary-amount">{{ pf.amount | number:'1.2-2' }} <span class="b-code">{{ homeCurrency() }}</span>@for (line of payConverted(pf.name, pf.amount); track line) {<span class="pay-own"> {{ line }}</span>}</span></div>
           @if (payNote()) {<div class="pay-summary-row"><span class="pay-summary-label">Note</span><span class="pay-summary-note">{{ payNote() }}</span></div>}
         </div>
         <div class="pay-with">Pay with</div>

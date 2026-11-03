@@ -72,6 +72,8 @@ export function seedDemo(store: MemoryStore): void {
       // Payment apps (#532), so "Pay with" shows on Finance.
       ...(p === MAYA ? { payHandles: { venmo: 'maya-demo', paypal: 'mayademo' } } : {}),
       ...(p === THEO ? { payHandles: { cashapp: 'theodemo' } } : {}),
+      // Their own currency (#429), so Pay now shows it beside the trip amount (#688).
+      ...(p === THEO ? { ownCurrency: 'USD' } : {}),
     };
     store.set(trip('members', p.uid), member as unknown as DocData);
   });
