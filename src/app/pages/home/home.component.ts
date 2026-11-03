@@ -18,7 +18,7 @@ import { StaysService } from '../../services/stays.service';
 import { RecsService } from '../../services/recs.service';
 import { ExpensesService } from '../../services/expenses.service';
 import { DataService } from '../../services/data.service';
-import { Rates, convertedTotal, perCurrencyText } from '../../utils/currency';
+import { Rates, convertedTotal, perCurrencyText, rateDay } from '../../utils/currency';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { money as formatMoney } from '../../utils/event-text';
 import {
@@ -401,7 +401,8 @@ export class HomeComponent implements OnInit, OnDestroy {
    *  (when currencies mix) the total in the trip's currency at each expense's date rate. */
   readonly trackedText = computed(() => {
     const home = this.activeTrip()?.currency || 'USD';
-    const entries = this.financeService.entries().map(e => ({ amount: e.amount || 0, currency: e.currency || home, date: e.date }));
+    const today = localTodayISO();
+    const entries = this.financeService.entries().map(e => ({ amount: e.amount || 0, currency: e.currency || home, date: rateDay(e, today), rate: e.rate }));
     const text = perCurrencyText(entries, home);
     if (this.singleCurrency()) return text;
     const { total, missing } = convertedTotal(entries, this.trackedRates(), home);
@@ -413,7 +414,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   private readonly loadTrackedRates = effect(() => {
     if (this.singleCurrency()) return;
     const home = this.activeTrip()?.currency || 'USD';
-    const dates = this.financeService.entries().map(e => e.date).filter(Boolean);
+    const today = localTodayISO();
+    const dates = this.financeService.entries().filter(e => e.rate?.to !== home).map(e => rateDay(e, today));
     const req = ++this.ratesRequest;
     void this.rateService.ratesByDate(home, dates).then(r => { if (req === this.ratesRequest) this.trackedRates.set(r); });
   });

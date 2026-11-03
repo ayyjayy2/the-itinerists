@@ -419,6 +419,23 @@ await t('member reads when a reminder was sent', 'allow', async () => { await ea
 await t('outsider sends a reminder', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'reminders', 'carol_bob'), { from: 'carol', to: 'bob', at: serverTimestamp() }));
 await t('guest sends a reminder', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'reminders', 'gus_bob'), { from: 'gus', to: 'bob', at: serverTimestamp() }));
 
+console.log('\nSaved exchange rates on expenses (#687)');
+const expense = (o = {}) => ({ date: '2026-11-02', vendor: 'Taxi', description: '', amount: 40, currency: 'USD', paidBy: 'Bob', splitAmong: 'All', category: '', addedByUid: 'bob', createdAt: 1, ...o });
+// Each test starts empty: write the expense first (rules off), then try the change.
+const onExpense = op => async () => {
+  await testEnv.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'trips', 'T', 'finance', 'r1'), expense({ rate: { to: 'THB', value: 33.67, on: '2026-11-02' } })));
+  return op();
+};
+await t('member adds an expense with its saved rate', 'allow', () => setDoc(doc(bob, 'trips', 'T', 'finance', 'r1'), expense({ rate: { to: 'THB', value: 33.67, on: '2026-11-02' } })));
+await t('member adds an expense in the trip currency, no rate', 'allow', () => setDoc(doc(bob, 'trips', 'T', 'finance', 'r2'), expense({ currency: 'THB' })));
+await t('member clears a saved rate (null)', 'allow', onExpense(() => updateDoc(doc(bob, 'trips', 'T', 'finance', 'r1'), { rate: null })));
+await t('saved rate of zero', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'finance', 'r3'), expense({ rate: { to: 'THB', value: 0, on: '2026-11-02' } })));
+await t('saved rate as text', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'finance', 'r3'), expense({ rate: { to: 'THB', value: '33', on: '2026-11-02' } })));
+await t('saved rate with an extra field', 'deny', onExpense(() => updateDoc(doc(bob, 'trips', 'T', 'finance', 'r1'), { rate: { to: 'THB', value: 33.67, on: '2026-11-02', by: 'bob' } })));
+await t('saved rate that is not a map', 'deny', onExpense(() => updateDoc(doc(bob, 'trips', 'T', 'finance', 'r1'), { rate: 33.67 })));
+await t('member still deletes an expense', 'allow', onExpense(() => deleteDoc(doc(bob, 'trips', 'T', 'finance', 'r1'))));
+await t('member still adds an itinerary item (no rate check outside finance)', 'allow', () => setDoc(doc(bob, 'trips', 'T', 'itinerary', 'r9'), { title: 'Stop', rate: 'n/a' }));
+
 console.log('\nSettling up (#666): the payer says they paid, the person owed confirms');
 const claim = (o = {}) => ({ from: 'bob', to: 'alice', amount: 40, currency: 'USD', app: 'venmo', at: serverTimestamp(), ...o });
 const claimed = () => testEnv.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'trips', 'T', 'payClaims', 'bob_alice'), { ...claim(), at: new Date() }));

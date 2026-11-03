@@ -1,4 +1,4 @@
-import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText } from './currency';
+import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText, lockRate, rateDay, needsNewRate } from './currency';
 
 // Frankfurter-style rates table: base = the "to" currency (here EUR), so
 // rates[X] = how many X per 1 EUR. EUR itself is implicitly 1.
@@ -105,5 +105,61 @@ describe('perCurrencyText', () => {
 
   it('shows zero in the trip currency when there is nothing', () => {
     expect(perCurrencyText([], 'EUR')).toBe('€0.00');
+  });
+});
+
+// #687: an expense keeps the rate for the date it's logged with, saved on it, so owed amounts never move.
+describe('lockRate', () => {
+  it('saves how many trip-currency units one unit of the expense currency is worth', () => {
+    // base THB: 1 THB = 0.0297 USD, so 1 USD = 33.67 THB
+    expect(lockRate('USD', 'THB', { USD: 0.0297 }, '2026-11-02')).toEqual({ to: 'THB', value: 1 / 0.0297, on: '2026-11-02' });
+  });
+  it('is null in the trip currency itself, or with no rate for that currency', () => {
+    expect(lockRate('THB', 'THB', { USD: 0.0297 }, '2026-11-02')).toBeNull();
+    expect(lockRate('VND', 'THB', { USD: 0.0297 }, '2026-11-02')).toBeNull();
+    expect(lockRate('USD', 'THB', null, '2026-11-02')).toBeNull();
+  });
+});
+
+describe('rateDay', () => {
+  const day = (iso: string) => new Date(iso + 'T12:00:00').getTime();
+  it('is the expense date when that has passed', () => {
+    expect(rateDay({ date: '2026-10-30', createdAt: day('2026-11-01') }, '2026-11-03')).toBe('2026-10-30');
+  });
+  it('is the day it was entered when the expense is dated ahead', () => {
+    expect(rateDay({ date: '2026-11-14', createdAt: day('2026-11-01') }, '2026-11-03')).toBe('2026-11-01');
+  });
+  it('is today for something dated today or entered today', () => {
+    expect(rateDay({ date: '2026-11-03', createdAt: day('2026-11-03') }, '2026-11-03')).toBe('2026-11-03');
+    expect(rateDay({ date: '2026-11-14', createdAt: day('2026-11-03') }, '2026-11-03')).toBe('2026-11-03');
+  });
+});
+
+describe('a saved rate wins', () => {
+  const rate = { to: 'EUR', value: 0.9, on: '2026-03-01' };
+  it('in convertShare: exact, whatever today\'s rates say', () => {
+    expect(convertShare(100, 'USD', '2026-03-01', { '2026-03-01': { USD: 1.5 } }, { USD: 2 }, 'EUR', rate))
+      .toEqual({ amount: 90, estimated: false });
+  });
+  it('in convertedTotal', () => {
+    const { total, missing } = convertedTotal([{ amount: 100, currency: 'USD', date: '2099-01-01', rate }], {}, 'EUR');
+    expect(total).toBeCloseTo(90, 6);
+    expect(missing).toBe(0);
+  });
+  it('is ignored once the trip\'s currency has changed', () => {
+    expect(convertShare(110, 'USD', '2026-03-01', { '2026-03-01': { USD: 1.10 } }, null, 'EUR', { ...rate, to: 'GBP' }).amount)
+      .toBeCloseTo(100, 6);
+  });
+});
+
+describe('needsNewRate', () => {
+  const before = { date: '2026-11-02', currency: 'USD' };
+  it('is the new date and currency when either changes', () => {
+    expect(needsNewRate(before, { date: '2026-11-01' })).toEqual({ date: '2026-11-01', currency: 'USD' });
+    expect(needsNewRate(before, { currency: 'EUR' })).toEqual({ date: '2026-11-02', currency: 'EUR' });
+  });
+  it('is null for any other edit, or when nothing really changed', () => {
+    expect(needsNewRate(before, { amount: 50 } as never)).toBeNull();
+    expect(needsNewRate(before, { date: '2026-11-02', currency: 'USD' })).toBeNull();
   });
 });
