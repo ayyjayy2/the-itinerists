@@ -58,9 +58,14 @@ counted in `_activity` as `type: 'offer'` with the partner id, shown in Pulse �
 
 ### Payment app links (not APIs)
 
-Finance's "Pay with" (#532) opens Venmo (`venmo.com/u/<name>?txn=pay&amount=…`, US dollars), PayPal
-(`paypal.me/<name>/<amount><currency>`) or Cash App (`cash.app/$<name>/<amount>`, dollars or pounds)
-with the amount filled in where the app takes that currency. Plain links that leave the app, so no
+Finance's "Pay now" (#532, #666) opens a pop-up of Venmo (`venmo.com/u/<name>?txn=pay&amount=…&note=…`,
+US dollars), PayPal (`paypal.me/<name>/<amount><currency>`) and Cash App (`cash.app/$<name>/<amount>`,
+dollars or pounds), for everyone you owe. The amount is converted at today's rate when the app doesn't
+take the trip's currency; only Venmo takes a note (the trip's name). With no handle saved, the app's own
+pay screen opens instead (`venmo.com/?txn=pay&amount=…&note=…`, `www.paypal.com/myaccount/transfer/homepage/pay`,
+`cash.app/`) and the payer picks the friend. "Mark as paid" writes `trips/{id}/payClaims/{from}_{to}`
+(amount, currency, app, server time); the items are ticked paid only when the person owed taps Got it,
+and either of them clears the claim. Plain links that leave the app, so no
 Content-Security-Policy entry; the app never calls them and never handles money. Each person's
 handles live on their profile and their member doc on each trip (`payHandles`, checked by the rules,
 built by `src/app/utils/pay-links.ts`). "Remind" writes `trips/{id}/reminders/{from}_{to}` (one a

@@ -160,6 +160,8 @@ export function seedDemo(store: MemoryStore): void {
     const entry: FinanceEntryDoc = { ...f, id: `fin-${i + 1}`, addedByUid: ALAYNA.uid, createdAt: at(60 + i) };
     store.set(trip('finance', entry.id), entry as unknown as DocData);
   });
+  // Theo says they paid Alayna back: the demo shows the person owed confirming it (#666).
+  store.set(trip('payClaims', `${THEO.uid}_${ALAYNA.uid}`), { from: THEO.uid, to: ALAYNA.uid, amount: 3112.5, currency: 'THB', app: 'cashapp', at: at(90) });
 
   // ── Recs ──────────────────────────────────────────────────────────────────
   const recs: Array<Omit<RecDoc, 'id' | 'addedByUid' | 'createdAt'>> = [

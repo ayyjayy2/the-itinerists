@@ -1,4 +1,4 @@
-import type { PayHandles } from '../utils/pay-links';
+import type { PayApp, PayHandles } from '../utils/pay-links';
 
 // ── User ──────────────────────────────────────────────────────────────────────
 
@@ -355,6 +355,20 @@ export interface AccommodationDoc {
 // ── Finance (shared) ──────────────────────────────────────────────────────────
 
 /** Stored in Firestore `financeEntries` collection — one doc per expense. */
+/**
+ * "I paid you" (#666): written by the payer when they tap Mark as paid, at
+ * trips/{id}/payClaims/{from}_{to}. The debt counts as settled only once the
+ * person owed confirms; either of them clears it.
+ */
+export interface PayClaimDoc {
+  from: string;       // payer uid
+  to: string;         // person owed (uid)
+  amount: number;     // in the trip's currency
+  currency: string;
+  app: PayApp;
+  at: unknown;        // server time
+}
+
 export interface FinanceEntryDoc {
   id: string;
   date: string;

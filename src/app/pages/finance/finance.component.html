@@ -65,18 +65,28 @@
                 <span class="net-working">({{ w }})</span>
               </div>
             }
-            <!-- A gentle nudge, once a day (#532) -->
+            <!-- A gentle nudge, once a day (#532), right under their line (#666) -->
             @if (canRemind(p.name)) {
-              <div class="pay-row">
+              <div class="pay-row" [class.pay-row-tight]="open">
                 <button type="button" class="pay-link" data-needs-account (click)="remind(p.name, p.amountHome)" [disabled]="reminding() === p.name">
                   {{ reminding() === p.name ? 'Sending a reminder…' : 'Remind ' + p.name }}
                 </button>
               </div>
             } @else if (remindedToday(p.name)) {
-              <div class="pay-row"><span class="pay-note">Reminded today</span></div>
+              <div class="pay-row" [class.pay-row-tight]="open"><span class="pay-note">Reminded today</span></div>
             }
           }
         </div>
+        <!-- They say they paid me: I confirm (#666) -->
+        @for (c of claimsToMe(); track c.from) {
+          <div class="pay-check" role="status">
+            <span class="pay-check-q">{{ c.name }} says they paid you {{ c.amount | number:'1.2-2' }} {{ c.currency }} with {{ c.appLabel }}</span>
+            <span class="pay-check-actions">
+              <button type="button" class="btn btn-sm pay-check-yes" data-needs-account (click)="confirmClaim(c)">Got it</button>
+              <button type="button" class="btn btn-sm pay-check-no" data-needs-account (click)="rejectClaim(c)">Not received</button>
+            </span>
+          </div>
+        }
         @if (remindError()) {<p class="field-error" role="alert">{{ remindError() }}</p>}
       </div>
     }
@@ -105,27 +115,26 @@
                 <span class="net-working">({{ w }})</span>
               </div>
             }
-            <!-- Pay them back in their payment app: a low-key hand-off (#532) -->
-            @let pays = payOptions(p.name, p.amountHome);
-            @if (pays.length) {
-              <div class="pay-row">
-                <span class="pay-note">Pay with</span>
-                @for (o of pays; track o.label) {
-                  <a class="pay-link" [href]="o.href" target="_blank" rel="noopener" (click)="onPay(p.name, p.amountHome)">{{ o.label }}</a>
-                }
-              </div>
-            }
+            <!-- Pay them back in a payment app: a low-key hand-off (#532, #666) -->
+            <div class="pay-row" [class.pay-row-tight]="open">
+              @if (waitingOn(p.name)) {
+                <span class="pay-note">Waiting for {{ p.name }} to confirm</span>
+              } @else {
+                <button type="button" class="pay-link" (click)="openPay(p.name, p.amountHome)">Pay now</button>
+              }
+            </div>
           }
         </div>
         @if (pendingPay(); as pp) {
           <div class="pay-check" role="status">
-            <span>Did you pay {{ pp.name }} {{ pp.amount | number:'1.2-2' }} {{ homeCurrency() }}?</span>
+            <span class="pay-check-q">Did you pay {{ pp.name }} {{ pp.amount | number:'1.2-2' }} {{ homeCurrency() }}?</span>
             <span class="pay-check-actions">
-              <button type="button" class="btn btn-primary btn-sm" data-needs-account (click)="settleWith(pp.name)">Mark as paid</button>
-              <button type="button" class="btn btn-ghost btn-sm" (click)="pendingPay.set(null)">Not yet</button>
+              <button type="button" class="btn btn-sm pay-check-yes" data-needs-account (click)="markPaid()">Mark as paid</button>
+              <button type="button" class="btn btn-sm pay-check-no" (click)="pendingPay.set(null)">Not yet</button>
             </span>
           </div>
         }
+        @if (payError()) {<p class="field-error" role="alert">{{ payError() }}</p>}
       </div>
     }
 
@@ -209,6 +218,28 @@
       <button data-needs-account #addBtnRef class="btn btn-primary btn-sm" (click)="startAdd()">+ Add</button>
     </div>
   </div>
+
+  <!-- ── Pay now: pick an app (#666) ── -->
+  @if (payFor(); as pf) {
+    <div class="modal-backdrop" (click)="payFor.set(null)">
+      <div class="modal-card card pay-sheet" role="dialog" aria-modal="true" [attr.aria-label]="'Pay ' + pf.name" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h4>Pay {{ pf.name }}</h4>
+          <button class="modal-close" (click)="payFor.set(null)" aria-label="Close">✕</button>
+        </div>
+        <div class="pay-summary">
+          <div class="pay-summary-row"><span class="pay-summary-label">Amount</span><span class="pay-summary-amount">{{ pf.amount | number:'1.2-2' }} <span class="b-code">{{ homeCurrency() }}</span></span></div>
+          @if (payNote()) {<div class="pay-summary-row"><span class="pay-summary-label">Note</span><span class="pay-summary-note">{{ payNote() }}</span></div>}
+        </div>
+        <div class="pay-with">Pay with</div>
+        @for (o of payOptions(pf.name, pf.amount); track o.app) {
+          <a class="btn btn-ghost pay-app" [href]="o.href" target="_blank" rel="noopener" (click)="choosePay(o.app)">
+            <span>{{ o.label }}</span><span aria-hidden="true">›</span>
+          </a>
+        }
+      </div>
+    </div>
+  }
 
   <!-- ── Add Expense Modal ── -->
   @if (showAddForm()) {

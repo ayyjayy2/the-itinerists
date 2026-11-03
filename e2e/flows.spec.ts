@@ -141,9 +141,9 @@ test('join from an invite link as a guest, then create an account to add somethi
   await expect(page.getByPlaceholder("What's happening?")).toBeVisible();
 });
 
-/** #532: pay someone back in their payment app, then mark it paid. Remind waits for the trip's last day (#664). */
-test('pay back from Finance and mark it paid; no Remind before the trip ends', async ({ page }) => {
-  await page.context().route(/venmo\.com|paypal\.me|cash\.app/, route => route.abort());   // never leave for the real apps
+/** #532, #666: Pay now opens the apps; Mark as paid waits for the person owed, who confirms. */
+test('pay back from Finance, then the person owed confirms', async ({ page }) => {
+  await page.context().route(/venmo\.com|paypal\.(me|com)|cash\.app/, route => route.abort());   // never leave for the real apps
   await page.goto('/finance');
   // Maya pays a big dinner for everyone, so I owe her overall.
   await page.getByRole('button', { name: '+ Add' }).click();
@@ -153,21 +153,35 @@ test('pay back from Finance and mark it paid; no Remind before the trip ends', a
   await page.getByRole('button', { name: 'Add Expense' }).click();
   const owe = page.locator('.banner-negative');
   await expect(owe.getByText('You still owe')).toBeVisible();
-  const venmo = owe.getByRole('link', { name: 'Venmo' }).first();
-  await expect(venmo).toHaveAttribute('href', /^https:\/\/venmo\.com\/u\/maya-demo\?txn=pay/);
-  await expect(venmo).toHaveAttribute('target', '_blank');
+
+  // Pay now: the amount and the trip as the note, then every app, Maya's handle where she added one.
+  await owe.getByRole('button', { name: 'Pay now' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Pay Maya' });
+  await expect(sheet.getByText('Chiang Mai, November')).toBeVisible();
+  const venmo = sheet.getByRole('link', { name: 'Venmo' });
+  await expect(venmo).toHaveAttribute('href', /^https:\/\/venmo\.com\/u\/maya-demo\?txn=pay.*note=Chiang\+Mai/);
+  await expect(sheet.getByRole('link', { name: 'PayPal' })).toHaveAttribute('href', /^https:\/\/paypal\.me\/mayademo\//);
+  await expect(sheet.getByRole('link', { name: 'Cash App' })).toHaveAttribute('href', 'https://cash.app/');   // no $cashtag saved
   const popup = page.waitForEvent('popup');
   await venmo.click();
   await (await popup).close();
+
+  // Back in the app: did you pay? Mark as paid waits for Maya.
   await expect(page.getByText(/Did you pay Maya/)).toBeVisible();
   await page.getByRole('button', { name: 'Mark as paid' }).click();
-  await expect(page.getByText(/Did you pay Maya/)).toHaveCount(0);
-  await expect(owe.locator('.banner-person-name', { hasText: 'Maya' })).toHaveCount(0);
+  await expect(owe.getByText('Waiting for Maya to confirm')).toBeVisible();
+  await expect(owe.getByRole('button', { name: 'Pay now' })).toHaveCount(0);
 
   // Before the trip's last day there's no Remind, and nothing announcing it (#664).
   const owed = page.locator('.banner-positive');
   await expect(owed.getByRole('button', { name: /^Remind / })).toHaveCount(0);
   await expect(owed.getByText(/send reminders/)).toHaveCount(0);
+
+  // Theo says they paid me: Got it settles it.
+  await expect(owed.getByText('Theo says they paid you 3,112.50 THB with Cash App')).toBeVisible();
+  await owed.getByRole('button', { name: 'Got it' }).click();
+  await expect(owed.getByText(/Theo says/)).toHaveCount(0);
+  await expect(owed.locator('.banner-person-name', { hasText: 'Theo' })).toHaveCount(0);
 });
 
 /** #664: reminding someone who owes you opens on the trip's last day. */

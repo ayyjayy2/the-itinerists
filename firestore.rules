@@ -560,6 +560,23 @@ service cloud.firestore {
         allow delete: if canEdit(tripId);
       }
 
+      // Settling up (#666): the payer says they paid ("Mark as paid"); the
+      // person owed confirms. One doc per pair, {from}_{to}, written by the
+      // payer; either of the two clears it (confirmed, not received, or taken back).
+      match /payClaims/{pair} {
+        allow read: if isMember(tripId);
+        allow create, update: if canEdit(tripId)
+          && request.resource.data.keys().hasOnly(['from', 'to', 'amount', 'currency', 'app', 'at'])
+          && request.resource.data.from == uid()
+          && request.resource.data.to is string
+          && pair == uid() + '_' + request.resource.data.to
+          && request.resource.data.amount is number && request.resource.data.amount > 0
+          && request.resource.data.currency is string && request.resource.data.currency.size() == 3
+          && request.resource.data.app in ['venmo', 'paypal', 'cashapp']
+          && request.resource.data.at == request.time;
+        allow delete: if canEdit(tripId) && (resource.data.from == uid() || resource.data.to == uid());
+      }
+
       match /packing/{ownerUid} {
         allow read:   if isMember(tripId) && ownerUid == uid();
         allow create, update: if canEdit(tripId) && ownerUid == uid();

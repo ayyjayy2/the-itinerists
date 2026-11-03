@@ -25,7 +25,7 @@ describe('FinanceComponent: expenses that leave people out', () => {
     finance = {
       entries: signal(entries), loaded: signal(true), paidItems: signal(new Set<string>()),
       updateEntry: jasmine.createSpy('updateEntry').and.resolveTo(), addEntry: jasmine.createSpy().and.resolveTo(),
-      deleteEntry: jasmine.createSpy().and.resolveTo(), togglePaidItem: jasmine.createSpy(), reminders: signal(new Map()),
+      deleteEntry: jasmine.createSpy().and.resolveTo(), togglePaidItem: jasmine.createSpy(), reminders: signal(new Map()), claims: signal(new Map()),
     };
     TestBed.configureTestingModule({
       imports: [FinanceComponent],
@@ -77,5 +77,88 @@ describe('FinanceComponent: expenses that leave people out', () => {
     (Array.from(el.querySelectorAll('.split-gap button')).find(b => b.textContent!.includes('Set amounts')) as HTMLButtonElement).click();
     expect(comp.editingEntryId()).toBe('car');
     expect(people.every(p => comp.editSplitMap[p.name])).toBeTrue();
+  });
+});
+
+// #666: Pay now for everyone you owe, and the person owed confirms before anything is settled.
+describe('FinanceComponent: settling up', () => {
+  const people = ['Maya', 'Theo'].map(name => ({ uid: name, name, color: '#8BAF7C', avatarEmoji: '🙂' }));
+  const entry = (paidBy: string): FinanceEntryDoc => ({
+    id: 'dinner', date: '2026-09-14', vendor: 'Dinner', description: '', amount: 60, currency: 'USD', paidBy,
+    splitAmong: 'Maya, Theo', category: '', addedByUid: paidBy, createdAt: 1,
+  } as FinanceEntryDoc);
+  let finance: Record<string, any>;
+
+  function create(paidBy: string, claims = new Map<string, unknown>()) {
+    finance = {
+      entries: signal([entry(paidBy)]), loaded: signal(true), paidItems: signal(new Set<string>()),
+      updateEntry: jasmine.createSpy().and.resolveTo(), addEntry: jasmine.createSpy().and.resolveTo(),
+      deleteEntry: jasmine.createSpy().and.resolveTo(), togglePaidItem: jasmine.createSpy('togglePaidItem'),
+      markAllPaid: jasmine.createSpy('markAllPaid'), reminders: signal(new Map()), claims: signal(claims),
+      claimPaid: jasmine.createSpy('claimPaid').and.resolveTo(), clearClaim: jasmine.createSpy('clearClaim').and.resolveTo(),
+    };
+    TestBed.configureTestingModule({
+      imports: [FinanceComponent],
+      providers: [
+        provideRouter([]),
+        { provide: FinanceService, useValue: finance },
+        { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), isAdmin: () => false } },
+        { provide: UsersService, useValue: { tripUsers: () => people } },
+        { provide: TripService, useValue: {
+          activeTrip: signal({ id: 't', name: 'Lisbon', currency: 'USD' }), ready: signal(true),
+          activeMembers: signal([{ uid: 'Maya', displayName: 'Maya' }, { uid: 'Theo', displayName: 'Theo' }]),
+        } },
+        { provide: ExchangeRateService, useValue: { ratesFor: () => Promise.resolve(null) } },
+        { provide: FocusService, useValue: { id: signal(null), clear: () => {} } },
+      ],
+    });
+    const fixture = TestBed.createComponent(FinanceComponent);
+    fixture.detectChanges();
+    return { fixture, comp: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+  }
+
+  it('offers Pay now even when the person owed has no payment app, with every app in the pop-up', () => {
+    const { fixture, el } = create('Theo');
+    const payNow = Array.from(el.querySelectorAll('.banner-negative button')).find(b => b.textContent!.trim() === 'Pay now') as HTMLButtonElement;
+    expect(payNow).withContext('Pay now').toBeTruthy();
+    payNow.click();
+    fixture.detectChanges();
+    const links = Array.from(el.querySelectorAll<HTMLAnchorElement>('.pay-sheet a.pay-app'));
+    expect(links.map(a => a.textContent!.replace('›', '').trim())).toEqual(['Venmo', 'PayPal', 'Cash App']);
+    expect(links[0].getAttribute('href')).toBe('https://venmo.com/?txn=pay&amount=30.00&note=Lisbon');
+  });
+
+  it('Mark as paid tells the person owed instead of settling it', async () => {
+    const { comp } = create('Theo');
+    comp.openPay('Theo', 30);
+    comp.choosePay('venmo');
+    await comp.markPaid();
+    expect(finance['claimPaid']).toHaveBeenCalledWith({ uid: 'Theo' }, 30, 'venmo');
+    expect(finance['markAllPaid']).not.toHaveBeenCalled();
+    expect(comp.pendingPay()).toBeNull();
+  });
+
+  it('shows "waiting to confirm" once I have said I paid', () => {
+    const { el } = create('Theo', new Map([['Maya_Theo', { from: 'Maya', to: 'Theo', amount: 30, currency: 'USD', app: 'venmo' }]]));
+    expect(el.querySelector('.banner-negative')!.textContent).toContain('Waiting for Theo to confirm');
+    expect(el.querySelector('.banner-negative')!.textContent).not.toContain('Pay now');
+  });
+
+  it('the person owed confirms: Got it settles and clears the claim', async () => {
+    const { el } = create('Maya', new Map([['Theo_Maya', { from: 'Theo', to: 'Maya', amount: 30, currency: 'USD', app: 'cashapp' }]]));
+    const box = el.querySelector('.banner-positive .pay-check')!;
+    expect(box.textContent!.replace(/\s+/g, ' ')).toContain('Theo says they paid you 30.00 USD with Cash App');
+    (Array.from(box.querySelectorAll('button')).find(b => b.textContent!.includes('Got it')) as HTMLButtonElement).click();
+    await Promise.resolve();
+    expect(finance['markAllPaid']).toHaveBeenCalled();
+    expect(finance['clearClaim']).toHaveBeenCalledWith('Theo', 'Maya');
+  });
+
+  it('Not received clears the claim without settling', async () => {
+    const { el } = create('Maya', new Map([['Theo_Maya', { from: 'Theo', to: 'Maya', amount: 30, currency: 'USD', app: 'cashapp' }]]));
+    (Array.from(el.querySelectorAll('.banner-positive .pay-check button')).find(b => b.textContent!.includes('Not received')) as HTMLButtonElement).click();
+    await Promise.resolve();
+    expect(finance['clearClaim']).toHaveBeenCalledWith('Theo', 'Maya');
+    expect(finance['markAllPaid']).not.toHaveBeenCalled();
   });
 });
