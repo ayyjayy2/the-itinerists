@@ -12,10 +12,10 @@ describe('ViewComponent: Save as PDF', () => {
   const view = { tripName: 'Chiang Mai, November', dates: '', places: [], people: [], flights: { departures: [], returns: [] }, days: [], stays: [] };
 
   function create() {
-    calls = [];
+    const log: string[] = calls = [];   // each test's own log: a print left over from another can't add to it
     const connection = {
-      pause: jasmine.createSpy('pause').and.callFake(async () => { calls.push('pause'); }),
-      resume: jasmine.createSpy('resume').and.callFake(async () => { calls.push('resume'); }),
+      pause: jasmine.createSpy('pause').and.callFake(async () => { log.push('pause'); }),
+      resume: jasmine.createSpy('resume').and.callFake(async () => { log.push('resume'); }),
     };
     TestBed.configureTestingModule({
       imports: [ViewComponent],
@@ -28,18 +28,20 @@ describe('ViewComponent: Save as PDF', () => {
     });
     const fixture = TestBed.createComponent(ViewComponent);
     fixture.detectChanges();
-    spyOn(window, 'print').and.callFake(() => { calls.push('print'); });
+    spyOn(window, 'print').and.callFake(() => { log.push('print'); });
     return { fixture, comp: fixture.componentInstance, el: fixture.nativeElement as HTMLElement, connection };
   }
   const button = (el: HTMLElement) => el.querySelector<HTMLButtonElement>('.view-pdf')!;
 
-  it('shows it is working straight away, with a note that it can take a minute', () => {
+  it('shows it is working straight away, with a note that it can take a minute', async () => {
     const { fixture, comp, el } = create();
-    void comp.savePdf();
+    const printing = comp.savePdf();
     fixture.detectChanges();
     expect(button(el).textContent).toContain('Preparing PDF');
     expect(button(el).disabled).toBeTrue();
     expect(el.querySelector('.view-pdf-note')!.textContent).toContain('can take a minute');
+    await printing;
+    window.dispatchEvent(new Event('afterprint'));   // finish, so nothing carries into the next test
   });
 
   it('closes the live connection before printing, and reopens it afterwards', async () => {
@@ -59,5 +61,6 @@ describe('ViewComponent: Save as PDF', () => {
     connection.pause.and.rejectWith(new Error('offline'));
     await comp.savePdf();
     expect(window.print).toHaveBeenCalled();
+    window.dispatchEvent(new Event('afterprint'));
   });
 });
