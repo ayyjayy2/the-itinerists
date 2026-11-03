@@ -34,7 +34,7 @@ import { effectivePins } from '../../utils/pins';
 import { activityText as activityLine, timeAgo as agoOf } from '../../utils/activity';
 import { effectiveHomeLayout } from '../../utils/layout';
 import { flightMomentsForUid } from '../../utils/flight-events';
-import { pickFirstUp } from '../../utils/first-up';
+import { pickFirstUp, firstUpPassed } from '../../utils/first-up';
 import { normalizeTime } from '../../utils/time-format';
 import { weatherLabel } from '../../utils/weather-label';
 import { needsRecoveryEmail, maskEmail } from '../../utils/email';
@@ -337,7 +337,8 @@ export class HomeComponent implements OnInit, OnDestroy {
    * hand-typed time when the Flights page knows better. An event stays
    * "first up" until it finishes, then the card rolls to the next one.
    * Events with no time hold for their whole day. When everything has
-   * passed, we fall back to the last event.
+   * passed, we fall back to the last event, which the card never calls
+   * "First up" (#535).
    */
   readonly firstUp = computed(() => {
     const uid  = this.currentUser()?.uid ?? '';
@@ -498,11 +499,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     switch (key) {
       case 'itinerary': {
         const e = this.firstUp();
-        return e
-          ? { key, path, icon: 'itinerary', tone: 'sage', title: `First up: ${e.activity}`, titleClass: '',
-              lines: [this.firstUpWhen() + (e.location ? ` · ${e.location}` : '')] }
-          : { key, path, icon: 'itinerary', tone: 'sage', title: 'Plan your itinerary', titleClass: '',
-              lines: ['Add your first event, day by day'] };
+        if (!e) return { key, path, icon: 'itinerary', tone: 'sage', title: 'Plan your itinerary', titleClass: '',
+                         lines: ['Add your first event, day by day'] };
+        const when = this.firstUpWhen() + (e.location ? ` · ${e.location}` : '');
+        // Everything has passed (#535): after the trip it was the last plan; during it, nothing is next yet.
+        if (firstUpPassed(e, this.now(), this.tripZone())) {
+          const end = this.activeTrip()?.endDate;
+          return end && localTodayISO(new Date(this.now()), this.tripZone()) > end
+            ? { key, path, icon: 'itinerary', tone: 'sage', title: `Last plan: ${e.activity}`, titleClass: '', lines: [when] }
+            : { key, path, icon: 'itinerary', tone: 'sage', title: 'Nothing else planned yet', titleClass: '',
+                lines: ["Add what's next, day by day"] };
+        }
+        return { key, path, icon: 'itinerary', tone: 'sage', title: `First up: ${e.activity}`, titleClass: '', lines: [when] };
       }
       case 'finance': {
         const net = this.financeNet();

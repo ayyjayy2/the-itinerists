@@ -119,3 +119,9 @@ export function pickFirstUp(
   if (isNaN(ms) || isNaN(fs)) return manual; // untimed manual holds its day; untimed flight defers
   return fs <= ms ? flight : manual;
 }
+
+/** True once the picked entry has finished: `pickFirstUp` falls back to the last entry when
+ *  everything has passed, and that must not be shown as "First up" (#535). */
+export function firstUpPassed(e: FirstUpEntry, nowMs: number, zone?: string): boolean {
+  return entryCutoffMs(e, zone) < nowMs;
+}

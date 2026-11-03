@@ -1,4 +1,4 @@
-import { parseTimeString, entryCutoffMs, pickFirstUp, FirstUpEntry } from './first-up';
+import { parseTimeString, entryCutoffMs, pickFirstUp, firstUpPassed, FirstUpEntry } from './first-up';
 import { FlightMoment, flightMomentsForUid } from './flight-events';
 
 const at = (date: string, h: number, min = 0) => new Date(`${date}T00:00`).setHours(h, min);
@@ -153,5 +153,21 @@ describe('pickFirstUp ignores hand-typed copies of a real flight', () => {
   it('keeps a flight-like item on a day with no real flight', () => {
     const taxi = { ...land, date: '2026-10-02', activity: 'Taxi to the airport' };
     expect(pickFirstUp([taxi], flights, Date.UTC(2026, 9, 2, 8, 0), 'Europe/Lisbon')?.activity).toBe('Taxi to the airport');
+  });
+});
+
+// #535: Home called the last, already-finished event "First up" after the trip.
+describe('firstUpPassed', () => {
+  it('is true only once the picked event has finished', () => {
+    const dinner = item({ activity: 'Farewell dinner', time: '7:00 PM', endTime: '9:00 PM' });
+    expect(firstUpPassed(dinner, at('2026-09-24', 20))).toBeFalse();
+    expect(firstUpPassed(dinner, at('2026-09-24', 21, 1))).toBeTrue();
+    expect(firstUpPassed(item({}), at('2026-09-24', 23))).toBeFalse();   // untimed: holds the whole day
+    expect(firstUpPassed(item({}), at('2026-09-25', 0, 1))).toBeTrue();
+  });
+  it('reads the time in the trip zone when given', () => {
+    const dinner = item({ activity: 'Farewell dinner', time: '7:00 PM' });
+    expect(firstUpPassed(dinner, Date.UTC(2026, 8, 24, 11, 59), 'Asia/Bangkok')).toBeFalse();
+    expect(firstUpPassed(dinner, Date.UTC(2026, 8, 24, 12, 1), 'Asia/Bangkok')).toBeTrue();
   });
 });
