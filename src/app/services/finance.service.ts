@@ -1,13 +1,13 @@
 import { Injectable, signal, inject, Injector, runInInjectionContext, effect, computed } from '@angular/core';
 import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, serverTimestamp, Unsubscribe } from '@angular/fire/firestore';
-import { FinanceEntryDoc } from '../models/trip.models';
+import { FinanceEntryDoc, PayClaimDoc } from '../models/trip.models';
 import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
 import { TripService } from './trip.service';
 import { TripEventsService } from './trip-events.service';
 import { financeAdded, financeChanged, financeRemoved } from '../utils/event-text';
 import { markId, paidKey, parsePaidKey, ticksToShare } from '../utils/paid-marks';
-import { reminderText } from '../utils/pay-links';
+import { PayApp, reminderText } from '../utils/pay-links';
 
 // Where ticks lived before they were shared with the trip (#448); moved to the trip once, then removed.
 const PAID_PREFIX = 'tripplanner_paid_items_';
@@ -32,6 +32,9 @@ export class FinanceService {
   /** When each pay-back reminder was last sent (#532), by pair "{from}_{to}" uids. */
   private _reminders = signal<ReadonlyMap<string, number>>(new Map());
   readonly reminders = this._reminders.asReadonly();
+  /** Payments someone says they've made, waiting for the person owed to confirm (#666), by pair "{from}_{to}". */
+  private _claims = signal<ReadonlyMap<string, PayClaimDoc>>(new Map());
+  readonly claims = this._claims.asReadonly();
 
   readonly entries   = this._entries.asReadonly();
   readonly paidItems = this._paidItems.asReadonly();
@@ -44,6 +47,7 @@ export class FinanceService {
   private unsub?: Unsubscribe;
   private unsubPaid?: Unsubscribe;
   private unsubReminders?: Unsubscribe;
+  private unsubClaims?: Unsubscribe;
 
   constructor() {
     effect(() => {
@@ -51,6 +55,7 @@ export class FinanceService {
       this.subscribe(tripId);
       this.subscribePaid(tripId);
       this.subscribeReminders(tripId);
+      this.subscribeClaims(tripId);
     });
   }
 
@@ -195,6 +200,33 @@ export class FinanceService {
       kind: 'finance', action: 'reminded', itemId: `remind-${to.uid}`, path: '/finance', targetUid: to.uid,
       summary: reminderText(me.name, amount, this.currency()), audience: [to.uid],
     }, tid);
+  }
+
+  private subscribeClaims(tripId: string | null): void {
+    this.unsubClaims?.(); this.unsubClaims = undefined;
+    this._claims.set(new Map());
+    if (!tripId) return;
+    runInInjectionContext(this.injector, () => {
+      this.unsubClaims = onSnapshot(collection(this.firestore, 'trips', tripId, 'payClaims'), snap => {
+        this._claims.set(new Map(snap.docs.map(d => [d.id, d.data() as PayClaimDoc])));
+      }, err => console.warn('[FinanceService] pay claims:', err.message));
+    });
+  }
+
+  /** "Mark as paid" (#666): tell the person owed I paid them; it settles when they confirm. */
+  async claimPaid(to: { uid: string }, amount: number, app: PayApp): Promise<void> {
+    const tid = this.requireTrip();
+    const me = this.userService.currentUser();
+    if (!me?.uid) throw new Error('Sign in to mark a payment.');
+    await runInInjectionContext(this.injector, () =>
+      setDoc(doc(this.firestore, 'trips', tid, 'payClaims', `${me.uid}_${to.uid}`),
+        { from: me.uid, to: to.uid, amount, currency: this.currency(), app, at: serverTimestamp() }));
+  }
+
+  /** Clear a claim: the person owed confirmed it or didn't get it, or the payer took it back. */
+  async clearClaim(from: string, to: string): Promise<void> {
+    const tid = this.requireTrip();
+    await runInInjectionContext(this.injector, () => deleteDoc(doc(this.firestore, 'trips', tid, 'payClaims', `${from}_${to}`)));
   }
 
   private requireTrip(): string {

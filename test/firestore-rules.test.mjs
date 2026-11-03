@@ -419,6 +419,22 @@ await t('member reads when a reminder was sent', 'allow', async () => { await ea
 await t('outsider sends a reminder', 'deny', () => setDoc(doc(carol, 'trips', 'T', 'reminders', 'carol_bob'), { from: 'carol', to: 'bob', at: serverTimestamp() }));
 await t('guest sends a reminder', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'reminders', 'gus_bob'), { from: 'gus', to: 'bob', at: serverTimestamp() }));
 
+console.log('\nSettling up (#666): the payer says they paid, the person owed confirms');
+const claim = (o = {}) => ({ from: 'bob', to: 'alice', amount: 40, currency: 'USD', app: 'venmo', at: serverTimestamp(), ...o });
+const claimed = () => testEnv.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'trips', 'T', 'payClaims', 'bob_alice'), { ...claim(), at: new Date() }));
+await t('payer says they paid the person they owe', 'allow', () => setDoc(doc(bob, 'trips', 'T', 'payClaims', 'bob_alice'), claim()));
+await t('payment claimed in someone else\'s name', 'deny', () => setDoc(doc(alice, 'trips', 'T', 'payClaims', 'bob_alice'), claim()));
+await t('payment claim under the wrong pair', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'payClaims', 'bob_carol'), claim()));
+await t('payment claim with no amount', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'payClaims', 'bob_alice'), claim({ amount: 0 })));
+await t('payment claim with an unknown app', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'payClaims', 'bob_alice'), claim({ app: 'cash' })));
+await t('payment claim with an extra field', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'payClaims', 'bob_alice'), claim({ note: 'hi' })));
+await t('payment claim with a client time', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'payClaims', 'bob_alice'), claim({ at: new Date(0) })));
+await t('person owed reads the claim', 'allow', async () => { await claimed(); return getDoc(doc(alice, 'trips', 'T', 'payClaims', 'bob_alice')); });
+await t('person owed confirms (clears the claim)', 'allow', async () => { await claimed(); return deleteDoc(doc(alice, 'trips', 'T', 'payClaims', 'bob_alice')); });
+await t('payer takes the claim back', 'allow', async () => { await claimed(); return deleteDoc(doc(bob, 'trips', 'T', 'payClaims', 'bob_alice')); });
+await t('outsider reads a claim', 'deny', async () => { await claimed(); return getDoc(doc(carol, 'trips', 'T', 'payClaims', 'bob_alice')); });
+await t('guest claims a payment', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'payClaims', 'gus_alice'), claim({ from: 'gus' })));
+
 console.log('\nShared trip views (#611): a read-only page for people at home');
 const shareOn = (token = 'TOK1') => testEnv.withSecurityRulesDisabled(ctx => updateDoc(doc(ctx.firestore(), 'trips', 'T'), { shareToken: token }));
 const shareDoc = (o = {}) => ({ tripId: 'T', view: { v: 1, tripName: 'Trip' }, updatedAt: serverTimestamp(), ...o });

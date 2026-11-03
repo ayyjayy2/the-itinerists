@@ -22,7 +22,7 @@ import { FocusService } from '../../services/focus.service';
 import { safeLink } from '../../utils/safe-link';
 import { leftOutOfSplit, splitPatch } from '../../utils/split-gaps';
 import { paidKey } from '../../utils/paid-marks';
-import { PAY_APPS, canRemind, payLink, remindersOpen } from '../../utils/pay-links';
+import { PAY_APPS, PayApp, canRemind, payAmount, payLink, remindersOpen } from '../../utils/pay-links';
 import { localTodayISO, tripZone } from '../../utils/trip-destinations';
 
 /**
@@ -318,24 +318,79 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       isPaid:        (from, to, id) => this.isItemPaid(from, to, id),
     }));
 
-  // ── Paying back (#532) ────────────────────────────────────────────────────────
-  // A low-key hand-off: "Pay" opens the other person's payment app with the
-  // amount filled in; the app never handles money. The person owed can send
-  // one gentle reminder a day. After a Pay tap the page asks whether to mark
-  // it paid, and never assumes.
+  // ── Paying back (#532, #666) ─────────────────────────────────────────────────
+  // A low-key hand-off: "Pay now" opens a pop-up of payment apps, each link
+  // carrying what its app allows (the amount, and on Venmo the trip as the
+  // note); the app never handles money. Coming back, the page asks whether to
+  // mark it paid, and never assumes. Mark as paid tells the person owed, who
+  // confirms; only then are the items ticked paid.
   private memberByName = computed(() => new Map(this.tripService.activeMembers().map(m => [m.displayName, m])));
+  private memberByUid = computed(() => new Map(this.tripService.activeMembers().map(m => [m.uid, m])));
 
-  /** The payment apps `name` has added, as links paying them `amount` (trip currency). */
-  payOptions(name: string, amount: number): { label: string; href: string }[] {
+  /** The note payment links carry: the trip's name. */
+  readonly payNote = computed(() => this.tripService.activeTrip()?.name ?? '');
+
+  /** Every payment app, as a link paying `name` `amount` (trip currency); their handle when they've added one. */
+  payOptions(name: string, amount: number): { app: PayApp; label: string; href: string }[] {
     const handles = this.memberByName().get(name)?.payHandles ?? {};
-    const note = this.tripService.activeTrip()?.name ?? '';
-    return PAY_APPS.filter(a => handles[a.app])
-      .map(a => ({ label: a.label, href: payLink(a.app, handles[a.app]!, amount, this.homeCurrency(), note) }));
+    return PAY_APPS.map(a => {
+      const send = payAmount(a.app, amount, this.homeCurrency(), this.latestRates());
+      return { app: a.app, label: a.label, href: payLink(a.app, handles[a.app] ?? '', send?.amount ?? 0, send?.currency ?? '', this.payNote()) };
+    });
   }
 
-  /** Who the page is asking "did you pay?" about, after a Pay tap. */
-  readonly pendingPay = signal<{ name: string; amount: number } | null>(null);
-  onPay(name: string, amount: number): void { this.pendingPay.set({ name, amount }); }
+  /** Who the "Pay now" pop-up is for. */
+  readonly payFor = signal<{ name: string; amount: number } | null>(null);
+  openPay(name: string, amount: number): void { this.payFor.set({ name, amount }); }
+
+  /** Who the page is asking "did you pay?" about, after picking an app. Not yet closes it; Pay now asks again. */
+  readonly pendingPay = signal<{ name: string; amount: number; app: PayApp } | null>(null);
+  choosePay(app: PayApp): void {
+    const pf = this.payFor();
+    if (pf) this.pendingPay.set({ ...pf, app });
+    this.payFor.set(null);
+  }
+
+  readonly payError = signal('');
+  /** Mark as paid: tell the person owed, who confirms (#666). */
+  async markPaid(): Promise<void> {
+    const pp = this.pendingPay(), them = pp && this.memberByName().get(pp.name);
+    if (!pp || !them) return;
+    this.payError.set('');
+    try {
+      await this.financeService.claimPaid({ uid: them.uid }, pp.amount, pp.app);
+      this.pendingPay.set(null);
+    } catch {
+      this.payError.set("Couldn't mark it paid. Check your connection and try again.");
+    }
+  }
+
+  /** I've told `name` I paid them, and they haven't confirmed yet. */
+  waitingOn(name: string): boolean {
+    const me = this.currentUser()?.uid, them = this.memberByName().get(name)?.uid;
+    return !!me && !!them && this.financeService.claims().has(`${me}_${them}`);
+  }
+
+  /** People who say they paid me, waiting for me to confirm. */
+  readonly claimsToMe = computed(() => {
+    const me = this.currentUser()?.uid;
+    if (!me) return [];
+    return [...this.financeService.claims().values()]
+      .filter(c => c.to === me && this.memberByUid().has(c.from))
+      .map(c => ({ ...c, name: this.memberByUid().get(c.from)!.displayName,
+        appLabel: PAY_APPS.find(a => a.app === c.app)?.label ?? c.app }));
+  });
+  private claimFrom(name: string): boolean { return this.claimsToMe().some(c => c.name === name); }
+
+  /** Got it: tick everything between us paid, then clear the claim. */
+  async confirmClaim(c: { from: string; name: string }): Promise<void> {
+    this.settleWith(c.name);
+    await this.financeService.clearClaim(c.from, this.currentUser()?.uid ?? '').catch(() => {/* the ticks already show it settled */});
+  }
+  /** Not received: back on their list. */
+  async rejectClaim(c: { from: string }): Promise<void> {
+    await this.financeService.clearClaim(c.from, this.currentUser()?.uid ?? '').catch(() => {/* try again from the box */});
+  }
 
   /** Settle up with `name`: every unpaid item between us, both ways, ticked paid. */
   settleWith(name: string): void {
@@ -347,15 +402,16 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pendingPay.set(null);
   }
 
-  /** Whether I can remind `name` today (they're on the trip, and no reminder in the last day). */
   /** Remind waits for the trip's last day, in the trip's zone (#664). */
   readonly remindOpen = computed(() => {
     const trip = this.tripService.activeTrip();
     return !trip || remindersOpen(trip.endDate, localTodayISO(new Date(), tripZone(trip)));
   });
+  /** Whether I can remind `name` today: they're on the trip, it's the last day or later,
+   *  no reminder in the last day, and they haven't just said they paid. */
   canRemind(name: string): boolean {
     const me = this.currentUser()?.uid, them = this.memberByName().get(name)?.uid;
-    if (!me || !them || !this.remindOpen()) return false;
+    if (!me || !them || !this.remindOpen() || this.claimFrom(name)) return false;
     return canRemind(this.financeService.reminders().get(`${me}_${them}`), Date.now());
   }
   /** I reminded `name` within the last day (the rules allow one a day). */

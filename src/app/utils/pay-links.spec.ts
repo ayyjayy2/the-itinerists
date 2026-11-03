@@ -1,4 +1,4 @@
-import { canRemind, cleanHandles, remindersOpen, normalizeHandle, payLink, reminderText, REMINDER_GAP_MS } from './pay-links';
+import { canRemind, cleanHandles, remindersOpen, normalizeHandle, payAmount, payLink, reminderText, REMINDER_GAP_MS } from './pay-links';
 
 describe('pay-links (#532)', () => {
   it('tidies typed handles and pasted profile links', () => {
@@ -23,6 +23,22 @@ describe('pay-links (#532)', () => {
     expect(payLink('paypal', 'maya', 12.5, 'EUR')).toBe('https://paypal.me/maya/12.50EUR');
     expect(payLink('cashapp', 'maya', 40, 'GBP')).toBe('https://cash.app/$maya/40.00');
     expect(payLink('cashapp', 'maya', 40, 'THB')).toBe('https://cash.app/$maya');
+  });
+
+  it('opens the app’s own pay screen when the friend has no handle saved (#666)', () => {
+    expect(payLink('venmo', '', 40, 'USD', 'Chiang Mai')).toBe('https://venmo.com/?txn=pay&amount=40.00&note=Chiang+Mai');
+    expect(payLink('paypal', '', 40, 'EUR')).toBe('https://www.paypal.com/myaccount/transfer/homepage/pay');
+    expect(payLink('cashapp', '', 40, 'USD')).toBe('https://cash.app/');
+  });
+
+  it('converts the amount to a currency the app takes (#666)', () => {
+    const rates = { USD: 0.0286, GBP: 0.0221 };   // per 1 THB
+    expect(payAmount('paypal', 6160, 'THB', rates)).toEqual({ amount: 6160, currency: 'THB' });
+    expect(payAmount('venmo', 40, 'USD', rates)).toEqual({ amount: 40, currency: 'USD' });
+    expect(payAmount('venmo', 6160, 'THB', rates)).toEqual({ amount: 176.18, currency: 'USD' });
+    expect(payAmount('cashapp', 6160, 'THB', rates)).toEqual({ amount: 176.18, currency: 'USD' });
+    expect(payAmount('cashapp', 30, 'GBP', rates)).toEqual({ amount: 30, currency: 'GBP' });
+    expect(payAmount('venmo', 6160, 'THB', null)).toBeNull();   // no rate yet: the app opens without an amount
   });
 
   it('words the reminder from the payer’s side', () => {

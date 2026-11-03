@@ -1,4 +1,5 @@
 import { money } from './event-text';
+import type { Rates } from './currency';
 
 /**
  * Paying someone back (#532): each person may add their handle for a payment
@@ -45,11 +46,29 @@ export function cleanHandles(raw: Partial<Record<PayApp, string>>): PayHandles {
   return out;
 }
 
+/** The currencies each app can be paid in, preferred first; empty means any (#666). */
+const APP_CURRENCIES: Record<PayApp, readonly string[]> = { venmo: ['USD'], paypal: [], cashapp: ['USD', 'GBP'] };
+
+/**
+ * What to send with `app` (#666): the trip's own amount when the app takes
+ * that currency, else the amount converted to the app's currency with `rates`
+ * (base = the trip's currency, so rates[X] = X per 1 trip unit). Null when
+ * there's no rate yet: the app then opens without an amount.
+ */
+export function payAmount(app: PayApp, amount: number, currency: string, rates: Rates | null): { amount: number; currency: string } | null {
+  const cur = currency.toUpperCase();
+  const takes = APP_CURRENCIES[app];
+  if (!takes.length || takes.includes(cur)) return { amount, currency: cur };
+  const to = takes[0], rate = rates?.[to];
+  return rate ? { amount: Math.round(amount * rate * 100) / 100, currency: to } : null;
+}
+
 /**
  * The link that opens `app` to pay `handle`. The amount is filled in where
  * the app takes it in that currency (Venmo: US dollars; Cash App: US dollars
- * or pounds; PayPal: any); otherwise the link opens their page and the payer
- * types it.
+ * or pounds; PayPal: any; see payAmount); only Venmo takes a note. With no
+ * handle saved the app's own pay screen opens and the payer picks the friend
+ * (only Venmo can still carry the amount and note).
  */
 export function payLink(app: PayApp, handle: string, amount: number, currency: string, note = ''): string {
   const h = encodeURIComponent(handle);
@@ -60,11 +79,13 @@ export function payLink(app: PayApp, handle: string, amount: number, currency: s
       const q = new URLSearchParams({ txn: 'pay' });
       if (amt && cur === 'USD') q.set('amount', amt);
       if (note) q.set('note', note);
-      return `https://venmo.com/u/${h}?${q}`;
+      return handle ? `https://venmo.com/u/${h}?${q}` : `https://venmo.com/?${q}`;
     }
     case 'paypal':
+      if (!handle) return 'https://www.paypal.com/myaccount/transfer/homepage/pay';
       return `https://paypal.me/${h}${amt ? `/${amt}${encodeURIComponent(cur)}` : ''}`;
     case 'cashapp':
+      if (!handle) return 'https://cash.app/';
       return `https://cash.app/$${h}${amt && (cur === 'USD' || cur === 'GBP') ? `/${amt}` : ''}`;
   }
 }
