@@ -9,15 +9,17 @@ import { LocalCacheService } from '../../services/local-cache.service';
 
 describe('LoginComponent', () => {
   let auth: jasmine.SpyObj<AuthService>;
+  let user: { sessionEnded: ReturnType<typeof signal<boolean>>; signInStalled: ReturnType<typeof signal<boolean>> };
 
   beforeEach(() => {
+    user = { sessionEnded: signal(false), signInStalled: signal(false) };
     auth = jasmine.createSpyObj('AuthService', ['login']);
     TestBed.configureTestingModule({
       imports: [LoginComponent],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: auth },
-        { provide: UserService, useValue: { sessionEnded: signal(false) } },
+        { provide: UserService, useValue: user },
         { provide: TripService, useValue: {} },
         { provide: LocalCacheService, useValue: { recoverIfBroken: () => false } },
       ],
@@ -29,6 +31,14 @@ describe('LoginComponent', () => {
     fixture.detectChanges();
     return { fixture, comp: fixture.componentInstance };
   }
+
+  // #703: sign-in gave up waiting for the account; say what happened, once.
+  it('says so when the last sign-in couldn\'t reach the account', () => {
+    user.signInStalled.set(true);
+    const { fixture } = create();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.auth-notice')!.textContent).toContain("couldn't reach your account");
+    expect(user.signInStalled()).toBeFalse();
+  });
 
   it('asks for an email', () => {
     const { fixture } = create();

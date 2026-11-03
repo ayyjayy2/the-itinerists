@@ -33,6 +33,10 @@ export const appConfig: ApplicationConfig = {
       // survive reloads/crashes, then auto-sync on reconnect. Cold-start offline
       // still shows last-synced data. Multi-tab manager keeps tabs consistent.
       localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      // In the iPhone app's web view the streaming connection could stall after
+      // sign-in, leaving it on "Signing in…" until a refresh (#703). Long polling
+      // is Firebase's advice for embedded web views.
+      ...(NATIVE ? { experimentalForceLongPolling: true } : {}),
     })),
     provideStorage(() => getStorage()),
     // Crashlytics: live in the native shell, inert on the web (see CrashReporterService).

@@ -13,6 +13,9 @@ import { userMessage, isBrokenLocalCacheError, isTooManyAttempts, TOO_MANY_ATTEM
 import { LocalCacheService } from '../../services/local-cache.service';
 import { SESSION_EXPIRED_MESSAGE } from '../../utils/session';
 
+/** Sign-in couldn't load the account in time (#703). */
+export const SIGN_IN_STALLED_MESSAGE = "We couldn't reach your account just now. Check your connection, then sign in again.";
+
 @Component({
   selector: 'app-login',
   imports: [BrandComponent, IconComponent, EyeButtonDirective, CommonModule, FormsModule, RouterLink],
@@ -41,6 +44,10 @@ export class LoginComponent {
     if (this.userService.sessionEnded()) {
       this.notice.set(SESSION_EXPIRED_MESSAGE);
       this.userService.sessionEnded.set(false);
+    }
+    if (this.userService.signInStalled()) {
+      this.notice.set(SIGN_IN_STALLED_MESSAGE);
+      this.userService.signInStalled.set(false);
     }
   }
 

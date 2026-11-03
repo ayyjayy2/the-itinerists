@@ -9,7 +9,7 @@ import { LocalCacheService } from '../../services/local-cache.service';
 
 describe('LoginComponent after a session ends', () => {
   function create(sessionEnded: boolean) {
-    const userService = { sessionEnded: signal(sessionEnded) };
+    const userService = { sessionEnded: signal(sessionEnded), signInStalled: signal(false) };
     TestBed.configureTestingModule({
       imports: [LoginComponent],
       providers: [
