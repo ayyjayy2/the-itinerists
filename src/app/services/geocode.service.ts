@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import tzLookup from 'tz-lookup';
 import { TripDestination } from '../models/trip.models';
 import { TripService } from './trip.service';
+import { placeSearch } from '../utils/place-search';
 
 /**
  * One place-name lookup (Nominatim), used to give a trip leg its coordinates
@@ -22,7 +23,6 @@ export class GeocodeService {
     let changed = false;
     for (let i = 0; i < legs.length; i++) {
       if (legs[i].timeZone || !legs[i].destination) continue;
-      if (changed) await new Promise(r => setTimeout(r, 1100));   // Nominatim: one request a second
       const hit = await this.locate(legs[i].destination);
       if (!hit) continue;
       legs[i].timeZone = hit.timeZone;
@@ -40,13 +40,8 @@ export class GeocodeService {
     const q = query.trim();
     if (!q) return null;
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`;
-      const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-      if (!res.ok) return null;
-      const hit = (await res.json())[0];
-      if (!hit) return null;
-      const lat = Number(hit.lat), lng = Number(hit.lon);
-      return { lat, lng, timeZone: tzLookup(lat, lng) };
+      const hit = await placeSearch.find(q);   // one a second app-wide, answers kept (#696)
+      return hit ? { ...hit, timeZone: tzLookup(hit.lat, hit.lng) } : null;
     } catch { return null; }
   }
 }

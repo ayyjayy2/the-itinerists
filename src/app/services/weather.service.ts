@@ -5,6 +5,7 @@ import { WeatherDayDoc } from '../models/trip.models';
 import { daysToSave, weatherRequests, WeatherRequest } from '../utils/forecast-window';
 import { TripContextService } from './trip-context.service';
 import { UserService } from './user.service';
+import { placeSearch } from '../utils/place-search';
 
 export function weatherEmoji(code: number): string {
   if (code === 0) return '☀️';
@@ -199,13 +200,11 @@ export class WeatherService {
   /** Resolve a destination string to coordinates + a short display name. */
   private async geocode(dest: string): Promise<{ lat: number; lon: number; name: string } | null> {
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(dest)}&format=json&limit=1&accept-language=en`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (!Array.isArray(data) || !data[0]) return null;
+      const hit = await placeSearch.find(dest);   // one a second app-wide, answers kept (#696)
+      if (!hit) return null;
       return {
-        lat:  parseFloat(data[0].lat),
-        lon:  parseFloat(data[0].lon),
+        lat:  hit.lat,
+        lon:  hit.lng,
         name: dest.split(',')[0].trim(), // "Tokyo, Japan" → "Tokyo"
       };
     } catch {

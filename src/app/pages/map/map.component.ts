@@ -176,7 +176,8 @@ interface LocationEntry {
 }
 
 import { FocusService } from '../../services/focus.service';
-import { RateGate, missIsFresh } from '../../utils/rate-gate';
+import { missIsFresh } from '../../utils/rate-gate';
+import { placeSearch } from '../../utils/place-search';
 import { BaseMapService } from '../../services/base-map.service';
 import { FlightsService } from '../../services/flights.service';
 import { bookingDatesFor, everyDay, tripDayList } from '../../utils/trip-day-list';
@@ -294,7 +295,6 @@ export class MapComponent implements OnDestroy {
   /** True while places are being looked up and their pins dropped in one by one. */
   private pinning       = false;
   private userMovedMap  = false;
-  private nominatim     = new RateGate(1100);
   /** This trip's shared place cache, loading in the background. */
   private sharedCache: Promise<void> = Promise.resolve();
 
@@ -526,18 +526,13 @@ export class MapComponent implements OnDestroy {
 
   /** One Nominatim lookup. With `near`, only results within about 150 km of it count
    *  (viewbox + bounded), which is what keeps a neighbourhood in its own city. */
-  private async fetchGeocode(query: string, near?: { lat: number; lng: number } | null): Promise<{ lat: number; lng: number } | null> {
-    try {
-      let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`;
-      if (near) {
-        const dLat = 1.4, dLng = 1.4 / Math.max(0.2, Math.cos(near.lat * Math.PI / 180));
-        url += `&viewbox=${(near.lng - dLng).toFixed(3)},${(near.lat + dLat).toFixed(3)},${(near.lng + dLng).toFixed(3)},${(near.lat - dLat).toFixed(3)}&bounded=1`;
-      }
-      await this.nominatim.wait();   // Nominatim: one request a second
-      const res  = await fetch(url);
-      const data = await res.json();
-      return data[0] ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
-    } catch { return null; }
+  private fetchGeocode(query: string, near?: { lat: number; lng: number } | null): Promise<{ lat: number; lng: number } | null> {
+    let extra = '';
+    if (near) {
+      const dLat = 1.4, dLng = 1.4 / Math.max(0.2, Math.cos(near.lat * Math.PI / 180));
+      extra = `&viewbox=${(near.lng - dLng).toFixed(3)},${(near.lat + dLat).toFixed(3)},${(near.lng + dLng).toFixed(3)},${(near.lat - dLat).toFixed(3)}&bounded=1`;
+    }
+    return placeSearch.find(query, extra);   // one a second app-wide, answers kept (#696)
   }
 
   /**
@@ -600,7 +595,9 @@ export class MapComponent implements OnDestroy {
       Math.hypot(a.lat - b.lat, (a.lng - b.lng) * Math.cos(b.lat * Math.PI / 180)) * 111;
     for (let i = 0; i < plan.length; i++) {
       if (this.destroyed) return null;
-      let coords = await this.fetchGeocode(plan[i].q, plan[i].near);
+      let coords: { lat: number; lng: number } | null;
+      try { coords = await this.fetchGeocode(plan[i].q, plan[i].near); }
+      catch { return null; }   // lookups paused (#696): not a miss, so it's tried again next visit
       if (coords && near && !plan[i].near && kmFrom(coords, near) > MAX_KM) coords = null;
       if (coords) {
         this.geocache[key] = coords;

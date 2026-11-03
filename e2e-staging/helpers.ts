@@ -74,7 +74,8 @@ export function watchErrors(page: Page, known: RegExp[] = []): string[] {
     if (m.type() !== 'error') return;
     const t = m.text();
     if (/favicon|Failed to load resource: the server responded with a status of 404/.test(t)) return;
-    if (known.some(k => k.test(t))) return;
+    const url = m.location()?.url ?? '';   // a failed request's "Failed to load resource" names its address here
+    if (known.some(k => k.test(t) || k.test(url))) return;
     errors.push(t);
   });
   return errors;

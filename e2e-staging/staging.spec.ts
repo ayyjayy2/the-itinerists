@@ -217,7 +217,9 @@ test.describe('2b. The bell', () => {
 test.describe('3. Every page', () => {
   test('loads without errors, finishes loading, and never scrolls sideways', async ({ page }) => {
     test.setTimeout(240_000);                               // 15 pages, a few seconds each
-    const errors = watchErrors(page, [/apis\.google\.com\/js\/api\.js/]);   // known: issue #344
+    // Known: issue #344. And OpenStreetMap's free place lookup refusing this computer for a while
+    // (429, logged as a CORS error): the app pauses lookups and leaves pins off (#696), so it isn't a page error.
+    const errors = watchErrors(page, [/apis\.google\.com\/js\/api\.js/, /nominatim\.openstreetmap\.org/]);
     await page.goto('/home');                               // the one load; the rest are in-app moves (#586)
     const problems: string[] = [];
     for (const p of PAGES) {
@@ -388,6 +390,9 @@ test.describe('7. API console', () => {
 
   test('outside lookups answer (airport by city, time zone of a city)', async ({ request }) => {
     const airports = await request.get('https://nominatim.openstreetmap.org/search?q=Port%20Moresby%20airport&namedetails=1&format=json&limit=5', { headers: { 'User-Agent': 'TheItinerists-staging-check/1.0' } });
+    // OpenStreetMap's free service turns busy callers away for a while (#696): say so, rather than fail on its error page.
+    test.skip(airports.status() === 429, 'OpenStreetMap is refusing this computer for now (429 Too many requests); try on the next deploy');
+    expect(airports.ok(), `OpenStreetMap answered ${airports.status()}`).toBe(true);
     expect((await airports.json()).some((r: { namedetails?: { iata?: string } }) => r.namedetails?.iata === 'POM')).toBe(true);
     const city = await request.get('https://geocoding-api.open-meteo.com/v1/search?name=Port%20Moresby&count=1');
     expect((await city.json()).results[0].timezone).toBe('Pacific/Port_Moresby');
