@@ -210,3 +210,33 @@ test('download my data from Profile', async ({ page }) => {
   expect(data.trips[0].otherMembers).toEqual(expect.arrayContaining(['Maya', 'Theo', 'Jo']));
   expect(JSON.stringify(data)).not.toContain('maya@the-itinerists.local');   // nobody else's sign-in
 });
+
+/** #613: My Expenses takes any currency: each amount stays in its own, with a converted total in the trip's. */
+test('My Expenses keeps each currency and adds a converted total', async ({ page }) => {
+  // Rates for the trip's currency (THB): no network in the demo tests.
+  await page.route('https://api.frankfurter.dev/**', route => route.fulfill({
+    json: { amount: 1, base: 'THB', date: '2026-11-01', rates: { EUR: 0.025, USD: 0.028 } },
+  }));
+  await page.goto('/expenses');
+  const add = async (description: string, amount: string, currency: string) => {
+    await page.getByRole('button', { name: '+ Add Expense' }).click();
+    await page.getByPlaceholder('e.g. Brunch').fill(description);
+    await page.getByPlaceholder('0.00').fill(amount);
+    await page.locator('.currency-input').click();
+    await page.locator('.currency-input').fill(currency);
+    await page.getByRole('option', { name: new RegExp('^' + currency) }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
+  };
+  await add('Coffee in Lisbon', '5', 'EUR');
+  await add('Songthaew', '200', 'THB');
+  const totals = page.locator('.total-chip');
+  // One total per currency, never added together, never shown as dollars (the demo traveller has baht expenses already).
+  await expect(totals).toContainText('€5.00');
+  await expect(totals).toContainText('THB');
+  await expect(totals).not.toContainText('$');
+  await expect(page.getByText('Coffee in Lisbon')).toBeVisible();
+  await expect(page.getByText('Songthaew').first()).toBeVisible();
+  // And one converted total in the trip's currency.
+  await expect(page.locator('.total-converted')).toContainText(/≈ .* in all/);
+  await expect(page.locator('.total-converted')).toContainText('converted to THB');
+});
