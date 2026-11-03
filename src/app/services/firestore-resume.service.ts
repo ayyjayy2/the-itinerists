@@ -46,6 +46,10 @@ export class FirestoreResumeService {
     catch (err) { console.warn('[FirestoreResume] restarting the connection failed:', (err as Error).message); }
   }
 
+  /** Close the connection for a moment, e.g. while the print sheet opens (#683); resume() reopens it. */
+  pause(): Promise<void> { return this.goOffline(); }
+  resume(): Promise<void> { return this.goOnline(); }
+
   private goOffline(): Promise<void> {
     return runInInjectionContext(this.injector, () => disableNetwork(this.firestore));
   }
