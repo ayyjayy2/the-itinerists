@@ -18,10 +18,11 @@ import { APP_VERSION, APP_BUILD, APP_BUILD_DATE } from '../../../version';
 import { userMessage } from '../../utils/user-message';
 import { PAY_APPS, PayApp, normalizeHandle } from '../../utils/pay-links';
 import { DataExportService } from '../../services/data-export.service';
+import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, FormsModule, IconComponent, EyeButtonDirective, AvatarPickerComponent, AvatarGlyphComponent, RouterLink],
+  imports: [CommonModule, FormsModule, IconComponent, EyeButtonDirective, AvatarPickerComponent, AvatarGlyphComponent, RouterLink, CurrencySelectComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
@@ -114,6 +115,7 @@ export class ProfileComponent implements OnInit {
       this.color       = u.color;
       this.avatarLetterColor = u.avatarLetterColor ?? '';
       this.payHandles = { venmo: '', paypal: '', cashapp: '', ...(u.payHandles ?? {}) };
+      this.ownCurrency = u.ownCurrency ?? '';
     }
   }
 
@@ -148,6 +150,24 @@ export class ProfileComponent implements OnInit {
       this.payError.set("Couldn't save your payment apps. Check your connection and try again.");
     } finally {
       this.paySaving.set(false);
+    }
+  }
+
+  // ── My currency (#429): what you owe and are owed also shows in it ──
+  ownCurrency = '';
+  readonly ownSaved = signal(false);
+  readonly ownError = signal('');
+  /** Saves as soon as one is picked; null goes back to each trip's currency. */
+  async saveOwnCurrency(code: string | null): Promise<void> {
+    this.ownCurrency = code ?? '';
+    this.ownSaved.set(false);
+    this.ownError.set('');
+    try {
+      await this.tripService.updateOwnCurrency(code);
+      this.ownSaved.set(true);
+      setTimeout(() => this.ownSaved.set(false), 3000);
+    } catch {
+      this.ownError.set("Couldn't save your currency. Check your connection and try again.");
     }
   }
 

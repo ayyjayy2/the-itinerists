@@ -12,7 +12,7 @@ import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
-import { Rates, convertedTotal, perCurrencySubtotals } from '../../utils/currency';
+import { Rates, convertedTotal, perCurrencySubtotals, inOwnCurrency } from '../../utils/currency';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { money } from '../../utils/event-text';
 
@@ -146,6 +146,20 @@ export class ExpensesComponent implements OnInit {
     const dates = this.filtered().map(e => e.date).filter(Boolean);
     const req = ++this.ratesRequest;   // a slower, older answer never overwrites a newer one
     void this.rateService.ratesByDate(home, dates).then(r => { if (req === this.ratesRequest) this.ratesByDate.set(r); });
+  });
+
+  // ── My own currency (#429): the trip-currency total again in it, at today's rate ──
+  private readonly ownRates = signal<Rates | null>(null);
+  private readonly loadOwnRates = effect(() => {
+    const home = this.homeCurrency(), own = this.userService.firestoreUser()?.ownCurrency;
+    if (!own || own === home) return;
+    void this.rateService.ratesFor(home, 'latest').then(r => this.ownRates.set(r));
+  });
+  readonly ownTotal = computed(() => {
+    const home = this.homeCurrency(), list = this.filtered();
+    const tripTotal = list.every(e => e.currency === home) ? list.reduce((n, e) => n + e.amount, 0)
+      : this.mixedCurrencies() && !this.converted().missing ? this.converted().total : null;
+    return tripTotal ? inOwnCurrency(tripTotal, home, this.userService.firestoreUser()?.ownCurrency, this.ownRates()) : null;
   });
 
   ngOnInit(): void {

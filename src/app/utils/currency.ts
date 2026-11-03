@@ -31,6 +31,12 @@ export function needsNewRate(before: { date: string; currency: string }, patch: 
   const date = patch.date ?? before.date, currency = patch.currency ?? before.currency;
   return date !== before.date || currency !== before.currency ? { date, currency } : null;
 }
+/** A trip-currency amount in the person's own currency (#429), from a base=trip `latest` table;
+ *  null when they have none, it's the trip's, or there's no rate yet. Approximate: today's rate. */
+export function inOwnCurrency(amount: number, tripCurrency: string, own: string | undefined, latest: Rates | null): { amount: number; currency: string } | null {
+  const rate = own && own !== tripCurrency ? latest?.[own] : undefined;
+  return rate ? { amount: Math.round(amount * rate * 100) / 100, currency: own! } : null;
+}
 function localISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }

@@ -22,6 +22,10 @@
     </p>
   }
 
+  @if (ownTotal(); as own) {
+    <p class="total-own">≈ {{ money(own.amount, own.currency) }} in {{ own.currency }}, at today's rate</p>
+  }
+
   <!-- Add form toggle -->
   @if (!showForm()) {
     <button data-needs-account class="btn btn-primary add-btn" (click)="openForm()">+ Add Expense</button>

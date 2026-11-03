@@ -7,7 +7,8 @@ import { UsersService } from '../../services/users.service';
 import { TripService } from '../../services/trip.service';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
-import { Rates, perCurrencySubtotals, convertedTotal, convertShare, rateDay } from '../../utils/currency';
+import { Rates, perCurrencySubtotals, convertedTotal, convertShare, rateDay, inOwnCurrency } from '../../utils/currency';
+import { money } from '../../utils/event-text';
 import { DirectDebt, NetLine, filterSettlements, netLine, personTotals, unpaidBetween, workingText } from '../../utils/settlements';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
@@ -80,6 +81,21 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!dates.length) return;
       void this.loadRates(home, dates);
     });
+    // Today's rate into my own currency (#429), when I have one that isn't the trip's.
+    effect(() => {
+      const home = this.homeCurrency(), own = this.ownCurrency();
+      if (!own || own === home) return;
+      void this.rateService.ratesFor(home, 'latest').then(r => this.ownRates.set(r));
+    });
+  }
+
+  /** My own currency (#429), from Profile; amounts owed also show in it. */
+  readonly ownCurrency = computed(() => this.userService.firestoreUser()?.ownCurrency);
+  private ownRates = signal<Rates | null>(null);
+  /** "≈ £24.00": a trip-currency amount in my own currency, or null when there's nothing to add. */
+  inOwn(amount: number): string | null {
+    const r = inOwnCurrency(amount, this.homeCurrency(), this.ownCurrency(), this.ownRates());
+    return r ? `≈ ${money(r.amount, r.currency)}` : null;
   }
 
   private async loadRates(home: string, dates: string[]): Promise<void> {

@@ -18,7 +18,7 @@ import { StaysService } from '../../services/stays.service';
 import { RecsService } from '../../services/recs.service';
 import { ExpensesService } from '../../services/expenses.service';
 import { DataService } from '../../services/data.service';
-import { Rates, convertedTotal, perCurrencyText, rateDay } from '../../utils/currency';
+import { Rates, convertedTotal, perCurrencyText, rateDay, inOwnCurrency } from '../../utils/currency';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { money as formatMoney } from '../../utils/event-text';
 import {
@@ -419,6 +419,17 @@ export class HomeComponent implements OnInit, OnDestroy {
     const req = ++this.ratesRequest;
     void this.rateService.ratesByDate(home, dates).then(r => { if (req === this.ratesRequest) this.trackedRates.set(r); });
   });
+  /** My own currency (#429): today's rate into it, for " (≈ £127.50)" after the balance. */
+  private readonly ownRates = signal<Rates | null>(null);
+  private readonly loadOwnRates = effect(() => {
+    const home = this.activeTrip()?.currency || 'USD', own = this.userService.firestoreUser()?.ownCurrency;
+    if (!own || own === home) return;
+    void this.rateService.ratesFor(home, 'latest').then(r => this.ownRates.set(r));
+  });
+  private inOwn(amount: number): string {
+    const r = inOwnCurrency(amount, this.activeTrip()?.currency || 'USD', this.userService.firestoreUser()?.ownCurrency, this.ownRates());
+    return r ? ` (≈ ${formatMoney(r.amount, r.currency)})` : '';
+  }
   /** Every expense is in the trip's currency, so a single balance in it is meaningful. */
   readonly singleCurrency = computed(() => {
     const home = this.activeTrip()?.currency || 'USD';
@@ -520,8 +531,8 @@ export class HomeComponent implements OnInit, OnDestroy {
           // Mixed currencies: no single-number balance here (Finance converts properly).
           const [title, titleClass] =
             !this.singleCurrency() ? ['Shared expenses', ''] :
-            net >  0.01 ? [`You're owed ${this.money(net)}`, 'owed'] :
-            net < -0.01 ? [`You owe ${this.money(-net)}`, 'owe'] :
+            net >  0.01 ? [`You're owed ${this.money(net)}${this.inOwn(net)}`, 'owed'] :
+            net < -0.01 ? [`You owe ${this.money(-net)}${this.inOwn(-net)}`, 'owe'] :
                           ["You're all settled up 🎉", ''];
           return { key, path, icon: 'finance', tone: 'gold', title, titleClass,
                    lines: [`${this.trackedText()} tracked so far · tap to settle up`] };

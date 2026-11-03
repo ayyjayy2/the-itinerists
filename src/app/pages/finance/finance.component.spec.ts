@@ -33,7 +33,7 @@ describe('FinanceComponent: expenses that leave people out', () => {
       providers: [
         provideRouter([]),
         { provide: FinanceService, useValue: finance },
-        { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), isAdmin: () => false } },
+        { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), firestoreUser: signal({ uid: 'Maya' }), isAdmin: () => false } },
         { provide: UsersService, useValue: { tripUsers: () => people } },
         { provide: TripService, useValue: { activeTrip: signal({ id: 't', name: 'Trip', currency: 'USD' }), ready: signal(true), activeMembers: signal([]) } },
         { provide: ExchangeRateService, useValue: { ratesFor: () => Promise.resolve(null) } },
@@ -90,7 +90,7 @@ describe('FinanceComponent: settling up', () => {
   } as FinanceEntryDoc);
   let finance: Record<string, any>;
 
-  function create(paidBy: string, claims = new Map<string, unknown>(), opts: { endDate?: string; reminders?: Map<string, number>; native?: boolean } = {}) {
+  function create(paidBy: string, claims = new Map<string, unknown>(), opts: { endDate?: string; reminders?: Map<string, number>; native?: boolean; own?: string; latest?: Record<string, number> } = {}) {
     finance = {
       entries: signal([entry(paidBy)]), loaded: signal(true), paidItems: signal(new Set<string>()),
       updateEntry: jasmine.createSpy().and.resolveTo(), addEntry: jasmine.createSpy().and.resolveTo(),
@@ -103,13 +103,13 @@ describe('FinanceComponent: settling up', () => {
       providers: [
         provideRouter([]),
         { provide: FinanceService, useValue: finance },
-        { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), isAdmin: () => false } },
+        { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), firestoreUser: signal({ uid: 'Maya', ownCurrency: opts.own }), isAdmin: () => false } },
         { provide: UsersService, useValue: { tripUsers: () => people } },
         { provide: TripService, useValue: {
           activeTrip: signal({ id: 't', name: 'Lisbon', currency: 'USD', endDate: opts.endDate }), ready: signal(true),
           activeMembers: signal([{ uid: 'Maya', displayName: 'Maya' }, { uid: 'Theo', displayName: 'Theo' }]),
         } },
-        { provide: ExchangeRateService, useValue: { ratesFor: () => Promise.resolve(null) } },
+        { provide: ExchangeRateService, useValue: { ratesFor: (_: string, d: string) => Promise.resolve(d === 'latest' ? opts.latest ?? null : null) } },
         { provide: FocusService, useValue: { id: signal(null), clear: () => {} } },
         { provide: NATIVE_PLATFORM, useValue: !!opts.native },
       ],
@@ -194,6 +194,40 @@ describe('FinanceComponent: settling up', () => {
     await Promise.resolve();
     expect(finance['markAllPaid']).toHaveBeenCalled();
     expect(finance['clearClaim']).toHaveBeenCalledWith('Theo', 'Maya');
+  });
+
+  // #429: what's owed also shows in my own currency, worked out from the trip's.
+  describe('in my own currency', () => {
+    async function render(own: string | undefined, paidBy = 'Theo') {
+      const r = create(paidBy, new Map(), { own, latest: { GBP: 0.8 } });
+      await r.fixture.whenStable();
+      r.fixture.detectChanges();
+      return r;
+    }
+    it('shows what I owe in my currency under the trip amount', async () => {
+      const { el } = await render('GBP');
+      expect(el.querySelector('.banner-negative .banner-amount')!.textContent).toContain('30.00');
+      expect(el.querySelector('.banner-negative .banner-own')!.textContent!.trim()).toBe('≈ £24.00');
+    });
+    it('and what I am owed', async () => {
+      const { el } = await render('GBP', 'Maya');
+      expect(el.querySelector('.banner-positive .banner-own')!.textContent!.trim()).toBe('≈ £24.00');
+    });
+    it('sits on the same line as the trip amount', async () => {
+      const { el } = await render('GBP');
+      expect(el.querySelector('.banner-negative .banner-amounts .banner-own')).not.toBeNull();
+    });
+    it('shows in the Pay now pop-up beside the amount', async () => {
+      const { comp, fixture, el } = await render('GBP');
+      comp.openPay('Theo', 30);
+      fixture.detectChanges();
+      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ')).toContain('30.00 USD ≈ £24.00');
+    });
+    it('shows nothing extra without a currency of my own, or when it is the trip\'s', async () => {
+      expect((await render(undefined)).el.querySelector('.banner-own')).toBeNull();
+      TestBed.resetTestingModule();
+      expect((await render('USD')).el.querySelector('.banner-own')).toBeNull();
+    });
   });
 
   // #682: the arrows that open the owe/owed working were still too small to spot.

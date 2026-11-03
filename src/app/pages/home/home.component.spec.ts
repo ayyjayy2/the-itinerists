@@ -81,7 +81,7 @@ describe('HomeComponent (hidden pages)', () => {
         { provide: EmailConfirmService, useValue: confirmStub },
         { provide: SurveyService, useValue: survey },
         // 1 EUR = 1.25 USD on every date.
-        { provide: ExchangeRateService, useValue: { ratesByDate: (_h: string, dates: string[]) => Promise.resolve(Object.fromEntries(dates.map(d => [d, { USD: 1.25 }]))) } },
+        { provide: ExchangeRateService, useValue: { ratesByDate: (_h: string, dates: string[]) => Promise.resolve(Object.fromEntries(dates.map(d => [d, { USD: 1.25 }]))), ratesFor: () => Promise.resolve({ GBP: 0.85 }) } },
       ],
     })
     .overrideComponent(HomeComponent, {
@@ -248,6 +248,16 @@ describe('HomeComponent (hidden pages)', () => {
     financeEntries.set([e(300)]);
     const el = render().nativeElement as HTMLElement;
     expect(el.querySelector('[data-widget="finance"]')!.textContent).toContain('€300.00 tracked so far');
+  });
+
+  // #429: the balance also shows in my own currency, at today's rate.
+  it('the expenses widget adds my own currency to the balance', async () => {
+    firestoreUser.update((u: any) => ({ ...u, ownCurrency: 'GBP' }));
+    financeEntries.set([{ id: 'd', date: '2026-10-02', description: 'x', amount: 300, currency: 'EUR', paidBy: 'Theo', splitAmong: 'Alayna, Theo', category: 'Food', addedByUid: 'me', createdAt: 1 }]);
+    const fixture = render();
+    await new Promise(r => setTimeout(r));
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-widget="finance"]')!.textContent).toContain('You owe €150.00 (≈ £127.50)');
   });
 
   it('shows no survey banner when there is nothing to show', () => {

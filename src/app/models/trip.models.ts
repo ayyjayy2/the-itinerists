@@ -45,6 +45,8 @@ export interface FirestoreUser {
   isGuest?: boolean;
   /** Payment app handles (#532), copied to the person's member doc on each trip so the group can pay them back. */
   payHandles?: PayHandles;
+  /** Their own currency (#429), e.g. GBP: amounts owed also show in it. Copied to their member docs like payHandles. Absent → the trip's. */
+  ownCurrency?: string;
   createdAt: number;   // unix ms
   /** Email the Auth account signs in with. NOT stored on the profile doc —
    *  it lives in users/{uid}/private/account and UserService merges it in for
@@ -169,6 +171,7 @@ export interface TripMember {
   isTest?: boolean;             // throwaway tester (see FirestoreUser.isTest)
   inviteCode?: string;          // the invite this member joined with (self-joins; required by the rules)
   payHandles?: PayHandles;      // their payment app handles, from their profile (#532)
+  ownCurrency?: string;         // their own currency, from their profile (#429)
   travelMode?: TravelMode | null;
   arrivalDate?: string;         // YYYY-MM-DD (derived from travel entries or set manually)
   arrivalTime?: string;         // e.g. "3:00 PM"

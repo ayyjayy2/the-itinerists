@@ -408,6 +408,13 @@ await t('member adds a handle with a space or a link', 'deny', () => updateDoc(d
 await t('member sets someone else\'s payment handles', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'alice'), { payHandles: { venmo: 'bob-b' } }));
 await t('person saves payment handles on their profile', 'allow', () => updateDoc(doc(bob, 'users', 'bob'), { payHandles: { paypal: 'BobB' } }));
 await t('person saves a bad handle on their profile', 'deny', () => updateDoc(doc(bob, 'users', 'bob'), { payHandles: { paypal: 'Bob B' } }));
+console.log('\nMy currency (#429): each person\'s own currency');
+await t('person sets their own currency on their profile', 'allow', () => updateDoc(doc(bob, 'users', 'bob'), { ownCurrency: 'GBP' }));
+await t('person sets a currency that is not a 3-letter code', 'deny', () => updateDoc(doc(bob, 'users', 'bob'), { ownCurrency: 'pounds' }));
+await t('person sets a currency that is not text', 'deny', () => updateDoc(doc(bob, 'users', 'bob'), { ownCurrency: 42 }));
+await t('member copies their currency to their own member doc', 'allow', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'bob'), { ownCurrency: 'GBP' }));
+await t('member puts a bad currency on their member doc', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'bob'), { ownCurrency: 'gbp' }));
+await t('member sets someone else\'s currency', 'deny', () => updateDoc(doc(bob, 'trips', 'T', 'members', 'alice'), { ownCurrency: 'GBP' }));
 await t('owed member reminds the member who owes', 'allow', () => setDoc(doc(alice, 'trips', 'T', 'reminders', 'alice_bob'), { from: 'alice', to: 'bob', at: serverTimestamp() }));
 const earlierReminder = hoursAgo => testEnv.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'trips', 'T', 'reminders', 'alice_bob'), { from: 'alice', to: 'bob', at: new Date(Date.now() - hoursAgo * 60 * 60 * 1000) }));
 await t('reminding again the same day', 'deny', async () => { await earlierReminder(2); return setDoc(doc(alice, 'trips', 'T', 'reminders', 'alice_bob'), { from: 'alice', to: 'bob', at: serverTimestamp() }); });

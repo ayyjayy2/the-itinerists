@@ -44,6 +44,24 @@
       </button>
     </div>
 
+    <!-- My currency (#429): amounts owed also show in it -->
+    <div class="card section-card" id="my-currency">
+      <h2>My currency</h2>
+      <div class="input-hint">What you owe and are owed also shows in this currency, at today's rate. Trips still add up in their own currency.</div>
+      <div class="form-group">
+        <app-currency-select [value]="ownCurrency" (valueChange)="saveOwnCurrency($event)" />
+      </div>
+      @if (ownError()) {
+        <div class="alert alert-error">{{ ownError() }}</div>
+      }
+      @if (ownSaved()) {
+        <div class="alert alert-success">{{ ownCurrency ? 'Saved: ' + ownCurrency + '.' : "Back to each trip's currency." }}</div>
+      }
+      @if (ownCurrency) {
+        <button type="button" class="link-btn" data-needs-account (click)="saveOwnCurrency(null)">Use each trip's currency instead</button>
+      }
+    </div>
+
     <!-- Payment apps (#532): so people on your trips can pay you back -->
     <div class="card section-card">
       <h2>Payment apps</h2>

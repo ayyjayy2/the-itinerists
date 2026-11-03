@@ -46,6 +46,7 @@
         <div class="banner-label">You are still owed</div>
         <div class="banner-amounts">
           <span class="banner-amount">{{ approxPrefix() }}{{ totalOwedToMeHome() | number:'1.2-2' }}<span class="b-code"> {{ homeCurrency() }}</span></span>
+          @if (inOwn(totalOwedToMeHome()); as own) { <span class="banner-own">{{ own }}</span> }
         </div>
         <div class="banner-persons">
           @for (p of personNetBreakdown().owed; track p.name) {
@@ -96,6 +97,7 @@
         <div class="banner-label">You still owe</div>
         <div class="banner-amounts">
           <span class="banner-amount">{{ approxPrefix() }}{{ totalIOweHome() | number:'1.2-2' }}<span class="b-code"> {{ homeCurrency() }}</span></span>
+          @if (inOwn(totalIOweHome()); as own) { <span class="banner-own">{{ own }}</span> }
         </div>
         <div class="banner-persons">
           @for (p of personNetBreakdown().owing; track p.name) {
@@ -228,7 +230,7 @@
           <button class="modal-close" (click)="payFor.set(null)" aria-label="Close">✕</button>
         </div>
         <div class="pay-summary">
-          <div class="pay-summary-row"><span class="pay-summary-label">Amount</span><span class="pay-summary-amount">{{ pf.amount | number:'1.2-2' }} <span class="b-code">{{ homeCurrency() }}</span></span></div>
+          <div class="pay-summary-row"><span class="pay-summary-label">Amount</span><span class="pay-summary-amount">{{ pf.amount | number:'1.2-2' }} <span class="b-code">{{ homeCurrency() }}</span>@if (inOwn(pf.amount); as own) {<span class="pay-own"> {{ own }}</span>}</span></div>
           @if (payNote()) {<div class="pay-summary-row"><span class="pay-summary-label">Note</span><span class="pay-summary-note">{{ payNote() }}</span></div>}
         </div>
         <div class="pay-with">Pay with</div>
