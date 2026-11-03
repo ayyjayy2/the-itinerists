@@ -77,7 +77,6 @@
             }
           }
         </div>
-        @if (remindOpensOn()) {<p class="pay-note remind-opens">You can send reminders from the last day, {{ remindOpensOn() }}.</p>}
         @if (remindError()) {<p class="field-error" role="alert">{{ remindError() }}</p>}
       </div>
     }

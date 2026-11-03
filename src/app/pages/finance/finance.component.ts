@@ -348,15 +348,14 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /** Whether I can remind `name` today (they're on the trip, and no reminder in the last day). */
-  /** Before the trip's last day: that day, as "Nov 19", for the note saying when reminders open (#664). */
-  readonly remindOpensOn = computed(() => {
+  /** Remind waits for the trip's last day, in the trip's zone (#664). */
+  readonly remindOpen = computed(() => {
     const trip = this.tripService.activeTrip();
-    if (!trip || remindersOpen(trip.endDate, localTodayISO(new Date(), tripZone(trip)))) return '';
-    return new Date(trip.endDate + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return !trip || remindersOpen(trip.endDate, localTodayISO(new Date(), tripZone(trip)));
   });
   canRemind(name: string): boolean {
     const me = this.currentUser()?.uid, them = this.memberByName().get(name)?.uid;
-    if (!me || !them || this.remindOpensOn()) return false;
+    if (!me || !them || !this.remindOpen()) return false;
     return canRemind(this.financeService.reminders().get(`${me}_${them}`), Date.now());
   }
   /** I reminded `name` within the last day (the rules allow one a day). */

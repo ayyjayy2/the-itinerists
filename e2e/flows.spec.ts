@@ -164,10 +164,10 @@ test('pay back from Finance and mark it paid; no Remind before the trip ends', a
   await expect(page.getByText(/Did you pay Maya/)).toHaveCount(0);
   await expect(owe.locator('.banner-person-name', { hasText: 'Maya' })).toHaveCount(0);
 
-  // Before the trip's last day there's no Remind, only when it opens (#664).
+  // Before the trip's last day there's no Remind, and nothing announcing it (#664).
   const owed = page.locator('.banner-positive');
   await expect(owed.getByRole('button', { name: /^Remind / })).toHaveCount(0);
-  await expect(owed.getByText('You can send reminders from the last day, Nov 19.')).toBeVisible();
+  await expect(owed.getByText(/send reminders/)).toHaveCount(0);
 });
 
 /** #664: reminding someone who owes you opens on the trip's last day. */
