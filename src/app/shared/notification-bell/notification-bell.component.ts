@@ -91,10 +91,13 @@ export class NotificationBellComponent {
   private now = signal(Date.now());
 
   private me      = computed(() => this.userService.firestoreUser());
-  /** Events for me newer than my high-water mark (own actions never count). */
-  private unseenList = computed(() => unseenEvents(
-    this.eventsService.events(), this.me()?.uid ?? '', seenMarkFor(this.me(), this.tripService.activeTrip()?.id), this.showTest(),
-  ));
+  /** Events for me newer than my high-water mark (own actions never count). Nothing counts until
+   *  my user doc has loaded: without it every event looks new, and the badge flashed on refresh (#685). */
+  private unseenList = computed(() => {
+    const me = this.me();
+    if (!me) return [];
+    return unseenEvents(this.eventsService.events(), me.uid, seenMarkFor(me, this.tripService.activeTrip()?.id), this.showTest());
+  });
   /** Unseen trip updates, plus the survey notice until the bell is next opened. */
   readonly unseen = computed(() => this.unseenList().length + (this.survey.noticeUnseen() ? 1 : 0));
   /** What the dropdown lists: the unseen ones, else the latest few for me. */

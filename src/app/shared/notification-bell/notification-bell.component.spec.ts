@@ -63,6 +63,18 @@ describe('NotificationBellComponent', () => {
     expect(row.getAttribute('href')).toBe('/itinerary?focus=i1');
   });
 
+  // #685: on a refresh the events can arrive before my own user doc; nothing counts until it does.
+  it('shows no badge until my user doc has loaded, then the real count', () => {
+    userStub.firestoreUser.set(null);
+    const fixture = TestBed.createComponent(NotificationBellComponent);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.bell-badge')).toBeNull();
+    userStub.firestoreUser.set({ uid: 'me', lastSeenActivityAt: 1000 });
+    fixture.detectChanges();
+    expect(el.querySelector('.bell-badge')?.textContent?.trim()).toBe('1');
+  });
+
   it('marks activity seen on open, and keeps showing the snapshot after the marker moves', () => {
     const fixture = TestBed.createComponent(NotificationBellComponent);
     fixture.detectChanges();
