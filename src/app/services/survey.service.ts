@@ -61,7 +61,8 @@ export class SurveyService {
   /** The bell's "New survey" notice badges once, until they next open the bell. */
   readonly noticeUnseen = computed(() => {
     const c = this._config();
-    return this.available() && !!c && !this.userService.firestoreUser()?.surveys?.[c.id]?.noticeSeenAt;
+    const me = this.userService.firestoreUser();   // until it loads, whether they've seen it is unknown (#694)
+    return this.available() && !!c && !!me && !me.surveys?.[c.id]?.noticeSeenAt;
   });
 
   /** The invitation isn't finished yet (see surveyPending): Home keeps its banner spot. */

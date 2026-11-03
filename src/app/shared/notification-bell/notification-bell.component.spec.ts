@@ -7,6 +7,7 @@ import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { TripEvent } from '../../models/trip.models';
 import { SurveyService } from '../../services/survey.service';
+import { TripContextService } from '../../services/trip-context.service';
 
 const ev = (o: Partial<TripEvent>): TripEvent => ({
   id: 'e', kind: 'itinerary', action: 'added', actorUid: 'other', actorName: 'Pat', itemId: 'i1',
@@ -43,6 +44,7 @@ describe('NotificationBellComponent', () => {
         { provide: UserService, useValue: userStub },
         { provide: TripService, useValue: { activeTrip: tripStub } },
         { provide: SurveyService, useValue: survey },
+        { provide: TripContextService, useValue: { activeTripId: signal('t1') } },
       ],
     });
   });
@@ -73,6 +75,24 @@ describe('NotificationBellComponent', () => {
     userStub.firestoreUser.set({ uid: 'me', lastSeenActivityAt: 1000 });
     fixture.detectChanges();
     expect(el.querySelector('.bell-badge')?.textContent?.trim()).toBe('1');
+  });
+
+  // #694: still a flash after #685. The updates follow the trip the app opens to (known at once),
+  // but the bell read "seen" from the trip's details (a moment later), using the older account-wide mark meanwhile.
+  it('shows no badge while the trip\'s details are still loading, when I have seen its updates', () => {
+    tripStub.set(null);
+    userStub.firestoreUser.set({ uid: 'me', lastSeenActivityAt: 0, lastSeenByTrip: { t1: 9999 } });
+    const fixture = TestBed.createComponent(NotificationBellComponent);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.bell-badge')).toBeNull();
+  });
+
+  it('doesn\'t count the survey notice before my user doc has loaded', () => {
+    userStub.firestoreUser.set(null);
+    survey.noticeUnseen.set(true);
+    const fixture = TestBed.createComponent(NotificationBellComponent);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.bell-badge')).toBeNull();
   });
 
   it('marks activity seen on open, and keeps showing the snapshot after the marker moves', () => {
