@@ -592,9 +592,19 @@ service cloud.firestore {
           'activityLog', 'removedMembers', 'events'
         ];
       }
+      // An expense's saved exchange rate (#687): { to: trip currency, value: units per 1, on: its day }.
+      function validRate(d) {
+        return !('rate' in d) || d.rate == null || (d.rate is map
+          && d.rate.keys().hasOnly(['to', 'value', 'on'])
+          && d.rate.to is string && d.rate.to.size() == 3
+          && d.rate.value is number && d.rate.value > 0
+          && d.rate.on is string && d.rate.on.size() == 10);
+      }
       match /{sub}/{doc} {
         allow read:  if isMember(tripId) && isSharedSub(sub);
-        allow write: if canEdit(tripId) && isSharedSub(sub);
+        allow create, update: if canEdit(tripId) && isSharedSub(sub)
+          && (sub != 'finance' || validRate(request.resource.data));
+        allow delete: if canEdit(tripId) && isSharedSub(sub);
         // A guest joining (or leaving) adds the "joined" line to the trip's
         // update feed and log, and writes nothing else under the trip.
         allow create: if isMember(tripId) && isGuest() && sub in ['activityLog', 'events'];

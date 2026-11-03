@@ -7,7 +7,7 @@ import { UsersService } from '../../services/users.service';
 import { TripService } from '../../services/trip.service';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
-import { Rates, perCurrencySubtotals, convertedTotal, convertShare } from '../../utils/currency';
+import { Rates, perCurrencySubtotals, convertedTotal, convertShare, rateDay } from '../../utils/currency';
 import { DirectDebt, NetLine, filterSettlements, netLine, personTotals, unpaidBetween, workingText } from '../../utils/settlements';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
@@ -64,6 +64,8 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   private ratesByDate = signal<Record<string, Rates>>({});
   /** Latest rates (base = home) — settlement fallback when a date rate is missing. */
   private latestRates = signal<Rates | null>(null);
+  /** Today on this phone: the day an expense without a saved rate is converted at, at the latest (#687). */
+  private todayISO(): string { return localTodayISO(); }
   /** Totals view: 'All' (converted to home) or a specific currency code. */
   totalsCurrency = signal<string>('All');
 
@@ -73,7 +75,8 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     // totals and the settlement conversion.
     effect(() => {
       const home  = this.homeCurrency();
-      const dates = [...new Set(this.entries().map(e => e.date).filter(Boolean))];
+      const today = this.todayISO();
+      const dates = [...new Set(this.entries().filter(e => e.rate?.to !== home).map(e => rateDay(e, today)))];
       if (!dates.length) return;
       void this.loadRates(home, dates);
     });
@@ -212,7 +215,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
         const origShare = e.splits ? (e.splits[debtor] ?? 0) : e.amount / splitNames.length;
         const currency  = e.currency || home;
         // Convert the share to the home currency for netting (date rate → latest → face value).
-        const { amount, estimated } = convertShare(origShare, currency, e.date, ratesByDate, latest, home);
+        const { amount, estimated } = convertShare(origShare, currency, rateDay(e, this.todayISO()), ratesByDate, latest, home, e.rate);
         const key = `${debtor}__${e.paidBy}`;
         if (!map.has(key)) map.set(key, { from: debtor, to: e.paidBy, amountHome: 0, items: [] });
         const d = map.get(key)!;
@@ -517,7 +520,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Grand total converted to the home currency, plus how many couldn't convert. */
   readonly convertedExpenseTotal = computed(() =>
-    convertedTotal(this.enrichedEntries(), this.ratesByDate(), this.homeCurrency()));
+    convertedTotal(this.enrichedEntries().map(e => ({ ...e, date: rateDay(e, this.todayISO()) })), this.ratesByDate(), this.homeCurrency()));
 
   /** The amount shown for the selected totals view ('All' = converted home total). */
   readonly totalsAmount = computed(() => {

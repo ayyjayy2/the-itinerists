@@ -8,6 +8,33 @@ import { money } from './event-text';
 
 export type Rates = Record<string, number>;
 
+/** The rate saved on an expense (#687): `value` units of the trip's currency `to` per 1 unit
+ *  of the expense's currency, for the day `on`. Amounts never move once it's saved. */
+export interface SavedRate { to: string; value: number; on: string }
+
+/** The rate to save on an expense, from a base=`home` table for its day; null in the trip's
+ *  own currency, or when there's no rate for that currency. */
+export function lockRate(currency: string, home: string, rates: Rates | null, on: string): SavedRate | null {
+  if (currency === home || !rates?.[currency]) return null;
+  return { to: home, value: 1 / rates[currency], on };
+}
+
+/** Which day's rate an expense without a saved one uses (#687): its own date once that has
+ *  passed, else the day it was entered, so it stops following today's rate. */
+export function rateDay(e: { date: string; createdAt?: number }, todayISO: string): string {
+  const entered = e.createdAt ? localISO(new Date(e.createdAt)) : todayISO;
+  const day = e.date && e.date < entered ? e.date : entered;
+  return day < todayISO ? day : todayISO;
+}
+/** After an edit, the date and currency to fetch a new saved rate for, or null when neither changed. */
+export function needsNewRate(before: { date: string; currency: string }, patch: { date?: string; currency?: string }): { date: string; currency: string } | null {
+  const date = patch.date ?? before.date, currency = patch.currency ?? before.currency;
+  return date !== before.date || currency !== before.currency ? { date, currency } : null;
+}
+function localISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 /**
  * Convert `amount` from `from` into `to`, given a `rates` table whose base is
  * `to` (so rates[from] = units of `from` per 1 `to`). Returns null when the
@@ -31,7 +58,7 @@ export function perCurrencySubtotals(entries: { amount: number; currency: string
 
 /**
  * Convert a single expense share into the `home` currency for settlement:
- *   1. already home → exact.
+ *   1. already home, or a rate saved on the expense (#687) → exact.
  *   2. date rate available → convert, exact.
  *   3. else latest rate available → convert, estimated.
  *   4. else (unsupported currency) → face value as home, estimated (last resort;
@@ -46,8 +73,10 @@ export function convertShare(
   ratesByDate: Record<string, Rates>,
   latestRates: Rates | null,
   home: string,
+  rate?: SavedRate | null,
 ): { amount: number; estimated: boolean } {
   if (currency === home) return { amount, estimated: false };
+  if (rate && rate.to === home) return { amount: amount * rate.value, estimated: false };
 
   const dateRates = ratesByDate[date];
   const exact = dateRates ? convertAmount(amount, currency, home, dateRates) : null;
@@ -66,12 +95,13 @@ export function convertShare(
  * `missing` so the UI can caveat the total.
  */
 export function convertedTotal(
-  entries: { amount: number; currency: string; date: string }[],
+  entries: { amount: number; currency: string; date: string; rate?: SavedRate | null }[],
   ratesByDate: Record<string, Rates>,
   home: string,
 ): { total: number; missing: number } {
   let total = 0, missing = 0;
   for (const e of entries) {
+    if (e.currency !== home && e.rate?.to === home) { total += e.amount * e.rate.value; continue; }
     const rates = ratesByDate[e.date];
     const converted = rates ? convertAmount(e.amount, e.currency, home, rates) : null;
     if (converted === null) { missing++; continue; }

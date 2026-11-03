@@ -8,6 +8,9 @@ import { TripEventsService } from './trip-events.service';
 import { financeAdded, financeChanged, financeRemoved } from '../utils/event-text';
 import { markId, paidKey, parsePaidKey, ticksToShare } from '../utils/paid-marks';
 import { PayApp, reminderText } from '../utils/pay-links';
+import { ExchangeRateService } from './exchange-rate.service';
+import { SavedRate, lockRate, needsNewRate } from '../utils/currency';
+import { localTodayISO } from '../utils/trip-destinations';
 
 // Where ticks lived before they were shared with the trip (#448); moved to the trip once, then removed.
 const PAID_PREFIX = 'tripplanner_paid_items_';
@@ -20,6 +23,7 @@ export class FinanceService {
   private userService = inject(UserService);
   private tripService = inject(TripService);
   private events      = inject(TripEventsService);
+  private rates       = inject(ExchangeRateService);
 
   /** The active trip id, but only while someone is signed in. Listeners opened
    *  while signed out are refused by the rules and never recover, so trip
@@ -121,10 +125,24 @@ export class FinanceService {
   async addEntry(entry: Omit<FinanceEntryDoc, 'id'>): Promise<void> {
     const tid = this.requireTrip();
     const ref = doc(collection(this.firestore, 'trips', tid, 'finance'));
-    const full = { ...entry, id: ref.id } as FinanceEntryDoc;
+    const rate = await this.rateFor(entry.currency, entry.date);
+    const full = { ...entry, id: ref.id, ...(rate ? { rate } : {}) } as FinanceEntryDoc;
     await setDoc(ref, full);
     const t = financeAdded(full, this.userService.currentUser()?.name ?? '', this.currency(), this.tripService.activeMembers());
     this.events.emit({ kind: 'finance', action: 'added', itemId: ref.id, path: '/finance', ...t });
+  }
+
+  /** The rate to save on an expense for its date (#687); null in the trip's currency, or when
+   *  rates can't be had within a few seconds (it then converts at its date's rate, as before). */
+  private async rateFor(currency: string, date: string): Promise<SavedRate | null> {
+    const home = this.currency();
+    if (!currency || currency === home) return null;
+    const today = localTodayISO();
+    const rates = await Promise.race([
+      this.rates.ratesFor(home, date),
+      new Promise<null>(r => setTimeout(() => r(null), 4000)),
+    ]);
+    return lockRate(currency, home, rates, date && date < today ? date : today);
   }
 
   async updateEntry(id: string, updates: Partial<FinanceEntryDoc>): Promise<void> {
@@ -133,6 +151,9 @@ export class FinanceService {
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
     const before = this._entries().find(e => e.id === id);
+    // A new date or currency takes the rate for the new date (#687).
+    const changed = before && needsNewRate(before, data as Partial<FinanceEntryDoc>);
+    if (changed) data['rate'] = await this.rateFor(changed.currency, changed.date);
     await updateDoc(doc(this.firestore, 'trips', tid, 'finance', id), data);
     if (!before) return;
     const t = financeChanged(before, { ...before, ...data } as FinanceEntryDoc, this.currency(), this.tripService.activeMembers());
