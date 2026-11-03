@@ -1292,7 +1292,9 @@
 }
 .working-arrow {
   display: inline-block;
-  width: 1.1rem;
-  font-size: 0.9rem;
+  width: 1.6rem;
+  font-size: 1.6rem;
+  line-height: 1;
+  vertical-align: -0.12em;
   color: var(--text-muted);
 }
