@@ -32,6 +32,7 @@ const trip = {
 describe('HomeComponent (hidden pages)', () => {
   let hidden: WritableSignal<string[]>;
   let financeEntries: WritableSignal<any[]>;
+  let itineraryItems: WritableSignal<any[]>;
   let firestoreUser: WritableSignal<any>;
   let activeMembers: ReturnType<typeof signal<any[]>>;
   let survey: { config: WritableSignal<any>; text: WritableSignal<any>; view: WritableSignal<string>; pending: WritableSignal<boolean>; popupOpen: WritableSignal<boolean>; take: jasmine.Spy; closePopup: jasmine.Spy; dismissBanner: jasmine.Spy };
@@ -40,6 +41,7 @@ describe('HomeComponent (hidden pages)', () => {
   beforeEach(async () => {
     hidden = signal<string[]>([]);
     financeEntries = signal<any[]>([]);
+    itineraryItems = signal<any[]>([]);
     // homeLayout is honoured only for picker accounts (layoutPicker).
     activeMembers = signal<any[]>([]);
     survey = {
@@ -68,7 +70,7 @@ describe('HomeComponent (hidden pages)', () => {
         { provide: TripContextService, useValue: { activeTripId: signal('t1') } },
         { provide: FlightCountdownService, useValue: {} },
         { provide: FlightsService,   useValue: { flights: signal([]), loaded: signal(true) } },
-        { provide: ItineraryService, useValue: { items: signal([]), loaded: signal(true) } },
+        { provide: ItineraryService, useValue: { items: itineraryItems, loaded: signal(true) } },
         { provide: FinanceService,   useValue: { entries: financeEntries } },
         { provide: PackingService,   useValue: { items: signal([]) } },
         { provide: WeatherService,   useValue: { weather: signal({}), loadMany: () => {} } },
@@ -251,5 +253,34 @@ describe('HomeComponent (hidden pages)', () => {
   it('shows no survey banner when there is nothing to show', () => {
     const el = render().nativeElement as HTMLElement;
     expect(el.querySelector('.survey-nudge')).toBeNull();
+  });
+
+  // #535: after the trip, Home said "First up: Farewell dinner" for an event that had passed.
+  describe('the itinerary card once events have passed', () => {
+    const ev = (date: string, activity: string) => ({ id: activity, date, time: '7:00 PM', endTime: '9:00 PM', activity, location: '', sortOrder: 0 });
+    const itineraryCard = (el: HTMLElement) => el.querySelector('[data-widget="itinerary"]')!.textContent!.replace(/\s+/g, ' ');
+    afterEach(() => jasmine.clock().uninstall());
+
+    it('says "First up" for an event still ahead', () => {
+      jasmine.clock().install(); jasmine.clock().mockDate(new Date('2026-10-02T12:00:00Z'));
+      itineraryItems.set([ev('2026-10-03', 'Museum')]);
+      expect(itineraryCard(render().nativeElement)).toContain('First up: Museum');
+    });
+
+    it('after the trip, calls the last event the last plan, never "First up"', () => {
+      jasmine.clock().install(); jasmine.clock().mockDate(new Date('2026-10-12T12:00:00Z'));
+      itineraryItems.set([ev('2026-10-08', 'Farewell dinner')]);
+      const text = itineraryCard(render().nativeElement);
+      expect(text).not.toContain('First up');
+      expect(text).toContain('Last plan: Farewell dinner');
+    });
+
+    it('mid-trip with everything so far done, offers to add what is next', () => {
+      jasmine.clock().install(); jasmine.clock().mockDate(new Date('2026-10-05T12:00:00Z'));
+      itineraryItems.set([ev('2026-10-02', 'Museum')]);
+      const text = itineraryCard(render().nativeElement);
+      expect(text).not.toContain('First up');
+      expect(text).toContain('Nothing else planned yet');
+    });
   });
 });
