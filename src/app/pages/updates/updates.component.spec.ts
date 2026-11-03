@@ -47,4 +47,13 @@ describe('UpdatesComponent', () => {
     expect(rows[1].getAttribute('href')).toBe('/itinerary?focus=i1');
     expect(userStub.markActivitySeen).toHaveBeenCalled();
   });
+
+  // #665: "Youadded …": the space after the name was dropped.
+  it('keeps a space between the name and what they did', () => {
+    const fixture = TestBed.createComponent(UpdatesComponent);
+    fixture.detectChanges();
+    const texts = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.feed-text')).map(t => t.textContent!.replace(/\s+/g, ' ').trim());
+    expect(texts[0]).toMatch(/^You added a rec: Mine \(Food\) · /);
+    expect(texts[1]).toMatch(/^Pat added Dinner/);
+  });
 });

@@ -206,6 +206,13 @@ function financeAudience(e: FinanceEntryDoc, members: readonly MemberLike[]): Au
   return uids;
 }
 
+/** What an expense is called: its description, else its vendor (#665). */
+function expenseName(e: FinanceEntryDoc): string {
+  return (e.description ?? '').trim() || (e.vendor ?? '').trim();
+}
+const forExpense = (e: FinanceEntryDoc) => expenseName(e) ? ` for ${expenseName(e)}` : '';
+const theExpense = (e: FinanceEntryDoc) => expenseName(e) || 'an expense';
+
 function splitPhrase(e: FinanceEntryDoc): string {
   const raw = (e.splitAmong ?? '').trim();
   if (!raw || raw.toLowerCase() === 'all') return 'split between all of you';
@@ -216,7 +223,7 @@ function splitPhrase(e: FinanceEntryDoc): string {
 export function financeAdded(e: FinanceEntryDoc, actorName: string, currency: string, members: readonly MemberLike[]): EventText {
   const paid = e.paidBy && e.paidBy !== actorName ? `, paid by ${e.paidBy}` : '';
   return {
-    summary: `added ${money(e.amount, e.currency || currency)} for ${e.description}${paid}, ${splitPhrase(e)}`,
+    summary: `added ${money(e.amount, e.currency || currency)}${forExpense(e)}${paid}, ${splitPhrase(e)}`,
     audience: financeAudience(e, members),
   };
 }
@@ -225,20 +232,20 @@ export function financeChanged(before: FinanceEntryDoc, after: FinanceEntryDoc, 
   const cur = after.currency || currency;
   const audience = financeAudience(after, members);
   if (!same(before.amount, after.amount)) {
-    return { summary: `changed ${after.description} to ${money(after.amount, cur)} (was ${money(before.amount, before.currency || currency)})`, audience };
+    return { summary: `changed ${theExpense(after)} to ${money(after.amount, cur)} (was ${money(before.amount, before.currency || currency)})`, audience };
   }
   if (!same(before.splitAmong, after.splitAmong) || JSON.stringify(before.splits ?? null) !== JSON.stringify(after.splits ?? null)) {
-    return { summary: `changed who splits ${after.description}`, audience };
+    return { summary: `changed who splits ${theExpense(after)}`, audience };
   }
   const changed = changedFields(before, after, [
     ['vendor', 'vendor'], ['date', 'date'], ['description', 'description'], ['paidBy', 'who paid'], ['category', 'category'], ['currency', 'currency'],
   ]);
   if (!changed.length) return null;
-  return { summary: `updated ${after.description} (${changed.join(', ')})`, audience };
+  return { summary: `updated ${theExpense(after)} (${changed.join(', ')})`, audience };
 }
 
 export function financeRemoved(e: FinanceEntryDoc, currency: string, members: readonly MemberLike[]): EventText {
-  return { summary: `removed ${money(e.amount, e.currency || currency)} for ${e.description}`, audience: financeAudience(e, members) };
+  return { summary: `removed ${money(e.amount, e.currency || currency)}${forExpense(e)}`, audience: financeAudience(e, members) };
 }
 
 // ── Recs (everyone) ───────────────────────────────────────────────────────────
