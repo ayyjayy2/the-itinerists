@@ -81,21 +81,31 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!dates.length) return;
       void this.loadRates(home, dates);
     });
-    // Today's rate into my own currency (#429), when I have one that isn't the trip's.
+    // Today's rates from the trip's currency: for my own currency (#429), the
+    // person I'm paying's (#688) and the payment apps' amounts.
     effect(() => {
-      const home = this.homeCurrency(), own = this.ownCurrency();
-      if (!own || own === home) return;
-      void this.rateService.ratesFor(home, 'latest').then(r => this.ownRates.set(r));
+      const home = this.homeCurrency();
+      void this.rateService.ratesFor(home, 'latest').then(r => this.todayRates.set(r));
     });
   }
 
   /** My own currency (#429), from Profile; amounts owed also show in it. */
   readonly ownCurrency = computed(() => this.userService.firestoreUser()?.ownCurrency);
-  private ownRates = signal<Rates | null>(null);
+  private todayRates = signal<Rates | null>(null);
   /** "≈ £24.00": a trip-currency amount in my own currency, or null when there's nothing to add. */
   inOwn(amount: number): string | null {
-    const r = inOwnCurrency(amount, this.homeCurrency(), this.ownCurrency(), this.ownRates());
+    const r = inOwnCurrency(amount, this.homeCurrency(), this.ownCurrency(), this.todayRates());
     return r ? `≈ ${money(r.amount, r.currency)}` : null;
+  }
+  /** The Pay now amount in my currency, then the person I'm paying's (#688), one line each and
+   *  named when they differ ("≈ £24.00 (you)", "≈ €27.00 (Theo)"); one unnamed line when we share one. */
+  payConverted(name: string, amount: number): string[] {
+    const home = this.homeCurrency(), rates = this.todayRates();
+    const mine = inOwnCurrency(amount, home, this.ownCurrency(), rates);
+    const theirs = inOwnCurrency(amount, home, this.memberByName().get(name)?.ownCurrency, rates);
+    const line = (r: { amount: number; currency: string }, who = '') => `≈ ${money(r.amount, r.currency)}${who ? ` (${who})` : ''}`;
+    if (theirs && theirs.currency !== mine?.currency) return [...(mine ? [line(mine, 'you')] : []), line(theirs, name)];
+    return mine ? [line(mine)] : [];
   }
 
   private async loadRates(home: string, dates: string[]): Promise<void> {
@@ -352,11 +362,11 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   /** The note payment links carry: the trip's name. */
   readonly payNote = computed(() => this.tripService.activeTrip()?.name ?? '');
 
-  /** Every payment app, as a link paying `name` `amount` (trip currency); their handle when they've added one. */
+  /** Every payment app, as a link paying `name` `amount` (trip currency, sent in mine where the app takes it); their handle when they've added one. */
   payOptions(name: string, amount: number): { app: PayApp; label: string; href: string; appHref: string | null }[] {
     const handles = this.memberByName().get(name)?.payHandles ?? {};
     return PAY_APPS.map(a => {
-      const send = payAmount(a.app, amount, this.homeCurrency(), this.latestRates());
+      const send = payAmount(a.app, amount, this.homeCurrency(), this.latestRates() ?? this.todayRates(), this.ownCurrency());
       const args = [handles[a.app] ?? '', send?.amount ?? 0, send?.currency ?? '', this.payNote()] as const;
       return { app: a.app, label: a.label, href: payLink(a.app, ...args), appHref: this.native ? payAppLink(a.app, ...args) : null };
     });

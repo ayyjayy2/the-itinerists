@@ -59,6 +59,16 @@ describe('pay-links (#532)', () => {
     expect(payAmount('venmo', 6160, 'THB', null)).toBeNull();   // no rate yet: the app opens without an amount
   });
 
+  // #688: the app gets the amount in the payer's own currency when it takes that currency.
+  it('sends the payer\'s own currency when the app takes it', () => {
+    const rates = { USD: 0.0286, GBP: 0.0221 };   // per 1 THB
+    expect(payAmount('paypal', 6160, 'THB', rates, 'GBP')).toEqual({ amount: 136.14, currency: 'GBP' });
+    expect(payAmount('cashapp', 6160, 'THB', rates, 'GBP')).toEqual({ amount: 136.14, currency: 'GBP' });
+    expect(payAmount('venmo', 6160, 'THB', rates, 'GBP')).toEqual({ amount: 176.18, currency: 'USD' });   // Venmo: dollars only
+    expect(payAmount('paypal', 6160, 'THB', rates, 'THB')).toEqual({ amount: 6160, currency: 'THB' });
+    expect(payAmount('paypal', 6160, 'THB', rates, 'JPY')).toEqual({ amount: 6160, currency: 'THB' });   // no rate for it
+  });
+
   it('words the reminder from the payer’s side', () => {
     expect(reminderText('Maya', 40, 'USD')).toBe("Don't forget to pay Maya: $40.00");
   });
