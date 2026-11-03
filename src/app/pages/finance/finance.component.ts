@@ -414,10 +414,12 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!me || !them || !this.remindOpen() || this.claimFrom(name)) return false;
     return canRemind(this.financeService.reminders().get(`${me}_${them}`), Date.now());
   }
-  /** I reminded `name` within the last day (the rules allow one a day). */
+  /** I reminded `name` within the last day (the rules allow one a day). Shown only where
+   *  Remind itself could be: from the last day on, and not while they say they paid (#674). */
   remindedToday(name: string): boolean {
     const me = this.currentUser()?.uid, them = this.memberByName().get(name)?.uid;
-    return !!me && !!them && !canRemind(this.financeService.reminders().get(`${me}_${them}`), Date.now());
+    if (!me || !them || !this.remindOpen() || this.claimFrom(name)) return false;
+    return !canRemind(this.financeService.reminders().get(`${me}_${them}`), Date.now());
   }
   readonly reminding = signal('');
   readonly remindError = signal('');

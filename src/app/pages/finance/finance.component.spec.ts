@@ -89,12 +89,12 @@ describe('FinanceComponent: settling up', () => {
   } as FinanceEntryDoc);
   let finance: Record<string, any>;
 
-  function create(paidBy: string, claims = new Map<string, unknown>()) {
+  function create(paidBy: string, claims = new Map<string, unknown>(), opts: { endDate?: string; reminders?: Map<string, number> } = {}) {
     finance = {
       entries: signal([entry(paidBy)]), loaded: signal(true), paidItems: signal(new Set<string>()),
       updateEntry: jasmine.createSpy().and.resolveTo(), addEntry: jasmine.createSpy().and.resolveTo(),
       deleteEntry: jasmine.createSpy().and.resolveTo(), togglePaidItem: jasmine.createSpy('togglePaidItem'),
-      markAllPaid: jasmine.createSpy('markAllPaid'), reminders: signal(new Map()), claims: signal(claims),
+      markAllPaid: jasmine.createSpy('markAllPaid'), reminders: signal(opts.reminders ?? new Map()), claims: signal(claims),
       claimPaid: jasmine.createSpy('claimPaid').and.resolveTo(), clearClaim: jasmine.createSpy('clearClaim').and.resolveTo(),
     };
     TestBed.configureTestingModule({
@@ -105,7 +105,7 @@ describe('FinanceComponent: settling up', () => {
         { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), isAdmin: () => false } },
         { provide: UsersService, useValue: { tripUsers: () => people } },
         { provide: TripService, useValue: {
-          activeTrip: signal({ id: 't', name: 'Lisbon', currency: 'USD' }), ready: signal(true),
+          activeTrip: signal({ id: 't', name: 'Lisbon', currency: 'USD', endDate: opts.endDate }), ready: signal(true),
           activeMembers: signal([{ uid: 'Maya', displayName: 'Maya' }, { uid: 'Theo', displayName: 'Theo' }]),
         } },
         { provide: ExchangeRateService, useValue: { ratesFor: () => Promise.resolve(null) } },
@@ -152,6 +152,28 @@ describe('FinanceComponent: settling up', () => {
     await Promise.resolve();
     expect(finance['markAllPaid']).toHaveBeenCalled();
     expect(finance['clearClaim']).toHaveBeenCalledWith('Theo', 'Maya');
+  });
+
+  // #674: a reminder sent before #664 still showed "Reminded today" before the trip's last day.
+  describe('"Reminded today"', () => {
+    const justNow = () => new Map([['Maya_Theo', Date.now() - 60_000]]);
+    const owed = (el: HTMLElement) => el.querySelector('.banner-positive')!.textContent!;
+
+    it('shows from the last day on, after a reminder today', () => {
+      const { el } = create('Maya', new Map(), { reminders: justNow() });
+      expect(owed(el)).toContain('Reminded today');
+    });
+
+    it('is hidden before the trip’s last day, like Remind', () => {
+      const { el } = create('Maya', new Map(), { endDate: '2999-01-01', reminders: justNow() });
+      expect(owed(el)).not.toContain('Reminded today');
+      expect(owed(el)).not.toContain('Remind Theo');
+    });
+
+    it('is hidden while they say they paid', () => {
+      const { el } = create('Maya', new Map([['Theo_Maya', { from: 'Theo', to: 'Maya', amount: 30, currency: 'USD', app: 'cashapp' }]]), { reminders: justNow() });
+      expect(owed(el)).not.toContain('Reminded today');
+    });
   });
 
   it('Not received clears the claim without settling', async () => {
