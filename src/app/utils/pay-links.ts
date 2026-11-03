@@ -92,6 +92,20 @@ export function payLink(app: PayApp, handle: string, amount: number, currency: s
   }
 }
 
+/**
+ * The app's own link, for the iPhone app (#681): iOS opens it straight away, where the
+ * web link goes through Safari, asks first, and Venmo's site puts '+' back in the note.
+ * Only Venmo has one that fills anything in; null for the others.
+ */
+export function payAppLink(app: PayApp, handle: string, amount: number, currency: string, note = ''): string | null {
+  if (app !== 'venmo') return null;
+  const q = new URLSearchParams({ txn: 'pay' });
+  if (handle) q.set('recipients', handle);
+  if (amount > 0 && currency.toUpperCase() === 'USD') q.set('amount', amount.toFixed(2));
+  if (note) q.set('note', note);
+  return `venmo://paycharge?${q.toString().replace(/\+/g, '%20')}`;
+}
+
 /** The reminder on the bell, from the payer's side: friendly, never "X reminded you". */
 export function reminderText(payee: string, amount: number, currency: string): string {
   return `Don't forget to pay ${payee}: ${money(amount, currency)}`;

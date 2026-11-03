@@ -63,7 +63,9 @@ US dollars), PayPal (`paypal.me/<name>/<amount><currency>`) and Cash App (`cash.
 dollars or pounds), for everyone you owe. The amount is converted at today's rate when the app doesn't
 take the trip's currency; only Venmo takes a note (the trip's name). With no handle saved, the app's own
 pay screen opens instead (`venmo.com/?txn=pay&amount=…&note=…`, `www.paypal.com/myaccount/transfer/homepage/pay`,
-`cash.app/`) and the payer picks the friend. "Mark as paid" writes `trips/{id}/payClaims/{from}_{to}`
+`cash.app/`) and the payer picks the friend. In the iPhone app Venmo opens with its own link
+(`venmo://paycharge?txn=pay&recipients=…&amount=…&note=…`, #681): no Safari step or prompt, and the note
+keeps its spaces; if Venmo isn't installed, the web link opens after 1.5 seconds. "Mark as paid" writes `trips/{id}/payClaims/{from}_{to}`
 (amount, currency, app, server time); the items are ticked paid only when the person owed taps Got it,
 and either of them clears the claim. Plain links that leave the app, so no
 Content-Security-Policy entry; the app never calls them and never handles money. Each person's

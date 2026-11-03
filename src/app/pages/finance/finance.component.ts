@@ -22,7 +22,8 @@ import { FocusService } from '../../services/focus.service';
 import { safeLink } from '../../utils/safe-link';
 import { leftOutOfSplit, splitPatch } from '../../utils/split-gaps';
 import { paidKey } from '../../utils/paid-marks';
-import { PAY_APPS, PayApp, canRemind, payAmount, payLink, remindersOpen } from '../../utils/pay-links';
+import { PAY_APPS, PayApp, canRemind, payAmount, payAppLink, payLink, remindersOpen } from '../../utils/pay-links';
+import { NATIVE_PLATFORM } from '../../native-platform';
 import { localTodayISO, tripZone } from '../../utils/trip-destinations';
 
 /**
@@ -37,7 +38,8 @@ export const NET_WORKING_SHOWN: 'tap' | 'always' = 'tap';
   selector: 'app-finance',
   imports: [FocusTargetDirective, LoadingComponent, IconComponent, NoTripStateComponent, CurrencySelectComponent, CommonModule, FormsModule, EmptyDateHintDirective],
   templateUrl: './finance.component.html',
-  styleUrl: './finance.component.scss'
+  styleUrl: './finance.component.scss',
+  host: { '(document:visibilitychange)': 'onVisibility()' },
 })
 export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Typed-in links pass through this before they're shown (#407). */
@@ -115,6 +117,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   expandedDebt       = signal<string | null>(null);
   showExpenses       = signal(false);
   private focus = inject(FocusService);
+  private native = inject(NATIVE_PLATFORM);
   /** A deep link to an expense opens the log so the row can scroll into view. */
   private readonly focusOpensLog = effect(() => {
     const id = this.focus.id();
@@ -331,13 +334,31 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly payNote = computed(() => this.tripService.activeTrip()?.name ?? '');
 
   /** Every payment app, as a link paying `name` `amount` (trip currency); their handle when they've added one. */
-  payOptions(name: string, amount: number): { app: PayApp; label: string; href: string }[] {
+  payOptions(name: string, amount: number): { app: PayApp; label: string; href: string; appHref: string | null }[] {
     const handles = this.memberByName().get(name)?.payHandles ?? {};
     return PAY_APPS.map(a => {
       const send = payAmount(a.app, amount, this.homeCurrency(), this.latestRates());
-      return { app: a.app, label: a.label, href: payLink(a.app, handles[a.app] ?? '', send?.amount ?? 0, send?.currency ?? '', this.payNote()) };
+      const args = [handles[a.app] ?? '', send?.amount ?? 0, send?.currency ?? '', this.payNote()] as const;
+      return { app: a.app, label: a.label, href: payLink(a.app, ...args), appHref: this.native ? payAppLink(a.app, ...args) : null };
     });
   }
+
+  /** In the iPhone app, open the payment app with its own link (#681); if it didn't open
+   *  (not installed: we're still on screen), fall back to the web link. */
+  openPayApp(ev: Event, o: { app: PayApp; href: string; appHref: string | null }): void {
+    if (o.appHref) {
+      ev.preventDefault();
+      this.left = false;
+      this.goTo(o.appHref);
+      setTimeout(() => { if (!this.left) window.open(o.href, '_blank'); }, 1500);
+    }
+    this.choosePay(o.app);
+  }
+  private left = false;
+  /** The page went to the background: the payment app opened. */
+  leftForApp(): void { this.left = true; }
+  onVisibility(): void { if (document.hidden) this.leftForApp(); }
+  goTo(url: string): void { location.href = url; }
 
   /** Who the "Pay now" pop-up is for. */
   readonly payFor = signal<{ name: string; amount: number } | null>(null);
