@@ -58,6 +58,8 @@ describe('NotificationBellComponent', () => {
     const row = el.querySelector('a.bell-item') as HTMLAnchorElement;
     expect(row.textContent).toContain('Pat');
     expect(row.textContent).toContain('added Dinner to Day 1, Sat Oct 3 at 7:00 PM');
+    // #679: "Mayaadded …": the spaces sat at @if block edges, which Angular drops.
+    expect(row.textContent!.replace(/\s+/g, ' ').trim()).toMatch(/^Pat added Dinner to Day 1, Sat Oct 3 at 7:00 PM · /);
     expect(row.getAttribute('href')).toBe('/itinerary?focus=i1');
   });
 

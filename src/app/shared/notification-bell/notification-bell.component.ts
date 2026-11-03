@@ -35,7 +35,7 @@ import { SurveyService } from '../../services/survey.service';
           @for (e of shown(); track e.id) {
             <a class="bell-item bell-link" [routerLink]="e.path" [queryParams]="e.itemId && e.action !== 'reminded' ? { focus: e.itemId } : null" (click)="open.set(false)">
               <!-- A pay-back reminder reads from your side, without who sent it (#532) -->
-              @if (e.action !== 'reminded') {<b>{{ e.actorName }}</b> }{{ e.summary }} <span class="bell-ago">· {{ ago(e.timestamp) }}</span>
+              @if (e.action !== 'reminded') {<b>{{ e.actorName }}</b>&ngsp;}{{ e.summary }} <span class="bell-ago">· {{ ago(e.timestamp) }}</span>
             </a>
           } @empty {
             @if (!surveyOn()) {
