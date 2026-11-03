@@ -10,6 +10,7 @@ import { ItineraryService } from '../../services/itinerary.service';
 import { TripService } from '../../services/trip.service';
 import { pickMapDay } from '../../utils/map-day';
 import { tripDestinations } from '../../utils/trip-destinations';
+import { placeSearch } from '../../utils/place-search';
 
 // Same cache the Trip Map page reads/writes, so geocodes are shared both ways.
 const GEOCACHE_KEY = 'tripmap_geocache';
@@ -163,16 +164,15 @@ export class DayMapCardComponent implements AfterViewInit, OnDestroy {
 
     const dest = this.tripService.activeTrip()?.destination ?? '';
     const points: L.LatLng[] = [];
-    let firstMiss = true;
 
     for (const item of this.dayItems()) {
       if (!item.location) continue;
       let coords = this.cachedCoords(item.location, dest);
       if (!coords) {
-        if (!firstMiss) await new Promise(r => setTimeout(r, 1100));
-        firstMiss = false;
-        coords = await this.fetchGeocode(`${item.location}, ${dest}`)
-              ?? await this.fetchGeocode(item.location);
+        // One a second app-wide, answers kept (#696); paused lookups just leave the pin off this time.
+        try {
+          coords = await placeSearch.find(`${item.location}, ${dest}`) ?? await placeSearch.find(item.location);
+        } catch { coords = null; }
         if (coords) this.storeCoords(item.location, dest, coords);
       }
       if (this.destroyed || seq !== this.renderSeq) return;
@@ -211,15 +211,6 @@ export class DayMapCardComponent implements AfterViewInit, OnDestroy {
       cache[`${location} @@ ${dest}`] = coords;
       localStorage.setItem(GEOCACHE_KEY, JSON.stringify(cache));
     } catch { /* cache is best-effort */ }
-  }
-
-  private async fetchGeocode(query: string): Promise<{ lat: number; lng: number } | null> {
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`;
-      const res  = await fetch(url);
-      const data = await res.json();
-      return data[0] ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
-    } catch { return null; }
   }
 }
 
