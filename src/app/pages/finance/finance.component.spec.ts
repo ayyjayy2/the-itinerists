@@ -196,6 +196,14 @@ describe('FinanceComponent: settling up', () => {
     expect(finance['clearClaim']).toHaveBeenCalledWith('Theo', 'Maya');
   });
 
+  // #682: the arrows that open the owe/owed working were still too small to spot.
+  it('draws the owe/owed arrows big enough to see, on a tap target of at least 44px', () => {
+    const { el } = create('Theo');
+    const arrow = el.querySelector<HTMLElement>('.banner-negative .working-arrow')!;
+    expect(parseFloat(getComputedStyle(arrow).fontSize)).toBeGreaterThanOrEqual(18);
+    expect(el.querySelector<HTMLElement>('.banner-negative .banner-person-tap')!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+  });
+
   // #674: a reminder sent before #664 still showed "Reminded today" before the trip's last day.
   describe('"Reminded today"', () => {
     const justNow = () => new Map([['Maya_Theo', Date.now() - 60_000]]);
