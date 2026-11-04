@@ -127,6 +127,23 @@ describe('ExpensesComponent currencies', () => {
     expect(expenses.add.calls.mostRecent().args[0].currency).toBe('GBP');
   });
 
+  it('stars the required fields, puts Vendor after Description, and says what is missing while Add is off (#733)', () => {
+    const { fixture, comp, el } = render();
+    comp.openForm();
+    fixture.detectChanges();
+    const labels = [...el.querySelectorAll('.add-form label')].map(l => l.textContent!.replace(/\s+/g, ' ').trim());
+    expect(labels.indexOf('Description *')).toBeGreaterThan(-1);
+    expect(labels.indexOf('Amount *')).toBeGreaterThan(-1);
+    expect(labels.findIndex(l => l.startsWith('Vendor'))).toBeGreaterThan(labels.indexOf('Description *'));
+    expect(el.querySelector('.form-missing')?.textContent).toContain('Add a description and an amount');
+    comp.form.description = 'Snack';
+    fixture.detectChanges();
+    expect(el.querySelector('.form-missing')?.textContent).toContain('Add an amount');
+    comp.form.amount = 3;
+    fixture.detectChanges();
+    expect(el.querySelector('.form-missing')).toBeNull();
+  });
+
   it("uses the trip's currency even when the trip loads after the page", () => {
     const trip = TestBed.inject(TripService) as any;
     trip.activeTrip.set(null);

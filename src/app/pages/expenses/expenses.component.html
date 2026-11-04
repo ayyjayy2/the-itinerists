@@ -44,19 +44,18 @@
       </div>
 
       <div class="form-group">
+        <label>Description <span class="label-required" aria-hidden="true">*</span></label>
+        <input type="text" [(ngModel)]="form.description" placeholder="e.g. Brunch" required>
+      </div>
+      <div class="form-group">
         <label>Vendor <span class="label-optional">(optional)</span></label>
         <input type="text" [(ngModel)]="form.vendor" placeholder="e.g. The Grey">
       </div>
 
-      <div class="form-group">
-        <label>Description</label>
-        <input type="text" [(ngModel)]="form.description" placeholder="e.g. Brunch">
-      </div>
-
       <div class="form-row">
         <div class="form-group">
-          <label>Amount</label>
-          <input type="number" [(ngModel)]="form.amount" placeholder="0.00" min="0" step="0.01">
+          <label>Amount <span class="label-required" aria-hidden="true">*</span></label>
+          <input type="number" [(ngModel)]="form.amount" placeholder="0.00" min="0" step="0.01" required>
         </div>
         <div class="form-group">
           <label>Currency</label>
@@ -64,6 +63,9 @@
         </div>
       </div>
 
+      @if (missingText(form.description, form.amount); as missing) {
+        <p class="form-missing">{{ missing }}</p>
+      }
       <div class="form-actions">
         <button class="btn btn-ghost" (click)="showForm.set(false)">Cancel</button>
         <button data-needs-account class="btn btn-primary" (click)="addExpense()" [disabled]="!form.description || !form.amount">Add</button>
@@ -136,17 +138,17 @@
             </div>
           </div>
           <div class="form-group">
+            <label>Description <span class="label-required" aria-hidden="true">*</span></label>
+            <input type="text" [(ngModel)]="editForm.description" required>
+          </div>
+          <div class="form-group">
             <label>Vendor <span class="label-optional">(optional)</span></label>
             <input type="text" [(ngModel)]="editForm.vendor" placeholder="e.g. The Grey">
           </div>
-          <div class="form-group">
-            <label>Description</label>
-            <input type="text" [(ngModel)]="editForm.description">
-          </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Amount</label>
-              <input type="number" [(ngModel)]="editForm.amount" min="0" step="0.01">
+              <label>Amount <span class="label-required" aria-hidden="true">*</span></label>
+              <input type="number" [(ngModel)]="editForm.amount" min="0" step="0.01" required>
             </div>
             <div class="form-group">
               <label>Currency</label>
@@ -177,17 +179,17 @@
             </div>
           </div>
           <div class="form-group">
+            <label>Description <span class="label-required" aria-hidden="true">*</span></label>
+            <input type="text" [(ngModel)]="financeEditDraft.description" required>
+          </div>
+          <div class="form-group">
             <label>Vendor <span class="label-optional">(optional)</span></label>
             <input type="text" [(ngModel)]="financeEditDraft.vendor" placeholder="e.g. Olde Pink House">
           </div>
-          <div class="form-group">
-            <label>Description</label>
-            <input type="text" [(ngModel)]="financeEditDraft.description">
-          </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Amount ({{ financeEditDraft.currency || homeCurrency() }})</label>
-              <input type="number" [(ngModel)]="financeEditDraft.amount" min="0" step="0.01">
+              <label>Amount ({{ financeEditDraft.currency || homeCurrency() }}) <span class="label-required" aria-hidden="true">*</span></label>
+              <input type="number" [(ngModel)]="financeEditDraft.amount" min="0" step="0.01" required>
             </div>
             <div class="form-group">
               <label>Paid by</label>
