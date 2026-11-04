@@ -12,6 +12,37 @@ export type Rates = Record<string, number>;
  *  of the expense's currency, for the day `on`. Amounts never move once it's saved. */
 export interface SavedRate { to: string; value: number; on: string }
 
+/**
+ * An expense's rates into every currency the group uses (#723): `per[X]` units
+ * of X for 1 unit of the expense's own currency, on the day `on`. Saved when
+ * it's added, filled in for currencies chosen later, so an amount in any
+ * currency is fixed and the same for everyone.
+ */
+export interface SavedRates { on: string; per: Record<string, number> }
+
+/** The trip's currency and each member's own, once each, trip's first. */
+export function groupCurrencies(trip: string, members: readonly { ownCurrency?: string }[]): string[] {
+  return [...new Set([trip, ...members.map(m => m.ownCurrency).filter((c): c is string => !!c)])];
+}
+
+/** From a table based on the expense's currency (table[X] = X per 1), the wanted rates it has, its own left out. */
+export function lockRates(currency: string, wanted: readonly string[], table: Rates | null, on: string): SavedRates | null {
+  if (!table) return null;
+  const per: Record<string, number> = {};
+  for (const c of wanted) if (c !== currency && table[c] > 0) per[c] = table[c];
+  return { on, per };
+}
+
+/** The group currencies an expense has no saved rate for yet (its own currency never needs one). */
+export function missingRates(e: { currency: string; rates?: SavedRates | null }, wanted: readonly string[]): string[] {
+  return wanted.filter(c => c !== e.currency && !((e.rates?.per?.[c] ?? 0) > 0));
+}
+
+/** Add rates an expense was missing; the ones it already had (and their day) stay as they were. */
+export function mergeRates(had: SavedRates | null | undefined, found: SavedRates): SavedRates {
+  return { on: had?.on ?? found.on, per: { ...found.per, ...(had?.per ?? {}) } };
+}
+
 /** The rate to save on an expense, from a base=`home` table for its day; null in the trip's
  *  own currency, or when there's no rate for that currency. */
 export function lockRate(currency: string, home: string, rates: Rates | null, on: string): SavedRate | null {
