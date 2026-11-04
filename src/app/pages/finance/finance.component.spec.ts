@@ -193,7 +193,8 @@ describe('FinanceComponent: settling up', () => {
     (Array.from(box.querySelectorAll('button')).find(b => b.textContent!.includes('Got it')) as HTMLButtonElement).click();
     await Promise.resolve();
     expect(finance['markAllPaid']).toHaveBeenCalled();
-    expect(finance['clearClaim']).toHaveBeenCalledWith('Theo', 'Maya');
+    // #716: Theo's bell hears it was received
+    expect(finance['clearClaim']).toHaveBeenCalledWith('Theo', 'Maya', { answer: 'received', amount: 30, currency: 'USD' });
   });
 
   // #429: what's owed also shows in my own currency, worked out from the trip's.
@@ -295,7 +296,7 @@ describe('FinanceComponent: settling up', () => {
     const { el } = create('Maya', new Map([['Theo_Maya', { from: 'Theo', to: 'Maya', amount: 30, currency: 'USD', app: 'cashapp' }]]));
     (Array.from(el.querySelectorAll('.banner-positive .pay-check button')).find(b => b.textContent!.includes('Not received')) as HTMLButtonElement).click();
     await Promise.resolve();
-    expect(finance['clearClaim']).toHaveBeenCalledWith('Theo', 'Maya');
+    expect(finance['clearClaim']).toHaveBeenCalledWith('Theo', 'Maya', { answer: 'not-received', amount: 30, currency: 'USD' });
     expect(finance['markAllPaid']).not.toHaveBeenCalled();
   });
 });

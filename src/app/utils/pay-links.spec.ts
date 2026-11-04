@@ -1,4 +1,4 @@
-import { canRemind, cleanHandles, remindersOpen, normalizeHandle, payAmount, payLink, payAppLink, reminderText, REMINDER_GAP_MS } from './pay-links';
+import { claimText, claimAnswerText, canRemind, cleanHandles, remindersOpen, normalizeHandle, payAmount, payLink, payAppLink, reminderText, REMINDER_GAP_MS } from './pay-links';
 
 describe('pay-links (#532)', () => {
   it('tidies typed handles and pasted profile links', () => {
@@ -67,6 +67,14 @@ describe('pay-links (#532)', () => {
     expect(payAmount('venmo', 6160, 'THB', rates, 'GBP')).toEqual({ amount: 176.18, currency: 'USD' });   // Venmo: dollars only
     expect(payAmount('paypal', 6160, 'THB', rates, 'THB')).toEqual({ amount: 6160, currency: 'THB' });
     expect(payAmount('paypal', 6160, 'THB', rates, 'JPY')).toEqual({ amount: 6160, currency: 'THB' });   // no rate for it
+  });
+
+  // #716: each step of "Mark as paid" reaches the other person's bell (the name comes first, on the bell).
+  it('words the payment notices for the other person', () => {
+    const plain = (t: string) => t.replace(/\u00a0/g, ' ');   // currency formatting uses a non-breaking space
+    expect(plain(claimText(3112.5, 'THB', 'Venmo'))).toBe('says they paid you THB 3,112.50 with Venmo. Confirm it in Finance.');
+    expect(plain(claimAnswerText('received', 3112.5, 'THB'))).toBe('got your THB 3,112.50 payment. You two are settled up.');
+    expect(plain(claimAnswerText('not-received', 3112.5, 'THB'))).toBe('hasn’t received your THB 3,112.50 payment yet. Check the app you paid with, then mark it paid again.');
   });
 
   it('words the reminder from the payer’s side', () => {

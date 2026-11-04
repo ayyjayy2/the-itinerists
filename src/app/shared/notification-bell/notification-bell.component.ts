@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { IconComponent } from '../icon/icon.component';
 import { UserService } from '../../services/user.service';
 import { timeAgo } from '../../utils/activity';
-import { eventsForMe, unseenEvents, seenMarkFor } from '../../utils/trip-events';
+import { eventsForMe, unseenEvents, seenMarkFor, opensItem } from '../../utils/trip-events';
 import { TripEventsService } from '../../services/trip-events.service';
 import { TripService } from '../../services/trip.service';
 import { TripContextService } from '../../services/trip-context.service';
@@ -34,7 +34,7 @@ import { SurveyService } from '../../services/survey.service';
             </a>
           }
           @for (e of shown(); track e.id) {
-            <a class="bell-item bell-link" [routerLink]="e.path" [queryParams]="e.itemId && e.action !== 'reminded' ? { focus: e.itemId } : null" (click)="open.set(false)">
+            <a class="bell-item bell-link" [routerLink]="e.path" [queryParams]="opensItem(e) ? { focus: e.itemId } : null" (click)="open.set(false)">
               <!-- A pay-back reminder reads from your side, without who sent it (#532) -->
               @if (e.action !== 'reminded') {<b>{{ e.actorName }}</b>&ngsp;}{{ e.summary }} <span class="bell-ago">· {{ ago(e.timestamp) }}</span>
             </a>
@@ -117,6 +117,7 @@ export class NotificationBellComponent {
   readonly shownCount = computed(() => this.shown().length + (this.surveyOn() ? 1 : 0));
 
   ago = (ts: number) => timeAgo(ts, this.now());
+  readonly opensItem = opensItem;
 
   /** Viewport-fixed top for the dropdown, measured from the bell on open. */
   readonly dropTop = signal(64);

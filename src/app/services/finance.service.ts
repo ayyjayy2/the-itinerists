@@ -7,7 +7,7 @@ import { TripService } from './trip.service';
 import { TripEventsService } from './trip-events.service';
 import { financeAdded, financeChanged, financeRemoved } from '../utils/event-text';
 import { markId, paidKey, parsePaidKey, ticksToShare } from '../utils/paid-marks';
-import { PayApp, reminderText } from '../utils/pay-links';
+import { PAY_APPS, PayApp, claimAnswerText, claimText, reminderText } from '../utils/pay-links';
 import { ExchangeRateService } from './exchange-rate.service';
 import { SavedRate, lockRate, needsNewRate } from '../utils/currency';
 import { localTodayISO } from '../utils/trip-destinations';
@@ -234,7 +234,7 @@ export class FinanceService {
     });
   }
 
-  /** "Mark as paid" (#666): tell the person owed I paid them; it settles when they confirm. */
+  /** "Mark as paid" (#666): tell the person owed I paid them; it settles when they confirm. Their bell hears it (#716). */
   async claimPaid(to: { uid: string }, amount: number, app: PayApp): Promise<void> {
     const tid = this.requireTrip();
     const me = this.userService.currentUser();
@@ -242,12 +242,24 @@ export class FinanceService {
     await runInInjectionContext(this.injector, () =>
       setDoc(doc(this.firestore, 'trips', tid, 'payClaims', `${me.uid}_${to.uid}`),
         { from: me.uid, to: to.uid, amount, currency: this.currency(), app, at: serverTimestamp() }));
+    const label = PAY_APPS.find(a => a.app === app)?.label ?? app;
+    this.events.emit({
+      kind: 'finance', action: 'paid', itemId: `claim-${me.uid}`, path: '/finance', targetUid: to.uid,
+      summary: claimText(amount, this.currency(), label), audience: [to.uid],
+    }, tid);
   }
 
-  /** Clear a claim: the person owed confirmed it or didn't get it, or the payer took it back. */
-  async clearClaim(from: string, to: string): Promise<void> {
+  /**
+   * Clear a claim: the person owed confirmed it or didn't get it, or the payer took it back.
+   * With an `answer`, the payer's bell hears which (#716).
+   */
+  async clearClaim(from: string, to: string, answer?: { answer: 'received' | 'not-received'; amount: number; currency: string }): Promise<void> {
     const tid = this.requireTrip();
     await runInInjectionContext(this.injector, () => deleteDoc(doc(this.firestore, 'trips', tid, 'payClaims', `${from}_${to}`)));
+    if (answer) this.events.emit({
+      kind: 'finance', action: answer.answer, itemId: `claim-${from}`, path: '/finance', targetUid: from,
+      summary: claimAnswerText(answer.answer, answer.amount, answer.currency), audience: [from],
+    }, tid);
   }
 
   private requireTrip(): string {

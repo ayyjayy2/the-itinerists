@@ -116,6 +116,18 @@ export function reminderText(payee: string, amount: number, currency: string): s
   return `Don't forget to pay ${payee}: ${money(amount, currency)}`;
 }
 
+/** To the person owed when someone marks a payment to them (#716); the bell puts the payer's name first. */
+export function claimText(amount: number, currency: string, appLabel: string): string {
+  return `says they paid you ${money(amount, currency)} with ${appLabel}. Confirm it in Finance.`;
+}
+
+/** To the payer when the person owed answers (#716); the bell puts that person's name first. */
+export function claimAnswerText(answer: 'received' | 'not-received', amount: number, currency: string): string {
+  return answer === 'received'
+    ? `got your ${money(amount, currency)} payment. You two are settled up.`
+    : `hasn’t received your ${money(amount, currency)} payment yet. Check the app you paid with, then mark it paid again.`;
+}
+
 /** At most one reminder a day for each pair (the rules hold to 20 hours, so "tomorrow" always works). */
 export const REMINDER_GAP_MS = 20 * 60 * 60 * 1000;
 export function canRemind(lastAt: number | undefined, now: number): boolean {

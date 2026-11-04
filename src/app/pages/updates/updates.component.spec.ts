@@ -57,3 +57,37 @@ describe('UpdatesComponent', () => {
     expect(texts[1]).toMatch(/^Pat added Dinner/);
   });
 });
+
+// #716: "Mark as paid" and its answer reach the other person; my own side reads as what I did.
+describe('UpdatesComponent: paying back', () => {
+  const pay = (o: Partial<TripEvent>) => ev({ kind: 'finance', path: '/finance', itemId: 'claim-me', ...o });
+  function feedText(events: TripEvent[]): string[] {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [UpdatesComponent],
+      providers: [
+        provideRouter([]),
+        { provide: TripService, useValue: { activeTrip: signal({ id: 't1', name: 'Berlin' }), activeMembers: signal([{ uid: 'p1', displayName: 'Pat', color: '#abc', avatarEmoji: '🐸' }]) } },
+        { provide: TripEventsService, useValue: { events: signal(events) } },
+        { provide: UserService, useValue: { firestoreUser: signal({ uid: 'me' }), markActivitySeen: jasmine.createSpy() } },
+      ],
+    });
+    const fixture = TestBed.createComponent(UpdatesComponent);
+    fixture.detectChanges();
+    const rows = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('a.feed-row'));
+    expect(rows.every(r => !r.href.includes('focus='))).withContext('no single item to open').toBeTrue();
+    return rows.map(r => r.querySelector('.feed-text')!.textContent!.replace(/\s+/g, ' ').replace(/ · .*$/, '').trim());
+  }
+
+  it('words my side of it', () => {
+    expect(feedText([pay({ action: 'paid', actorUid: 'me', actorName: 'Me', targetUid: 'p1', audience: ['p1'], summary: 'says they paid you $30.00 with Venmo. Confirm it in Finance.' })]))
+      .toEqual(['You told Pat you paid them']);
+    expect(feedText([pay({ action: 'received', actorUid: 'me', actorName: 'Me', targetUid: 'p1', audience: ['p1'], summary: 'got your $30.00 payment. You two are settled up.' })]))
+      .toEqual(['You confirmed Pat’s payment']);
+  });
+
+  it('shows the other person\'s notice to me with their name first', () => {
+    expect(feedText([pay({ action: 'not-received', actorUid: 'p1', actorName: 'Pat', targetUid: 'me', audience: ['me'], summary: 'hasn’t received your $30.00 payment yet.' })]))
+      .toEqual(['Pat hasn’t received your $30.00 payment yet.']);
+  });
+});
