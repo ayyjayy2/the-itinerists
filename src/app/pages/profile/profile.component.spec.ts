@@ -6,6 +6,7 @@ import { ProfileComponent } from './profile.component';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
 import { AuthService } from '../../services/auth.service';
+import { AccountPromptService } from '../../services/account-prompt.service';
 
 /** Download my data (#332) stand-in: the file itself is tested in utils/data-export.spec.ts. */
 const dataExport = { download: jasmine.createSpy('download').and.resolveTo() };
@@ -333,5 +334,59 @@ describe('ProfileComponent my currency (#429)', () => {
     trips.updateOwnCurrency.and.rejectWith(new Error('offline'));
     await comp.saveOwnCurrency('GBP');
     expect(comp.ownError()).toContain('connection');
+  });
+});
+
+describe('ProfileComponent as a guest (#742)', () => {
+  function create() {
+    TestBed.resetTestingModule();
+    const ask = jasmine.createSpy('ask');
+    TestBed.configureTestingModule({
+      imports: [ProfileComponent],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: {} },
+        { provide: DataExportService, useValue: dataExport },
+        { provide: UserService, useValue: { firestoreUser: signal({ uid: 'g', displayName: 'Robin', avatarEmoji: '', color: '#fff', isAdmin: false, createdAt: 0, isGuest: true }), currentUser: signal(null), isGuest: signal(true), updateHomeLayout: () => {} } },
+        { provide: TripService, useValue: { activeMembers: signal([]), activeTrip: signal({ id: 't', name: 'Chiang Mai, November' }) } },
+        { provide: AccountPromptService, useValue: { ask } },
+      ],
+    });
+    const fixture = TestBed.createComponent(ProfileComponent);
+    fixture.detectChanges();
+    return { comp: fixture.componentInstance, el: fixture.nativeElement as HTMLElement, fixture, ask };
+  }
+  const headings = (el: HTMLElement) => Array.from(el.querySelectorAll('h2')).map(h => h.textContent!.trim());
+
+  it('leads with Create your account on the trip, and hides what needs an account', () => {
+    const { el, ask } = create();
+    const first = el.querySelector('.card')!;
+    expect(first.textContent).toContain('Create your account');
+    expect(first.textContent).toContain("You're a guest on Chiang Mai, November.");
+    expect(headings(el)).not.toContain('My currency');
+    expect(headings(el)).not.toContain('Payment apps');
+    expect(el.textContent).not.toContain('Download my data');
+    (first.querySelector('button') as HTMLButtonElement).click();
+    expect(ask).toHaveBeenCalled();
+  });
+
+  it('asks "Log out as a guest?", and Create account opens the account sheet instead', () => {
+    const { comp, el, fixture, ask } = create();
+    comp.showLogoutConfirm.set(true);
+    fixture.detectChanges();
+    const box = el.querySelector('[role="dialog"]')!;
+    expect(box.querySelector('h2')!.textContent).toBe('Log out as a guest?');
+    const create_ = Array.from(box.querySelectorAll('button')).find(b => b.textContent!.trim() === 'Create account') as HTMLButtonElement;
+    create_.click();
+    expect(ask).toHaveBeenCalled();
+    expect(comp.showLogoutConfirm()).toBeFalse();
+  });
+
+  it('✕ keeps them a guest', () => {
+    const { comp, el, fixture } = create();
+    comp.showLogoutConfirm.set(true);
+    fixture.detectChanges();
+    (el.querySelector('[aria-label="Stay as a guest"]') as HTMLButtonElement).click();
+    expect(comp.showLogoutConfirm()).toBeFalse();
   });
 });

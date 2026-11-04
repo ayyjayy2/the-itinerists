@@ -11,6 +11,16 @@
     </div>
   }
 
+  <!-- A guest (#742): the nudge asks them to create an account; they can't add an email without one -->
+  @if (showGuestNudge()) {
+    <div class="recovery-nudge" role="status">
+      <span class="rn-ic"><app-icon name="profile" [size]="16" /></span>
+      <span class="rn-text"><strong>You're a guest on this trip.</strong> Create an account to add and change things.</span>
+      <button class="btn btn-sm btn-primary" type="button" (click)="accountPrompt.ask()">Create account</button>
+      <button class="rn-close" type="button" (click)="dismissRecoveryNudge()" aria-label="Not now">✕</button>
+    </div>
+  }
+
   <!-- Recovery-email nudge (accounts without a real email can't reset their own password) -->
   @if (showRecoveryNudge()) {
     <div class="recovery-nudge" role="status">

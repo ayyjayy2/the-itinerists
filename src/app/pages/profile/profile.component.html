@@ -5,6 +5,20 @@
 
   @if (firestoreUser(); as user) {
 
+    @if (user.isGuest) {
+      <!-- A guest (#610, #742): signing up comes first -->
+      <div class="card section-card guest-card">
+        <h2>Create your account</h2>
+        <p class="input-hint">
+          @if (tripName(); as trip) { You're a guest on <strong>{{ trip }}</strong>. } @else { You're a guest. }
+          Create an account to add and change things, and to sign in on another device. You'll stay on the trip.
+        </p>
+        <div class="account-actions">
+          <button class="btn btn-primary" (click)="createAccount()">Create account</button>
+        </div>
+      </div>
+    }
+
     <!-- Preview -->
     <div class="card profile-preview">
       <div class="avatar-preview" [style.background]="color"><app-avatar-glyph [emoji]="avatarEmoji" [letterColor]="avatarLetterColor" /></div>
@@ -44,6 +58,7 @@
       </button>
     </div>
 
+    @if (!user.isGuest) {
     <!-- My currency (#429): amounts owed also show in it -->
     <div class="card section-card" id="my-currency">
       <h2>My currency</h2>
@@ -89,19 +104,16 @@
       </button>
     </div>
 
+    }
+
     <!-- Account actions -->
     @if (user.isGuest) {
-      <!-- A guest (#610): no email or password yet -->
+      <!-- A guest (#742): no email, password or data of their own yet; Create account is at the top -->
       <div class="card section-card">
         <h2>Account</h2>
-        <p class="input-hint">You're seeing your trips as a guest. Create an account to add and change things, and to sign in on another device. You'll keep your trips.</p>
         <div class="account-actions">
-          <button class="btn btn-primary" (click)="createAccount()">Create account</button>
-        </div>
-        <div class="account-exit">
           <button class="btn btn-ghost btn-ghost-warn" (click)="showLogoutConfirm.set(true)">Log Out</button>
         </div>
-        <ng-container *ngTemplateOutlet="dataLink" />
       </div>
     } @else {
     <div class="card section-card">
@@ -159,18 +171,27 @@
 <!-- Logout confirmation modal -->
 @if (showLogoutConfirm()) {
   <div class="modal-backdrop" (click)="showLogoutConfirm.set(false)">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <h2>Do you want to log out?</h2>
-      @if (firestoreUser()?.isGuest) {
-        <p class="modal-hint">You're a guest, so once you log out you can only get back to your trips through a new invite link. Create an account first to keep them.</p>
-      } @else {
-        <p class="modal-hint">You'll be taken to the sign-in screen.</p>
-      }
-      <div class="modal-actions">
-        <button class="btn btn-ghost" (click)="showLogoutConfirm.set(false)">No</button>
-        <button class="btn btn-danger" (click)="confirmLogout()">Yes</button>
+    @if (firestoreUser()?.isGuest) {
+      <!-- A guest's sign-in is never kept (#742): the green choice keeps their place, ✕ keeps them here -->
+      <div class="modal-box guest-logout" role="dialog" aria-modal="true" aria-labelledby="guest-logout-title" (click)="$event.stopPropagation()">
+        <button class="modal-x" type="button" (click)="showLogoutConfirm.set(false)" aria-label="Stay as a guest">✕</button>
+        <h2 id="guest-logout-title">Log out as a guest?</h2>
+        <p class="modal-hint">Nothing is saved to an account. To come back, open the invite link and enter your name again: you'll join as a new guest. Create an account to keep your place.</p>
+        <div class="modal-actions">
+          <button class="btn btn-primary" (click)="showLogoutConfirm.set(false); createAccount()">Create account</button>
+          <button class="btn btn-danger" (click)="confirmLogout()">Log out</button>
+        </div>
       </div>
-    </div>
+    } @else {
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h2>Do you want to log out?</h2>
+        <p class="modal-hint">You'll be taken to the sign-in screen.</p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" (click)="showLogoutConfirm.set(false)">No</button>
+          <button class="btn btn-danger" (click)="confirmLogout()">Yes</button>
+        </div>
+      </div>
+    }
   </div>
 }
 
