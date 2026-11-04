@@ -7,6 +7,7 @@ import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { TripDoc } from '../../models/trip.models';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { AccountPromptService } from '../../services/account-prompt.service';
 import { InvitePanelComponent } from '../../shared/invite-panel/invite-panel.component';
 import { userMessage } from '../../utils/user-message';
 import { publicLink } from '../../shared/public-link';
@@ -25,6 +26,9 @@ export class MyTripsComponent implements OnInit {
   private authService = inject(AuthService);
   private router      = inject(Router);
   private tripContext = inject(TripContextService);
+  /** A guest (#744) plans their own trip through the account sheet, and has no invites to give. */
+  protected readonly isGuest = this.userService.isGuest;
+  protected readonly accountPrompt = inject(AccountPromptService);
 
   trips   = signal<TripDoc[]>([]);
   loading = signal(true);

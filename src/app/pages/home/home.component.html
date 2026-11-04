@@ -62,7 +62,12 @@
             @if (isActive(t)) { <span class="switch-active">· active</span> }
           </button>
         }
-        <a class="switch-chip new" routerLink="/trips/new">+ New</a>
+        @if (userService.isGuest()) {
+          <!-- A guest (#744): an account first, then the New trip form -->
+          <button class="switch-chip new" type="button" (click)="accountPrompt.ask('plan')">+ Plan your own</button>
+        } @else {
+          <a class="switch-chip new" routerLink="/trips/new">+ New</a>
+        }
       </div>
     }
 

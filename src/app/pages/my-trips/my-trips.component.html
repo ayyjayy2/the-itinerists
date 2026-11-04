@@ -1,7 +1,12 @@
 <div class="page-container">
   <div class="trips-header">
     <h1><app-icon name="trips" [size]="22" /> My Trips</h1>
-    <button class="btn btn-primary" (click)="newTrip()">+ New Trip</button>
+    @if (isGuest()) {
+      <!-- A guest (#744): an account first, then the New trip form -->
+      <button class="btn btn-ghost" (click)="accountPrompt.ask('plan')">+ Plan your own</button>
+    } @else {
+      <button class="btn btn-primary" (click)="newTrip()">+ New Trip</button>
+    }
   </div>
 
   @if (loading()) {
@@ -28,11 +33,13 @@
             <div class="trip-line"><app-icon name="itinerary" [size]="15" /> {{ dateRange(trip) }}</div>
             <div class="trip-meta"><app-icon name="people" [size]="15" /> {{ trip.memberCount }} · {{ trip.currency }}</div>
           </button>
+          @if (!isGuest()) {
           <button class="btn btn-ghost btn-sm invite-btn" (click)="invite(trip)" [disabled]="invitingId() === trip.id">
             @if (copiedId() === trip.id) { ✓ Invite link copied }
             @else if (invitingId() === trip.id) { Generating… }
             @else { <app-icon name="link" [size]="14" /> Invite }
           </button>
+          }
           @if (openInvite()?.tripId === trip.id) {
             <app-invite-panel [code]="openInvite()!.code" [closing]="inviteClosing()" (close)="closeInvite(trip, $event)" />
           }
