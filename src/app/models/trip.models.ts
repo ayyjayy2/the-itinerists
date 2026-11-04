@@ -574,3 +574,17 @@ export interface SurveyProgress {
   bannerDismissals?: number; // times they closed the Home banner
   noticeSeenAt?: number;     // they opened the bell after the survey notice arrived
 }
+
+/**
+ * `_waitlist/{id}`: someone who asked to hear about the iPhone app's beta and
+ * launch. The welcome page writes email, list, source and at; survey entries
+ * (and a phone number instead of an email) come only from scripts/waitlist.js (#763).
+ */
+export interface WaitlistEntry {
+  email?: string;
+  phone?: string;
+  list: 'ios';
+  /** Missing on entries from before #763: counts as 'website'. */
+  source?: 'website' | 'instagram' | 'linkedin' | 'survey';
+  at: unknown;   // server timestamp
+}

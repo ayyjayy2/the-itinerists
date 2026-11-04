@@ -373,25 +373,37 @@ test('waitlistStats: unique emails (case and spaces ignored), first sign-up deci
   assert.equal(s.total, 4);
   assert.equal(s.inRange, 2);                     // theo and jo; maya first signed up before the range
   assert.equal(s.lastAt, at('2026-10-14T18:30:00Z'));
-  assert.deepEqual(Object.keys(s).sort(), ['inRange', 'lastAt', 'total']); // counts only: no emails come back
-  assert.deepEqual(waitlistStats([], 0, 1), { total: 0, inRange: 0, lastAt: null });
+  assert.deepEqual(s.bySource, { website: 4, instagram: 0, linkedin: 0, survey: 0 });   // no source yet: website
+  assert.deepEqual(waitlistStats([], 0, 1), { total: 0, inRange: 0, lastAt: null, bySource: { website: 0, instagram: 0, linkedin: 0, survey: 0 } });
 });
 
-test('waitlistList: one row per email (case and spaces ignored), first sign-up time, newest first (#759)', () => {
+test('waitlistList: one row per person (email, else phone), first sign-up time and source, newest first (#759, #763)', () => {
   const at = (iso) => Date.parse(iso);
   const list = waitlistList([
-    { email: 'maya@example.com', at: at('2026-10-12T10:00:00Z') },
-    { email: ' Maya@Example.com ', at: at('2026-10-02T10:00:00Z') },  // the same person, earlier
-    { email: 'theo@example.com', at: at('2026-10-11T09:00:00Z') },
-    { email: 'rafa@example.com', at: 0 },                              // no server time yet: listed last
-    { email: '  ', at: at('2026-10-13T00:00:00Z') },                   // nothing typed: skipped
+    { email: 'maya@example.com', at: at('2026-10-12T10:00:00Z'), source: 'instagram' },
+    { email: ' Maya@Example.com ', at: at('2026-10-02T10:00:00Z'), source: 'linkedin' }, // the same person, earlier: this source wins
+    { email: 'theo@example.com', at: at('2026-10-11T09:00:00Z') },                      // from before sources: website
+    { phone: '(555) 010-0199', at: at('2026-10-13T00:00:00Z'), source: 'survey' },      // a phone number only
+    { phone: '5550100199', at: at('2026-10-14T00:00:00Z'), source: 'survey' },          // the same number, written differently
+    { email: 'rafa@example.com', at: 0, source: 'nonsense' },                           // no time yet: last; unknown source: website
+    { email: '  ', at: at('2026-10-15T00:00:00Z') },                                    // nothing typed: skipped
   ]);
   assert.deepEqual(list, [
-    { email: 'theo@example.com', at: at('2026-10-11T09:00:00Z') },
-    { email: 'maya@example.com', at: at('2026-10-02T10:00:00Z') },
-    { email: 'rafa@example.com', at: 0 },
+    { email: null, phone: '5550100199', source: 'survey', at: at('2026-10-13T00:00:00Z') },
+    { email: 'theo@example.com', phone: null, source: 'website', at: at('2026-10-11T09:00:00Z') },
+    { email: 'maya@example.com', phone: null, source: 'linkedin', at: at('2026-10-02T10:00:00Z') },
+    { email: 'rafa@example.com', phone: null, source: 'website', at: 0 },
   ]);
   assert.deepEqual(waitlistList([]), []);
+});
+
+test('waitlistStats: people per source (#763)', () => {
+  const s = waitlistStats([
+    { email: 'a@example.com', at: 5, source: 'instagram' }, { email: 'b@example.com', at: 6, source: 'instagram' },
+    { phone: '+15550100', at: 7, source: 'survey' }, { email: 'c@example.com', at: 8 },
+  ], 0, 10);
+  assert.equal(s.total, 4);
+  assert.deepEqual(s.bySource, { website: 1, instagram: 2, linkedin: 0, survey: 1 });
 });
 
 // #596: the usage and write logs are append-only, so Pulse keeps them on the

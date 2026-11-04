@@ -104,7 +104,7 @@ function start() {
   }, err => showError('Deletions: ' + err.message));
   // iPhone launch list (#524): the Waitlist tab (#759) lists it for the owner.
   unsubWaitlist = onSnapshot(collection(db, '_waitlist'), snap => {
-    state.waitlist = snap.docs.map(d => { const r = d.data(); return { email: r.email, at: r.at?.toMillis?.() ?? 0 }; });
+    state.waitlist = snap.docs.map(d => { const r = d.data(); return { email: r.email, phone: r.phone, source: r.source, at: r.at?.toMillis?.() ?? 0 }; });
     scheduleRender();
   }, err => showError('Launch list: ' + err.message));
   unsubUsers = onSnapshot(collection(db, 'users'), snap => {
@@ -452,27 +452,45 @@ function allZones() {
 // ── Waitlist tab (#759) ──────────────────────────────────────────────────────
 // Anyone can join, so there are no test entries to hide; the range picker
 // doesn't apply (the list is all time).
+const SOURCE_LABEL = { website: 'Website', instagram: 'Instagram', linkedin: 'LinkedIn', survey: 'Survey' };
+let waitlistFilter = 'all';
+const waitlistShown = () => S.waitlistList(state.waitlist ?? []).filter(r => waitlistFilter === 'all' || r.source === waitlistFilter);
 function renderWaitlist() {
   const all = state.waitlist ?? [];
   const now = Date.now();
   const wl = S.waitlistStats(all, now - 7 * DAY, now + DAY);
-  const list = S.waitlistList(all);
+  const list = waitlistShown();
   $('waitlistBadge').textContent = wl.total ? `(${wl.total})` : '';
   $('waitlistTotal').textContent = wl.total;
   $('waitlistWeek').textContent = wl.inRange;
   $('waitlistLast').textContent = wl.lastAt ? `Latest ${S.stampText(wl.lastAt, state.zone)} (${zoneAbbr(state.zone, wl.lastAt)})` : 'Nobody yet.';
-  $('waitlistCopy').disabled = list.length === 0;
-  $('waitlistTable').innerHTML = list.length === 0 ? '<tr><td class="muted">Nobody yet.</td></tr>' :
-    '<tr><th>Email</th><th class="n">Joined</th></tr>' +
-    list.map(r => `<tr><td>${esc(r.email)}</td><td class="n">${r.at ? `${esc(S.stampText(r.at, state.zone))} (${esc(zoneAbbr(state.zone, r.at))})` : '<span class="muted">just now</span>'}</td></tr>`).join('');
+  // Where people came from (#763): a filter with the count for each source
+  $('waitlistSources').innerHTML = [['all', 'All', wl.total], ...S.WAITLIST_SOURCES.map(k => [k, SOURCE_LABEL[k], wl.bySource[k]])]
+    .map(([k, label, n]) => `<button type="button" data-source="${k}" aria-pressed="${waitlistFilter === k}">${label} <span class="num">${n}</span></button>`).join('');
+  const emails = list.filter(r => r.email).length;
+  $('waitlistCopy').disabled = emails === 0;
+  $('waitlistCopy').textContent = waitlistFilter === 'all' ? 'Copy emails' : `Copy ${SOURCE_LABEL[waitlistFilter]} emails`;
+  $('waitlistTable').innerHTML = list.length === 0 ? '<tr><td class="muted">Nobody here yet.</td></tr>' :
+    '<tr><th>Contact</th><th>From</th><th class="n">Joined</th></tr>' +
+    list.map(r => `<tr><td>${r.email ? esc(r.email) : `${esc(r.phone)} <span class="muted">phone</span>`}</td><td><span class="src src-${r.source}">${SOURCE_LABEL[r.source]}</span></td><td class="n">${r.at ? `${esc(S.stampText(r.at, state.zone))} (${esc(zoneAbbr(state.zone, r.at))})` : '<span class="muted">just now</span>'}</td></tr>`).join('');
 }
+$('waitlistSources').addEventListener('click', e => {
+  const b = e.target.closest('button[data-source]');
+  if (!b) return;
+  waitlistFilter = b.dataset.source;
+  $('waitlistCopyMsg').textContent = '';
+  renderWaitlist();
+});
 $('waitlistCopy').addEventListener('click', async () => {
-  const text = S.waitlistList(state.waitlist ?? []).map(r => r.email).join(', ');
+  const shown = waitlistShown();
+  const text = shown.filter(r => r.email).map(r => r.email).join(', ');
+  const phones = shown.filter(r => !r.email).length;
+  const note = phones ? ` ${phones} ${phones === 1 ? 'person has' : 'people have'} only a phone number; text them instead.` : '';
   try {
     await navigator.clipboard.writeText(text);
-    $('waitlistCopyMsg').textContent = 'Copied. Paste them into Bcc.';
+    $('waitlistCopyMsg').textContent = 'Copied. Paste them into Bcc.' + note;
   } catch {
-    $('waitlistCopyMsg').textContent = 'Copying was blocked; select the emails in the table instead.';
+    $('waitlistCopyMsg').textContent = 'Copying was blocked; select the emails in the table instead.' + note;
   }
 });
 
