@@ -103,7 +103,7 @@
   .loading { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin: 0.25rem 0 0.75rem; }
   .loading .spin { width: 0.9rem; height: 0.9rem; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--primary); animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  #dash.is-loading .card, #dash.is-loading .tiles { opacity: 0.55; transition: opacity 0.2s; }
+  #dash.is-loading #tabUsage .card, #dash.is-loading #tabUsage .tiles { opacity: 0.55; transition: opacity 0.2s; }
   .linkish { background: none; border: 0; padding: 0; font: inherit; color: var(--accent, inherit); text-decoration: underline; cursor: pointer; }
   #trips .hidden-row { padding-top: 0.8rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; font-size: 0.82rem; }
 
@@ -167,6 +167,21 @@
   #trips { min-width: 820px; }
   #trips td:first-child { white-space: nowrap; }
 
+  /* tabs: Usage (the dashboard) and Waitlist (#759) */
+  .tab { display: contents; }
+  .tabs { align-self: flex-start; }
+  .tabs button { min-height: 44px; padding-inline: 1.2rem; }
+  .list-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+  #waitlistTable td:first-child { overflow-wrap: anywhere; }
+  /* Phones: the joined time goes under each email, so emails don't break mid-word. */
+  @media (max-width: 560px) {
+    #waitlistTable th:last-child { display: none; }
+    #waitlistTable tr { display: flex; flex-direction: column; border-top: 1px solid var(--border); padding: 0.45rem 0.25rem; }
+    #waitlistTable tr:first-child { border-top: 0; }
+    #waitlistTable td { border: 0; padding: 0; text-align: left; }
+    #waitlistTable td.n { font-size: 0.78rem; color: var(--text-muted); }
+  }
+
   /* sign-in */
   #dash { display: contents; }
   .gate { max-width: 420px; margin: 3rem auto 0; display: flex; flex-direction: column; gap: 0.9rem; }
@@ -209,6 +224,12 @@
 
   <!-- Dashboard -->
   <section id="dash" hidden>
+    <nav class="seg tabs" id="tabs" aria-label="Pulse pages">
+      <button type="button" data-tab="usage" aria-pressed="true">Usage</button>
+      <button type="button" data-tab="waitlist" aria-pressed="false">Waitlist <span class="num" id="waitlistBadge"></span></button>
+    </nav>
+
+    <div class="tab" id="tabUsage">
     <div class="controls">
       <div class="seg" id="range" role="group" aria-label="Range">
         <button type="button" data-range="today">Today</button>
@@ -321,13 +342,6 @@
     </div>
 
     <div class="card">
-      <h2>iPhone launch list <small id="waitlistSub"></small></h2>
-      <div class="tiles"><div class="tile"><div class="v num" id="waitlistTotal">0</div><div class="l">unique emails, all time</div></div></div>
-      <p id="waitlistLast"></p>
-      <p class="hint">"Notify me" on the welcome page. Only the count is shown here; the emails stay private to the owner and come out only with <code>node scripts/waitlist.js export</code>.</p>
-    </div>
-
-    <div class="card">
       <h2>Accounts deleted <small id="deletionsSub"></small></h2>
       <p id="deletionsSummary"></p>
       <table class="tbl" id="deletions"></table>
@@ -353,6 +367,30 @@
     </div>
 
     <p class="hint since" id="firstEvent">Collected since Sep 30, 2026</p>
+    </div>
+
+    <!-- The iPhone launch list (#759): the owner's only, like the rest of Pulse.
+         Real emails live in Firestore only, never in the repository. -->
+    <div class="tab" id="tabWaitlist" hidden>
+      <div class="card">
+        <h2>Waitlist <small>"Join the waitlist" on the welcome page</small></h2>
+        <div class="tiles">
+          <div class="tile"><div class="v num" id="waitlistTotal">0</div><div class="l">people, all time</div></div>
+          <div class="tile"><div class="v num" id="waitlistWeek">0</div><div class="l">joined in the last 7 days</div></div>
+        </div>
+        <p id="waitlistLast"></p>
+      </div>
+      <div class="card">
+        <div class="list-head">
+          <h2>Emails <small>newest first</small></h2>
+          <button class="btn small" id="waitlistCopy" type="button" disabled>Copy emails</button>
+        </div>
+        <p class="hint" id="waitlistCopyMsg" role="status"></p>
+        <div class="scroll"><table class="tbl" id="waitlistTable"></table></div>
+        <p class="hint">For the beta invite and the launch email only, as the privacy policy promises. Paste them into Bcc, never To. Someone who unsubscribes or asks is removed with <code>node scripts/waitlist.js</code>.</p>
+      </div>
+    </div>
+
     <p class="hint since" id="updatedAt" aria-live="off"></p>
   </section>
 

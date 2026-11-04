@@ -484,9 +484,9 @@ export function deletionStats(records, from, to) {
 }
 
 /**
- * The iPhone launch list ("Notify me", `_waitlist`) as counts only: unique
- * emails (case and spaces ignored) all time, how many first signed up in
- * [from, to), and the latest sign-up. The emails themselves never leave here.
+ * The iPhone launch list ("Notify me", `_waitlist`) as counts: unique emails
+ * (case and spaces ignored) all time, how many first signed up in [from, to),
+ * and the latest sign-up.
  */
 export function waitlistStats(entries, from, to) {
   const first = new Map();   // email -> earliest sign-up
@@ -500,6 +500,22 @@ export function waitlistStats(entries, from, to) {
   let inRange = 0;
   for (const at of first.values()) if (at >= from && at < to) inRange++;
   return { total: first.size, inRange, lastAt };
+}
+
+/**
+ * The launch list itself, for the owner's Waitlist tab (#759): one row per
+ * email (trimmed, lower case), at its first sign-up, newest first. Entries
+ * still waiting for their server time (0) go last.
+ */
+export function waitlistList(entries) {
+  const first = new Map();
+  for (const { email, at } of entries) {
+    const key = String(email ?? '').trim().toLowerCase();
+    if (!key) continue;
+    const t = at || 0;
+    if (!first.has(key) || (t && (!first.get(key) || t < first.get(key)))) first.set(key, t);
+  }
+  return [...first].map(([email, at]) => ({ email, at })).sort((a, b) => (b.at || 0) - (a.at || 0));
 }
 
 // ── North Star and its drivers (#609) ───────────────────────────────────────

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   dayKey, hourIn, startOfDay, stampText, onlineNow, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, offerStats, peopleStats, tripStats,
-  deletionStats, waitlistStats, historyCacheUsable, liveFrom, backfillRange, mergeRows, planItems, northStar,
+  deletionStats, waitlistStats, waitlistList, historyCacheUsable, liveFrom, backfillRange, mergeRows, planItems, northStar,
 } from '../public/pulse/stats.mjs';
 
 const H = 3_600_000;
@@ -375,6 +375,23 @@ test('waitlistStats: unique emails (case and spaces ignored), first sign-up deci
   assert.equal(s.lastAt, at('2026-10-14T18:30:00Z'));
   assert.deepEqual(Object.keys(s).sort(), ['inRange', 'lastAt', 'total']); // counts only: no emails come back
   assert.deepEqual(waitlistStats([], 0, 1), { total: 0, inRange: 0, lastAt: null });
+});
+
+test('waitlistList: one row per email (case and spaces ignored), first sign-up time, newest first (#759)', () => {
+  const at = (iso) => Date.parse(iso);
+  const list = waitlistList([
+    { email: 'maya@example.com', at: at('2026-10-12T10:00:00Z') },
+    { email: ' Maya@Example.com ', at: at('2026-10-02T10:00:00Z') },  // the same person, earlier
+    { email: 'theo@example.com', at: at('2026-10-11T09:00:00Z') },
+    { email: 'rafa@example.com', at: 0 },                              // no server time yet: listed last
+    { email: '  ', at: at('2026-10-13T00:00:00Z') },                   // nothing typed: skipped
+  ]);
+  assert.deepEqual(list, [
+    { email: 'theo@example.com', at: at('2026-10-11T09:00:00Z') },
+    { email: 'maya@example.com', at: at('2026-10-02T10:00:00Z') },
+    { email: 'rafa@example.com', at: 0 },
+  ]);
+  assert.deepEqual(waitlistList([]), []);
 });
 
 // #596: the usage and write logs are append-only, so Pulse keeps them on the
