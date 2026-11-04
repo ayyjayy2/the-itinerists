@@ -102,7 +102,7 @@ function start() {
     state.deletions = snap.docs.map(d => { const r = d.data(); return { ...r, at: r.at?.toMillis?.() ?? 0 }; });
     scheduleRender();
   }, err => showError('Deletions: ' + err.message));
-  // iPhone launch list (#524): counted here, never shown; scripts/waitlist.js exports it.
+  // iPhone launch list (#524): the Waitlist tab (#759) lists it for the owner.
   unsubWaitlist = onSnapshot(collection(db, '_waitlist'), snap => {
     state.waitlist = snap.docs.map(d => { const r = d.data(); return { email: r.email, at: r.at?.toMillis?.() ?? 0 }; });
     scheduleRender();
@@ -449,6 +449,49 @@ function allZones() {
 }
 
 // ── render ─────────────────────────────────────────────────────────────────
+// ── Waitlist tab (#759) ──────────────────────────────────────────────────────
+// Anyone can join, so there are no test entries to hide; the range picker
+// doesn't apply (the list is all time).
+function renderWaitlist() {
+  const all = state.waitlist ?? [];
+  const now = Date.now();
+  const wl = S.waitlistStats(all, now - 7 * DAY, now + DAY);
+  const list = S.waitlistList(all);
+  $('waitlistBadge').textContent = wl.total ? `(${wl.total})` : '';
+  $('waitlistTotal').textContent = wl.total;
+  $('waitlistWeek').textContent = wl.inRange;
+  $('waitlistLast').textContent = wl.lastAt ? `Latest ${S.stampText(wl.lastAt, state.zone)} (${zoneAbbr(state.zone, wl.lastAt)})` : 'Nobody yet.';
+  $('waitlistCopy').disabled = list.length === 0;
+  $('waitlistTable').innerHTML = list.length === 0 ? '<tr><td class="muted">Nobody yet.</td></tr>' :
+    '<tr><th>Email</th><th class="n">Joined</th></tr>' +
+    list.map(r => `<tr><td>${esc(r.email)}</td><td class="n">${r.at ? `${esc(S.stampText(r.at, state.zone))} (${esc(zoneAbbr(state.zone, r.at))})` : '<span class="muted">just now</span>'}</td></tr>`).join('');
+}
+$('waitlistCopy').addEventListener('click', async () => {
+  const text = S.waitlistList(state.waitlist ?? []).map(r => r.email).join(', ');
+  try {
+    await navigator.clipboard.writeText(text);
+    $('waitlistCopyMsg').textContent = 'Copied. Paste them into Bcc.';
+  } catch {
+    $('waitlistCopyMsg').textContent = 'Copying was blocked; select the emails in the table instead.';
+  }
+});
+
+// Two tabs: Usage (the dashboard) and Waitlist. #waitlist in the address opens the second.
+function showTab(name) {
+  const tab = name === 'waitlist' ? 'waitlist' : 'usage';
+  $('tabUsage').hidden = tab !== 'usage';
+  $('tabWaitlist').hidden = tab !== 'waitlist';
+  for (const b of document.querySelectorAll('#tabs button')) b.setAttribute('aria-pressed', String(b.dataset.tab === tab));
+}
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]');
+  if (!b) return;
+  history.replaceState(null, '', b.dataset.tab === 'waitlist' ? '#waitlist' : location.pathname + location.search);
+  showTab(b.dataset.tab);
+});
+addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+showTab(location.hash.slice(1));
+
 function render() {
   lastFull = state.now;
   renderStamps();
@@ -721,11 +764,7 @@ function render() {
     '<tr><th>Deleted</th><th>Person</th><th>Last trip</th><th class="n">Trips</th><th class="n">Account age</th></tr>' +
     gone.list.map(d => `<tr><td>${esc(S.stampText(d.at, state.zone))}</td><td>${esc(userName(d.uid))}</td><td>${afterText(d)}</td><td class="n num">${d.trips}</td><td class="n num">${d.accountAgeDays === null ? '–' : `${d.accountAgeDays} d`}</td></tr>`).join('');
 
-  // iPhone launch list: counts only (anyone can sign up, so there are no test entries to hide)
-  const wl = S.waitlistStats(state.waitlist ?? [], queryStart(), now + DAY);
-  $('waitlistSub').textContent = `${wl.inRange} new in ${rangeLabel}`;
-  $('waitlistTotal').textContent = wl.total;
-  $('waitlistLast').textContent = wl.lastAt ? `Latest ${S.stampText(wl.lastAt, state.zone)} (${zoneAbbr(state.zone, wl.lastAt)})` : 'Nobody yet.';
+  renderWaitlist();
 
   // Countries the app was used in (from each event's zone, recorded at the moment of use)
   const countries = S.countryStats(rows, zoneCountry);
