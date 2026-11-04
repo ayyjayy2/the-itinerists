@@ -185,7 +185,8 @@ export class ExpensesService {
     // Always write to localStorage immediately so new additions survive Firestore errors
     this.writeBackup(backupKey, items);
     this.errorLogger.trackWrite();
-    setDoc(doc(this.firestore, 'userExpenses', user.uid), { items })
+    // Items kept from before #730 may still hold an empty field: leave it out.
+    setDoc(doc(this.firestore, 'userExpenses', user.uid), { items: items.map(i => sanitizeStrings(i)) })
       .catch(err => {
         console.error('[Expenses] Failed to save:', err);
         this.errorLogger.logError(err, 'firebase_error');
