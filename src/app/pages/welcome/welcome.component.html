@@ -52,18 +52,18 @@
     <p class="kicker">iPhone app</p>
     <h2>Coming soon</h2>
     @if (joined()) {
-      <p class="joined">You're on the list. We'll email you when the app is out.</p>
+      <p class="joined">You're on the list. We'll email you when the beta opens and when the app is out.</p>
       <p class="consent">Plus occasional updates. No spam, and you can unsubscribe any time.</p>
     } @else {
-      <p class="app-sub">Leave your email and we'll tell you when it's in the App Store.</p>
+      <p class="app-sub">Join the waitlist for an invite to the beta, and we'll tell you when it's in the App Store.</p>
       <form (ngSubmit)="notifyMe()" novalidate>
         <label class="sr-only" for="notify-email">Email</label>
         <input id="notify-email" type="email" inputmode="email" name="email" [(ngModel)]="email"
                placeholder="you@example.com" autocomplete="email" autocapitalize="none" spellcheck="false"
                [attr.aria-invalid]="error() ? true : null" [attr.aria-describedby]="error() ? 'notify-error' : null" />
         @if (error()) { <p class="field-error" id="notify-error">{{ error() }}</p> }
-        <button class="btn btn-primary" type="submit" [disabled]="sending()">{{ sending() ? 'Adding…' : 'Notify me' }}</button>
-        <p class="consent">We'll email you at launch, plus occasional updates. No spam, and you can unsubscribe any time.</p>
+        <button class="btn btn-primary" type="submit" [disabled]="sending()">{{ sending() ? 'Adding…' : 'Join the waitlist' }}</button>
+        <p class="consent">We'll email you about the beta and the launch, plus occasional updates. No spam, and you can unsubscribe any time.</p>
       </form>
     }
   </section>
