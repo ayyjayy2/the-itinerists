@@ -8,6 +8,26 @@
     <h2><app-icon name="finance" [size]="22" /> Finance</h2>
   </div>
 
+  <!-- A guest who logged out (#747): what they're still in, for the group to check -->
+  @for (l of leavers(); track l.uid) {
+    <section class="card leaver-review" role="status">
+      <h3>{{ l.name }} (guest) left the trip</h3>
+      @if (leaverSaved()?.uid === l.uid) {
+        <p class="leaver-saved"><app-icon name="check" [size]="15" /> Saved: {{ leaverSaved()!.title }}</p>
+      }
+      <p class="leaver-hint">They’re still in these. Their share counts until you change it, so check each one.</p>
+      <ul>
+        @for (i of l.items; track i.id) {
+          <li>
+            <span><b>{{ i.title }}</b><small>{{ leaverLine(l.name, i) }}</small></span>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="editFromReview(l, i)">Edit</button>
+          </li>
+        }
+      </ul>
+      <div class="leaver-actions"><button type="button" class="btn btn-primary btn-sm" (click)="looksRight(l)">Looks right</button></div>
+    </section>
+  }
+
   @if (settlementEstimated()) {
     <div class="currency-caveat">
       <app-icon name="finance" [size]="15" />
@@ -348,6 +368,9 @@
           <h4 id="edit-expense-title">Edit expense</h4>
           <button class="modal-close" (click)="cancelEditEntry()" aria-label="Close">✕</button>
         </div>
+        @if (reviewing(); as r) {
+          <p class="leaver-from">From “{{ r.name }} (guest) left the trip”: take {{ r.name }} out of the split if they shouldn’t pay, then Save.</p>
+        }
         <div class="form-grid">
           <div class="form-field"><label>Date</label><input type="date" [(ngModel)]="editEntryDraft.date" /></div>
           <div class="form-field">

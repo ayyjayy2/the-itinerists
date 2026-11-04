@@ -8,7 +8,7 @@ import { Component, OnInit, inject, signal, computed, effect, untracked } from '
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ItineraryService } from '../../services/itinerary.service';
 import { UserService } from '../../services/user.service';
 import { UsersService } from '../../services/users.service';
@@ -353,9 +353,23 @@ export class ItineraryComponent implements OnInit {
     const id = this.focus.id();
     if (!id || !this.itineraryService.loaded()) return;
     const date = focusDate(this.itineraryService.items(), id);
-    if (date) untracked(() => { this.view.set('list'); this.selectedDate.set(date); });
+    if (date) untracked(() => {
+      this.view.set('list'); this.selectedDate.set(date);
+      // From Finance's "<guest> left the trip" card (#747): open its edit form straight away.
+      const item = this.itineraryService.items().find(i => i.id === id);
+      if (item && this.fromReview && this.editingId() !== id && !this.reviewOpened) { this.reviewOpened = true; this.startEdit(item); }
+    });
     else untracked(() => this.focus.markMissing());
   });
+
+  // ── Edit from the left-guest card (#747): ?focus=<id>&edit=1&review=<guest uid>[&last=1] ──
+  private readonly router = inject(Router);
+  private readonly fromReview = (() => {
+    const q = inject(ActivatedRoute).snapshot.queryParamMap;
+    const uid = q.get('review');
+    return q.get('edit') && uid ? { uid, id: q.get('focus') ?? '', last: !!q.get('last') } : null;
+  })();
+  private reviewOpened = false;
 
   // ── ForWho helpers ─────────────────────────────────────────────────────────
   private buildForWho(map: Record<string, boolean>): string {
@@ -406,7 +420,15 @@ export class ItineraryComponent implements OnInit {
       endTime: this.draft.endTime ?? '',
       forWho:  this.buildForWho(this.editForWhoMap),
     });
+    const title = this.draft.activity?.trim() || original.activity;
     this.cancelEdit();
+    // Saved from the left-guest card: check it off, then back to the card on Finance.
+    const r = this.fromReview;
+    if (r?.id === original.id) {
+      await this.tripService.checkLeaverItem(r.uid, original.id);
+      this.router.navigate(['/finance'], { queryParams: { review: r.uid, reviewed: title, last: r.last ? 1 : null } });
+      return;
+    }
     // Moved to another day: follow it there, so it doesn't just disappear from this one.
     if (date !== original.date && this.selectedDate() !== 'All') this.selectedDate.set(date);
   }

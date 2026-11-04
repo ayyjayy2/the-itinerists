@@ -26,6 +26,10 @@ import { paidKey } from '../../utils/paid-marks';
 import { PAY_APPS, PayApp, canRemind, payAmount, payAppLink, payLink, remindersOpen } from '../../utils/pay-links';
 import { NATIVE_PLATFORM } from '../../native-platform';
 import { localTodayISO, tripZone } from '../../utils/trip-destinations';
+import { LeaverItem, leaverItems, reviewOpen } from '../../utils/leaver-review';
+import { stopDateRange } from '../../utils/stop-dates';
+import { ItineraryService } from '../../services/itinerary.service';
+import { ActivatedRoute, Router } from '@angular/router';
 
 /**
  * How the working under each balance shows (#519): 'tap' shows it with a
@@ -52,6 +56,67 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   userService    = inject(UserService);
   usersService   = inject(UsersService);
   tripService    = inject(TripService);
+  private itinerary = inject(ItineraryService);
+  private router    = inject(Router);
+  private route     = inject(ActivatedRoute);
+
+  // ── A guest who logged out (#747): the group checks each expense and plan they're still in ──
+  /** Each left guest with something still to check; the card goes once it's empty or Looks right. */
+  readonly leavers = computed(() => {
+    const reviews = this.tripService.activeTrip()?.leaverReviews ?? {};
+    const everyone = this.financeUsers().map(u => u.name);
+    return this.tripService.activeMembers().filter(m => m.leftAt).map(m => ({
+      uid: m.uid, name: m.displayName,
+      items: leaverItems(m.displayName, everyone, this.entries(), this.itinerary.items(), reviews[m.uid]?.checked ?? []),
+    })).filter(l => reviewOpen(reviews[l.uid], l.items.length));
+  });
+  /** The last item saved from the card, for its "Saved" line. */
+  readonly leaverSaved = signal<{ uid: string; title: string } | null>(null);
+  /** The expense open in the edit pop-up came from the card (so Save checks it off). */
+  readonly reviewing = signal<{ uid: string; name: string; id: string; title: string; last: boolean } | null>(null);
+
+  leaverLine(name: string, i: LeaverItem): string {
+    if (i.kind === 'plan') return `Plan · ${stopDateRange(i.date, i.date)} · ${name} is going`;
+    const parts = [i.ways ? `split ${i.ways} ways` : '', i.share != null ? `${name}’s share ${this.amt(i.share, i.currency)}` : '', i.paid ? `${name} paid` : '']
+      .filter(Boolean);
+    return `Expense · ${parts.join(', ')}`;
+  }
+
+  /** Edit from the card: an expense in the edit pop-up here, a plan in Itinerary's edit, then back. */
+  editFromReview(l: { uid: string; name: string; items: LeaverItem[] }, i: LeaverItem): void {
+    const last = l.items.length === 1;
+    if (i.kind === 'plan') {
+      this.router.navigate(['/itinerary'], { queryParams: { focus: i.id, edit: 1, review: l.uid, last: last ? 1 : null } });
+      return;
+    }
+    const entry = this.entries().find(e => e.id === i.id);
+    if (!entry) return;
+    this.startEditEntry(entry);
+    this.reviewing.set({ uid: l.uid, name: l.name, id: i.id, title: i.title, last });
+  }
+
+  async looksRight(l: { uid: string; name: string }): Promise<void> {
+    await this.tripService.finishLeaverReview(l.uid);
+    this.allChecked(l.name);
+  }
+
+  private allChecked(name: string): void {
+    this.leaverSaved.set(null);
+    this.showToast(`That’s everything ${name} was in, checked.`);
+  }
+
+  /** Back from a plan saved in Itinerary's edit (?reviewed=<title>&review=<uid>[&last=1]). */
+  private readonly fromItinerary = (() => {
+    const q = this.route.snapshot.queryParamMap;
+    const uid = q.get('review'), title = q.get('reviewed');
+    if (!uid || !title) return;
+    if (q.get('last')) {
+      const name = this.tripService.activeMembers().find(m => m.uid === uid)?.displayName ?? '';
+      queueMicrotask(() => this.allChecked(name));
+    } else {
+      this.leaverSaved.set({ uid, title });
+    }
+  })();
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
   /** Spinner (delayed) until we know the trip and its data — no empty-state flash. */
   readonly loading = computed(() => !this.tripService.ready() || !this.financeService.loaded());
@@ -740,9 +805,16 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     };
     await this.financeService.updateEntry(id, patch);
     this.editingEntryId.set(null);
+    const r = this.reviewing();
+    if (r?.id === id) {
+      this.reviewing.set(null);
+      await this.tripService.checkLeaverItem(r.uid, id);
+      if (r.last) this.allChecked(r.name);
+      else this.leaverSaved.set({ uid: r.uid, title: r.title });
+    }
   }
 
-  cancelEditEntry(): void { this.editFormSubmitted.set(false); this.editingEntryId.set(null); }
+  cancelEditEntry(): void { this.editFormSubmitted.set(false); this.editingEntryId.set(null); this.reviewing.set(null); }
 
   async deleteEntry(e: FinanceEntryDoc): Promise<void> {
     if (!confirm(`Delete "${e.vendor || e.description}"?`)) return;

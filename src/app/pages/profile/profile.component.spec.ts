@@ -338,17 +338,21 @@ describe('ProfileComponent my currency (#429)', () => {
 });
 
 describe('ProfileComponent as a guest (#742)', () => {
+  let trips: { activeMembers: unknown; activeTrip: unknown; markGuestLeft: jasmine.Spy };
+  let logout: jasmine.Spy;
   function create() {
     TestBed.resetTestingModule();
     const ask = jasmine.createSpy('ask');
+    trips = { activeMembers: signal([]), activeTrip: signal({ id: 't', name: 'Chiang Mai, November' }), markGuestLeft: jasmine.createSpy('markGuestLeft').and.resolveTo() };
+    logout = jasmine.createSpy('logout').and.resolveTo();
     TestBed.configureTestingModule({
       imports: [ProfileComponent],
       providers: [
         provideRouter([]),
-        { provide: AuthService, useValue: {} },
+        { provide: AuthService, useValue: { logout: () => logout() } },
         { provide: DataExportService, useValue: dataExport },
         { provide: UserService, useValue: { firestoreUser: signal({ uid: 'g', displayName: 'Robin', avatarEmoji: '', color: '#fff', isAdmin: false, createdAt: 0, isGuest: true }), currentUser: signal(null), isGuest: signal(true), updateHomeLayout: () => {} } },
-        { provide: TripService, useValue: { activeMembers: signal([]), activeTrip: signal({ id: 't', name: 'Chiang Mai, November' }) } },
+        { provide: TripService, useValue: trips },
         { provide: AccountPromptService, useValue: { ask } },
       ],
     });
@@ -388,5 +392,15 @@ describe('ProfileComponent as a guest (#742)', () => {
     fixture.detectChanges();
     (el.querySelector('[aria-label="Stay as a guest"]') as HTMLButtonElement).click();
     expect(comp.showLogoutConfirm()).toBeFalse();
+  });
+
+  it('logging out marks them left on the trip first (#747), and still signs out if that fails', async () => {
+    const { comp } = create();
+    await comp.signOut();
+    expect(trips.markGuestLeft).toHaveBeenCalled();
+    expect(logout).toHaveBeenCalled();
+    trips.markGuestLeft.and.rejectWith(new Error('offline'));
+    await comp.signOut();
+    expect(logout).toHaveBeenCalledTimes(2);
   });
 });

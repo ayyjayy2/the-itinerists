@@ -165,6 +165,7 @@
               {{ m.displayName }}
               @if (isMe(m)) { <span class="tag">You</span> }
               @if (m.role === 'owner') { <span class="tag tag-owner">Owner</span> }
+              @if (m.leftAt) { <span class="tag">Left</span> }
             </span>
             @if (canRemove(m) && !isGuest()) {
               <button data-needs-account class="btn btn-danger btn-sm" (click)="remove(m)" [disabled]="busyMember() === m.uid">

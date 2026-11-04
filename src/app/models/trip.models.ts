@@ -1,3 +1,4 @@
+import type { LeaverReview } from '../utils/leaver-review';
 import type { PayApp, PayHandles } from '../utils/pay-links';
 import type { SavedRate, SavedRates } from '../utils/currency';
 
@@ -157,6 +158,8 @@ export interface TripDoc {
   archived?: boolean;           // set true by archiveTrip()
   /** A trip used for testing: tester activity shows in its feed (it is hidden on real trips). */
   isTest?: boolean;
+  /** Guests who logged out (#747), by uid: what the group has checked of what they were in. */
+  leaverReviews?: Record<string, LeaverReview>;
 }
 
 /** Stored at Firestore `/trips/{tripId}/members/{uid}` — one doc per member (doc id = uid). */
@@ -178,6 +181,7 @@ export interface TripMember {
   departureDate?: string;       // YYYY-MM-DD
   departureTime?: string;       // e.g. "9:00 AM"
   hiddenPages?: string[];       // pages this member has toggled off, e.g. ["cars", "outfits"]
+  leftAt?: number;              // a guest who logged out (#747): they stay on the trip, marked left (unix ms)
 }
 
 /** Stored at Firestore `/userTrips/{uid}` — fast index of the trips a user belongs to (doc id = uid). */

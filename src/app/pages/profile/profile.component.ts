@@ -323,8 +323,17 @@ export class ProfileComponent implements OnInit {
    *  page chunk from an older deploy. */
   async confirmLogout(): Promise<void> {
     this.showLogoutConfirm.set(false);
-    try { await this.authService.logout(); }
+    try { await this.signOut(); }
     finally { window.location.assign('/login'); }
+  }
+
+  /** A guest is marked left on their trips first (#747), so the group can check what they were in.
+   *  If that can't be saved (offline), they're still signed out. */
+  async signOut(): Promise<void> {
+    if (this.firestoreUser()?.isGuest) {
+      try { await this.tripService.markGuestLeft(); } catch { /* signing out matters more */ }
+    }
+    await this.authService.logout();
   }
 
   /** Live password-requirement checklist for the change-password form. */
