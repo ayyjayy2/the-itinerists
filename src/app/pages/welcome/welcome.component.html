@@ -5,6 +5,9 @@
     <p class="lede">One shared plan for flights, stays, money and packing, plus a place to plan your outfits for every day. No more digging through the group chat.</p>
   </header>
 
+  <!-- The preview and the sign-up side by side on wider screens, so the form
+       is visible without scrolling; stacked (sign-up first) on phones. -->
+  <div class="showcase">
   <!-- A few seconds of each key screen (the demo's made-up trip) -->
   <section class="clips" aria-label="A look inside the app">
     <div class="clip-strip" #strip (scroll)="onScroll(strip)">
@@ -56,6 +59,7 @@
       </form>
     }
   </section>
+  </div>
 
   <!-- Preview and waitlist only: no sign-up or sign-in links here (owner, Nov 4, 2026).
        /login and /signup still work for invite links, existing accounts and the iPhone app. -->

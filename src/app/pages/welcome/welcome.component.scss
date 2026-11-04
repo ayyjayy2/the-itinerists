@@ -11,6 +11,22 @@
   text-align: center;
 
   > * { width: 100%; max-width: 420px; }
+  > .showcase { max-width: 880px; }
+}
+
+// ── Preview and sign-up: one column on phones (sign-up first, so it shows
+//    without scrolling), two columns side by side from tablet width ───────────
+.showcase {
+  display: flex; flex-direction: column; gap: 1.25rem;
+  .app-card { order: -1; }
+}
+@media (min-width: 760px) {
+
+  .showcase {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center; gap: 2.5rem;
+    .app-card { order: 0; }
+  }
 }
 
 .welcome-head {
