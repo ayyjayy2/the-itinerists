@@ -207,7 +207,8 @@ export type TripEventAction =
   | 'added' | 'changed' | 'removed'
   | 'joined' | 'left' | 'kicked' | 'restored'
   | 'suggested' | 'accepted' | 'declined'
-  | 'reminded';   // a gentle nudge to pay someone back (#532): shown without the sender's name
+  | 'reminded'    // a gentle nudge to pay someone back (#532): shown without the sender's name
+  | 'paid' | 'received' | 'not-received';   // "Mark as paid" and the answer to it (#716), each to the other person only
 
 /** Stored at `/trips/{tripId}/events/{id}`. Display line = `${actorName} ${summary}`. */
 export interface TripEvent {

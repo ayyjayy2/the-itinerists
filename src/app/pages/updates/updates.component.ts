@@ -6,6 +6,7 @@ import { UserService } from '../../services/user.service';
 import { timeAgo } from '../../utils/activity';
 import { TripEventsService } from '../../services/trip-events.service';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
+import { myPaymentWords, opensItem } from '../../utils/trip-events';
 
 @Component({
   selector: 'app-updates',
@@ -18,12 +19,13 @@ import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.com
 
       <div class="card">
         @for (a of feed(); track a.event.id) {
-          <a class="feed-row" [class.mine]="a.mine" [routerLink]="a.event.path" [queryParams]="a.event.itemId && a.event.action !== 'reminded' ? { focus: a.event.itemId } : null">
+          <a class="feed-row" [class.mine]="a.mine" [routerLink]="a.event.path" [queryParams]="opensItem(a.event) ? { focus: a.event.itemId } : null">
             <div class="avatar-sm" [style.background]="a.member?.color ?? 'var(--surface-2, #eee)'">
               <app-avatar-glyph [emoji]="a.member?.avatarEmoji ?? '👤'" [letterColor]="a.member?.avatarLetterColor" />
             </div>
             <span class="feed-text">
               @if (a.event.action === 'reminded' && a.mine) {<b>You</b> sent {{ a.target }} a reminder to pay you back}
+              @else if (a.mine && myPaymentWords(a.event.action, a.target); as words) {<b>You</b> {{ words }}}
               @else {@if (a.event.action !== 'reminded') {<b>{{ a.mine ? 'You' : a.event.actorName }}</b>&ngsp;}{{ a.event.summary }}} <span class="feed-ago"> · {{ ago(a.event.timestamp) }}</span>
             </span>
           </a>
@@ -64,6 +66,8 @@ export class UpdatesComponent implements OnInit, OnDestroy {
   });
 
   ago = (ts: number) => timeAgo(ts, this.now());
+  readonly opensItem = opensItem;
+  readonly myPaymentWords = myPaymentWords;
 
   ngOnInit(): void {
     void this.userService.markActivitySeen(this.tripService.activeTrip()?.id);

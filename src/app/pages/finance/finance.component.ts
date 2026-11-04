@@ -431,13 +431,15 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   private claimFrom(name: string): boolean { return this.claimsToMe().some(c => c.name === name); }
 
   /** Got it: tick everything between us paid, then clear the claim. */
-  async confirmClaim(c: { from: string; name: string }): Promise<void> {
+  async confirmClaim(c: { from: string; name: string; amount: number; currency: string }): Promise<void> {
     this.settleWith(c.name);
-    await this.financeService.clearClaim(c.from, this.currentUser()?.uid ?? '').catch(() => {/* the ticks already show it settled */});
+    await this.financeService.clearClaim(c.from, this.currentUser()?.uid ?? '', { answer: 'received', amount: c.amount, currency: c.currency })
+      .catch(() => {/* the ticks already show it settled */});
   }
-  /** Not received: back on their list. */
-  async rejectClaim(c: { from: string }): Promise<void> {
-    await this.financeService.clearClaim(c.from, this.currentUser()?.uid ?? '').catch(() => {/* try again from the box */});
+  /** Not received: back on their list, and their bell says so (#716). */
+  async rejectClaim(c: { from: string; amount: number; currency: string }): Promise<void> {
+    await this.financeService.clearClaim(c.from, this.currentUser()?.uid ?? '', { answer: 'not-received', amount: c.amount, currency: c.currency })
+      .catch(() => {/* try again from the box */});
   }
 
   /** Settle up with `name`: every unpaid item between us, both ways, ticked paid. */

@@ -1,4 +1,4 @@
-import { CollapseTracker, COLLAPSE_WINDOW_MS, eventsForMe, isFor, unseenEvents, seenMarkFor } from './trip-events';
+import { CollapseTracker, COLLAPSE_WINDOW_MS, eventsForMe, isFor, unseenEvents, seenMarkFor, opensItem, myPaymentWords } from './trip-events';
 import { TripEvent } from '../models/trip.models';
 
 const ev = (o: Partial<TripEvent>): TripEvent => ({
@@ -73,5 +73,18 @@ describe('seenMarkFor', () => {
     expect(seenMarkFor(user, 'central')).toBe(100);   // never opened there yet: Lisbon's read does not count
     expect(seenMarkFor({}, 'lisbon')).toBe(0);
     expect(seenMarkFor(null, 'lisbon')).toBe(0);
+  });
+});
+
+describe('payment notices (#716)', () => {
+  it('open Finance, not an item', () => {
+    for (const action of ['reminded', 'paid', 'received', 'not-received'] as const) expect(opensItem({ action, itemId: 'claim-x' })).toBeFalse();
+    expect(opensItem({ action: 'added', itemId: 'f1' })).toBeTrue();
+    expect(opensItem({ action: 'added', itemId: '' })).toBeFalse();
+  });
+  it('word my own side', () => {
+    expect(myPaymentWords('paid', 'Pat')).toBe('told Pat you paid them');
+    expect(myPaymentWords('not-received', 'Pat')).toBe('told Pat their payment hasn’t arrived');
+    expect(myPaymentWords('added', 'Pat')).toBeNull();
   });
 });

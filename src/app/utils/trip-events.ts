@@ -65,3 +65,18 @@ export function seenMarkFor(user: { lastSeenActivityAt?: number; lastSeenByTrip?
   if (!user) return 0;
   return (tripId && user.lastSeenByTrip?.[tripId]) || user.lastSeenActivityAt || 0;
 }
+
+/** Payment notices and reminders are about a person, not one item: tapping opens Finance, not an item (#716). */
+export function opensItem(ev: Pick<TripEvent, 'action' | 'itemId'>): boolean {
+  return !!ev.itemId && !['reminded', 'paid', 'received', 'not-received'].includes(ev.action);
+}
+
+/** My own side of a payment notice in the Updates feed (#716), or null for any other event. */
+export function myPaymentWords(action: TripEvent['action'], target: string): string | null {
+  switch (action) {
+    case 'paid': return `told ${target} you paid them`;
+    case 'received': return `confirmed ${target}’s payment`;
+    case 'not-received': return `told ${target} their payment hasn’t arrived`;
+    default: return null;
+  }
+}
