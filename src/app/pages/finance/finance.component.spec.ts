@@ -34,7 +34,7 @@ describe('FinanceComponent: expenses that leave people out', () => {
       providers: [
         provideRouter([]),
         { provide: FinanceService, useValue: finance },
-        { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), firestoreUser: signal({ uid: 'Maya' }), isAdmin: () => false } },
+        { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), firestoreUser: signal({ uid: 'Maya' }), isAdmin: () => false, isGuest: signal(false) } },
         { provide: UsersService, useValue: { tripUsers: () => people } },
         { provide: TripService, useValue: { activeTrip: signal({ id: 't', name: 'Trip', currency: 'USD' }), ready: signal(true), activeMembers: signal([]) } },
         { provide: ExchangeRateService, useValue: { ratesFor: () => Promise.resolve(null) } },
@@ -105,7 +105,7 @@ describe('FinanceComponent: settling up', () => {
       providers: [
         provideRouter([]),
         { provide: FinanceService, useValue: finance },
-        { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), firestoreUser: signal({ uid: 'Maya', ownCurrency: opts.own }), isAdmin: () => false } },
+        { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), firestoreUser: signal({ uid: 'Maya', ownCurrency: opts.own }), isAdmin: () => false, isGuest: signal(false) } },
         { provide: UsersService, useValue: { tripUsers: () => people } },
         { provide: TripService, useValue: {
           activeTrip: signal({ id: 't', name: 'Lisbon', currency: 'USD', endDate: opts.endDate }), ready: signal(true),
@@ -408,6 +408,20 @@ describe('FinanceComponent: a guest who left', () => {
     button(card(el)!, 'Edit').click();
     await comp.saveEditEntry('dinner');
     expect(comp.toast()).toBe('That’s everything Robin was in, checked.');
+  });
+
+  it('shows no card to a guest, who can\'t edit (#768)', () => {
+    const { el, fixture } = create([dinner]);
+    (TestBed.inject(UserService) as unknown as { isGuest: ReturnType<typeof signal<boolean>> }).isGuest.set(true);
+    fixture.detectChanges();
+    expect(card(el)).toBeNull();
+  });
+
+  it('shows no card for a guest who came back under the same name (#768)', () => {
+    const { el, fixture } = create([dinner]);
+    (trips['activeMembers'] as ReturnType<typeof signal<object[]>>).update(ms => [...ms, { uid: 'Robin2', displayName: 'Robin' }]);
+    fixture.detectChanges();
+    expect(card(el)).toBeNull();
   });
 
   it('shows no card once it is done, or when nothing is left', () => {

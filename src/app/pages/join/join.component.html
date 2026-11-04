@@ -39,6 +39,47 @@
       </div>
     }
 
+    @if (step() === 'same-name' && joined()?.clash; as clash) {
+      <!-- #768: a guest who left under this name may be them coming back -->
+      <div class="auth-header">
+        <app-brand [mark]="48" [showWordmark]="false" />
+        <h1>There's already a {{ clash.name }} on this trip</h1>
+        <p class="auth-sub">Is this you? If you joined before as a guest, carry on as {{ clash.name }}: you'll be in the same expenses and plans.</p>
+      </div>
+      @if (nameError(); as err) { <p class="field-error" role="alert">{{ err }}</p> }
+      <div class="auth-form">
+        <button type="button" class="btn btn-primary auth-btn" (click)="thisIsMe()" [disabled]="joining()">
+          {{ joining() ? 'Opening the trip…' : 'Yes, this is me' }}
+        </button>
+        <button type="button" class="btn btn-ghost auth-btn" (click)="someoneElse()" [disabled]="joining()">No, I'm someone else</button>
+      </div>
+    }
+
+    @if (step() === 'rename' && joined()?.clash; as clash) {
+      <!-- #768: two people can't share a name: expenses and plans go by it -->
+      <div class="auth-header">
+        <app-brand [mark]="48" [showWordmark]="false" />
+        <h1>Pick another name</h1>
+        <p class="auth-sub">The group needs to tell you apart.</p>
+      </div>
+      <form class="auth-form" (ngSubmit)="rename()">
+        <div class="form-group">
+          <label for="guest-new-name">What should the group call you? <span class="label-required" aria-hidden="true">*</span></label>
+          <input id="guest-new-name" type="text" name="newName" [(ngModel)]="newName"
+                 autocomplete="given-name" maxlength="40" required
+                 [class.invalid]="!!nameError()" [attr.aria-invalid]="nameError() ? true : null" aria-describedby="guest-new-name-msg" />
+          @if (nameError(); as err) {
+            <p class="field-error" id="guest-new-name-msg">{{ err }}</p>
+          } @else {
+            <p class="input-hint" id="guest-new-name-msg">Someone on this trip is already called {{ clash.name }}. Add an initial or a nickname.</p>
+          }
+        </div>
+        <button type="submit" class="btn btn-primary auth-btn" [disabled]="joining()">
+          {{ joining() ? 'Saving…' : 'Continue' }}
+        </button>
+      </form>
+    }
+
     @if (step() === 'invalid') {
       <div class="auth-header">
         <app-brand [mark]="48" [showWordmark]="false" />

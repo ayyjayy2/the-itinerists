@@ -16,7 +16,7 @@ describe('JoinComponent', () => {
   function setup(signedIn: boolean) {
     order = [];
     replaceState = jasmine.createSpy('replaceState').and.callFake(() => order.push('replaceState'));
-    joinAsGuest = jasmine.createSpy('joinAsGuest').and.resolveTo();
+    joinAsGuest = jasmine.createSpy('joinAsGuest').and.resolveTo({ uid: 'g', members: [], clash: null });
     TestBed.configureTestingModule({
       imports: [JoinComponent],
       providers: [

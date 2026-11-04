@@ -1,3 +1,4 @@
+import { guestAvatar } from '../utils/guest';
 import { DiagnosticsService } from './diagnostics.service';
 import { Injectable, inject, Injector, runInInjectionContext, signal, computed, effect } from '@angular/core';
 import {
@@ -318,6 +319,11 @@ export class TripService {
     await runInInjectionContext(this.injector, () =>
       setDoc(doc(this.firestore, 'userTrips', user.uid), { lastActiveTrip: tripId }, { merge: true }),
     );
+  }
+
+  /** Change the signed-in person's name, and the letter avatar made from it, everywhere (#768: a guest picking another name). */
+  async renameMe(name: string): Promise<void> {
+    await this.updateProfileAndTrips({ displayName: name, ...guestAvatar(name) });
   }
 
   /** A guest logging out (#747): they stay on their trips, marked left, so the group can check what they were in. */

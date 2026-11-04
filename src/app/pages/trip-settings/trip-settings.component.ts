@@ -20,6 +20,7 @@ import { userMessage } from '../../utils/user-message';
 import { ShareViewService } from '../../services/share-view.service';
 import { publicLink } from '../../shared/public-link';
 import { AccountPromptService } from '../../services/account-prompt.service';
+import { returnedGuests } from '../../utils/guest';
 import { tripDateRange } from '../../utils/stop-dates';
 
 interface CurrencyOption { code: string; label: string; }
@@ -65,7 +66,12 @@ export class TripSettingsComponent {
   setTheme(id: string): void { this.themeService.set(id); }
 
   readonly trip     = this.tripService.activeTrip;
-  readonly members  = this.tripService.activeMembers;
+  /** Each person once: a guest who came back under the same name (#768) isn't listed twice. */
+  readonly members  = computed(() => {
+    const all = this.tripService.activeMembers();
+    const back = returnedGuests(all);
+    return all.filter(m => !back.has(m.uid));
+  });
   readonly activity = this.tripService.activeActivity;
 
   readonly currencies: CurrencyOption[] = [
