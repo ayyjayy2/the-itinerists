@@ -320,6 +320,29 @@ export class TripService {
     );
   }
 
+  /** A guest logging out (#747): they stay on their trips, marked left, so the group can check what they were in. */
+  async markGuestLeft(): Promise<void> {
+    await this.updateTripsOnly({ leftAt: Date.now() });
+  }
+
+  /** The group has saved one of a left guest's expenses or plans from the review card (#747). */
+  async checkLeaverItem(leaverUid: string, itemId: string): Promise<void> {
+    const tripId = this.activeTrip()?.id;
+    if (!tripId) return;
+    await runInInjectionContext(this.injector, () =>
+      updateDoc(doc(this.firestore, 'trips', tripId), { [`leaverReviews.${leaverUid}.checked`]: arrayUnion(itemId) }),
+    );
+  }
+
+  /** "Looks right" on the review card (#747): nothing more to check for that guest. */
+  async finishLeaverReview(leaverUid: string): Promise<void> {
+    const tripId = this.activeTrip()?.id;
+    if (!tripId) return;
+    await runInInjectionContext(this.injector, () =>
+      updateDoc(doc(this.firestore, 'trips', tripId), { [`leaverReviews.${leaverUid}.done`]: true }),
+    );
+  }
+
   /** Mark a trip archived (default) or restore it. */
   async archiveTrip(tripId: string, archived = true): Promise<void> {
     await runInInjectionContext(this.injector, () =>
@@ -632,6 +655,17 @@ export class TripService {
   /** Save the signed-in person's own currency (#429) the same way; null goes back to each trip's. */
   async updateOwnCurrency(code: string | null): Promise<void> {
     await this.updateProfileAndTrips({ ownCurrency: code ?? deleteField() });
+  }
+
+  /** Write a patch to the signed-in person's member doc on each of their trips (not their profile). */
+  private async updateTripsOnly(patch: UpdateData<DocumentData>): Promise<void> {
+    const user = this.requireUser();
+    await runInInjectionContext(this.injector, async () => {
+      const idx = await getDoc(doc(this.firestore, 'userTrips', user.uid));
+      const tripIds = idx.exists() ? ((idx.data() as UserTripsDoc).tripIds ?? []) : [];
+      await Promise.all(tripIds.map(id =>
+        updateDoc(this.memberRef(id, user.uid), patch).catch(() => {/* a trip they've left */})));
+    });
   }
 
   private async updateProfileAndTrips(patch: UpdateData<DocumentData>): Promise<void> {

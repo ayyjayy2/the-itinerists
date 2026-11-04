@@ -397,6 +397,12 @@ await t('guest fills the map place cache', 'allow', () => setDoc(doc(gus, 'trips
 await t('guest clears the map place cache', 'deny', () => deleteDoc(doc(gus, 'trips', 'T', 'geocache', 'c1')));
 await t('guest changes their own name on the trip', 'allow', () => updateDoc(doc(gus, 'trips', 'T', 'members', 'gus'), { displayName: 'Gus' }));
 await t('guest makes themselves owner', 'deny', () => updateDoc(doc(gus, 'trips', 'T', 'members', 'gus'), { role: 'owner' }));
+// #747: a guest logging out is marked left on the trip; the group records what it has checked.
+await t('guest marks themselves left on the trip', 'allow', () => updateDoc(doc(gus, 'trips', 'T', 'members', 'gus'), { leftAt: 1793830000000 }));
+await t('guest marks someone else left', 'deny', () => updateDoc(doc(gus, 'trips', 'T', 'members', 'bob'), { leftAt: 1793830000000 }));
+await t('member records a left guest\'s checked expense', 'allow', () => updateDoc(doc(bob, 'trips', 'T'), { 'leaverReviews.gus.checked': arrayUnion('f1') }));
+await t('member taps Looks right for a left guest', 'allow', () => updateDoc(doc(bob, 'trips', 'T'), { 'leaverReviews.gus.done': true }));
+await t('guest records a review', 'deny', () => updateDoc(doc(gus, 'trips', 'T'), { 'leaverReviews.gus.done': true }));
 await t('guest makes an invite', 'deny', () => setDoc(doc(gus, 'trips', 'T', 'invites', 'GUEST1'), { tripId: 'T', usedBy: [], expiresAt: 9999999999999 }));
 await t('guest records a page view', 'allow', () => setDoc(doc(gus, '_activity', 'ge1'), { uid: 'gus', tripId: 'T', type: 'page', page: '/home', at: serverTimestamp(), localHour: 9, tz: 'Europe/Berlin', tzOffsetMin: 60, platform: 'web', sessionId: 's', appVersion: '1' }));
 await t('new guest joins with a live invite', 'allow', () => setDoc(doc(gina, 'trips', 'T', 'members', 'gina'), { uid: 'gina', role: 'member', inviteCode: 'CODE1', displayName: 'Gina' }));

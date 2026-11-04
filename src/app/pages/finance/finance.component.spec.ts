@@ -10,6 +10,7 @@ import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FocusService } from '../../services/focus.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
 import { NATIVE_PLATFORM } from '../../native-platform';
+import { ItineraryService } from '../../services/itinerary.service';
 
 // #447: an "Everyone" expense with individual amounts typed before two people
 // joined used to count them as owing nothing, silently.
@@ -38,6 +39,7 @@ describe('FinanceComponent: expenses that leave people out', () => {
         { provide: TripService, useValue: { activeTrip: signal({ id: 't', name: 'Trip', currency: 'USD' }), ready: signal(true), activeMembers: signal([]) } },
         { provide: ExchangeRateService, useValue: { ratesFor: () => Promise.resolve(null) } },
         { provide: FocusService, useValue: { id: signal(null), clear: () => {} } },
+        { provide: ItineraryService, useValue: { items: signal([]) } },
       ],
     });
     const fixture = TestBed.createComponent(FinanceComponent);
@@ -111,6 +113,7 @@ describe('FinanceComponent: settling up', () => {
         } },
         { provide: ExchangeRateService, useValue: { ratesFor: (_: string, d: string) => Promise.resolve(d === 'latest' ? opts.latest ?? null : null) } },
         { provide: FocusService, useValue: { id: signal(null), clear: () => {} } },
+        { provide: ItineraryService, useValue: { items: signal([]) } },
         { provide: NATIVE_PLATFORM, useValue: !!opts.native },
       ],
     });
@@ -315,5 +318,101 @@ describe('FinanceComponent: settling up', () => {
     await Promise.resolve();
     expect(finance['clearClaim']).toHaveBeenCalledWith('Theo', 'Maya', { answer: 'not-received', amount: 30, currency: 'USD' });
     expect(finance['markAllPaid']).not.toHaveBeenCalled();
+  });
+});
+
+// #747: a guest who logged out stays on the trip, marked left; the group checks what they were in.
+describe('FinanceComponent: a guest who left', () => {
+  const people = ['Maya', 'Theo', 'Robin'].map(name => ({ uid: name, name, color: '#8BAF7C', avatarEmoji: '🙂' }));
+  const dinner = {
+    id: 'dinner', date: '2026-11-18', vendor: 'Dash!', description: 'Farewell dinner', amount: 300, currency: 'THB', paidBy: 'Maya',
+    splitAmong: 'All', splits: null, category: '', addedByUid: 'Maya', createdAt: 1,
+  } as unknown as FinanceEntryDoc;
+  const taxi = { ...dinner, id: 'taxi', vendor: 'Mr. Kwan', date: '2026-11-16', splitAmong: 'Maya, Theo' } as FinanceEntryDoc;
+  const park = { ...dinner, id: 'park', vendor: 'Elephant Nature Park', date: '2026-11-16' } as FinanceEntryDoc;
+  let trips: { [k: string]: unknown; checkLeaverItem: jasmine.Spy; finishLeaverReview: jasmine.Spy; activeTrip: ReturnType<typeof signal<object>> };
+  let updateEntry: jasmine.Spy;
+
+  function create(entries: FinanceEntryDoc[], leaverReviews: object = {}) {
+    TestBed.resetTestingModule();
+    updateEntry = jasmine.createSpy('updateEntry').and.resolveTo();
+    trips = {
+      activeTrip: signal({ id: 't', name: 'Trip', currency: 'THB', leaverReviews }), ready: signal(true),
+      activeMembers: signal([{ uid: 'Maya', displayName: 'Maya' }, { uid: 'Theo', displayName: 'Theo' }, { uid: 'Robin', displayName: 'Robin', leftAt: 1 }]),
+      checkLeaverItem: jasmine.createSpy('checkLeaverItem').and.resolveTo(),
+      finishLeaverReview: jasmine.createSpy('finishLeaverReview').and.resolveTo(),
+    };
+    TestBed.configureTestingModule({
+      imports: [FinanceComponent],
+      providers: [
+        provideRouter([]),
+        { provide: FinanceService, useValue: {
+          entries: signal(entries), loaded: signal(true), paidItems: signal(new Set<string>()), updateEntry,
+          addEntry: jasmine.createSpy().and.resolveTo(), deleteEntry: jasmine.createSpy().and.resolveTo(), togglePaidItem: jasmine.createSpy(),
+          reminders: signal(new Map()), claims: signal(new Map()) } },
+        { provide: UserService, useValue: { currentUser: signal({ uid: 'Maya', name: 'Maya' }), firestoreUser: signal({ uid: 'Maya' }), isAdmin: () => false, isGuest: signal(false) } },
+        { provide: UsersService, useValue: { tripUsers: () => people } },
+        { provide: TripService, useValue: trips },
+        { provide: ExchangeRateService, useValue: { ratesFor: () => Promise.resolve(null) } },
+        { provide: FocusService, useValue: { id: signal(null), clear: () => {} } },
+        { provide: ItineraryService, useValue: { items: signal([]) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(FinanceComponent);
+    fixture.detectChanges();
+    return { fixture, comp: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
+  }
+  const card = (el: HTMLElement) => el.querySelector('.leaver-review') as HTMLElement | null;
+  const rows = (el: HTMLElement) => Array.from(card(el)?.querySelectorAll('li') ?? []).map(li => li.querySelector('b')!.textContent!.trim());
+  const button = (root: HTMLElement, text: string) =>
+    Array.from(root.querySelectorAll('button')).find(b => b.textContent!.trim() === text) as HTMLButtonElement;
+
+  it('lists the expenses they are still in, each with Edit', () => {
+    const { el } = create([dinner, taxi, park]);
+    expect(card(el)!.querySelector('h3')!.textContent).toContain('Robin (guest) left the trip');
+    expect(rows(el)).toEqual(['Elephant Nature Park', 'Dash!']);
+    expect(card(el)!.textContent).toContain('Robin’s share ฿100');
+  });
+
+  it('Edit opens the expense\'s edit pop-up; Save takes it off the list and says so', async () => {
+    const { fixture, comp, el } = create([dinner, park]);
+    button(card(el)!.querySelector('li')!, 'Edit').click();
+    fixture.detectChanges();
+    expect(comp.editingEntry()?.id).toBe('park');
+    await comp.saveEditEntry('park');
+    expect(updateEntry).toHaveBeenCalled();
+    expect(trips.checkLeaverItem).toHaveBeenCalledWith('Robin', 'park');
+    trips.activeTrip.set({ id: 't', name: 'Trip', currency: 'THB', leaverReviews: { Robin: { checked: ['park'] } } });
+    fixture.detectChanges();
+    expect(card(el)!.querySelector('.leaver-saved')!.textContent).toContain('Saved: Elephant Nature Park');
+    expect(rows(el)).toEqual(['Dash!']);
+  });
+
+  it('an edit opened anywhere else is not counted as checked', async () => {
+    const { comp } = create([dinner]);
+    comp.startEditEntry(dinner);
+    await comp.saveEditEntry('dinner');
+    expect(trips.checkLeaverItem).not.toHaveBeenCalled();
+  });
+
+  it('Looks right finishes it for everyone, with a short message', async () => {
+    const { el, comp } = create([dinner]);
+    button(card(el)!, 'Looks right').click();
+    await Promise.resolve();
+    expect(trips.finishLeaverReview).toHaveBeenCalledWith('Robin');
+    expect(comp.toast()).toBe('That’s everything Robin was in, checked.');
+  });
+
+  it('saving the last one says everything is checked', async () => {
+    const { el, comp } = create([dinner]);
+    button(card(el)!, 'Edit').click();
+    await comp.saveEditEntry('dinner');
+    expect(comp.toast()).toBe('That’s everything Robin was in, checked.');
+  });
+
+  it('shows no card once it is done, or when nothing is left', () => {
+    expect(card(create([dinner], { Robin: { done: true } }).el)).toBeNull();
+    expect(card(create([dinner], { Robin: { checked: ['dinner'] } }).el)).toBeNull();
+    expect(card(create([taxi]).el)).toBeNull();
   });
 });
