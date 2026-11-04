@@ -63,7 +63,7 @@
 // The same handwriting, left of the phone, its arrow pointing down to the
 // sign-up card below (narrow screens only; hidden in the media query above).
 .waitlist-note {
-  position: absolute; right: calc(100% + 12px); bottom: -4%;
+  position: absolute; right: calc(100% + 28px); bottom: -4%;
   width: clamp(64px, 18vw, 96px);
   margin: 0; display: flex; flex-direction: column; align-items: flex-end;
   font-family: 'Caveat', cursive; font-weight: 700; font-size: 1.2rem; line-height: 1.05;
