@@ -79,14 +79,6 @@
   .btn { justify-content: center; width: 100%; }
 }
 
-// ── Quieter options ───────────────────────────────────────────────────────────
-.continue-browser {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-height: 44px; width: auto;
-  color: var(--text-muted); font-weight: 700; text-decoration: none;
-  &:hover { color: var(--text); text-decoration: underline; }
-}
-.have-account { margin: -0.75rem 0 0; color: var(--text); a { font-weight: 800; color: var(--primary-dark); } }
 .legal {
   margin-top: auto; font-size: 0.85rem; color: var(--text-muted);
   a { color: inherit; display: inline-block; padding: 0.6rem 0.25rem; }
