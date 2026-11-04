@@ -41,6 +41,7 @@ import { needsRecoveryEmail, maskEmail } from '../../utils/email';
 import { stopDateRange, tripDateRange } from '../../utils/stop-dates';
 import { heroLine } from '../../utils/hero-line';
 import { EmailConfirmService } from '../../services/email-confirm.service';
+import { AccountPromptService } from '../../services/account-prompt.service';
 import { SurveyService } from '../../services/survey.service';
 import { AvatarGlyphComponent } from '../../shared/avatar-glyph/avatar-glyph.component';
 
@@ -130,8 +131,15 @@ export class HomeComponent implements OnInit, OnDestroy {
   private nudgeDismissed = signal(false);
   readonly showRecoveryNudge = computed(() => {
     const u = this.userService.firestoreUser();
-    if (!needsRecoveryEmail(u) || this.nudgeDismissed() || this.survey.pending()) return false;
+    if (u?.isGuest || !needsRecoveryEmail(u) || this.nudgeDismissed() || this.survey.pending()) return false;
     try { return localStorage.getItem(`recoveryNudgeDismissed:${u!.uid}`) !== '1'; } catch { return true; }
+  });
+  /** A guest gets "Create an account" in the same spot (#742); ✕ hides it like the recovery nudge. */
+  readonly accountPrompt = inject(AccountPromptService);
+  readonly showGuestNudge = computed(() => {
+    const u = this.userService.firestoreUser();
+    if (!u?.isGuest || this.nudgeDismissed() || this.survey.pending()) return false;
+    try { return localStorage.getItem(`recoveryNudgeDismissed:${u.uid}`) !== '1'; } catch { return true; }
   });
   readonly pendingRecoveryEmail = computed(() => this.userService.firestoreUser()?.pendingEmail ?? '');
   dismissRecoveryNudge(): void {

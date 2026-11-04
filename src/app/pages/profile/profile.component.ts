@@ -185,6 +185,8 @@ export class ProfileComponent implements OnInit {
 
   /** A guest's "Create account" (#610): the same sheet a guest gets when they try to change something. */
   createAccount(): void { this.accountPrompt.ask(); }
+  /** The open trip's name, for a guest's "You're a guest on …" (#742). */
+  readonly tripName = computed(() => this.tripService.activeTrip()?.name ?? '');
 
   openPasswordModal(): void {
     this.shownFields.set(new Set());

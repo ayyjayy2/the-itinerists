@@ -101,6 +101,12 @@
   flex-wrap: wrap;
 }
 
+// A guest's Create your account card, first on the page (#742)
+.guest-card {
+  border-color: var(--primary);
+  background: var(--primary-tint);
+}
+
 // ── Modals ────────────────────────────────────────────────────────────────────
 .modal-backdrop {
   background: rgba(0, 0, 0, 0.45);
@@ -124,6 +130,28 @@
   gap: 1rem;
 
   h2 { margin: 0 0 0.25rem; }
+
+  // A guest's log-out pop-up closes from a ✕ in its corner (#742)
+  &.guest-logout { position: relative; h2 { padding-right: 2rem; } }
+}
+
+.modal-x {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+
+  &:hover { background: var(--bg); color: var(--text); }
 }
 
 .modal-hint {
