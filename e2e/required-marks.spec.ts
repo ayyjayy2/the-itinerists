@@ -44,7 +44,8 @@ test('sign-in and sign-up star their required fields', async ({ page }) => {
   await page.getByRole('button', { name: 'Log Out' }).click();
   await page.getByRole('button', { name: 'Yes' }).click();
   await expect(page).toHaveURL(/\/login/);
-  expect(Object.keys(await starred(page))).toEqual(['Email', 'Password']);
+  // Poll: the URL changes before the form has rendered every field (#756: CI once read only "Email").
+  await expect.poll(async () => Object.keys(await starred(page))).toEqual(['Email', 'Password']);
   await page.goto('/signup');
-  expect(Object.keys(await starred(page))).toEqual(['Your Name', 'Email', 'Password', 'Confirm Password']);
+  await expect.poll(async () => Object.keys(await starred(page))).toEqual(['Your Name', 'Email', 'Password', 'Confirm Password']);
 });
