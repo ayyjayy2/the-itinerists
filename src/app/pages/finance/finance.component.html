@@ -597,17 +597,17 @@
             <div class="table-totals-row">
               <span class="totals-label">{{ enrichedEntries().length }} expense{{ enrichedEntries().length !== 1 ? 's' : '' }}</span>
               <span class="totals-amount">
-                @if (totalsCurrency() === 'All' && mine(totalsAmount()); as m) {
-                  {{ m }}<span class="pay-own"> {{ totalsAmount() | number:'1.2-2' }} {{ totalsCode() }}</span>
+                @if (totalsCurrency() === 'All') {
+                  {{ expBig() }}@if (expOthers().length) {<span class="totals-others"> {{ expOthers().join(' · ') }}</span>}
                 } @else {
-                  @if (totalsCurrency() === 'All' && hasMixedCurrencies()) { ≈ }{{ totalsAmount() | number:'1.2-2' }} <span class="cur-code">{{ totalsCode() }}</span>
+                  {{ totalsAmount() | number:'1.2-2' }} <span class="cur-code">{{ totalsCode() }}</span>
                 }
               </span>
             </div>
             @if (totalsCurrency() === 'All' && hasMixedCurrencies()) {
               <div class="totals-note">
-                ≈ converted to {{ homeCurrency() }} at each expense's date rate.
-                @if (convertedExpenseTotal().missing > 0) { <span class="totals-warn">{{ convertedExpenseTotal().missing }} not converted (rate unavailable).</span> }
+                ≈ each expense converted at the rate for its own date.
+                @if (expTotals()[0].missing > 0) { <span class="totals-warn">{{ expTotals()[0].missing }} not converted yet (rate unavailable).</span> }
               </div>
             }
           }

@@ -231,12 +231,13 @@ describe('FinanceComponent: settling up', () => {
       r.fixture.detectChanges();
       expect(r.el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('≈ £15.00 30.00 USD ≈ €18.00 (Theo)');
     });
-    it('leads the expenses total with my currency too', async () => {
-      const { fixture, comp, el } = await render('GBP');
-      comp.showExpenses.set(true);
-      fixture.detectChanges();
-      const t = comp.totalsAmount();
-      expect(el.querySelector('.totals-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe(`≈ £${(t * 0.8).toFixed(2)} ${t.toFixed(2)} USD`);
+    // #724: the expenses total leads with my currency, then the group's others, each expense at its saved rate.
+    it('leads the expenses total with my currency, then the group\'s others', async () => {
+      const r = create('Theo', new Map(), { own: 'GBP', theirs: 'EUR', latest: { GBP: 0.8, EUR: 0.9 }, saved: { GBP: 0.5, EUR: 0.6 } });
+      await r.fixture.whenStable();
+      r.comp.showExpenses.set(true);
+      r.fixture.detectChanges();
+      expect(r.el.querySelector('.totals-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('≈ £30.00 $60.00 · ≈ €36.00');
     });
     it('leads the Pay now pop-up with my currency', async () => {
       const { comp, fixture, el } = await render('GBP');

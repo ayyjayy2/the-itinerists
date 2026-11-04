@@ -22,8 +22,10 @@ describe('ExpensesComponent currencies', () => {
   };
 
   let me: ReturnType<typeof signal<any>>;
+  let members: ReturnType<typeof signal<any[]>>;
   beforeEach(() => {
     me = signal<any>({ uid: 'u1' });
+    members = signal<any[]>([{ uid: 'u1', displayName: 'Maya' }]);
     entries = signal<any[]>([hotel]);
     personal = signal<any[]>([]);
     expenses = {
@@ -39,9 +41,9 @@ describe('ExpensesComponent currencies', () => {
         { provide: FinanceService, useValue: finance },
         { provide: UserService, useValue: { currentUser: signal({ uid: 'u1', name: 'Maya' }), firestoreUser: me } },
         { provide: UsersService, useValue: { tripUsers: () => [{ name: 'Maya' }] } },
-        { provide: TripService, useValue: { activeTrip: signal({ id: 't1', currency: 'EUR' }), ready: signal(true) } },
+        { provide: TripService, useValue: { activeTrip: signal({ id: 't1', currency: 'EUR' }), ready: signal(true), activeMembers: members } },
         // 1 EUR = 1.25 USD on every date: $12 is €9.60.
-        { provide: ExchangeRateService, useValue: { ratesByDate: (_home: string, dates: string[]) => Promise.resolve(Object.fromEntries(dates.map(d => [d, { USD: 1.25 }]))), ratesFor: () => Promise.resolve({ USD: 1.25 }) } },
+        { provide: ExchangeRateService, useValue: { ratesFor: (base: string) => Promise.resolve(base === 'USD' ? { EUR: 0.8 } : base === 'EUR' ? { USD: 1.25 } : null) } },
       ],
     });
   });
@@ -55,7 +57,7 @@ describe('ExpensesComponent currencies', () => {
   it('shows a EUR shared expense in euros in the row and the total, never as USD', () => {
     const { el } = render();
     expect(el.querySelector('.exp-amount')!.textContent).toContain('€300.00');
-    const total = el.querySelector('.total-chip')!.textContent!;
+    const total = el.querySelector('.total-card')!.textContent!;
     expect(total).toContain('€300.00');
     expect(el.textContent).not.toContain('USD');
     expect(el.textContent).not.toContain('$');
@@ -80,50 +82,38 @@ describe('ExpensesComponent currencies', () => {
     expect(row).toContain('of €300.00');
   });
 
-  it('shows a currency code once in the total, even for currencies without a symbol', () => {
-    entries.set([{ ...hotel, currency: 'THB', amount: 6000 }]);
-    const { el } = render();
-    const total = el.querySelector('.total-chip')!.textContent!;
-    expect(total.match(/THB/g)?.length).toBe(1);
+  // #724: one total that stands out, in my currency (the trip's if I have none), then every group currency.
+  const settle = async () => { const r = render(); await r.fixture.whenStable(); r.fixture.detectChanges(); return r; };
+  const text = (el: HTMLElement, sel: string) => el.querySelector(sel)?.textContent!.replace(/\s+/g, ' ').trim() ?? null;
+
+  it('leads with the trip\'s currency when I have none, and lists nothing else for a one-currency group', async () => {
+    const { el } = await settle();
+    expect(text(el, '.total-big')).toBe('€300.00');
+    expect(el.querySelector('.total-others')).toBeNull();
+    expect(el.querySelector('.total-entered')).toBeNull();
   });
 
-  it('never adds different currencies into one total', () => {
+  it('adds mixed currencies at each expense\'s rate, and still shows them as entered, never added together', async () => {
     personal.set([{ id: 'p1', date: '2027-05-11', description: 'Taxi', amount: 12, currency: 'USD', category: 'Transport' }]);
-    const { el } = render();
-    const total = el.querySelector('.total-chip')!.textContent!;
-    expect(total).toContain('€300.00');
-    expect(total).toContain('$12.00');
-    expect(total).not.toContain('312');
+    const { el } = await settle();
+    expect(text(el, '.total-big')).toBe('≈ €309.60');                   // 300 + 12 × 0.8
+    expect(text(el, '.total-entered')).toBe('As entered: €300.00 · $12.00');
+    expect(text(el, '.total-big')).not.toContain('312');
   });
 
-  it("adds a converted total in the trip's currency when currencies are mixed", async () => {
-    personal.set([{ id: 'p1', date: '2027-05-11', description: 'Taxi', amount: 12, currency: 'USD', category: 'Transport' }]);
-    const { fixture, el } = render();
-    await fixture.whenStable(); fixture.detectChanges();
-    const converted = el.querySelector('.total-converted')!.textContent!;
-    expect(converted).toContain('≈ €309.60');                         // 300 + 12 / 1.25
-    expect(converted).toContain("converted to EUR at each expense's date rate");
-  });
-
-  // #429: the total also shows in my own currency, from the trip's at today's rate.
-  it('adds the total in my own currency', async () => {
+  it('leads with my own currency, then the others the group uses', async () => {
     me.set({ uid: 'u1', ownCurrency: 'USD' });
-    const { fixture, el } = render();
-    await fixture.whenStable(); fixture.detectChanges();
-    expect(el.querySelector('.total-own')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('≈ $375.00 in USD, at today\'s rate');
+    members.set([{ uid: 'u1', displayName: 'Maya', ownCurrency: 'USD' }]);
+    const { el } = await settle();
+    expect(text(el, '.total-big')).toBe('≈ $375.00');                   // €300 × 1.25
+    expect(text(el, '.total-others')).toBe('≈ €300.00');
   });
 
-  it('adds nothing when my currency is the trip\'s', async () => {
-    me.set({ uid: 'u1', ownCurrency: 'EUR' });
-    const { fixture, el } = render();
-    await fixture.whenStable(); fixture.detectChanges();
-    expect(el.querySelector('.total-own')).toBeNull();
-  });
-
-  it('shows no converted line when everything is in one currency', async () => {
-    const { fixture, el } = render();
-    await fixture.whenStable(); fixture.detectChanges();
-    expect(el.querySelector('.total-converted')).toBeNull();
+  it('uses a shared expense\'s saved rate rather than its day\'s table', async () => {
+    entries.set([{ ...hotel, rates: { on: '2027-05-10', per: { USD: 2 } } }]);
+    me.set({ uid: 'u1', ownCurrency: 'USD' });
+    const { el } = await settle();
+    expect(text(el, '.total-big')).toBe('≈ $600.00');
   });
 
   it("starts a new personal expense in the trip's currency, and saves the one you pick", () => {

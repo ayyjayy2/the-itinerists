@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExpensesService } from '../../services/expenses.service';
@@ -12,7 +12,8 @@ import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
 import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 import { CurrencySelectComponent } from '../../shared/currency-select/currency-select.component';
-import { Rates, convertedTotal, perCurrencySubtotals, inOwnCurrency } from '../../utils/currency';
+import { Rates, perCurrencySubtotals, amountText, groupCurrencies, totalsInEvery, tablesNeeded } from '../../utils/currency';
+import { localTodayISO } from '../../utils/trip-destinations';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { money } from '../../utils/event-text';
 
@@ -29,6 +30,8 @@ interface DisplayExpense {
   category: string;
   isPersonal: boolean;
   financeId?: string;
+  createdAt?: number;
+  per?: Record<string, number>;   // a shared expense's saved rates (#723)
 }
 
 @Component({
@@ -52,6 +55,7 @@ export class ExpensesComponent implements OnInit {
   /** The trip's own currency: the default for new expenses and the first total shown. */
   readonly homeCurrency = computed(() => this.tripService.activeTrip()?.currency ?? 'USD');
   readonly money = money;
+  readonly amountText = amountText;
 
   showForm = signal(false);
   form = {
@@ -105,6 +109,8 @@ export class ExpensesComponent implements OnInit {
           category:   e.category,
           isPersonal: false,
           financeId:  e.id,
+          createdAt:  e.createdAt,
+          per:        e.rates?.per,
         };
       });
   });
@@ -133,34 +139,36 @@ export class ExpensesComponent implements OnInit {
   });
   readonly totalEmpty = computed(() => this.filtered().length === 0);
 
-  // ── Converted total: everything in the trip's currency (Trip Settings), each
-  //    expense at its own date's rate, as Finance does. Shown when currencies mix. ──
+  // ── Totals (#724): one that stands out, in my currency (the trip's if I have
+  //    none), then the same total in every other currency the group uses. Each
+  //    expense counts at its saved rate (#723), else its day's rate, which
+  //    never changes once the day has passed. ──
   private rateService = inject(ExchangeRateService);
-  private readonly ratesByDate = signal<Record<string, Rates>>({});
   readonly mixedCurrencies = computed(() => new Set(this.filtered().map(e => e.currency)).size > 1);
-  readonly converted = computed(() => convertedTotal(this.filtered(), this.ratesByDate(), this.homeCurrency()));
-  private ratesRequest = 0;
-  private readonly loadRates = effect(() => {
-    if (!this.mixedCurrencies()) return;
-    const home = this.homeCurrency();
-    const dates = this.filtered().map(e => e.date).filter(Boolean);
-    const req = ++this.ratesRequest;   // a slower, older answer never overwrites a newer one
-    void this.rateService.ratesByDate(home, dates).then(r => { if (req === this.ratesRequest) this.ratesByDate.set(r); });
+  private readonly lead = computed(() => this.userService.firestoreUser()?.ownCurrency || this.homeCurrency());
+  private readonly targets = computed(() => {
+    const all = groupCurrencies(this.homeCurrency(), this.tripService.activeMembers());
+    return [this.lead(), ...all.filter(c => c !== this.lead())];
   });
-
-  // ── My own currency (#429): the trip-currency total again in it, at today's rate ──
-  private readonly ownRates = signal<Rates | null>(null);
-  private readonly loadOwnRates = effect(() => {
-    const home = this.homeCurrency(), own = this.userService.firestoreUser()?.ownCurrency;
-    if (!own || own === home) return;
-    void this.rateService.ratesFor(home, 'latest').then(r => this.ownRates.set(r));
+  private readonly tables = signal<Record<string, Rates>>({});
+  private readonly loadTables = effect(() => {
+    const today = localTodayISO(), have = untracked(this.tables);
+    for (const { currency, day } of tablesNeeded(this.filtered(), this.targets(), today)) {
+      const key = `${currency}|${day}`;
+      if (have[key]) continue;
+      void this.rateService.ratesFor(currency, day).then(r => { if (r) this.tables.update(t => ({ ...t, [key]: r })); });
+    }
   });
-  readonly ownTotal = computed(() => {
-    const home = this.homeCurrency(), list = this.filtered();
-    const tripTotal = list.every(e => e.currency === home) ? list.reduce((n, e) => n + e.amount, 0)
-      : this.mixedCurrencies() && !this.converted().missing ? this.converted().total : null;
-    return tripTotal ? inOwnCurrency(tripTotal, home, this.userService.firestoreUser()?.ownCurrency, this.ownRates()) : null;
+  private readonly everyTotal = computed(() => totalsInEvery(this.filtered(), this.targets(), this.tables(), localTodayISO()));
+  /** The total that stands out: "≈ $375.00", or "€300.00" when nothing needed converting. */
+  readonly bigTotal = computed(() => {
+    const t = this.everyTotal()[0];
+    const converted = this.filtered().some(e => e.currency !== t.currency);
+    return `${converted ? '≈ ' : ''}${amountText(t.total, t.currency)}`;
   });
+  /** The same total in the group's other currencies, once each has a rate for every expense. */
+  readonly otherTotals = computed(() => this.everyTotal().slice(1).filter(t => !t.missing)
+    .map(t => `≈ ${amountText(t.total, t.currency)}`));
 
   ngOnInit(): void {
     this.expensesService.init();

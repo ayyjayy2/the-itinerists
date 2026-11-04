@@ -10,24 +10,22 @@
   .user-sub { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem; }
 }
 
-.total-chip {
-  background: var(--primary);
-  color: #1a4a2e;
-  font-size: 1rem;
-  font-weight: 800;
-  padding: 0.35rem 0.75rem;
+// The total (#724): one amount that stands out, in my currency (the trip's if I
+// have none), then the same total in the group's other currencies, then the
+// amounts as entered when currencies are mixed.
+.total-card {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
   border-radius: var(--radius);
-  white-space: nowrap;
-  align-self: center;
-
-  .total-code {
-    font-size: 0.72rem;
-    font-weight: 600;
-    opacity: 0.7;
-    margin-left: 0.2rem;   // "$12.00 USD", not "$12.00USD"
-  }
-
-  &.total-empty { opacity: 0.45; font-size: 0.9rem; }
+  background: var(--surface);
+  border: 1px solid var(--border);
+  .total-label { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+  .total-big { font-size: 1.9rem; font-weight: 800; line-height: 1.15; color: var(--primary-dark); }
+  .total-others { font-size: 1rem; color: var(--text); }
+  .total-entered { font-size: 0.85rem; color: var(--text-muted); }
+  &.total-empty .total-big { opacity: 0.45; }
 }
 
 .add-btn { margin-bottom: 1rem; }
@@ -148,9 +146,6 @@
 // Your share of a shared expense, with the whole amount underneath.
 .exp-of { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
 
-// The total, one per currency (never added across currencies).
-.total-part { white-space: nowrap; }
-.total-sep { opacity: 0.5; margin: 0 0.15rem; }
 
 .edit-btn {
   opacity: 0.5;
@@ -194,11 +189,4 @@
   }
 }
 
-// The converted total under the per-currency amounts (mixed currencies only).
-.total-converted {
-  margin: -0.25rem 0 1rem; font-weight: 800; color: var(--text);
-  .total-note { display: block; font-size: 0.78rem; font-weight: 400; color: var(--text-muted); }
-}
 
-// The total again in my own currency (#429).
-.total-own { margin: -0.5rem 0 1rem; font-size: 0.9rem; color: var(--text-muted); }

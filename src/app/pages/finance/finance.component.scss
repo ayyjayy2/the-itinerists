@@ -33,6 +33,8 @@
   display: flex;
   justify-content: flex-end;
   padding-right: 1.5rem;          // where it sat before, 1.5rem in from the edge
+  // Room after the page's last row, so scrolled to the end the button never covers it (#724).
+  margin-top: calc(52px + 2.5rem);
   z-index: 90;
   pointer-events: none;
 }
@@ -1306,3 +1308,7 @@
   vertical-align: -0.12em;
   color: var(--text-muted);
 }
+
+// The expenses total in the group's other currencies, on its own line under it (#724).
+.totals-amount { text-align: right; }
+.totals-others { display: block; font-size: 0.85rem; font-weight: 400; color: var(--text-muted); }
