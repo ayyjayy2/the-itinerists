@@ -6,7 +6,7 @@
   </header>
 
   <!-- The preview and the sign-up side by side on wider screens, so the form
-       is visible without scrolling; stacked (sign-up first) on phones. -->
+       is visible without scrolling; stacked (demo first) on narrow screens. -->
   <div class="showcase">
   <!-- A few seconds of each key screen (the demo's made-up trip) -->
   <section class="clips" aria-label="A look inside the app">
@@ -15,7 +15,7 @@
         <figure class="clip">
           <div class="phone-wrap">
             <div class="phone">
-              <video [src]="clip.src" [poster]="clip.poster" [muted]="true" [autoplay]="!reducedMotion" loop playsinline preload="metadata"
+              <video #clipVideo muted loop playsinline preload="auto" [attr.autoplay]="reducedMotion ? null : ''" [poster]="clip.poster" [src]="clip.src"
                      [attr.aria-label]="clip.label"></video>
             </div>
             <!-- Outfits live under More: a handwritten nudge pointing at the tab -->
@@ -27,6 +27,14 @@
               </svg>
             </p>
           </div>
+          <!-- Stacked layout only (narrow screens): points down to the sign-up card -->
+          <p class="waitlist-note" aria-hidden="true">
+            <span>Join<br>waitlist!</span>
+            <svg class="arrow" viewBox="0 0 60 80" focusable="false">
+              <path d="M18 4 C 6 22, 8 44, 26 58 C 32 63, 34 68, 34 74" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" />
+              <path d="M24 64 L 34 76 L 43 63" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </p>
           <figcaption>{{ clip.label }}</figcaption>
         </figure>
       }
@@ -44,18 +52,18 @@
     <p class="kicker">iPhone app</p>
     <h2>Coming soon</h2>
     @if (joined()) {
-      <p class="joined">You're on the list. We'll email you when the app is out.</p>
+      <p class="joined">You're on the list. We'll email you when the beta opens and when the app is out.</p>
       <p class="consent">Plus occasional updates. No spam, and you can unsubscribe any time.</p>
     } @else {
-      <p class="app-sub">Leave your email and we'll tell you when it's in the App Store.</p>
+      <p class="app-sub">Join the waitlist for an invite to the beta, and we'll tell you when it's in the App Store.</p>
       <form (ngSubmit)="notifyMe()" novalidate>
         <label class="sr-only" for="notify-email">Email</label>
         <input id="notify-email" type="email" inputmode="email" name="email" [(ngModel)]="email"
                placeholder="you@example.com" autocomplete="email" autocapitalize="none" spellcheck="false"
                [attr.aria-invalid]="error() ? true : null" [attr.aria-describedby]="error() ? 'notify-error' : null" />
         @if (error()) { <p class="field-error" id="notify-error">{{ error() }}</p> }
-        <button class="btn btn-primary" type="submit" [disabled]="sending()">{{ sending() ? 'Adding…' : 'Notify me' }}</button>
-        <p class="consent">We'll email you at launch, plus occasional updates. No spam, and you can unsubscribe any time.</p>
+        <button class="btn btn-primary" type="submit" [disabled]="sending()">{{ sending() ? 'Adding…' : 'Join the waitlist' }}</button>
+        <p class="consent">We'll email you about the beta and the launch, plus occasional updates. No spam, and you can unsubscribe any time.</p>
       </form>
     }
   </section>

@@ -16,13 +16,13 @@ test('a signed-out visitor opening the app lands on the welcome page', async ({ 
   await expect(page.locator('.app-card')).toContainText('Coming soon');
 });
 
-test('Notify me adds an email, and there is no way to sign up or sign in from here', async ({ page }) => {
+test('Join the waitlist adds an email, and there is no way to sign up or sign in from here', async ({ page }) => {
   await signOut(page);
   await page.goto('/welcome');
-  await page.getByRole('button', { name: 'Notify me' }).click();
+  await page.getByRole('button', { name: 'Join the waitlist' }).click();
   await expect(page.locator('.app-card .field-error')).toContainText('email');
   await page.getByPlaceholder('you@example.com').fill('maya@example.com');
-  await page.getByRole('button', { name: 'Notify me' }).click();
+  await page.getByRole('button', { name: 'Join the waitlist' }).click();
   await expect(page.locator('.app-card')).toContainText("You're on the list");
 
   await expect(page.getByRole('link', { name: 'Continue in browser' })).toHaveCount(0);

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, signal, viewChildren } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BrandComponent } from '../../shared/brand/brand.component';
@@ -20,7 +20,7 @@ interface Clip { src: string; poster: string; label: string; }
   templateUrl: './welcome.component.html',
   styleUrl: './welcome.component.scss',
 })
-export class WelcomeComponent {
+export class WelcomeComponent implements AfterViewInit {
   private waitlist = inject(WaitlistService);
 
   readonly clips: Clip[] = [
@@ -32,10 +32,25 @@ export class WelcomeComponent {
   /** Respect reduced motion: show each clip's still frame, no autoplay. */
   readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  private readonly videos = viewChildren<ElementRef<HTMLVideoElement>>('clipVideo');
+
   email = '';
   readonly error   = signal('');
   readonly sending = signal(false);
   readonly joined  = signal(this.waitlist.joined());
+
+  /**
+   * Safari only autoplays muted video, and checks before Angular's bindings
+   * land: make sure each clip is muted, then start it ourselves. A refusal
+   * (Low Power Mode, data saver) just leaves the poster frame showing.
+   */
+  ngAfterViewInit(): void {
+    if (this.reducedMotion) return;
+    for (const { nativeElement: v } of this.videos()) {
+      v.muted = true;
+      v.play?.()?.catch(() => { /* the poster stays; nothing to do */ });
+    }
+  }
 
   /** The clip strip scrolled: light the matching dot. */
   onScroll(strip: HTMLElement): void {

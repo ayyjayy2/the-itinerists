@@ -25,10 +25,20 @@ describe('WelcomeComponent', () => {
     expect(videos.length).toBeGreaterThanOrEqual(3);
     for (const v of videos) {
       expect(v.muted).toBeTrue();
+      // Safari (Mac and iPhone) only autoplays when the muted ATTRIBUTE is in
+      // the markup; Angular's [muted] binding sets only the property.
+      expect(v.hasAttribute('muted')).toBeTrue();
       expect(v.loop).toBeTrue();
       expect(v.hasAttribute('playsinline')).toBeTrue();
       expect(v.getAttribute('poster')).toBeTruthy();
     }
+  });
+
+  it('has a handwritten "Join waitlist!" pointer for the stacked layout, kept out of screen readers', () => {
+    const note = render().el.querySelector('.waitlist-note')!;
+    expect((note as HTMLElement).innerText ?? note.textContent).toMatch(/Join\s*waitlist!/);   // two lines
+    expect(note.getAttribute('aria-hidden')).toBe('true');   // the card itself is the real information
+    expect(note.querySelector('svg.arrow')).not.toBeNull();
   });
 
   it('uses no emoji in its own words', () => {
@@ -50,6 +60,12 @@ describe('WelcomeComponent', () => {
   it('says the iPhone app is coming soon, and offers only the preview and the waitlist', () => {
     const { el } = render();
     expect(el.querySelector('.app-card')?.textContent).toContain('Coming soon');
+    // One list for both: a beta invite, then the App Store launch
+    const card = el.querySelector('.app-card')?.textContent ?? '';
+    expect(card).toContain('invite to the beta');
+    expect(card).toContain('App Store');
+    expect(card).toContain('about the beta and the launch');
+    expect(el.querySelector('.app-card button[type=submit]')?.textContent?.trim()).toBe('Join the waitlist');
     const links = [...el.querySelectorAll<HTMLAnchorElement>('a[href]')].map(a => a.getAttribute('href'));
     expect(links).not.toContain('/signup');                     // no "Continue in browser"
     expect(links).not.toContain('/login');                      // no "Sign in"
@@ -76,6 +92,7 @@ describe('WelcomeComponent', () => {
     await fixture.whenStable(); fixture.detectChanges();
     expect(waitlist.join).toHaveBeenCalledWith('maya@example.com');
     expect(el.querySelector('.app-card')?.textContent).toContain("You're on the list");
+    expect(el.querySelector('.app-card')?.textContent).toContain('when the beta opens');
   });
 
   it('says what signing up means: launch news, occasional updates, no spam, unsubscribe any time', () => {
@@ -91,5 +108,6 @@ describe('WelcomeComponent', () => {
     const { el } = render();
     expect(el.querySelector('.app-card form')).toBeNull();
     expect(el.querySelector('.app-card')?.textContent).toContain("You're on the list");
+    expect(el.querySelector('.app-card')?.textContent).toContain('when the beta opens');
   });
 });
