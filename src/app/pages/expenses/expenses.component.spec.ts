@@ -97,7 +97,7 @@ describe('ExpensesComponent currencies', () => {
     personal.set([{ id: 'p1', date: '2027-05-11', description: 'Taxi', amount: 12, currency: 'USD', category: 'Transport' }]);
     const { el } = await settle();
     expect(text(el, '.total-big')).toBe('≈ €309.60');                   // 300 + 12 × 0.8
-    expect(text(el, '.total-entered')).toBe('As entered: €300.00 · $12.00');
+    expect(text(el, '.total-entered')).toBe('As entered: €300.00 + $12.00');
     expect(text(el, '.total-big')).not.toContain('312');
   });
 
