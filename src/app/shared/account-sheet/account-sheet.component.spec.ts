@@ -56,4 +56,11 @@ describe('AccountSheetComponent', () => {
     expect(comp.error()).toContain('already has an account');
     expect(TestBed.inject(AccountPromptService).open()).toBeTrue();
   });
+
+  it('has no note under Email, and more room above the buttons (#746)', () => {
+    const el = setup().nativeElement as HTMLElement;
+    expect(el.querySelector('#account-email-hint')).toBeNull();
+    expect(el.querySelector('#account-email')!.getAttribute('aria-describedby')).toBeNull();
+    expect(parseFloat(getComputedStyle(el.querySelector('form .actions')!).marginTop)).toBeGreaterThanOrEqual(20);
+  });
 });
