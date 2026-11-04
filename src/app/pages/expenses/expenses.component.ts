@@ -175,6 +175,15 @@ export class ExpensesComponent implements OnInit {
   }
 
   /** Open the add form in the trip's currency (the trip may load after the page). */
+  /** Why Add is off, so a blank required field isn't a mystery (#733); null once both are filled. */
+  missingText(description: string, amount: number | null | undefined): string | null {
+    const noDesc = !description, noAmount = !amount;
+    if (noDesc && noAmount) return 'Add a description and an amount.';
+    if (noDesc) return 'Add a description.';
+    if (noAmount) return 'Add an amount.';
+    return null;
+  }
+
   openForm(): void {
     this.form.currency = this.homeCurrency();
     this.showForm.set(true);
