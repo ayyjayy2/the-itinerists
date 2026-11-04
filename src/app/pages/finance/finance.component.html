@@ -61,13 +61,13 @@
               <button type="button" class="banner-person banner-person-tap" (click)="toggleWorking('owed:' + p.name)"
                       [attr.aria-expanded]="open" [attr.aria-label]="p.name + ': how this is worked out'">
                 <span class="banner-person-name"><span class="working-arrow" aria-hidden="true">{{ open ? '▾' : '▸' }}</span>{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? (p.amountHome | number:'1.2-2') }}</span>
+                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? amt(p.amountHome) }}</span>
                 @if (open) {<span class="net-working">({{ w }})</span>}
               </button>
             } @else {
               <div class="banner-person">
                 <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? (p.amountHome | number:'1.2-2') }}</span>
+                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? amt(p.amountHome) }}</span>
                 <span class="net-working">({{ w }})</span>
               </div>
             }
@@ -117,13 +117,13 @@
               <button type="button" class="banner-person banner-person-tap" (click)="toggleWorking('owing:' + p.name)"
                       [attr.aria-expanded]="open" [attr.aria-label]="p.name + ': how this is worked out'">
                 <span class="banner-person-name"><span class="working-arrow" aria-hidden="true">{{ open ? '▾' : '▸' }}</span>{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? (p.amountHome | number:'1.2-2') }}</span>
+                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? amt(p.amountHome) }}</span>
                 @if (open) {<span class="net-working">({{ w }})</span>}
               </button>
             } @else {
               <div class="banner-person">
                 <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? (p.amountHome | number:'1.2-2') }}</span>
+                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? amt(p.amountHome) }}</span>
                 <span class="net-working">({{ w }})</span>
               </div>
             }
@@ -159,10 +159,10 @@
       [class.banner-settled]="paidBalanceHome() === 0">
       @if (paidBalanceHome() < 0) {
         <div class="banner-label">You've paid out</div>
-        <div class="banner-amounts"><span class="banner-amount">{{ -paidBalanceHome() | number:'1.2-2' }}</span></div>
+        <div class="banner-amounts"><span class="banner-amount">{{ amt(-paidBalanceHome()) }}</span></div>
       } @else if (paidBalanceHome() > 0) {
         <div class="banner-label">You've been paid back</div>
-        <div class="banner-amounts"><span class="banner-amount">{{ paidBalanceHome() | number:'1.2-2' }}</span></div>
+        <div class="banner-amounts"><span class="banner-amount">{{ amt(paidBalanceHome()) }}</span></div>
       } @else {
         <div class="banner-settled-text">Nothing settled yet.</div>
       }
@@ -212,7 +212,7 @@
                       <span>{{ d.emoji }} {{ d.counterpart }} owes them</span>
                     }
                   </span>
-                  <span class="gs-detail-amounts">{{ d.amountHome | number:'1.2-2' }}</span>
+                  <span class="gs-detail-amounts">{{ amt(d.amountHome) }}</span>
                 </div>
               }
             </div>
@@ -331,7 +331,7 @@
                   }
                 }
                 <div class="indiv-total" [class.indiv-mismatch]="!splitIsValid" [class.indiv-match]="splitIsValid && addIndivTotal > 0">
-                  Total: {{ addIndivTotal | number:'1.2-2' }} / {{ (newEntry.amount ?? 0) | number:'1.2-2' }}
+                  Total: {{ amt(addIndivTotal, newEntry.currency || homeCurrency()) }} / {{ amt(newEntry.amount ?? 0, newEntry.currency || homeCurrency()) }}
                   @if (!splitIsValid) { <span class="indiv-warn">⚠ Must equal total</span> }
                   @if (splitIsValid && addIndivTotal > 0) { <span class="indiv-ok">✓</span> }
                 </div>
@@ -490,7 +490,7 @@
                 @if (entry.isIndivSplit) {
                   <span class="pp-custom">custom</span>
                 } @else if (entry.amount > 0) {
-                  {{ entry.ppAmount | number:'1.2-2' }}<span class="pp-split">/{{ entry.ppCount }}</span>
+                  {{ amt(entry.ppAmount, entry.currency) }}<span class="pp-split">/{{ entry.ppCount }}</span>
                 } @else {
                   <span class="pp-tbd">TBD</span>
                 }
@@ -565,7 +565,7 @@
                           }
                         }
                         <div class="indiv-total" [class.indiv-mismatch]="!editSplitIsValid" [class.indiv-match]="editSplitIsValid && editIndivTotal > 0">
-                          Total: {{ editIndivTotal | number:'1.2-2' }} / {{ (editEntryDraft.amount ?? 0) | number:'1.2-2' }}
+                          Total: {{ amt(editIndivTotal, editEntryDraft.currency || homeCurrency()) }} / {{ amt(editEntryDraft.amount ?? 0, editEntryDraft.currency || homeCurrency()) }}
                           @if (!editSplitIsValid) { <span class="indiv-warn">⚠ Must equal total</span> }
                           @if (editSplitIsValid && editIndivTotal > 0) { <span class="indiv-ok">✓</span> }
                         </div>

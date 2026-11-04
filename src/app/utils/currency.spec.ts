@@ -1,4 +1,4 @@
-import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText, lockRate, rateDay, needsNewRate, inOwnCurrency } from './currency';
+import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText, lockRate, rateDay, needsNewRate, inOwnCurrency, amountText } from './currency';
 
 // Frankfurter-style rates table: base = the "to" currency (here EUR), so
 // rates[X] = how many X per 1 EUR. EUR itself is implicitly 1.
@@ -175,5 +175,18 @@ describe('inOwnCurrency', () => {
     expect(inOwnCurrency(1000, 'THB', 'THB', latest)).toBeNull();
     expect(inOwnCurrency(1000, 'THB', 'JPY', latest)).toBeNull();
     expect(inOwnCurrency(1000, 'THB', 'GBP', null)).toBeNull();
+  });
+});
+
+// #719: every amount carries its currency, as a symbol where it has one.
+describe('amountText', () => {
+  it('puts the currency\'s symbol on the amount, always with cents', () => {
+    expect(amountText(3840, 'THB')).toBe('฿3,840.00');
+    expect(amountText(30, 'USD')).toBe('$30.00');
+    expect(amountText(24.5, 'GBP')).toBe('£24.50');
+  });
+  it('uses the code where there is no symbol, or the code is unknown', () => {
+    expect(amountText(10, 'CHF')).toBe('CHF 10.00');
+    expect(amountText(10, 'XYZ')).toBe('XYZ 10.00');
   });
 });

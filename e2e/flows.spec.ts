@@ -76,7 +76,7 @@ test('each balance shows its working, and a tap folds it away (#519)', async ({ 
   await page.goto('/finance');
   const maya = page.locator('.banner-positive .banner-person').filter({ hasText: 'Maya' });
   const jo = page.locator('.banner-positive .banner-person').filter({ hasText: 'Jo' });
-  await expect(maya.locator('.banner-person-amounts')).toHaveText('3,840.00');
+  await expect(maya.locator('.banner-person-amounts')).toHaveText('฿3,840.00');
   // Open from the start, so the total's maths is in sight (survey feedback).
   await expect(maya.locator('.net-working')).toHaveText('(they owe ฿4,000 − you owe ฿160)');
   await expect(jo.locator('.net-working')).toHaveText('(they owe ฿4,000 − you owe ฿1,600)');
