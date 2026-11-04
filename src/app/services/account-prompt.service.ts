@@ -14,6 +14,8 @@ export class AccountPromptService {
   private user = inject(UserService);
   /** Whether the "Create your account" sheet is open. */
   readonly open = signal(false);
+  /** Why it's open: to change this trip, or to plan their own (#744: then New trip opens after). */
+  readonly purpose = signal<'change' | 'plan'>('change');
   private started = false;
 
   /** Called once from the root component. */
@@ -28,7 +30,7 @@ export class AccountPromptService {
   }
 
   /** Open the sheet from code (a page that knows the person is a guest). */
-  ask(): void { this.open.set(true); }
+  ask(purpose: 'change' | 'plan' = 'change'): void { this.purpose.set(purpose); this.open.set(true); }
 
   private intercept(e: Event): void {
     if (!this.user.isGuest()) return;
@@ -36,6 +38,6 @@ export class AccountPromptService {
     if (!target?.closest?.('[data-needs-account]')) return;
     e.preventDefault();
     e.stopImmediatePropagation();
-    this.open.set(true);
+    this.ask();
   }
 }

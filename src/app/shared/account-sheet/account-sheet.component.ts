@@ -1,5 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { TripService } from '../../services/trip.service';
 import { FormsModule } from '@angular/forms';
+import { NgTemplateOutlet } from '@angular/common';
 import { AccountPromptService } from '../../services/account-prompt.service';
 import { AuthService } from '../../services/auth.service';
 import { IconComponent } from '../icon/icon.component';
@@ -14,13 +17,17 @@ import { userMessage } from '../../utils/user-message';
  */
 @Component({
   selector: 'app-account-sheet',
-  imports: [FormsModule, IconComponent, EyeButtonDirective],
+  imports: [FormsModule, NgTemplateOutlet, IconComponent, EyeButtonDirective],
   templateUrl: './account-sheet.component.html',
   styleUrl: './account-sheet.component.scss',
 })
 export class AccountSheetComponent {
   protected prompt = inject(AccountPromptService);
   private auth = inject(AuthService);
+  private router = inject(Router);
+  private trips = inject(TripService);
+  /** The trip they're a guest on, for "You'll stay on … too" (#744). */
+  protected tripName = computed(() => this.trips.activeTrip()?.name ?? '');
 
   email = '';
   password = '';
@@ -50,6 +57,12 @@ export class AccountSheetComponent {
     } finally {
       this.busy.set(false);
     }
+  }
+
+  /** After the account is made from "+ Plan your own" (#744): on to the New trip form. */
+  planTrip(): void {
+    this.close();
+    this.router.navigate(['/trips/new']);
   }
 
   close(): void {

@@ -4,21 +4,25 @@ import { AccountPromptService } from '../../services/account-prompt.service';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { signal } from '@angular/core';
+import { Router, provideRouter } from '@angular/router';
+import { TripService } from '../../services/trip.service';
 
 /** #610: a guest creates their account from the sheet and stays on the trip. */
 describe('AccountSheetComponent', () => {
   let upgradeGuest: jasmine.Spy;
 
-  function setup() {
+  function setup(purpose: 'change' | 'plan' = 'change') {
     upgradeGuest = jasmine.createSpy('upgradeGuest').and.resolveTo();
     TestBed.configureTestingModule({
       imports: [AccountSheetComponent],
       providers: [
         { provide: AuthService, useValue: { upgradeGuest } },
         { provide: UserService, useValue: { isGuest: signal(true) } },
+        { provide: TripService, useValue: { activeTrip: signal({ id: 't', name: 'Chiang Mai, November' }) } },
+        provideRouter([]),
       ],
     });
-    TestBed.inject(AccountPromptService).open.set(true);
+    TestBed.inject(AccountPromptService).ask(purpose);
     const fixture = TestBed.createComponent(AccountSheetComponent);
     fixture.detectChanges();
     return fixture;
@@ -62,5 +66,22 @@ describe('AccountSheetComponent', () => {
     expect(el.querySelector('#account-email-hint')).toBeNull();
     expect(el.querySelector('#account-email')!.getAttribute('aria-describedby')).toBeNull();
     expect(parseFloat(getComputedStyle(el.querySelector('form .actions')!).marginTop)).toBeGreaterThanOrEqual(20);
+  });
+
+  it('from "+ Plan your own" (#744): asks for an account to plan a trip, then opens New trip', async () => {
+    const fixture = setup('plan');
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('#account-sheet-title')!.textContent).toBe('Plan your own trip');
+    expect(el.textContent).toContain("You'll stay on Chiang Mai, November too.");
+    const comp = fixture.componentInstance;
+    comp.email = 'robin@example.com';
+    comp.password = 'Sunshine2026';
+    await comp.create();
+    fixture.detectChanges();
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    const next = Array.from(el.querySelectorAll('button')).find(b => b.textContent!.trim() === 'Plan your trip') as HTMLButtonElement;
+    next.click();
+    expect(navigate).toHaveBeenCalledWith(['/trips/new']);
+    expect(TestBed.inject(AccountPromptService).open()).toBeFalse();
   });
 });
