@@ -90,27 +90,26 @@
   } @else {
     <div class="expense-list">
       @for (exp of filtered(); track exp.id) {
+        <!-- Every row the same shape (#722): title, then date · description, then tags; the amount and ✏️ on the right -->
         <div class="expense-row card">
-          <div class="exp-left">
-            <span class="exp-date">{{ formatDate(exp.date) }}</span>
-            <span class="exp-meta">
-              @if (exp.vendor) { <span class="exp-vendor">{{ exp.vendor }}</span> }
-              <span class="exp-desc" [class.exp-desc-sub]="exp.vendor">{{ exp.description }}</span>
+          <div class="exp-main">
+            <span class="exp-title">{{ exp.vendor || exp.description }}</span>
+            <span class="exp-sub">
+              <span class="exp-date">{{ formatDate(exp.date) }}</span>
+              @if (exp.vendor && exp.description) { · {{ exp.description }} }
             </span>
-            <span class="chip" [ngClass]="catClass(exp.category)">{{ exp.category }}</span>
-            @if (!exp.isPersonal) {
-              <span class="shared-badge">shared</span>
+            <span class="exp-tags">
+              <span class="chip" [ngClass]="catClass(exp.category)">{{ exp.category }}</span>
+              @if (!exp.isPersonal) { <span class="shared-badge">shared</span> }
+            </span>
+          </div>
+          <span class="exp-amounts">
+            <span class="exp-amount">{{ money(exp.amount, exp.currency) }}</span>
+            @if (exp.fullAmount !== undefined) {
+              <span class="exp-of">of {{ money(exp.fullAmount, exp.currency) }}</span>
             }
-          </div>
-          <div class="exp-right">
-            <span class="exp-amounts">
-              <span class="exp-amount">{{ money(exp.amount, exp.currency) }}</span>
-              @if (exp.fullAmount !== undefined) {
-                <span class="exp-of">of {{ money(exp.fullAmount, exp.currency) }}</span>
-              }
-            </span>
-            <button data-needs-account class="btn btn-ghost btn-sm edit-btn" (click)="openEdit(exp)">✏️</button>
-          </div>
+          </span>
+          <button data-needs-account class="btn btn-ghost btn-sm edit-btn" (click)="openEdit(exp)" title="Edit" aria-label="Edit">✏️</button>
         </div>
       }
     </div>
