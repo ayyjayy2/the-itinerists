@@ -32,6 +32,13 @@ test('the add-expense form fits above the keyboard (Finance)', async ({ page }) 
   await expectFits(page, 'Add Expense');
 });
 
+test('the edit-expense form fits above the keyboard (Finance, #753)', async ({ page }) => {
+  await page.goto('/finance');
+  await page.getByRole('button', { name: /Expenses \(/ }).click();
+  await page.locator('.edit-row-btn').first().click();
+  await expectFits(page, 'Save');
+});
+
 test('the edit-expense form fits above the keyboard (Expenses)', async ({ page }) => {
   await page.goto('/expenses');
   await page.locator('.edit-btn').first().click();

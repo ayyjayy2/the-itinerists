@@ -917,6 +917,7 @@
 
 // ── Expenses Table ─────────────────────────────────────────────────────────────
 .expenses-table {
+  display: grid;   // every row stretches to the widest, so nothing pokes past the row backgrounds (#753)
   background: var(--card-bg);
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -927,8 +928,9 @@
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: 65px 1fr 85px 85px 75px 30px;
-  min-width: 460px;
+  // Wide enough that every cell fits inside its row (#753): the description had ~50px and amounts spilled out.
+  grid-template-columns: 64px minmax(150px, 1fr) 80px 120px 100px 44px;
+  min-width: 640px;
 }
 
 .table-header {
@@ -956,7 +958,7 @@
   &:last-child { border-bottom: none; }
   &:hover { background: var(--bg); }
   &:hover .edit-row-btn { opacity: 1; }
-  &.is-editing { background: var(--bg); border-bottom: none; }
+  &.is-editing { background: var(--bg); }
 }
 
 .date-cell   { color: var(--text-muted); font-size: 0.76rem; padding-top: 0.1rem; }
@@ -1047,15 +1049,6 @@
   white-space: nowrap;
   border-left: 1px solid var(--border);
   padding-left: 0.75rem;
-}
-
-// ── Inline Edit Form ──────────────────────────────────────────────────────────
-.inline-entry-form {
-  padding: 1.1rem 1rem;
-  border-top: 2px solid var(--primary);
-  background: var(--bg);
-
-  h4 { margin-bottom: 0.85rem; font-size: 0.9rem; }
 }
 
 // ── Shared form styles ─────────────────────────────────────────────────────────

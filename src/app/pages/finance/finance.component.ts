@@ -708,6 +708,8 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   isEditingEntry(e: FinanceEntryDoc): boolean { return this.editingEntryId() === e.id; }
+  /** The expense open in the Edit expense pop-up (#753). */
+  editingEntry = computed(() => this.entries().find(e => e.id === this.editingEntryId()) ?? null);
 
   startEditEntry(e: FinanceEntryDoc): void {
     this.editFormSubmitted.set(false);
