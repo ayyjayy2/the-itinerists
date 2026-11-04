@@ -17,7 +17,8 @@
       <span class="total-others">{{ otherTotals().join(' · ') }}</span>
     }
     @if (mixedCurrencies()) {
-      <span class="total-entered">As entered: @for (t of totals(); track t.currency; let last = $last) {<span>{{ amountText(t.amount, t.currency) }}</span>@if (!last) {<span> · </span>}}</span>
+      <!-- Parts of the total, so "+"; the line above is the same total in other currencies, so "·" -->
+      <span class="total-entered">As entered: @for (t of totals(); track t.currency; let last = $last) {<span>{{ amountText(t.amount, t.currency) }}</span>@if (!last) {<span> + </span>}}</span>
     }
   </section>
 
