@@ -45,8 +45,13 @@
       <div class="balance-banner banner-positive">
         <div class="banner-label">You are still owed</div>
         <div class="banner-amounts">
-          <span class="banner-amount">{{ approxPrefix() }}{{ totalOwedToMeHome() | number:'1.2-2' }}<span class="b-code"> {{ homeCurrency() }}</span></span>
-          @if (inOwn(totalOwedToMeHome()); as own) { <span class="banner-own">{{ own }}</span> }
+          @if (mine(totalOwedToMeHome()); as m) {
+            <!-- My own currency first, the trip's small beside it (#714) -->
+            <span class="banner-amount">{{ m }}</span>
+            <span class="banner-own">{{ totalOwedToMeHome() | number:'1.2-2' }} {{ homeCurrency() }}</span>
+          } @else {
+            <span class="banner-amount">{{ approxPrefix() }}{{ totalOwedToMeHome() | number:'1.2-2' }}<span class="b-code"> {{ homeCurrency() }}</span></span>
+          }
         </div>
         <div class="banner-persons">
           @for (p of personNetBreakdown().owed; track p.name) {
@@ -56,13 +61,13 @@
               <button type="button" class="banner-person banner-person-tap" (click)="toggleWorking('owed:' + p.name)"
                       [attr.aria-expanded]="open" [attr.aria-label]="p.name + ': how this is worked out'">
                 <span class="banner-person-name"><span class="working-arrow" aria-hidden="true">{{ open ? '▾' : '▸' }}</span>{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
+                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? (p.amountHome | number:'1.2-2') }}</span>
                 @if (open) {<span class="net-working">({{ w }})</span>}
               </button>
             } @else {
               <div class="banner-person">
                 <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
+                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? (p.amountHome | number:'1.2-2') }}</span>
                 <span class="net-working">({{ w }})</span>
               </div>
             }
@@ -96,8 +101,13 @@
       <div class="balance-banner banner-negative">
         <div class="banner-label">You still owe</div>
         <div class="banner-amounts">
-          <span class="banner-amount">{{ approxPrefix() }}{{ totalIOweHome() | number:'1.2-2' }}<span class="b-code"> {{ homeCurrency() }}</span></span>
-          @if (inOwn(totalIOweHome()); as own) { <span class="banner-own">{{ own }}</span> }
+          @if (mine(totalIOweHome()); as m) {
+            <!-- My own currency first, the trip's small beside it (#714) -->
+            <span class="banner-amount">{{ m }}</span>
+            <span class="banner-own">{{ totalIOweHome() | number:'1.2-2' }} {{ homeCurrency() }}</span>
+          } @else {
+            <span class="banner-amount">{{ approxPrefix() }}{{ totalIOweHome() | number:'1.2-2' }}<span class="b-code"> {{ homeCurrency() }}</span></span>
+          }
         </div>
         <div class="banner-persons">
           @for (p of personNetBreakdown().owing; track p.name) {
@@ -107,13 +117,13 @@
               <button type="button" class="banner-person banner-person-tap" (click)="toggleWorking('owing:' + p.name)"
                       [attr.aria-expanded]="open" [attr.aria-label]="p.name + ': how this is worked out'">
                 <span class="banner-person-name"><span class="working-arrow" aria-hidden="true">{{ open ? '▾' : '▸' }}</span>{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
+                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? (p.amountHome | number:'1.2-2') }}</span>
                 @if (open) {<span class="net-working">({{ w }})</span>}
               </button>
             } @else {
               <div class="banner-person">
                 <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ p.amountHome | number:'1.2-2' }}</span>
+                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? (p.amountHome | number:'1.2-2') }}</span>
                 <span class="net-working">({{ w }})</span>
               </div>
             }
@@ -230,7 +240,7 @@
           <button class="modal-close" (click)="payFor.set(null)" aria-label="Close">✕</button>
         </div>
         <div class="pay-summary">
-          <div class="pay-summary-row"><span class="pay-summary-label">Amount</span><span class="pay-summary-amount">{{ pf.amount | number:'1.2-2' }} <span class="b-code">{{ homeCurrency() }}</span>@for (line of payConverted(pf.name, pf.amount); track line) {<span class="pay-own"> {{ line }}</span>}</span></div>
+          <div class="pay-summary-row"><span class="pay-summary-label">Amount</span><span class="pay-summary-amount">@if (mine(pf.amount); as m) {{{ m }}<span class="pay-own"> {{ pf.amount | number:'1.2-2' }} {{ homeCurrency() }}</span>} @else {<span>{{ pf.amount | number:'1.2-2' }} <span class="b-code">{{ homeCurrency() }}</span></span>}@for (line of payTheirs(pf.name, pf.amount); track line) {<span class="pay-own"> {{ line }}</span>}</span></div>
           @if (payNote()) {<div class="pay-summary-row"><span class="pay-summary-label">Note</span><span class="pay-summary-note">{{ payNote() }}</span></div>}
         </div>
         <div class="pay-with">Pay with</div>
@@ -587,7 +597,11 @@
             <div class="table-totals-row">
               <span class="totals-label">{{ enrichedEntries().length }} expense{{ enrichedEntries().length !== 1 ? 's' : '' }}</span>
               <span class="totals-amount">
-                @if (totalsCurrency() === 'All' && hasMixedCurrencies()) { ≈ }{{ totalsAmount() | number:'1.2-2' }} <span class="cur-code">{{ totalsCode() }}</span>
+                @if (totalsCurrency() === 'All' && mine(totalsAmount()); as m) {
+                  {{ m }}<span class="pay-own"> {{ totalsAmount() | number:'1.2-2' }} {{ totalsCode() }}</span>
+                } @else {
+                  @if (totalsCurrency() === 'All' && hasMixedCurrencies()) { ≈ }{{ totalsAmount() | number:'1.2-2' }} <span class="cur-code">{{ totalsCode() }}</span>
+                }
               </span>
             </div>
             @if (totalsCurrency() === 'All' && hasMixedCurrencies()) {
