@@ -25,7 +25,9 @@
   .showcase {
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: center; gap: 2.5rem;
-    .app-card { order: 0; }
+    // Centred on the phone, not on the phone + caption + dots below it:
+    // the bottom margin matches that caption-and-dots strip (about 5.4rem).
+    .app-card { order: 0; margin-bottom: 5.4rem; }
   }
 }
 
