@@ -45,7 +45,7 @@
       <div class="balance-banner banner-positive">
         <div class="banner-label">You are still owed</div>
         <div class="banner-amounts">
-          @if (mine(totalOwedToMeHome()); as m) {
+          @if (mineTotal('owed'); as m) {
             <!-- My own currency first, the trip's small beside it (#714) -->
             <span class="banner-amount">{{ m }}</span>
             <span class="banner-own">{{ totalOwedToMeHome() | number:'1.2-2' }} {{ homeCurrency() }}</span>
@@ -61,13 +61,13 @@
               <button type="button" class="banner-person banner-person-tap" (click)="toggleWorking('owed:' + p.name)"
                       [attr.aria-expanded]="open" [attr.aria-label]="p.name + ': how this is worked out'">
                 <span class="banner-person-name"><span class="working-arrow" aria-hidden="true">{{ open ? '▾' : '▸' }}</span>{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? amt(p.amountHome) }}</span>
+                <span class="banner-person-amounts">{{ mineFor(p.name) ?? amt(p.amountHome) }}</span>
                 @if (open) {<span class="net-working">({{ w }})</span>}
               </button>
             } @else {
               <div class="banner-person">
                 <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? amt(p.amountHome) }}</span>
+                <span class="banner-person-amounts">{{ mineFor(p.name) ?? amt(p.amountHome) }}</span>
                 <span class="net-working">({{ w }})</span>
               </div>
             }
@@ -101,7 +101,7 @@
       <div class="balance-banner banner-negative">
         <div class="banner-label">You still owe</div>
         <div class="banner-amounts">
-          @if (mine(totalIOweHome()); as m) {
+          @if (mineTotal('owing'); as m) {
             <!-- My own currency first, the trip's small beside it (#714) -->
             <span class="banner-amount">{{ m }}</span>
             <span class="banner-own">{{ totalIOweHome() | number:'1.2-2' }} {{ homeCurrency() }}</span>
@@ -117,13 +117,13 @@
               <button type="button" class="banner-person banner-person-tap" (click)="toggleWorking('owing:' + p.name)"
                       [attr.aria-expanded]="open" [attr.aria-label]="p.name + ': how this is worked out'">
                 <span class="banner-person-name"><span class="working-arrow" aria-hidden="true">{{ open ? '▾' : '▸' }}</span>{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? amt(p.amountHome) }}</span>
+                <span class="banner-person-amounts">{{ mineFor(p.name) ?? amt(p.amountHome) }}</span>
                 @if (open) {<span class="net-working">({{ w }})</span>}
               </button>
             } @else {
               <div class="banner-person">
                 <span class="banner-person-name">{{ getUserEmoji(p.name) }} {{ p.name }}</span>
-                <span class="banner-person-amounts">{{ mine(p.amountHome) ?? amt(p.amountHome) }}</span>
+                <span class="banner-person-amounts">{{ mineFor(p.name) ?? amt(p.amountHome) }}</span>
                 <span class="net-working">({{ w }})</span>
               </div>
             }
@@ -240,7 +240,7 @@
           <button class="modal-close" (click)="payFor.set(null)" aria-label="Close">✕</button>
         </div>
         <div class="pay-summary">
-          <div class="pay-summary-row"><span class="pay-summary-label">Amount</span><span class="pay-summary-amount">@if (mine(pf.amount); as m) {{{ m }}<span class="pay-own"> {{ pf.amount | number:'1.2-2' }} {{ homeCurrency() }}</span>} @else {<span>{{ pf.amount | number:'1.2-2' }} <span class="b-code">{{ homeCurrency() }}</span></span>}@for (line of payTheirs(pf.name, pf.amount); track line) {<span class="pay-own"> {{ line }}</span>}</span></div>
+          <div class="pay-summary-row"><span class="pay-summary-label">Amount</span><span class="pay-summary-amount">@if (mineFor(pf.name); as m) {{{ m }}<span class="pay-own"> {{ pf.amount | number:'1.2-2' }} {{ homeCurrency() }}</span>} @else {<span>{{ pf.amount | number:'1.2-2' }} <span class="b-code">{{ homeCurrency() }}</span></span>}@for (line of payTheirs(pf.name); track line) {<span class="pay-own"> {{ line }}</span>}</span></div>
           @if (payNote()) {<div class="pay-summary-row"><span class="pay-summary-label">Note</span><span class="pay-summary-note">{{ payNote() }}</span></div>}
         </div>
         <div class="pay-with">Pay with</div>

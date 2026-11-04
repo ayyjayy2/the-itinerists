@@ -12,6 +12,8 @@ export interface DebtItem {
   origAmount: number;    // share as entered
   origCurrency: string;
   estimated: boolean;
+  /** The expense's saved rates (#723): units of each group currency per 1 of origCurrency. */
+  per?: Record<string, number>;
 }
 
 export interface DirectDebt {
@@ -63,10 +65,26 @@ export function filterSettlements(debts: readonly DirectDebt[], f: SettlementFil
 type IsPaid = (from: string, to: string, itemId: string) => boolean;
 
 /** What `from` still owes `to` in the home currency: their unpaid items only. */
-export function unpaidBetween(debts: readonly DirectDebt[], from: string, to: string, isPaid: IsPaid): number {
+export function unpaidBetween(debts: readonly DirectDebt[], from: string, to: string, isPaid: IsPaid,
+                              amountOf: (item: DebtItem) => number = i => i.amount): number {
   return debts
     .filter(d => d.from === from && d.to === to)
-    .reduce((sum, d) => sum + d.items.filter(i => !isPaid(d.from, d.to, i.id)).reduce((s, i) => s + i.amount, 0), 0);
+    .reduce((sum, d) => sum + d.items.filter(i => !isPaid(d.from, d.to, i.id)).reduce((s, i) => s + amountOf(i), 0), 0);
+}
+
+/**
+ * One share in `target` currency (#723): as entered when that's its currency,
+ * from its expense's saved rate when there is one, the trip-currency share for
+ * the trip's currency; else today's rate from the trip's currency (`todayHome`,
+ * target per 1 trip unit) until the saved one is filled in. Null with none.
+ */
+export function itemIn(item: DebtItem, target: string, home: string, todayHome: Record<string, number> | null): number | null {
+  if (target === item.origCurrency) return item.origAmount;
+  const saved = item.per?.[target];
+  if (saved) return item.origAmount * saved;
+  if (target === home) return item.amount;
+  const today = todayHome?.[target];
+  return today ? item.amount * today : null;
 }
 
 /**

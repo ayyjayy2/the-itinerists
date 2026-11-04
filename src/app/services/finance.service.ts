@@ -9,7 +9,7 @@ import { financeAdded, financeChanged, financeRemoved } from '../utils/event-tex
 import { markId, paidKey, parsePaidKey, ticksToShare } from '../utils/paid-marks';
 import { PAY_APPS, PayApp, claimAnswerText, claimText, reminderText } from '../utils/pay-links';
 import { ExchangeRateService } from './exchange-rate.service';
-import { SavedRate, lockRate, needsNewRate } from '../utils/currency';
+import { SavedRate, SavedRates, fillPlan, groupCurrencies, lockRates, mergeRates, needsNewRate } from '../utils/currency';
 import { localTodayISO } from '../utils/trip-destinations';
 
 // Where ticks lived before they were shared with the trip (#448); moved to the trip once, then removed.
@@ -60,6 +60,12 @@ export class FinanceService {
       this.subscribePaid(tripId);
       this.subscribeReminders(tripId);
       this.subscribeClaims(tripId);
+    });
+    // Whenever the expenses, the members or their currencies change, fill in any
+    // group currency an expense is missing (#723).
+    effect(() => {
+      this._entries(); this._loaded(); this.tripService.activeMembers(); this.currency();
+      queueMicrotask(() => void this.fillMissingRates());
     });
   }
 
@@ -125,24 +131,71 @@ export class FinanceService {
   async addEntry(entry: Omit<FinanceEntryDoc, 'id'>): Promise<void> {
     const tid = this.requireTrip();
     const ref = doc(collection(this.firestore, 'trips', tid, 'finance'));
-    const rate = await this.rateFor(entry.currency, entry.date);
-    const full = { ...entry, id: ref.id, ...(rate ? { rate } : {}) } as FinanceEntryDoc;
+    const { rate, rates } = await this.ratesFor(entry.currency, entry.date);
+    const full = { ...entry, id: ref.id, ...(rate ? { rate } : {}), ...(rates ? { rates } : {}) } as FinanceEntryDoc;
     await setDoc(ref, full);
     const t = financeAdded(full, this.userService.currentUser()?.name ?? '', this.currency(), this.tripService.activeMembers());
     this.events.emit({ kind: 'finance', action: 'added', itemId: ref.id, path: '/finance', ...t });
   }
 
-  /** The rate to save on an expense for its date (#687); null in the trip's currency, or when
-   *  rates can't be had within a few seconds (it then converts at its date's rate, as before). */
-  private async rateFor(currency: string, date: string): Promise<SavedRate | null> {
-    const home = this.currency();
-    if (!currency || currency === home) return null;
-    const today = localTodayISO();
-    const rates = await Promise.race([
-      this.rates.ratesFor(home, date),
+  /** The trip's currency and each member's own (#723). */
+  private wantedCurrencies(): string[] {
+    return groupCurrencies(this.currency(), this.tripService.activeMembers());
+  }
+
+  /** A rate table based on `currency` for `day`, or null if it can't be had within a few seconds. */
+  private tableFor(currency: string, day: string) {
+    return Promise.race([
+      this.rates.ratesFor(currency, day).catch(() => null),
       new Promise<null>(r => setTimeout(() => r(null), 4000)),
     ]);
-    return lockRate(currency, home, rates, date && date < today ? date : today);
+  }
+
+  /**
+   * The rates to save on an expense for its date, from one lookup: into every
+   * group currency (#723), and the trip-currency one (#687). Null where there's
+   * nothing to save, or rates can't be had (the fill-in below tries again).
+   */
+  private async ratesFor(currency: string, date: string): Promise<{ rate: SavedRate | null; rates: SavedRates | null }> {
+    const home = this.currency(), wanted = this.wantedCurrencies();
+    if (!currency || wanted.every(c => c === currency)) return { rate: null, rates: null };
+    const today = localTodayISO();
+    const on = date && date < today ? date : today;
+    const rates = lockRates(currency, wanted, await this.tableFor(currency, on), on);
+    const toHome = rates?.per[home];
+    return {
+      rate: currency !== home && toHome ? { to: home, value: toHome, on } : null,
+      rates: rates && Object.keys(rates.per).length ? rates : null,
+    };
+  }
+
+  /**
+   * Fill in the group currencies older expenses don't have yet (#723): someone
+   * picked a currency, or joined, after they were added. Each is filled in at
+   * its own day's rate, which never changes, so it's what saving it then would
+   * have given. Only adds rates; nothing already saved changes.
+   */
+  private filling = new Set<string>();
+  private async fillMissingRates(): Promise<void> {
+    if (!this._loaded() || this.userService.isGuest()) return;
+    const tid = this.tripContext.activeTripId();
+    const entries = this._entries();
+    if (!tid || !entries.length || !this.tripService.activeMembers().length) return;
+    for (const group of fillPlan(entries, this.wantedCurrencies(), localTodayISO())) {
+      const key = `${tid}|${group.currency}|${group.on}|${group.wanted.join()}|${group.ids.join()}`;
+      if (this.filling.has(key)) continue;   // tried this session: no endless retries
+      this.filling.add(key);
+      const found = lockRates(group.currency, group.wanted, await this.tableFor(group.currency, group.on), group.on);
+      if (!found || !Object.keys(found.per).length) continue;
+      for (const id of group.ids) {
+        const e = this._entries().find(x => x.id === id);
+        if (!e) continue;
+        const merged = mergeRates(e.rates, found);
+        if (Object.keys(merged.per).length === Object.keys(e.rates?.per ?? {}).length) continue;
+        await runInInjectionContext(this.injector, () => updateDoc(doc(this.firestore, 'trips', tid, 'finance', id), { rates: merged }))
+          .catch(err => console.warn('[FinanceService] filling in rates:', (err as Error).message));
+      }
+    }
   }
 
   async updateEntry(id: string, updates: Partial<FinanceEntryDoc>): Promise<void> {
@@ -153,7 +206,7 @@ export class FinanceService {
     const before = this._entries().find(e => e.id === id);
     // A new date or currency takes the rate for the new date (#687).
     const changed = before && needsNewRate(before, data as Partial<FinanceEntryDoc>);
-    if (changed) data['rate'] = await this.rateFor(changed.currency, changed.date);
+    if (changed) Object.assign(data, await this.ratesFor(changed.currency, changed.date));
     await updateDoc(doc(this.firestore, 'trips', tid, 'finance', id), data);
     if (!before) return;
     const t = financeChanged(before, { ...before, ...data } as FinanceEntryDoc, this.currency(), this.tripService.activeMembers());

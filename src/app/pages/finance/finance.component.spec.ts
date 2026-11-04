@@ -90,9 +90,9 @@ describe('FinanceComponent: settling up', () => {
   } as FinanceEntryDoc);
   let finance: Record<string, any>;
 
-  function create(paidBy: string, claims = new Map<string, unknown>(), opts: { endDate?: string; reminders?: Map<string, number>; native?: boolean; own?: string; theirs?: string; latest?: Record<string, number> } = {}) {
+  function create(paidBy: string, claims = new Map<string, unknown>(), opts: { endDate?: string; reminders?: Map<string, number>; native?: boolean; own?: string; theirs?: string; latest?: Record<string, number>; saved?: Record<string, number> } = {}) {
     finance = {
-      entries: signal([entry(paidBy)]), loaded: signal(true), paidItems: signal(new Set<string>()),
+      entries: signal([{ ...entry(paidBy), ...(opts.saved ? { rates: { on: '2026-09-14', per: opts.saved } } : {}) }]), loaded: signal(true), paidItems: signal(new Set<string>()),
       updateEntry: jasmine.createSpy().and.resolveTo(), addEntry: jasmine.createSpy().and.resolveTo(),
       deleteEntry: jasmine.createSpy().and.resolveTo(), togglePaidItem: jasmine.createSpy('togglePaidItem'),
       markAllPaid: jasmine.createSpy('markAllPaid'), reminders: signal(opts.reminders ?? new Map()), claims: signal(claims),
@@ -220,6 +220,16 @@ describe('FinanceComponent: settling up', () => {
     it('sits on the same line as the trip amount', async () => {
       const { el } = await render('GBP');
       expect(el.querySelector('.banner-negative .banner-amounts .banner-own')).not.toBeNull();
+    });
+    // #723: amounts in my currency come from each expense's saved rate, so they never move.
+    it('uses the expense\'s saved rate for my currency and theirs, not today\'s', async () => {
+      const r = create('Theo', new Map(), { own: 'GBP', theirs: 'EUR', latest: { GBP: 0.8, EUR: 0.9 }, saved: { GBP: 0.5, EUR: 0.6 } });
+      await r.fixture.whenStable(); r.fixture.detectChanges();
+      expect(r.el.querySelector('.banner-negative .banner-amount')!.textContent!.trim()).toBe('≈ £15.00');
+      expect(r.el.querySelector('.banner-negative .banner-person-amounts')!.textContent!.trim()).toBe('≈ £15.00');
+      r.comp.openPay('Theo', 30);
+      r.fixture.detectChanges();
+      expect(r.el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('≈ £15.00 30.00 USD ≈ €18.00 (Theo)');
     });
     it('leads the expenses total with my currency too', async () => {
       const { fixture, comp, el } = await render('GBP');

@@ -1,4 +1,4 @@
-import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText, lockRate, rateDay, needsNewRate, inOwnCurrency, amountText } from './currency';
+import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText, lockRate, rateDay, needsNewRate, inOwnCurrency, amountText, groupCurrencies, lockRates, missingRates, mergeRates, fillPlan } from './currency';
 
 // Frankfurter-style rates table: base = the "to" currency (here EUR), so
 // rates[X] = how many X per 1 EUR. EUR itself is implicitly 1.
@@ -188,5 +188,51 @@ describe('amountText', () => {
   it('uses the code where there is no symbol, or the code is unknown', () => {
     expect(amountText(10, 'CHF')).toBe('CHF 10.00');
     expect(amountText(10, 'XYZ')).toBe('XYZ 10.00');
+  });
+});
+
+// #723: each expense keeps a rate for every currency the group uses, so amounts never move.
+describe('saved rates for every group currency', () => {
+  it('lists the trip currency and each member\'s, once each', () => {
+    expect(groupCurrencies('THB', [{ ownCurrency: 'USD' }, {}, { ownCurrency: 'GBP' }, { ownCurrency: 'USD' }, { ownCurrency: 'THB' }])).toEqual(['THB', 'USD', 'GBP']);
+  });
+  it('keeps, from a table based on the expense currency, every wanted rate but its own', () => {
+    // base USD: 1 USD = 33.5 THB = 0.79 GBP
+    expect(lockRates('USD', ['THB', 'USD', 'GBP', 'JPY'], { THB: 33.5, GBP: 0.79 }, '2026-11-02'))
+      .toEqual({ on: '2026-11-02', per: { THB: 33.5, GBP: 0.79 } });
+    expect(lockRates('USD', ['THB'], null, '2026-11-02')).toBeNull();
+  });
+  it('says which group currencies an expense is missing', () => {
+    expect(missingRates({ currency: 'USD', rates: { on: '2026-11-02', per: { THB: 33.5 } } }, ['THB', 'USD', 'GBP'])).toEqual(['GBP']);
+    expect(missingRates({ currency: 'THB' }, ['THB', 'USD'])).toEqual(['USD']);
+  });
+  it('adds rates it was missing without touching the ones it had', () => {
+    expect(mergeRates({ on: '2026-11-02', per: { THB: 33.5 } }, { on: '2026-11-02', per: { THB: 99, GBP: 0.79 } }))
+      .toEqual({ on: '2026-11-02', per: { THB: 33.5, GBP: 0.79 } });
+    expect(mergeRates(undefined, { on: '2026-11-02', per: { GBP: 0.79 } })).toEqual({ on: '2026-11-02', per: { GBP: 0.79 } });
+  });
+});
+
+describe('fillPlan (#723)', () => {
+  const today = '2026-11-04';
+  const e = (id: string, currency: string, date: string, rates?: { on: string; per: Record<string, number> }) => ({ id, currency, date, createdAt: Date.parse(date + 'T12:00:00'), rates });
+  it('groups the expenses missing a group currency by their currency and day, so each needs one lookup', () => {
+    const plan = fillPlan([
+      e('a', 'USD', '2026-11-01', { on: '2026-11-01', per: { THB: 33 } }),
+      e('b', 'USD', '2026-11-01'),
+      e('c', 'THB', '2026-11-02', { on: '2026-11-02', per: { USD: 0.03, GBP: 0.022 } }),
+      e('d', 'THB', '2026-11-03'),
+    ], ['THB', 'USD', 'GBP'], today);
+    expect(plan).toEqual([
+      { currency: 'USD', on: '2026-11-01', ids: ['a', 'b'], wanted: ['THB', 'GBP'] },
+      { currency: 'THB', on: '2026-11-03', ids: ['d'], wanted: ['USD', 'GBP'] },
+    ]);
+  });
+  it('keeps the day an expense\'s rates were saved on', () => {
+    expect(fillPlan([e('a', 'USD', '2026-11-03', { on: '2026-11-01', per: {} })], ['THB', 'USD'], today))
+      .toEqual([{ currency: 'USD', on: '2026-11-01', ids: ['a'], wanted: ['THB'] }]);
+  });
+  it('is empty when every expense has every group currency', () => {
+    expect(fillPlan([e('a', 'THB', '2026-11-01', { on: '2026-11-01', per: { USD: 0.03 } })], ['THB', 'USD'], today)).toEqual([]);
   });
 });

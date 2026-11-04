@@ -1,4 +1,4 @@
-import { filterSettlements, netLine, workingText, personTotals, unpaidBetween, DirectDebt, SettlementFilter } from './settlements';
+import { filterSettlements, netLine, workingText, personTotals, unpaidBetween, itemIn, DirectDebt, SettlementFilter } from './settlements';
 
 const item = (id: string, amount: number) =>
   ({ id, label: id, date: '2026-10-01', amount, origAmount: amount, origCurrency: 'USD', estimated: false });
@@ -116,5 +116,23 @@ describe('the working behind a netted balance (#519)', () => {
 
   it('says nothing when settled', () => {
     expect(workingText(netLine('Jo', 50, 50), 'USD')).toBe('');
+  });
+});
+
+// #723: a share in any currency comes from its expense's saved rate, never today's.
+describe('itemIn', () => {
+  const item = { id: 'f1', label: 'Dinner', date: '2026-11-02', amount: 1675, origAmount: 50, origCurrency: 'USD', estimated: false, per: { THB: 33.5, GBP: 0.79 } };
+  it('uses the saved rate, the amount as entered, or the trip-currency share', () => {
+    expect(itemIn(item, 'GBP', 'THB', null)).toBeCloseTo(39.5, 6);
+    expect(itemIn(item, 'USD', 'THB', null)).toBe(50);
+    expect(itemIn(item, 'THB', 'THB', null)).toBe(1675);
+  });
+  it('falls back to today\'s rate from the trip currency, or null without one', () => {
+    expect(itemIn(item, 'EUR', 'THB', { EUR: 0.025 })).toBeCloseTo(41.875, 6);
+    expect(itemIn(item, 'EUR', 'THB', null)).toBeNull();
+  });
+  it('lets unpaidBetween add up in another currency', () => {
+    const debts = [{ from: 'Maya', to: 'Theo', amountHome: 1675, items: [item] }];
+    expect(unpaidBetween(debts, 'Maya', 'Theo', () => false, i => itemIn(i, 'GBP', 'THB', null) ?? 0)).toBeCloseTo(39.5, 6);
   });
 });
