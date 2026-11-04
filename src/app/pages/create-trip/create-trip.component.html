@@ -6,7 +6,7 @@
 
   <div class="card">
     <div class="form-group">
-      <label>Trip name</label>
+      <label>Trip name <span class="label-required" aria-hidden="true">*</span></label>
       <input type="text" [(ngModel)]="name" placeholder="e.g. Bali Girls Trip 2026" maxlength="80" />
     </div>
 
@@ -23,17 +23,17 @@
     @if (!multiDest) {
       <!-- ── Single destination ─────────────────────────────────────────── -->
       <div class="form-group">
-        <label>Destination</label>
+        <label>Destination <span class="label-required" aria-hidden="true">*</span></label>
         <input type="text" [(ngModel)]="destination" placeholder="e.g. Bali, Indonesia" maxlength="120" />
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Start date</label>
+          <label>Start date <span class="label-required" aria-hidden="true">*</span></label>
           <input type="date" [(ngModel)]="startDate" [appThenEndDate]="tripEnd" />
         </div>
         <div class="form-group">
-          <label>End date</label>
+          <label>End date <span class="label-required" aria-hidden="true">*</span></label>
           <input #tripEnd type="date" [(ngModel)]="endDate" [min]="startDate || null" [class.invalid]="!!dateRangeProblem(startDate, endDate, 'End date', 'start date')" />
           @if (dateRangeProblem(startDate, endDate, 'End date', 'start date'); as err) { <p class="field-error">{{ err }}</p> }
         </div>
@@ -57,17 +57,17 @@
           </div>
 
           <div class="form-group">
-            <label>Destination</label>
+            <label>Destination <span class="label-required" aria-hidden="true">*</span></label>
             <input type="text" [(ngModel)]="leg.destination" [name]="'dest' + i" placeholder="e.g. Paris, France" maxlength="120" />
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label>Start date</label>
+              <label>Start date <span class="label-required" aria-hidden="true">*</span></label>
               <input type="date" [(ngModel)]="leg.startDate" [name]="'start' + i" [appThenEndDate]="legEnd" />
             </div>
             <div class="form-group">
-              <label>End date</label>
+              <label>End date <span class="label-required" aria-hidden="true">*</span></label>
               <input #legEnd type="date" [(ngModel)]="leg.endDate" [name]="'end' + i" [min]="leg.startDate || null" [class.invalid]="!!dateRangeProblem(leg.startDate, leg.endDate, 'End date', 'start date')" />
               @if (dateRangeProblem(leg.startDate, leg.endDate, 'End date', 'start date'); as err) { <p class="field-error">{{ err }}</p> }
             </div>

@@ -23,7 +23,7 @@
       <h2>Display Info</h2>
 
       <div class="form-group">
-        <label>Name</label>
+        <label>Name <span class="label-required" aria-hidden="true">*</span></label>
         <div class="input-hint">This is your display name — what others see in the app.</div>
         <input type="text" [(ngModel)]="displayName" placeholder="Your display name" />
       </div>
@@ -182,7 +182,7 @@
       <p class="modal-hint">This removes your profile, your expenses and packing lists, and takes you off every trip. Trips you own pass to the longest-standing member; a trip you're the only member of is deleted. <strong>This can't be undone.</strong></p>
 
       <div class="form-group">
-        <label>Current Password</label>
+        <label>Current Password <span class="label-required" aria-hidden="true">*</span></label>
         <div class="input-wrap">
           <input [type]="isShown('delete') ? 'text' : 'password'" [(ngModel)]="deletePass" autocomplete="current-password" placeholder="Enter current password" />
           <button type="button" class="eye-btn" (click)="toggleShown('delete')" tabindex="-1"
@@ -213,7 +213,7 @@
       <h2>Change Password</h2>
 
       <div class="form-group">
-        <label>Current Password</label>
+        <label>Current Password <span class="label-required" aria-hidden="true">*</span></label>
         <div class="input-wrap">
           <input [type]="isShown('current') ? 'text' : 'password'" [(ngModel)]="currentPassword" autocomplete="off" placeholder="Enter current password" />
           <button type="button" class="eye-btn" (click)="toggleShown('current')" tabindex="-1"
@@ -223,7 +223,7 @@
         </div>
       </div>
       <div class="form-group">
-        <label>New Password</label>
+        <label>New Password <span class="label-required" aria-hidden="true">*</span></label>
         <div class="input-wrap">
           <input [type]="isShown('new') ? 'text' : 'password'" [(ngModel)]="newPassword" autocomplete="new-password" placeholder="At least 8 characters" />
           <button type="button" class="eye-btn" (click)="toggleShown('new')" tabindex="-1"
@@ -240,7 +240,7 @@
         }
       </div>
       <div class="form-group">
-        <label>Confirm New Password</label>
+        <label>Confirm New Password <span class="label-required" aria-hidden="true">*</span></label>
         <div class="input-wrap">
           <input [type]="isShown('confirm') ? 'text' : 'password'" [(ngModel)]="confirmPassword" autocomplete="new-password" placeholder="Re-enter new password" />
           <button type="button" class="eye-btn" (click)="toggleShown('confirm')" tabindex="-1"
@@ -277,7 +277,7 @@
         <p class="modal-hint">Waiting on <strong>{{ pendingRecoveryEmail }}</strong> — open the email from The Itinerists (check spam) and tap "Verify email". Didn't get it? Enter your password to send it again.</p>
 
         <div class="form-group">
-          <label>Current Password</label>
+          <label>Current Password <span class="label-required" aria-hidden="true">*</span></label>
           <div class="input-wrap">
             <input [type]="isShown('recovery') ? 'text' : 'password'" [(ngModel)]="recoveryPass" autocomplete="current-password" placeholder="Enter current password" />
             <button type="button" class="eye-btn" (click)="toggleShown('recovery')" tabindex="-1"
@@ -315,11 +315,11 @@
       }
 
       <div class="form-group">
-        <label>Email</label>
+        <label>Email <span class="label-required" aria-hidden="true">*</span></label>
         <input type="email" [(ngModel)]="recoveryEmail" autocomplete="email" placeholder="you@example.com" />
       </div>
       <div class="form-group">
-        <label>Current Password</label>
+        <label>Current Password <span class="label-required" aria-hidden="true">*</span></label>
         <div class="input-wrap">
           <input [type]="isShown('recovery') ? 'text' : 'password'" [(ngModel)]="recoveryPass" autocomplete="off" placeholder="Enter current password" />
           <button type="button" class="eye-btn" (click)="toggleShown('recovery')" tabindex="-1"

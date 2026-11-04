@@ -28,7 +28,7 @@
     @if (mode() === 'code') {
       <form class="code-form" (ngSubmit)="joinWithCode()">
         <div class="form-group">
-          <label>Invite Code</label>
+          <label>Invite Code <span class="label-required" aria-hidden="true">*</span></label>
           <input
             type="text"
             [(ngModel)]="inviteCode"

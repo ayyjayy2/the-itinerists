@@ -187,11 +187,11 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label>From <span class="label-hint">(IATA)</span></label>
+          <label>From <span class="label-hint">(IATA)</span> <span class="label-required" aria-hidden="true">*</span></label>
           <input type="text" [(ngModel)]="leg.from" maxlength="4" placeholder="e.g. ORD" style="text-transform:uppercase" [name]="'from'+i+isEdit" />
         </div>
         <div class="form-group">
-          <label>To <span class="label-hint">(IATA)</span></label>
+          <label>To <span class="label-hint">(IATA)</span> <span class="label-required" aria-hidden="true">*</span></label>
           <input type="text" [(ngModel)]="leg.to" maxlength="4" placeholder="e.g. SAV" style="text-transform:uppercase" [name]="'to'+i+isEdit" />
         </div>
       </div>
@@ -209,23 +209,23 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label>Departure Date</label>
+          <label>Departure Date <span class="label-required" aria-hidden="true">*</span></label>
           <input type="date" [(ngModel)]="leg.departureDate" [name]="'depDate'+i+isEdit" />
         </div>
         <div class="form-group">
-          <label>Departure Time</label>
+          <label>Departure Time <span class="label-required" aria-hidden="true">*</span></label>
           <app-time-input [(ngModel)]="leg.departureTime" [name]="'depTime'+i+isEdit" label="Departure time" />
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Arrival Date</label>
+          <label>Arrival Date <span class="label-required" aria-hidden="true">*</span></label>
           <input type="date" [(ngModel)]="leg.arrivalDate" [name]="'arrDate'+i+isEdit" [min]="leg.departureDate || null" [class.invalid]="!!dateRangeProblem(leg.departureDate, leg.arrivalDate, 'Arrival date', 'departure date')" />
           @if (dateRangeProblem(leg.departureDate, leg.arrivalDate, 'Arrival date', 'departure date'); as err) { <p class="field-error">{{ err }}</p> }
         </div>
         <div class="form-group">
-          <label>Arrival Time</label>
+          <label>Arrival Time <span class="label-required" aria-hidden="true">*</span></label>
           <app-time-input [(ngModel)]="leg.arrivalTime" [name]="'arrTime'+i+isEdit" label="Arrival time" />
         </div>
       </div>
