@@ -18,6 +18,7 @@
 //    two columns side by side from tablet width ──────────────────────────────
 .showcase { display: flex; flex-direction: column; gap: 1.25rem; }
 @media (min-width: 760px) {
+  .showcase .waitlist-note { display: none; }   // side by side: the card is right there
 
   .showcase {
     display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -59,6 +60,17 @@
 // curling down to the phone's More tab (bottom-right of the screen).
 .phone-wrap { position: relative; width: 48%; max-width: 190px; }
 .phone-wrap .phone { width: 100%; max-width: none; }
+// The same handwriting, left of the phone, its arrow pointing down to the
+// sign-up card below (narrow screens only; hidden in the media query above).
+.waitlist-note {
+  position: absolute; right: calc(100% + 12px); bottom: -4%;
+  width: clamp(64px, 18vw, 96px);
+  margin: 0; display: flex; flex-direction: column; align-items: flex-end;
+  font-family: 'Caveat', cursive; font-weight: 700; font-size: 1.2rem; line-height: 1.05;
+  color: var(--primary-dark); text-align: right;
+  transform: rotate(4deg); transform-origin: right bottom;
+  .arrow { width: 40px; height: 54px; margin-top: 0.15rem; margin-right: 0.6rem; }
+}
 .outfit-note {
   position: absolute; left: calc(100% - 14px); bottom: 2%;
   width: clamp(92px, 26vw, 140px);

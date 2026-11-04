@@ -34,6 +34,13 @@ describe('WelcomeComponent', () => {
     }
   });
 
+  it('has a handwritten "Join waitlist!" pointer for the stacked layout, kept out of screen readers', () => {
+    const note = render().el.querySelector('.waitlist-note')!;
+    expect(note.textContent).toContain('Join waitlist!');
+    expect(note.getAttribute('aria-hidden')).toBe('true');   // the card itself is the real information
+    expect(note.querySelector('svg.arrow')).not.toBeNull();
+  });
+
   it('uses no emoji in its own words', () => {
     const text = render().el.textContent ?? '';
     expect(/\p{Extended_Pictographic}/u.test(text)).toBeFalse();
