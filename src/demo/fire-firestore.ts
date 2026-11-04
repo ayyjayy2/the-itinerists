@@ -151,29 +151,49 @@ export function onSnapshot(
 
 // ── Writes ───────────────────────────────────────────────────────────────────
 
-export async function setDoc(ref: DocumentReference, data: DocumentData, options?: { merge?: boolean }): Promise<void> {
-  ref.firestore.store.set(ref.path, data, options?.merge === true);
+/**
+ * Real Firestore refuses a write holding an `undefined` value, at once (it
+ * throws, not rejects). The stand-in does the same, so the demo and the
+ * end-to-end tests catch it (#731: My expenses' Add did nothing on staging).
+ */
+function refuseUndefined(fn: string, path: string, data: unknown): void {
+  const walk = (v: unknown): boolean => {
+    if (v === undefined) return true;
+    if (Array.isArray(v)) return v.some(walk);
+    if (v && typeof v === 'object' && Object.getPrototypeOf(v) === Object.prototype) return Object.values(v).some(walk);
+    return false;
+  };
+  if (walk(data)) throw new Error(`Function ${fn}() called with invalid data. Unsupported field value: undefined (found in document ${path})`);
 }
 
-export async function updateDoc(ref: DocumentReference, data: DocumentData): Promise<void> {
+export function setDoc(ref: DocumentReference, data: DocumentData, options?: { merge?: boolean }): Promise<void> {
+  refuseUndefined('setDoc', ref.path, data);
+  ref.firestore.store.set(ref.path, data, options?.merge === true);
+  return Promise.resolve();
+}
+
+export function updateDoc(ref: DocumentReference, data: DocumentData): Promise<void> {
+  refuseUndefined('updateDoc', ref.path, data);
   ref.firestore.store.update(ref.path, data);
+  return Promise.resolve();
 }
 
 export async function deleteDoc(ref: DocumentReference): Promise<void> {
   ref.firestore.store.delete(ref.path);
 }
 
-export async function addDoc(col: CollectionReference, data: DocumentData): Promise<DocumentReference> {
+export function addDoc(col: CollectionReference, data: DocumentData): Promise<DocumentReference> {
   const ref = doc(col);
+  refuseUndefined('addDoc', ref.path, data);
   col.firestore.store.set(ref.path, data);
-  return ref;
+  return Promise.resolve(ref);
 }
 
 export function writeBatch(fs: Firestore): WriteBatch {
   const ops: Parameters<MemoryStore['batch']>[0] = [];
   const batch: WriteBatch = {
-    set(ref, data, options) { ops.push({ kind: 'set', path: ref.path, data, merge: options?.merge === true }); return batch; },
-    update(ref, data) { ops.push({ kind: 'update', path: ref.path, data }); return batch; },
+    set(ref, data, options) { refuseUndefined('WriteBatch.set', ref.path, data); ops.push({ kind: 'set', path: ref.path, data, merge: options?.merge === true }); return batch; },
+    update(ref, data) { refuseUndefined('WriteBatch.update', ref.path, data); ops.push({ kind: 'update', path: ref.path, data }); return batch; },
     delete(ref) { ops.push({ kind: 'delete', path: ref.path }); return batch; },
     async commit() { fs.store.batch(ops); },
   };
