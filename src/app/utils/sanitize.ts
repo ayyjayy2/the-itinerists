@@ -5,7 +5,7 @@
  *
  * - String fields: leading/trailing whitespace stripped
  * - String array fields: each element trimmed; blank elements removed
- * - Undefined fields: left out, since Firestore refuses a write holding one (#730)
+ * - Undefined fields: left out, since Firestore refuses a write holding one (#731)
  * - All other field types: passed through unchanged
  */
 export function sanitizeStrings<T extends object>(obj: T): T {

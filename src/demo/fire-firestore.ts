@@ -154,7 +154,7 @@ export function onSnapshot(
 /**
  * Real Firestore refuses a write holding an `undefined` value, at once (it
  * throws, not rejects). The stand-in does the same, so the demo and the
- * end-to-end tests catch it (#730: My expenses' Add did nothing on staging).
+ * end-to-end tests catch it (#731: My expenses' Add did nothing on staging).
  */
 function refuseUndefined(fn: string, path: string, data: unknown): void {
   const walk = (v: unknown): boolean => {
