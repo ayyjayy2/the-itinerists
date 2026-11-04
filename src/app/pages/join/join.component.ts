@@ -9,6 +9,8 @@ import { AuthService } from '../../services/auth.service';
 import { LocalCacheService } from '../../services/local-cache.service';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { userMessage } from '../../utils/user-message';
+import { guestName as tidyName, nameClash } from '../../utils/guest';
+import { GuestJoin } from '../../services/auth.service';
 
 /**
  * Landing page for an invite link (/join?code=…). Someone already signed in
@@ -34,7 +36,10 @@ export class JoinComponent implements OnInit {
   private authService = inject(AuthService);
 
   codeError = signal('');
-  step      = signal<'validating' | 'invalid' | 'guest'>('validating');
+  step      = signal<'validating' | 'invalid' | 'guest' | 'same-name' | 'rename'>('validating');
+  /** Joined, but someone on the trip already has their name (#768). */
+  joined    = signal<GuestJoin | null>(null);
+  newName   = '';
   /** The guest step: their name, and the busy and error states of "See the trip". */
   guestName = '';
   joining   = signal(false);
@@ -73,13 +78,55 @@ export class JoinComponent implements OnInit {
     this.nameError.set('');
     this.joining.set(true);
     try {
-      await this.authService.joinAsGuest(this.code, this.guestName);
+      const joined = await this.authService.joinAsGuest(this.code, this.guestName);
       await this.userService.waitForUser();
+      if (joined.clash) {
+        // A guest who left under this name may be them coming back; anyone else, pick another name.
+        this.joined.set(joined);
+        this.joining.set(false);
+        this.step.set(joined.clash.left ? 'same-name' : 'rename');
+        return;
+      }
       await this.router.navigate(['/home']);
     } catch (err) {
       if (this.localCache.recoverIfBroken(err)) return;
       this.joining.set(false);
       this.nameError.set(userMessage(err, "Couldn't open the trip. Check your connection and try again."));
+    }
+  }
+
+  /** "Yes, this is me": carry on as the guest who left, under exactly their name (#768). */
+  async thisIsMe(): Promise<void> {
+    const j = this.joined();
+    if (!j?.clash || this.joining()) return;
+    this.joining.set(true);
+    try {
+      if (tidyName(this.guestName) !== j.clash.name) await this.tripService.renameMe(j.clash.name);
+      await this.router.navigate(['/home']);
+    } catch (err) {
+      this.joining.set(false);
+      this.nameError.set(userMessage(err, "Couldn't open the trip. Check your connection and try again."));
+    }
+  }
+
+  /** "No, I'm someone else", or someone on the trip has the name: pick another (#768). */
+  someoneElse(): void { this.nameError.set(''); this.newName = ''; this.step.set('rename'); }
+
+  async rename(): Promise<void> {
+    const j = this.joined();
+    if (!j || this.joining()) return;
+    const name = tidyName(this.newName);
+    if (!name) { this.nameError.set('Enter your name so the group knows who you are.'); return; }
+    const clash = nameClash(name, j.uid, j.members);
+    if (clash) { this.nameError.set(`Someone on this trip is already called ${clash.name}. Add an initial or a nickname.`); return; }
+    this.nameError.set('');
+    this.joining.set(true);
+    try {
+      await this.tripService.renameMe(name);
+      await this.router.navigate(['/home']);
+    } catch (err) {
+      this.joining.set(false);
+      this.nameError.set(userMessage(err, "Couldn't save your name. Check your connection and try again."));
     }
   }
 

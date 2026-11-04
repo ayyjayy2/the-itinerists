@@ -3,6 +3,7 @@ import { Firestore, collection, onSnapshot } from '@angular/fire/firestore';
 import { FirestoreUser, TripUser } from '../models/trip.models';
 import { TripService } from './trip.service';
 import { UserService } from './user.service';
+import { returnedGuests } from '../utils/guest';
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
@@ -20,9 +21,13 @@ export class UsersService {
    * "for who" pickers, and suggestions operate over. (Previously this wrongly
    * returned every app user, which pulled non-members into expense splits.)
    */
-  readonly tripUsers = (): TripUser[] =>
-    this.tripService.activeMembers()
+  /** The trip's people, each once: a guest who left and came back under the same name (#768) is one person. */
+  readonly tripUsers = (): TripUser[] => {
+    const members = this.tripService.activeMembers();
+    const back = returnedGuests(members);
+    return members.filter(m => !back.has(m.uid))
       .map(m => ({ uid: m.uid, name: m.displayName, color: m.color, avatarEmoji: m.avatarEmoji, avatarLetterColor: m.avatarLetterColor }));
+  };
 
   init(): void {
     if (!this.userService.isAdmin()) { this._allUsers.set([]); return; }

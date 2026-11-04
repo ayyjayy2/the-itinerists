@@ -27,6 +27,7 @@ import { PAY_APPS, PayApp, canRemind, payAmount, payAppLink, payLink, remindersO
 import { NATIVE_PLATFORM } from '../../native-platform';
 import { localTodayISO, tripZone } from '../../utils/trip-destinations';
 import { LeaverItem, leaverItems, reviewOpen } from '../../utils/leaver-review';
+import { returnedGuests } from '../../utils/guest';
 import { stopDateRange } from '../../utils/stop-dates';
 import { ItineraryService } from '../../services/itinerary.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -63,9 +64,13 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── A guest who logged out (#747): the group checks each expense and plan they're still in ──
   /** Each left guest with something still to check; the card goes once it's empty or Looks right. */
   readonly leavers = computed(() => {
+    // Members with an account check (a guest can't edit); a guest who came back (#768) needs no check.
+    if (this.userService.isGuest()) return [];
     const reviews = this.tripService.activeTrip()?.leaverReviews ?? {};
     const everyone = this.financeUsers().map(u => u.name);
-    return this.tripService.activeMembers().filter(m => m.leftAt).map(m => ({
+    const members = this.tripService.activeMembers();
+    const back = returnedGuests(members);
+    return members.filter(m => m.leftAt && !back.has(m.uid)).map(m => ({
       uid: m.uid, name: m.displayName,
       items: leaverItems(m.displayName, everyone, this.entries(), this.itinerary.items(), reviews[m.uid]?.checked ?? []),
     })).filter(l => reviewOpen(reviews[l.uid], l.items.length));

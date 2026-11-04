@@ -1,4 +1,4 @@
-import { Injectable, inject, Injector } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import { EmailConfirmService } from './email-confirm.service';
 import {
   Auth,
@@ -42,7 +42,7 @@ import { randomCode } from '../utils/invite-code';
 import { TripEventsService } from './trip-events.service';
 import { InviteLogService } from './invite-log.service';
 import { InviteVia } from '../utils/invite-opens';
-import { guestAvatar, guestName } from '../utils/guest';
+import { guestAvatar, guestName, nameClash } from '../utils/guest';
 import { ExpensesService } from './expenses.service';
 import { deletionRecord } from '../utils/account-deletion';
 import { publicLink } from '../shared/public-link';
@@ -89,6 +89,13 @@ export class UseEmailToSignInError extends Error {
 }
 
 const AVATAR_COLORS = BACKGROUND_COLORS;
+
+/** A guest who just joined (#768): the trip's members, and anyone else already called their name. */
+export interface GuestJoin {
+  uid: string;
+  members: TripMember[];
+  clash: { uid: string; name: string; left: boolean } | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -256,7 +263,7 @@ export class AuthService {
    * they create an account (`upgradeGuest`), which keeps this same sign-in
    * and membership. The rules hold guests to reading (isGuest / canEdit).
    */
-  async joinAsGuest(inviteCode: string, name: string): Promise<void> {
+  async joinAsGuest(inviteCode: string, name: string): Promise<GuestJoin> {
     const code = inviteCode.trim().toUpperCase();
     const displayName = guestName(name);
     if (!displayName) throw new Error('Enter your name so the group knows who you are.');
@@ -276,6 +283,10 @@ export class AuthService {
     }
     await this.joinInvitedTrip(userDoc, tripId, code, now);
     this.tripContext.switchTrip(tripId);
+    // Now a member, they can see the names (#768): someone else may already be called this.
+    const snap = await runInInjectionContext(this.injector, () => getDocs(collection(this.firestore, 'trips', tripId, 'members')));
+    const members = snap.docs.map(d => d.data() as TripMember);
+    return { uid: userDoc.uid, members, clash: nameClash(displayName, userDoc.uid, members) };
   }
 
   /**
