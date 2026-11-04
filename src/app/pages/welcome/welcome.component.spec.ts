@@ -25,6 +25,9 @@ describe('WelcomeComponent', () => {
     expect(videos.length).toBeGreaterThanOrEqual(3);
     for (const v of videos) {
       expect(v.muted).toBeTrue();
+      // Safari (Mac and iPhone) only autoplays when the muted ATTRIBUTE is in
+      // the markup; Angular's [muted] binding sets only the property.
+      expect(v.hasAttribute('muted')).toBeTrue();
       expect(v.loop).toBeTrue();
       expect(v.hasAttribute('playsinline')).toBeTrue();
       expect(v.getAttribute('poster')).toBeTruthy();

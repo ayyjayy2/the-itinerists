@@ -6,7 +6,7 @@
   </header>
 
   <!-- The preview and the sign-up side by side on wider screens, so the form
-       is visible without scrolling; stacked (sign-up first) on phones. -->
+       is visible without scrolling; stacked (demo first) on narrow screens. -->
   <div class="showcase">
   <!-- A few seconds of each key screen (the demo's made-up trip) -->
   <section class="clips" aria-label="A look inside the app">
@@ -15,7 +15,7 @@
         <figure class="clip">
           <div class="phone-wrap">
             <div class="phone">
-              <video [src]="clip.src" [poster]="clip.poster" [muted]="true" [autoplay]="!reducedMotion" loop playsinline preload="metadata"
+              <video #clipVideo muted loop playsinline preload="auto" [attr.autoplay]="reducedMotion ? null : ''" [poster]="clip.poster" [src]="clip.src"
                      [attr.aria-label]="clip.label"></video>
             </div>
             <!-- Outfits live under More: a handwritten nudge pointing at the tab -->

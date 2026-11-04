@@ -14,12 +14,9 @@
   > .showcase { max-width: 880px; }
 }
 
-// ── Preview and sign-up: one column on phones (sign-up first, so it shows
-//    without scrolling), two columns side by side from tablet width ───────────
-.showcase {
-  display: flex; flex-direction: column; gap: 1.25rem;
-  .app-card { order: -1; }
-}
+// ── Preview and sign-up: one column on narrow screens (demo, then sign-up),
+//    two columns side by side from tablet width ──────────────────────────────
+.showcase { display: flex; flex-direction: column; gap: 1.25rem; }
 @media (min-width: 760px) {
 
   .showcase {
@@ -27,7 +24,7 @@
     align-items: center; gap: 2.5rem;
     // Centred on the phone, not on the phone + caption + dots below it:
     // the bottom margin matches that caption-and-dots strip (about 5.4rem).
-    .app-card { order: 0; margin-bottom: 5.4rem; }
+    .app-card { margin-bottom: 5.4rem; }
   }
 }
 
