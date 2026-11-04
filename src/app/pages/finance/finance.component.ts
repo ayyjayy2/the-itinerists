@@ -7,7 +7,7 @@ import { UsersService } from '../../services/users.service';
 import { TripService } from '../../services/trip.service';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
-import { Rates, perCurrencySubtotals, convertedTotal, convertShare, rateDay, inOwnCurrency, amountText } from '../../utils/currency';
+import { Rates, perCurrencySubtotals, convertedTotal, convertShare, rateDay, inOwnCurrency, amountText, groupCurrencies, totalsInEvery, tablesNeeded } from '../../utils/currency';
 import { money } from '../../utils/event-text';
 import { DebtItem, DirectDebt, NetLine, filterSettlements, itemIn, netLine, personTotals, unpaidBetween, workingText } from '../../utils/settlements';
 import { IconComponent } from '../../shared/icon/icon.component';
@@ -580,6 +580,31 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly currencySubtotals = computed(() => perCurrencySubtotals(this.enrichedEntries()));
 
   /** Grand total converted to the home currency, plus how many couldn't convert. */
+  // ── The expenses total in every group currency (#724): mine first (the trip's
+  //    if I have none), each expense at its saved rate (#723), else its day's. ──
+  private readonly expTables = signal<Record<string, Rates>>({});
+  private readonly expTargets = computed(() => {
+    const lead = this.ownCurrency() || this.homeCurrency();
+    return [lead, ...groupCurrencies(this.homeCurrency(), this.tripService.activeMembers()).filter(c => c !== lead)];
+  });
+  private readonly expItems = computed(() => this.enrichedEntries().map(e =>
+    ({ amount: e.amount, currency: e.currency || this.homeCurrency(), date: e.date, createdAt: e.createdAt, per: e.rates?.per })));
+  private readonly loadExpTables = effect(() => {
+    const have = untracked(this.expTables);
+    for (const { currency, day } of tablesNeeded(this.expItems(), this.expTargets(), this.todayISO())) {
+      const key = `${currency}|${day}`;
+      if (have[key]) continue;
+      void this.rateService.ratesFor(currency, day).then(r => { if (r) this.expTables.update(t => ({ ...t, [key]: r })); });
+    }
+  });
+  readonly expTotals = computed(() => totalsInEvery(this.expItems(), this.expTargets(), this.expTables(), this.todayISO()));
+  /** "≈" only where an expense had to be converted into that currency. */
+  private expText(t: { currency: string; total: number }): string {
+    return `${this.expItems().some(i => i.currency !== t.currency) ? '≈ ' : ''}${amountText(t.total, t.currency)}`;
+  }
+  readonly expBig = computed(() => this.expText(this.expTotals()[0]));
+  readonly expOthers = computed(() => this.expTotals().slice(1).filter(t => !t.missing).map(t => this.expText(t)));
+
   readonly convertedExpenseTotal = computed(() =>
     convertedTotal(this.enrichedEntries().map(e => ({ ...e, date: rateDay(e, this.todayISO()) })), this.ratesByDate(), this.homeCurrency()));
 

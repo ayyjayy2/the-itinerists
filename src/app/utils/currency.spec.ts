@@ -1,4 +1,4 @@
-import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText, lockRate, rateDay, needsNewRate, inOwnCurrency, amountText, groupCurrencies, lockRates, missingRates, mergeRates, fillPlan } from './currency';
+import { convertAmount, perCurrencySubtotals, convertedTotal, convertShare, perCurrencyText, lockRate, rateDay, needsNewRate, inOwnCurrency, amountText, groupCurrencies, lockRates, missingRates, mergeRates, fillPlan, totalsInEvery, tablesNeeded } from './currency';
 
 // Frankfurter-style rates table: base = the "to" currency (here EUR), so
 // rates[X] = how many X per 1 EUR. EUR itself is implicitly 1.
@@ -234,5 +234,26 @@ describe('fillPlan (#723)', () => {
   });
   it('is empty when every expense has every group currency', () => {
     expect(fillPlan([e('a', 'THB', '2026-11-01', { on: '2026-11-01', per: { USD: 0.03 } })], ['THB', 'USD'], today)).toEqual([]);
+  });
+});
+
+// #724: one total in every currency the group uses, each expense at its saved rate (else its day's rate).
+describe('totalsInEvery', () => {
+  const today = '2026-11-04';
+  const items = [
+    { amount: 3000, currency: 'THB', date: '2026-11-01', per: { USD: 0.03 } },          // saved: $90
+    { amount: 50, currency: 'EUR', date: '2026-11-02' },                                 // its day's table
+  ];
+  const tables = { 'EUR|2026-11-02': { THB: 36, USD: 1.08 } };
+  it('adds each expense in each currency, at its saved rate or its day\'s', () => {
+    expect(totalsInEvery(items, ['USD', 'THB', 'EUR'], tables, today)).toEqual([
+      { currency: 'USD', total: 90 + 54, missing: 0 },
+      { currency: 'THB', total: 3000 + 1800, missing: 0 },
+      { currency: 'EUR', total: 50, missing: 1 },          // the baht expense has no euro rate yet
+    ]);
+  });
+  it('lists the rate tables still needed: one per currency and day', () => {
+    expect(tablesNeeded(items, ['USD', 'THB', 'EUR'], today)).toEqual([{ currency: 'THB', day: '2026-11-01' }, { currency: 'EUR', day: '2026-11-02' }]);
+    expect(tablesNeeded(items.slice(0, 1), ['USD', 'THB'], today)).toEqual([]);
   });
 });

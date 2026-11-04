@@ -7,24 +7,19 @@
       <h2><app-icon name="expenses" [size]="22" /> My Expenses</h2>
       <p class="user-sub">{{ currentUser()?.name }}'s personal log</p>
     </div>
-    <div class="total-chip" [class.total-empty]="totalEmpty()">
-      @for (t of totals(); track t.currency; let last = $last) {
-        <span class="total-part">{{ money(t.amount, t.currency) }}@if (!money(t.amount, t.currency).includes(t.currency)) { <span class="total-code">{{ t.currency }}</span> }</span>
-        @if (!last) { <span class="total-sep" aria-hidden="true">·</span> }
-      }
-    </div>
   </div>
 
-  @if (mixedCurrencies()) {
-    <p class="total-converted">
-      ≈ {{ money(converted().total, homeCurrency()) }} in all
-      <span class="total-note">converted to {{ homeCurrency() }} at each expense's date rate@if (converted().missing) {; {{ converted().missing }} not converted yet (no rate)}</span>
-    </p>
-  }
-
-  @if (ownTotal(); as own) {
-    <p class="total-own">≈ {{ money(own.amount, own.currency) }} in {{ own.currency }}, at today's rate</p>
-  }
+  <!-- The total (#724): in my currency (the trip's if I have none), then every other group currency -->
+  <section class="total-card" [class.total-empty]="totalEmpty()" aria-label="Total">
+    <span class="total-label">Total</span>
+    <span class="total-big">{{ bigTotal() }}</span>
+    @if (otherTotals().length) {
+      <span class="total-others">{{ otherTotals().join(' · ') }}</span>
+    }
+    @if (mixedCurrencies()) {
+      <span class="total-entered">As entered: @for (t of totals(); track t.currency; let last = $last) {<span>{{ amountText(t.amount, t.currency) }}</span>@if (!last) {<span> · </span>}}</span>
+    }
+  </section>
 
   <!-- Add form toggle -->
   @if (!showForm()) {

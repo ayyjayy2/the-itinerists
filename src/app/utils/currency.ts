@@ -67,6 +67,38 @@ export function fillPlan(
   return [...groups.values()].map(g => ({ ...g, wanted: g.wanted.sort((a, b) => order(a) - order(b)) }));
 }
 
+/** An amount to total in every group currency (#724): its saved rates when it has them, else its day's table. */
+export interface TotalItem { amount: number; currency: string; date: string; createdAt?: number; per?: Record<string, number> }
+
+/**
+ * The same total in each of `targets` (#724): every item in every currency, at
+ * its expense's saved rate, else the rate table for its currency and day
+ * (`tables['EUR|2026-11-02']`, base = that currency). Past days' rates never
+ * change. `missing` counts items with no rate into that currency yet.
+ */
+export function totalsInEvery(items: readonly TotalItem[], targets: readonly string[],
+                              tables: Record<string, Rates>, todayISO: string): { currency: string; total: number; missing: number }[] {
+  return targets.map(target => {
+    let total = 0, missing = 0;
+    for (const i of items) {
+      const rate = i.currency === target ? 1 : i.per?.[target] ?? tables[`${i.currency}|${rateDay(i, todayISO)}`]?.[target];
+      if (rate) total += i.amount * rate; else missing++;
+    }
+    return { currency: target, total, missing };
+  });
+}
+
+/** The rate tables totalsInEvery still needs: one per currency and day, for items missing a saved rate. */
+export function tablesNeeded(items: readonly TotalItem[], targets: readonly string[], todayISO: string): { currency: string; day: string }[] {
+  const out = new Map<string, { currency: string; day: string }>();
+  for (const i of items) {
+    if (targets.every(t => t === i.currency || i.per?.[t])) continue;
+    const day = rateDay(i, todayISO);
+    out.set(`${i.currency}|${day}`, { currency: i.currency, day });
+  }
+  return [...out.values()];
+}
+
 /** The rate to save on an expense, from a base=`home` table for its day; null in the trip's
  *  own currency, or when there's no rate for that currency. */
 export function lockRate(currency: string, home: string, rates: Rates | null, on: string): SavedRate | null {

@@ -237,10 +237,12 @@ test('download my data from Profile', async ({ page }) => {
 
 /** #613: My Expenses takes any currency: each amount stays in its own, with a converted total in the trip's. */
 test('My Expenses keeps each currency and adds a converted total', async ({ page }) => {
-  // Rates for the trip's currency (THB): no network in the demo tests.
-  await page.route('https://api.frankfurter.dev/**', route => route.fulfill({
-    json: { amount: 1, base: 'THB', date: '2026-11-01', rates: { EUR: 0.025, USD: 0.028 } },
-  }));
+  // Rates from each currency asked about (1 EUR = 40 THB = 1.12 USD): no network in the demo tests.
+  const perUsd = { THB: 35.7, EUR: 0.893 }, perEur = { THB: 40, USD: 1.12 }, perThb = { EUR: 0.025, USD: 0.028 };
+  await page.route('https://api.frankfurter.dev/**', route => {
+    const base = new URL(route.request().url()).searchParams.get('base') ?? 'THB';
+    route.fulfill({ json: { amount: 1, base, date: '2026-11-01', rates: base === 'EUR' ? perEur : base === 'USD' ? perUsd : perThb } });
+  });
   await page.goto('/expenses');
   const add = async (description: string, amount: string, currency: string) => {
     await page.getByRole('button', { name: '+ Add Expense' }).click();
@@ -253,16 +255,16 @@ test('My Expenses keeps each currency and adds a converted total', async ({ page
   };
   await add('Coffee in Lisbon', '5', 'EUR');
   await add('Songthaew', '200', 'THB');
-  const totals = page.locator('.total-chip');
-  // One total per currency, never added together, never shown as dollars (the demo traveller has baht expenses already).
-  await expect(totals).toContainText('€5.00');
-  await expect(totals).toContainText('THB');
-  await expect(totals).not.toContainText('$');
+  // As entered, one amount per currency, never added together (the demo traveller has baht expenses already).
+  const entered = page.locator('.total-entered');
+  await expect(entered).toContainText('€5.00');
+  await expect(entered).toContainText('฿');
   await expect(page.getByText('Coffee in Lisbon')).toBeVisible();
   await expect(page.getByText('Songthaew').first()).toBeVisible();
-  // And one converted total in the trip's currency.
-  await expect(page.locator('.total-converted')).toContainText(/≈ .* in all/);
-  await expect(page.locator('.total-converted')).toContainText('converted to THB');
+  // The total that stands out is in the trip's baht (no currency of my own), converted (#724),
+  // then the same total in Theo's dollars.
+  await expect(page.locator('.total-big')).toContainText(/^≈ ฿[\d,]+\.\d\d$/);
+  await expect(page.locator('.total-others')).toContainText(/≈ \$[\d,]+\.\d\d/);
 });
 
 /** #611: "Save as PDF" prints the whole shared page, not just its first screen. */
