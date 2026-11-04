@@ -443,6 +443,15 @@ await t('saved rate that is not a map', 'deny', onExpense(() => updateDoc(doc(bo
 await t('member still deletes an expense', 'allow', onExpense(() => deleteDoc(doc(bob, 'trips', 'T', 'finance', 'r1'))));
 await t('member still adds an itinerary item (no rate check outside finance)', 'allow', () => setDoc(doc(bob, 'trips', 'T', 'itinerary', 'r9'), { title: 'Stop', rate: 'n/a' }));
 
+console.log('\nRates in every group currency on expenses (#723)');
+const per = { THB: 33.5, GBP: 0.79 };
+await t('member adds an expense with rates for every group currency', 'allow', () => setDoc(doc(bob, 'trips', 'T', 'finance', 'g1'), expense({ rates: { on: '2026-11-02', per } })));
+await t('member fills in a currency someone chose later', 'allow', onExpense(() => updateDoc(doc(bob, 'trips', 'T', 'finance', 'r1'), { rates: { on: '2026-11-02', per: { ...per, EUR: 0.92 } } })));
+await t('rates with an extra field', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'finance', 'g2'), expense({ rates: { on: '2026-11-02', per, by: 'bob' } })));
+await t('rates whose "per" is not a map', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'finance', 'g2'), expense({ rates: { on: '2026-11-02', per: 33.5 } })));
+await t('rates with a bad day', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'finance', 'g2'), expense({ rates: { on: 'today', per } })));
+await t('rates for more currencies than a group can have', 'deny', () => setDoc(doc(bob, 'trips', 'T', 'finance', 'g2'), expense({ rates: { on: '2026-11-02', per: Object.fromEntries(Array.from({ length: 30 }, (_, i) => [`C${String(i).padStart(2, '0')}`, 1])) } })));
+
 console.log('\nSettling up (#666): the payer says they paid, the person owed confirms');
 const claim = (o = {}) => ({ from: 'bob', to: 'alice', amount: 40, currency: 'USD', app: 'venmo', at: serverTimestamp(), ...o });
 const claimed = () => testEnv.withSecurityRulesDisabled(ctx => setDoc(doc(ctx.firestore(), 'trips', 'T', 'payClaims', 'bob_alice'), { ...claim(), at: new Date() }));

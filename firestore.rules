@@ -607,10 +607,18 @@ service cloud.firestore {
           && d.rate.value is number && d.rate.value > 0
           && d.rate.on is string && d.rate.on.size() == 10);
       }
+      // An expense's rates into every group currency (#723): its day, and a map of
+      // currency → rate no bigger than a group's currencies could make it.
+      function validRates(d) {
+        return !('rates' in d) || d.rates == null || (d.rates is map
+          && d.rates.keys().hasOnly(['on', 'per'])
+          && d.rates.on is string && d.rates.on.size() == 10
+          && d.rates.per is map && d.rates.per.size() <= 20);
+      }
       match /{sub}/{doc} {
         allow read:  if isMember(tripId) && isSharedSub(sub);
         allow create, update: if canEdit(tripId) && isSharedSub(sub)
-          && (sub != 'finance' || validRate(request.resource.data));
+          && (sub != 'finance' || (validRate(request.resource.data) && validRates(request.resource.data)));
         allow delete: if canEdit(tripId) && isSharedSub(sub);
         // A guest joining (or leaving) adds the "joined" line to the trip's
         // update feed and log, and writes nothing else under the trip.
