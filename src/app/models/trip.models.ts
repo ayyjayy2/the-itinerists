@@ -1,5 +1,5 @@
 import type { PayApp, PayHandles } from '../utils/pay-links';
-import type { SavedRate } from '../utils/currency';
+import type { SavedRate, SavedRates } from '../utils/currency';
 
 // ── User ──────────────────────────────────────────────────────────────────────
 
@@ -390,6 +390,8 @@ export interface FinanceEntryDoc {
   /** The rate for its date, saved when it's added or its date or currency changes (#687),
    *  so owed amounts never move. Absent in the trip's own currency. */
   rate?: SavedRate | null;
+  /** Its rates into every currency the group uses, for its day (#723): amounts in any currency never move. */
+  rates?: SavedRates | null;
   addedByUid: string;
   createdAt: number;
 }

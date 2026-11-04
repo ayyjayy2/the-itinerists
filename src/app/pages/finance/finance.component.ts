@@ -9,7 +9,7 @@ import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
 import { Rates, perCurrencySubtotals, convertedTotal, convertShare, rateDay, inOwnCurrency, amountText } from '../../utils/currency';
 import { money } from '../../utils/event-text';
-import { DirectDebt, NetLine, filterSettlements, netLine, personTotals, unpaidBetween, workingText } from '../../utils/settlements';
+import { DebtItem, DirectDebt, NetLine, filterSettlements, itemIn, netLine, personTotals, unpaidBetween, workingText } from '../../utils/settlements';
 import { IconComponent } from '../../shared/icon/icon.component';
 import { LoadingComponent } from '../../shared/loading/loading.component';
 import { NoTripStateComponent } from '../../shared/no-trip-state/no-trip-state.component';
@@ -100,12 +100,44 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
     const r = inOwnCurrency(amount, this.homeCurrency(), this.ownCurrency(), this.todayRates());
     return r ? `≈ ${money(r.amount, r.currency)}` : null;
   }
-  /** Under the Pay now amount (#688): the person I'm paying's currency, "≈ €27.00 (Theo)", when it isn't mine. */
-  payTheirs(name: string, amount: number): string[] {
-    const home = this.homeCurrency(), rates = this.todayRates();
-    const theirs = inOwnCurrency(amount, home, this.memberByName().get(name)?.ownCurrency, rates);
-    const mine = inOwnCurrency(amount, home, this.ownCurrency(), rates);
-    return theirs && theirs.currency !== mine?.currency ? [`≈ ${money(theirs.amount, theirs.currency)} (${name})`] : [];
+  /**
+   * What's left between me and `name` in `target` currency (#723): each unpaid
+   * share at its expense's saved rate, so it never moves and both of us see the
+   * same. Null if a share has no rate yet, not even today's.
+   */
+  private netIn(name: string, target: string): number | null {
+    const me = this.currentUser()?.name ?? '', home = this.homeCurrency(), today = this.todayRates();
+    const debts = this.directDebts(), paid = this.isItemPaid.bind(this);
+    let missing = false;
+    const of = (i: DebtItem) => { const v = itemIn(i, target, home, today); if (v === null) missing = true; return v ?? 0; };
+    const net = unpaidBetween(debts, name, me, paid, of) - unpaidBetween(debts, me, name, paid, of);
+    return missing ? null : Math.abs(net);
+  }
+  /** "≈ £15.00": what's left with `name` in my own currency (#714, #723), or null without one. */
+  mineFor(name: string): string | null {
+    const own = this.ownCurrency();
+    if (!own || own === this.homeCurrency()) return null;
+    const v = this.netIn(name, own);
+    return v === null ? null : `≈ ${money(v, own)}`;
+  }
+  /** The owed or owing total in my own currency: the people's amounts added up. */
+  mineTotal(side: 'owed' | 'owing'): string | null {
+    const own = this.ownCurrency();
+    if (!own || own === this.homeCurrency()) return null;
+    let total = 0;
+    for (const p of this.personNetBreakdown()[side]) {
+      const v = this.netIn(p.name, own);
+      if (v === null) return null;
+      total += v;
+    }
+    return `≈ ${money(total, own)}`;
+  }
+  /** Under the Pay now amount (#688): the person I'm paying's currency, "≈ €18.00 (Theo)", when it isn't mine. */
+  payTheirs(name: string): string[] {
+    const theirs = this.memberByName().get(name)?.ownCurrency;
+    if (!theirs || theirs === this.homeCurrency() || theirs === this.ownCurrency()) return [];
+    const v = this.netIn(name, theirs);
+    return v === null ? [] : [`≈ ${money(v, theirs)} (${name})`];
   }
 
 
@@ -249,7 +281,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
         d.amountHome += amount;
         d.items.push({
           id: e.id, label: e.vendor || e.description, date: e.date, description: e.description, notes: e.notes,
-          amount, origAmount: origShare, origCurrency: currency, estimated,
+          amount, origAmount: origShare, origCurrency: currency, estimated, per: e.rates?.per,
         });
       }
     }

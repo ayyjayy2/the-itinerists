@@ -43,6 +43,30 @@ export function mergeRates(had: SavedRates | null | undefined, found: SavedRates
   return { on: had?.on ?? found.on, per: { ...found.per, ...(had?.per ?? {}) } };
 }
 
+/**
+ * The expenses missing a group currency (#723), grouped by their currency and
+ * day so each group needs one rate lookup: the day their rates were saved on,
+ * else the day they use for rates (rateDay).
+ */
+export function fillPlan(
+  entries: readonly { id: string; currency: string; date: string; createdAt?: number; rates?: SavedRates | null }[],
+  groupWanted: readonly string[], todayISO: string,
+): { currency: string; on: string; ids: string[]; wanted: string[] }[] {
+  const groups = new Map<string, { currency: string; on: string; ids: string[]; wanted: string[] }>();
+  for (const e of entries) {
+    const missing = missingRates(e, groupWanted);
+    if (!missing.length) continue;
+    const on = e.rates?.on ?? rateDay(e, todayISO);
+    const key = `${e.currency}|${on}`;
+    const g = groups.get(key) ?? { currency: e.currency, on, ids: [], wanted: [] };
+    g.ids.push(e.id);
+    for (const c of missing) if (!g.wanted.includes(c)) g.wanted.push(c);
+    groups.set(key, g);
+  }
+  const order = (c: string) => groupWanted.indexOf(c);
+  return [...groups.values()].map(g => ({ ...g, wanted: g.wanted.sort((a, b) => order(a) - order(b)) }));
+}
+
 /** The rate to save on an expense, from a base=`home` table for its day; null in the trip's
  *  own currency, or when there's no rate for that currency. */
 export function lockRate(currency: string, home: string, rates: Rates | null, on: string): SavedRate | null {
