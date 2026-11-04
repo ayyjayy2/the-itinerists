@@ -173,9 +173,18 @@
   .tabs button { min-height: 44px; padding-inline: 1.2rem; }
   .list-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
   #waitlistTable td:first-child { overflow-wrap: anywhere; }
+  .sources { margin-top: 0.75rem; }
+  .sources button { min-height: 44px; }
+  .sources .num { opacity: 0.75; margin-left: 0.15rem; }
+  .src { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 0.1rem 0.55rem; border-radius: 999px; background: var(--surface-2); color: var(--text); }
+  .src-instagram { background: var(--highlight-tint); color: var(--highlight-dk); }
+  .src-linkedin { background: var(--lavender-tint); color: var(--lavender-dark); }
+  .src-survey { background: var(--accent-tint); color: var(--accent-dark); }
+  .src-website { background: var(--primary-tint); color: var(--primary-dark); }
   /* Phones: the joined time goes under each email, so emails don't break mid-word. */
   @media (max-width: 560px) {
-    #waitlistTable th:last-child { display: none; }
+    .sources { border-radius: var(--radius-sm); }
+    #waitlistTable th { display: none; }
     #waitlistTable tr { display: flex; flex-direction: column; border-top: 1px solid var(--border); padding: 0.45rem 0.25rem; }
     #waitlistTable tr:first-child { border-top: 0; }
     #waitlistTable td { border: 0; padding: 0; text-align: left; }
@@ -373,7 +382,7 @@
          Real emails live in Firestore only, never in the repository. -->
     <div class="tab" id="tabWaitlist" hidden>
       <div class="card">
-        <h2>Waitlist <small>"Join the waitlist" on the welcome page</small></h2>
+        <h2>Waitlist <small>the welcome page, post links and the alpha survey</small></h2>
         <div class="tiles">
           <div class="tile"><div class="v num" id="waitlistTotal">0</div><div class="l">people, all time</div></div>
           <div class="tile"><div class="v num" id="waitlistWeek">0</div><div class="l">joined in the last 7 days</div></div>
@@ -382,12 +391,13 @@
       </div>
       <div class="card">
         <div class="list-head">
-          <h2>Emails <small>newest first</small></h2>
+          <h2>People <small>newest first</small></h2>
           <button class="btn small" id="waitlistCopy" type="button" disabled>Copy emails</button>
         </div>
+        <div class="seg sources" id="waitlistSources" role="group" aria-label="Where they came from"></div>
         <p class="hint" id="waitlistCopyMsg" role="status"></p>
         <div class="scroll"><table class="tbl" id="waitlistTable"></table></div>
-        <p class="hint">For the beta invite and the launch email only, as the privacy policy promises. Paste them into Bcc, never To. Someone who unsubscribes or asks is removed with <code>node scripts/waitlist.js</code>.</p>
+        <p class="hint">For the beta invite and the launch email only, as the privacy policy promises. Paste them into Bcc, never To. "From": Website is the welcome page; Instagram and LinkedIn are sign-ups through a post link (<code>theitinerists.com/?from=instagram</code>); Survey is added from the alpha survey with <code>node scripts/waitlist.js import</code>. Someone who unsubscribes or asks is removed with <code>node scripts/waitlist.js</code>.</p>
       </div>
     </div>
 

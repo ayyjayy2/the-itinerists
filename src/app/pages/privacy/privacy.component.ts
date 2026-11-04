@@ -44,7 +44,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         </ul>
         <h3>If you ask to hear when the iPhone app launches</h3>
         <ul>
-          <li>If you join the waitlist on the welcome page, we keep your email and when you left it. We use it to invite you to the iPhone app's beta (an invite, not a promise of a spot), to tell you when the iPhone app is out, and to send occasional updates about The Itinerists, nothing else. We keep those few and far between: no spam. You don't need an account. Every email has a link to unsubscribe; when you unsubscribe or ask us, we delete your address. Only the developer can see the list, and we never sell or share it.</li>
+          <li>If you join the waitlist on the welcome page, we keep your email, when you left it, and where you came from (the website itself, or a link in one of our Instagram or LinkedIn posts). If you said yes to beta testing in our trip feedback survey and left an email or phone number there, we added it to the same list. We use it to invite you to the iPhone app's beta (an invite, not a promise of a spot), to tell you when the iPhone app is out, and to send occasional updates about The Itinerists, nothing else. We keep those few and far between: no spam. You don't need an account. Every email has a link to unsubscribe; when you unsubscribe or ask us, we delete your address or number. Only the developer can see the list, and we never sell or share it.</li>
         </ul>
         <h3>Technical information</h3>
         <ul>
@@ -104,7 +104,7 @@ import { BrandComponent } from '../../shared/brand/brand.component';
         <p>We don't sell your personal information or share it for targeted advertising, and we don't collect sensitive personal information. If your state gives you privacy rights (such as California, Colorado, Virginia or Illinois), you can use them by emailing us, and we won't treat you differently for doing so.</p>
 
         <h2>How long we keep data</h2>
-        <p>Until you delete it, with one exception: usage records (which screens you opened and when, and that you changed something, never what you wrote) are kept after you delete your account, together with a note of when it was deleted, when it was created, how many trips it was on and when the last one ended. Those notes carry no name, email or trip content and are used only to understand how the app is used. Trip content stays as long as the trip has members. An email left on the waitlist is kept until you unsubscribe or ask us to remove it. Error reports are kept for troubleshooting and contain no personal data.</p>
+        <p>Until you delete it, with one exception: usage records (which screens you opened and when, and that you changed something, never what you wrote) are kept after you delete your account, together with a note of when it was deleted, when it was created, how many trips it was on and when the last one ended. Those notes carry no name, email or trip content and are used only to understand how the app is used. Trip content stays as long as the trip has members. An email or phone number on the waitlist is kept until you unsubscribe or ask us to remove it. Error reports are kept for troubleshooting and contain no personal data.</p>
 
         <h2>Security</h2>
         <p>All traffic is encrypted in transit. Database access is restricted by security rules that are tested with every change. Only the developer can administer the project.</p>
