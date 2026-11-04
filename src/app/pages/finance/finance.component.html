@@ -222,6 +222,93 @@
     </div>
   }
 
+  <!-- ── Expense Log: right below Group Summary, easy to find (#754) ── -->
+  <div class="expenses-section">
+    <button class="expenses-toggle" (click)="showExpenses.set(!showExpenses())">
+      <span>{{ showExpenses() ? '▾' : '▸' }} Expenses ({{ entries().length }})</span>
+    </button>
+
+    @if (showExpenses()) {
+      @if (enrichedEntries().length === 0) {
+        <p class="empty-expenses">No expenses to show.</p>
+      } @else {
+        <div class="expenses-table">
+          <div class="table-header">
+            <span>Date</span>
+            <span>Description</span>
+            <span>Paid By</span>
+            <span class="r">Total</span>
+            <span class="r">/pp</span>
+            <span></span>
+          </div>
+
+          @for (entry of enrichedEntries(); track entry.id) {
+            <div class="table-row" [class.is-editing]="isEditingEntry(entry)" [appFocusTarget]="entry.id">
+              <span class="date-cell">{{ formatDate(entry.date) }}</span>
+              <div class="desc-cell">
+                @if (entry.vendor) { <span class="entry-vendor">{{ entry.vendor }}</span> }
+                <span>{{ entry.description }}</span>
+                @if (entry.notes) { <span class="entry-notes">{{ entry.notes }}</span> }
+                <div class="desc-chips">
+                  @if (entry.category) { <span class="chip chip-muted">{{ entry.category }}</span> }
+                  <span class="chip" [class.chip-primary]="entry.splitAmong === 'All'" [class.chip-highlight]="entry.splitAmong !== 'All'">
+                    {{ entry.splitAmong === 'All' ? 'Everyone' : entry.splitAmong }}
+                  </span>
+                  @if (leftOut(entry); as missing) {
+                    @if (missing.length) { <span class="chip chip-gap">Leaves out {{ peopleList(missing) }}</span> }
+                  }
+                  @if (safeLink(entry.link); as href) {
+                    <a class="entry-link" [href]="href" target="_blank" rel="noopener">🔗</a>
+                  }
+                </div>
+              </div>
+              <span class="paidby-cell">{{ entry.paidBy }}</span>
+              <span class="amount-cell r">{{ entry.amount | number:'1.2-2' }} <span class="cur-code">{{ entry.currency }}</span></span>
+              <span class="pp-cell r">
+                @if (entry.isIndivSplit) {
+                  <span class="pp-custom">custom</span>
+                } @else if (entry.amount > 0) {
+                  {{ amt(entry.ppAmount, entry.currency) }}<span class="pp-split">/{{ entry.ppCount }}</span>
+                } @else {
+                  <span class="pp-tbd">TBD</span>
+                }
+              </span>
+              <button data-needs-account class="edit-row-btn" (click)="startEditEntry(entry)" title="Edit">✏️</button>
+            </div>
+
+          }
+
+          @if (enrichedEntries().length > 0) {
+            @if (hasMixedCurrencies()) {
+              <div class="totals-toggle">
+                <button class="totals-chip" [class.active]="totalsCurrency() === 'All'" (click)="setTotalsCurrency('All')">All</button>
+                @for (c of usedCurrencies(); track c) {
+                  <button class="totals-chip" [class.active]="totalsCurrency() === c" (click)="setTotalsCurrency(c)">{{ c }}</button>
+                }
+              </div>
+            }
+            <div class="table-totals-row">
+              <span class="totals-label">{{ enrichedEntries().length }} expense{{ enrichedEntries().length !== 1 ? 's' : '' }}</span>
+              <span class="totals-amount">
+                @if (totalsCurrency() === 'All') {
+                  {{ expBig() }}@if (expOthers().length) {<span class="totals-others"> {{ expOthers().join(' · ') }}</span>}
+                } @else {
+                  {{ totalsAmount() | number:'1.2-2' }} <span class="cur-code">{{ totalsCode() }}</span>
+                }
+              </span>
+            </div>
+            @if (totalsCurrency() === 'All' && hasMixedCurrencies()) {
+              <div class="totals-note">
+                ≈ each expense converted at the rate for its own date.
+                @if (expTotals()[0].missing > 0) { <span class="totals-warn">{{ expTotals()[0].missing }} not converted yet (rate unavailable).</span> }
+              </div>
+            }
+          }
+        </div>
+      }
+    }
+  </div>
+
   <!-- ── Scope + Add ── -->
   <div class="scope-tabs">
     <button [class.active]="settlementsScope() === 'mine'" (click)="settlementsScope.set('mine')">My Trip</button>
@@ -533,93 +620,6 @@
           }
         </div>
       </div>
-    }
-  </div>
-
-  <!-- ── Expense Log ── -->
-  <div class="expenses-section">
-    <button class="expenses-toggle" (click)="showExpenses.set(!showExpenses())">
-      <span>{{ showExpenses() ? '▾' : '▸' }} Expenses ({{ entries().length }})</span>
-    </button>
-
-    @if (showExpenses()) {
-      @if (enrichedEntries().length === 0) {
-        <p class="empty-expenses">No expenses to show.</p>
-      } @else {
-        <div class="expenses-table">
-          <div class="table-header">
-            <span>Date</span>
-            <span>Description</span>
-            <span>Paid By</span>
-            <span class="r">Total</span>
-            <span class="r">/pp</span>
-            <span></span>
-          </div>
-
-          @for (entry of enrichedEntries(); track entry.id) {
-            <div class="table-row" [class.is-editing]="isEditingEntry(entry)" [appFocusTarget]="entry.id">
-              <span class="date-cell">{{ formatDate(entry.date) }}</span>
-              <div class="desc-cell">
-                @if (entry.vendor) { <span class="entry-vendor">{{ entry.vendor }}</span> }
-                <span>{{ entry.description }}</span>
-                @if (entry.notes) { <span class="entry-notes">{{ entry.notes }}</span> }
-                <div class="desc-chips">
-                  @if (entry.category) { <span class="chip chip-muted">{{ entry.category }}</span> }
-                  <span class="chip" [class.chip-primary]="entry.splitAmong === 'All'" [class.chip-highlight]="entry.splitAmong !== 'All'">
-                    {{ entry.splitAmong === 'All' ? 'Everyone' : entry.splitAmong }}
-                  </span>
-                  @if (leftOut(entry); as missing) {
-                    @if (missing.length) { <span class="chip chip-gap">Leaves out {{ peopleList(missing) }}</span> }
-                  }
-                  @if (safeLink(entry.link); as href) {
-                    <a class="entry-link" [href]="href" target="_blank" rel="noopener">🔗</a>
-                  }
-                </div>
-              </div>
-              <span class="paidby-cell">{{ entry.paidBy }}</span>
-              <span class="amount-cell r">{{ entry.amount | number:'1.2-2' }} <span class="cur-code">{{ entry.currency }}</span></span>
-              <span class="pp-cell r">
-                @if (entry.isIndivSplit) {
-                  <span class="pp-custom">custom</span>
-                } @else if (entry.amount > 0) {
-                  {{ amt(entry.ppAmount, entry.currency) }}<span class="pp-split">/{{ entry.ppCount }}</span>
-                } @else {
-                  <span class="pp-tbd">TBD</span>
-                }
-              </span>
-              <button data-needs-account class="edit-row-btn" (click)="startEditEntry(entry)" title="Edit">✏️</button>
-            </div>
-
-          }
-
-          @if (enrichedEntries().length > 0) {
-            @if (hasMixedCurrencies()) {
-              <div class="totals-toggle">
-                <button class="totals-chip" [class.active]="totalsCurrency() === 'All'" (click)="setTotalsCurrency('All')">All</button>
-                @for (c of usedCurrencies(); track c) {
-                  <button class="totals-chip" [class.active]="totalsCurrency() === c" (click)="setTotalsCurrency(c)">{{ c }}</button>
-                }
-              </div>
-            }
-            <div class="table-totals-row">
-              <span class="totals-label">{{ enrichedEntries().length }} expense{{ enrichedEntries().length !== 1 ? 's' : '' }}</span>
-              <span class="totals-amount">
-                @if (totalsCurrency() === 'All') {
-                  {{ expBig() }}@if (expOthers().length) {<span class="totals-others"> {{ expOthers().join(' · ') }}</span>}
-                } @else {
-                  {{ totalsAmount() | number:'1.2-2' }} <span class="cur-code">{{ totalsCode() }}</span>
-                }
-              </span>
-            </div>
-            @if (totalsCurrency() === 'All' && hasMixedCurrencies()) {
-              <div class="totals-note">
-                ≈ each expense converted at the rate for its own date.
-                @if (expTotals()[0].missing > 0) { <span class="totals-warn">{{ expTotals()[0].missing }} not converted yet (rate unavailable).</span> }
-              </div>
-            }
-          }
-        </div>
-      }
     }
   </div>
 
