@@ -36,7 +36,7 @@ describe('WelcomeComponent', () => {
 
   it('has a handwritten "Join waitlist!" pointer for the stacked layout, kept out of screen readers', () => {
     const note = render().el.querySelector('.waitlist-note')!;
-    expect(note.textContent).toContain('Join waitlist!');
+    expect((note as HTMLElement).innerText ?? note.textContent).toMatch(/Join\s*waitlist!/);   // two lines
     expect(note.getAttribute('aria-hidden')).toBe('true');   // the card itself is the real information
     expect(note.querySelector('svg.arrow')).not.toBeNull();
   });
