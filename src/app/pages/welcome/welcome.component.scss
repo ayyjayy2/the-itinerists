@@ -27,9 +27,6 @@
     align-items: center; gap: 2.5rem;
     .app-card { order: 0; }
   }
-  // The phone shrinks with the window's height, so the whole demo column fits
-  // on screen and the card sits level with it (centred in the column).
-  .showcase .phone-wrap { width: clamp(130px, calc((100dvh - 430px) * 0.46), 190px); max-width: none; }
 }
 
 .welcome-head {
