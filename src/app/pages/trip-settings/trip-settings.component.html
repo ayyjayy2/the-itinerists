@@ -8,6 +8,27 @@
   } @else {
     @if (error()) { <div class="alert-error">{{ error() }}</div> }
 
+    @if (isGuest()) {
+      <!-- A guest (#743): read-only, the same banner layout as Home's -->
+      <div class="guest-nudge" role="status">
+        <span class="rn-ic"><app-icon name="profile" [size]="16" /></span>
+        <span class="rn-text"><strong>You're a guest, so this is read-only.</strong> Create an account to change the trip.</span>
+        <button class="btn btn-sm btn-primary" type="button" (click)="accountPrompt.ask()">Create account</button>
+      </div>
+
+      <!-- Details, as plain text -->
+      <section class="card">
+        <h2>Details</h2>
+        <div class="ro-row"><span class="ro-label">Trip name</span><span class="ro-value">{{ trip()!.name }}</span></div>
+        @for (leg of guestLegs(); track $index) {
+          <div class="ro-row">
+            <span class="ro-label">{{ guestLegs().length > 1 ? 'Destination ' + ($index + 1) : 'Destination' }}</span>
+            <span class="ro-value">{{ leg.destination }}</span>
+            <span class="ro-sub">{{ leg.dates }} · {{ leg.currency }}</span>
+          </div>
+        }
+      </section>
+    } @else {
     <!-- Details -->
     <section class="card">
       <h2>Details</h2>
@@ -116,12 +137,13 @@
       }
       @if (shareError()) {<div class="alert alert-error">{{ shareError() }}</div>}
     </section>
+    }
 
     <!-- Members -->
     <section class="card">
       <div class="section-head">
         <h2>Members ({{ members().length }})</h2>
-        @if (isOwner()) {
+        @if (isOwner() && !isGuest()) {
         <button data-needs-account class="btn btn-ghost btn-sm" (click)="copyInvite()" [disabled]="inviteState() === 'copying'">
           @if (inviteState() === 'copied') { <app-icon name="check" [size]="15" /> Link copied }
           @else if (inviteState() === 'copying') { Generating… }
@@ -144,7 +166,7 @@
               @if (isMe(m)) { <span class="tag">You</span> }
               @if (m.role === 'owner') { <span class="tag tag-owner">Owner</span> }
             </span>
-            @if (canRemove(m)) {
+            @if (canRemove(m) && !isGuest()) {
               <button data-needs-account class="btn btn-danger btn-sm" (click)="remove(m)" [disabled]="busyMember() === m.uid">
                 Remove
               </button>
@@ -163,7 +185,7 @@
             <li class="activity-row">
               <span class="activity-dot" [class]="activityTone(e)"></span>
               <span class="activity-text">{{ activityText(e) }}</span>
-              @if (canRestore(e)) {
+              @if (canRestore(e) && !isGuest()) {
                 <button data-needs-account class="btn btn-ghost btn-sm" (click)="restore(e)" [disabled]="busyMember() === e.targetUid">
                   Restore
                 </button>
@@ -178,10 +200,10 @@
     <!-- Appearance (DP2-9) — theme picker -->
     <section class="card">
       <h2>Appearance</h2>
-      <p class="muted">Pick a theme. Applies on all your devices.</p>
-      <div class="theme-grid">
+      <p class="muted">{{ isGuest() ? 'The app’s themes. Create an account to pick one.' : 'Pick a theme. Applies on all your devices.' }}</p>
+      <div class="theme-grid" [class.ro-off]="isGuest()">
         @for (t of themes; track t.id) {
-          <button class="theme-card" [class.active]="currentTheme() === t.id" (click)="setTheme(t.id)">
+          <button class="theme-card" [class.active]="currentTheme() === t.id" (click)="setTheme(t.id)" [disabled]="isGuest()">
             <span class="theme-swatch">
               <span class="sw" [style.background]="t.swatch[0]"></span>
               <span class="sw" [style.background]="t.swatch[1]"></span>
@@ -200,12 +222,15 @@
     <!-- Customize Menu (page toggles) -->
     <section class="card">
       <h2>Customize Menu</h2>
-      <p class="muted">Hide pages you don't use. Home and Itinerary always stay. This only affects your menu and Home on this trip.</p>
-      <ul class="toggle-list">
+      <p class="muted">
+        @if (isGuest()) { The pages on this trip. Create an account to hide the ones you don't use. }
+        @else { Hide pages you don't use. Home and Itinerary always stay. This only affects your menu and Home on this trip. }
+      </p>
+      <ul class="toggle-list" [class.ro-off]="isGuest()">
         @for (p of hideablePages; track p.key) {
           <li class="toggle-row">
             <span class="page-name"><app-icon [name]="p.icon" [size]="16" /> {{ p.label }}</span>
-            <button class="toggle" [class.on]="!isHidden(p.key)" (click)="togglePage(p.key)">
+            <button class="toggle" [class.on]="!isHidden(p.key)" (click)="togglePage(p.key)" [disabled]="isGuest()">
               {{ isHidden(p.key) ? 'Hidden' : 'Shown' }}
             </button>
           </li>

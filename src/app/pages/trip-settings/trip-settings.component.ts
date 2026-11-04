@@ -19,6 +19,8 @@ import { EmptyDateHintDirective } from '../../shared/empty-date-hint.directive';
 import { userMessage } from '../../utils/user-message';
 import { ShareViewService } from '../../services/share-view.service';
 import { publicLink } from '../../shared/public-link';
+import { AccountPromptService } from '../../services/account-prompt.service';
+import { tripDateRange } from '../../utils/stop-dates';
 
 interface CurrencyOption { code: string; label: string; }
 interface HideablePage { key: string; label: string; icon: string; }
@@ -46,6 +48,14 @@ export class TripSettingsComponent {
   protected shareView = inject(ShareViewService);
   private geocode = inject(GeocodeService);
   private userService = inject(UserService);
+  /** A guest (#743) sees the trip's settings read-only, and is asked to create an account. */
+  protected readonly isGuest = this.userService.isGuest;
+  protected readonly accountPrompt = inject(AccountPromptService);
+  /** Each destination as plain text for a guest: place, "Nov 12 – 19, 2026", currency. */
+  protected readonly guestLegs = computed(() => {
+    const t = this.trip();
+    return t ? tripDestinations(t).map(l => ({ destination: l.destination, dates: tripDateRange(l.startDate, l.endDate), currency: l.currency })) : [];
+  });
   private themeService = inject(ThemeService);
   private router      = inject(Router);
 
