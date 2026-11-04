@@ -58,6 +58,9 @@ build (approval takes a day or two).
       `node scripts/migrate-outfit-photos.js` (dry run), then `--run`.
 - [ ] After the survey comes back (mid Oct): fixes from the alpha survey — anything that blocked
       or confused them first, then asks two or more people made (same order beta fixes will use).
+- [ ] The Itinerists LLC — *Alayna*. Filed with the Illinois Secretary of State 2026-11-03
+      ($150 + $3.38 card fee, paid); waiting for approval, then the EIN and the free D-U-N-S
+      number so Apple enrolment can be in the company's name (#678, #618).
 - [ ] Apple Developer Program enrollment ($99/yr) — *Alayna*. About a week before TestFlight.
 - [ ] Needs Apple: real App Check on iOS — App Attest via a Capacitor App Check plugin; remove
       the debug-token path in `src/app/app.config.ts`.
