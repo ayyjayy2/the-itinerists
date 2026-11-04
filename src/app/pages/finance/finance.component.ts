@@ -7,7 +7,7 @@ import { UsersService } from '../../services/users.service';
 import { TripService } from '../../services/trip.service';
 import { ExchangeRateService } from '../../services/exchange-rate.service';
 import { FinanceEntryDoc } from '../../models/trip.models';
-import { Rates, perCurrencySubtotals, convertedTotal, convertShare, rateDay, inOwnCurrency } from '../../utils/currency';
+import { Rates, perCurrencySubtotals, convertedTotal, convertShare, rateDay, inOwnCurrency, amountText } from '../../utils/currency';
 import { money } from '../../utils/event-text';
 import { DirectDebt, NetLine, filterSettlements, netLine, personTotals, unpaidBetween, workingText } from '../../utils/settlements';
 import { IconComponent } from '../../shared/icon/icon.component';
@@ -92,6 +92,9 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   /** My own currency (#429), from Profile; amounts owed also show in it. */
   readonly ownCurrency = computed(() => this.userService.firestoreUser()?.ownCurrency);
   private todayRates = signal<Rates | null>(null);
+  /** An amount with its currency's symbol (#719); the trip's currency unless another is given. */
+  amt(amount: number, currency = this.homeCurrency()): string { return amountText(amount, currency); }
+
   /** "≈ £24.00": a trip-currency amount in my own currency, which Finance leads with once I've set one (#714); null otherwise. */
   mine(amount: number): string | null {
     const r = inOwnCurrency(amount, this.homeCurrency(), this.ownCurrency(), this.todayRates());

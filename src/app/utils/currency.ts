@@ -42,6 +42,19 @@ function localISO(d: Date): string {
 }
 
 /**
+ * An amount with its currency (#719): the symbol where it has one (฿3,840.00,
+ * $30.00), otherwise its code (CHF 10.00), always with cents. No bare numbers.
+ */
+export function amountText(amount: number, currency: string): string {
+  try {
+    return amount.toLocaleString('en-US', { style: 'currency', currency, currencyDisplay: 'narrowSymbol', minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      .replace(/\u00a0/g, ' ');
+  } catch {
+    return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;   // not a code Intl knows
+  }
+}
+
+/**
  * Convert `amount` from `from` into `to`, given a `rates` table whose base is
  * `to` (so rates[from] = units of `from` per 1 `to`). Returns null when the
  * source rate is unavailable — callers surface that rather than guess.

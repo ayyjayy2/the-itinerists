@@ -262,6 +262,12 @@ describe('FinanceComponent: settling up', () => {
     });
   });
 
+  // #719: Maya, with no currency of her own, saw bare numbers on each person's line.
+  it('shows each person\'s amount with its currency', () => {
+    const { el } = create('Theo');
+    expect(el.querySelector('.banner-negative .banner-person-amounts')!.textContent!.trim()).toBe('$30.00');
+  });
+
   // #682: the arrows that open the owe/owed working were still too small to spot.
   it('draws the owe/owed arrows big enough to see, on a tap target of at least 44px', () => {
     const { el } = create('Theo');
