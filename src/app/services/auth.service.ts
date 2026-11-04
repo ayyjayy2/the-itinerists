@@ -46,6 +46,8 @@ import { guestAvatar, guestName } from '../utils/guest';
 import { ExpensesService } from './expenses.service';
 import { deletionRecord } from '../utils/account-deletion';
 import { publicLink } from '../shared/public-link';
+import { signInByUsername } from '../utils/username-sign-in';
+import { waitWithNudge } from '../utils/wait-with-nudge';
 
 const EMAIL_DOMAIN = PLACEHOLDER_DOMAIN;
 
@@ -104,7 +106,12 @@ export class AuthService {
    * address (username@the-itinerists.local) that reveals nothing.
    */
   async login(emailOrUsername: string, password: string): Promise<void> {
-    await signInWithEmailAndPassword(this.auth, await this.signInEmail(emailOrUsername), password);
+    const id = emailOrUsername.trim();
+    const attempt = (address: string) => signInWithEmailAndPassword(this.auth, address, password);
+    if (isValidEmail(id)) { await attempt(id.toLowerCase()); return; }
+    // Username: Auth first, the database only if Auth refuses, and then not for long (#712).
+    const lookup = () => waitWithNudge(this.lookupUsername(id), () => {}, { nudgeAfterMs: 60_000, giveUpAfterMs: 10_000 });
+    if (await signInByUsername(id, attempt, lookup) === 'use-email') throw new UseEmailToSignInError();
   }
 
   /** The address to hand Firebase Auth for what the person typed. */

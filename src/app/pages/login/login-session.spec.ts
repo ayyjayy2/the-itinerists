@@ -5,6 +5,7 @@ import { LoginComponent } from './login.component';
 import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { TripService } from '../../services/trip.service';
+import { ErrorLoggerService } from '../../services/error-logger.service';
 import { LocalCacheService } from '../../services/local-cache.service';
 
 describe('LoginComponent after a session ends', () => {
@@ -18,6 +19,7 @@ describe('LoginComponent after a session ends', () => {
         { provide: UserService, useValue: userService },
         { provide: TripService, useValue: {} },
         { provide: LocalCacheService, useValue: { recoverIfBroken: () => false } },
+        { provide: ErrorLoggerService, useValue: { logDiagnostic: () => {} } },
       ],
     });
     const fixture = TestBed.createComponent(LoginComponent);
