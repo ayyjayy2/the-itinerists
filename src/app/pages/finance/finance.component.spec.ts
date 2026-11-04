@@ -204,37 +204,47 @@ describe('FinanceComponent: settling up', () => {
       r.fixture.detectChanges();
       return r;
     }
-    it('shows what I owe in my currency under the trip amount', async () => {
+    // #714: with a currency of my own, Finance leads with it; the trip amount goes small beside it.
+    it('shows what I owe in my currency first, the trip amount small beside it', async () => {
       const { el } = await render('GBP');
-      expect(el.querySelector('.banner-negative .banner-amount')!.textContent).toContain('30.00');
-      expect(el.querySelector('.banner-negative .banner-own')!.textContent!.trim()).toBe('≈ £24.00');
+      expect(el.querySelector('.banner-negative .banner-amount')!.textContent!.trim()).toBe('≈ £24.00');
+      expect(el.querySelector('.banner-negative .banner-own')!.textContent!.trim()).toBe('30.00 USD');
+      expect(el.querySelector('.banner-negative .banner-person-amounts')!.textContent!.trim()).toBe('≈ £24.00');
     });
     it('and what I am owed', async () => {
       const { el } = await render('GBP', 'Maya');
-      expect(el.querySelector('.banner-positive .banner-own')!.textContent!.trim()).toBe('≈ £24.00');
+      expect(el.querySelector('.banner-positive .banner-amount')!.textContent!.trim()).toBe('≈ £24.00');
+      expect(el.querySelector('.banner-positive .banner-own')!.textContent!.trim()).toBe('30.00 USD');
     });
     it('sits on the same line as the trip amount', async () => {
       const { el } = await render('GBP');
       expect(el.querySelector('.banner-negative .banner-amounts .banner-own')).not.toBeNull();
     });
-    it('shows in the Pay now pop-up beside the amount', async () => {
+    it('leads the expenses total with my currency too', async () => {
+      const { fixture, comp, el } = await render('GBP');
+      comp.showExpenses.set(true);
+      fixture.detectChanges();
+      const t = comp.totalsAmount();
+      expect(el.querySelector('.totals-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe(`≈ £${(t * 0.8).toFixed(2)} ${t.toFixed(2)} USD`);
+    });
+    it('leads the Pay now pop-up with my currency', async () => {
       const { comp, fixture, el } = await render('GBP');
       comp.openPay('Theo', 30);
       fixture.detectChanges();
-      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ')).toContain('30.00 USD ≈ £24.00');
+      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ')).toContain('≈ £24.00 30.00 USD');
     });
     // #688: the pop-up also shows the payee's own currency, when it differs from mine.
-    it('the Pay now pop-up shows the trip amount, then mine, then theirs', async () => {
+    it('the Pay now pop-up shows mine, then the trip amount, then theirs', async () => {
       const { comp, fixture, el } = await render('GBP', 'Theo', 'EUR');
       comp.openPay('Theo', 30);
       fixture.detectChanges();
-      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('30.00 USD ≈ £24.00 (you) ≈ €27.00 (Theo)');
+      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('≈ £24.00 30.00 USD ≈ €27.00 (Theo)');
     });
     it('shows one converted amount when we share a currency', async () => {
       const { comp, fixture, el } = await render('GBP', 'Theo', 'GBP');
       comp.openPay('Theo', 30);
       fixture.detectChanges();
-      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('30.00 USD ≈ £24.00');
+      expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('≈ £24.00 30.00 USD');
     });
     it('shows theirs even when I have none of my own', async () => {
       const { comp, fixture, el } = await render(undefined, 'Theo', 'EUR');
@@ -243,7 +253,9 @@ describe('FinanceComponent: settling up', () => {
       expect(el.querySelector('.pay-summary-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('30.00 USD ≈ €27.00 (Theo)');
     });
     it('shows nothing extra without a currency of my own, or when it is the trip\'s', async () => {
-      expect((await render(undefined)).el.querySelector('.banner-own')).toBeNull();
+      const plain = (await render(undefined)).el;
+      expect(plain.querySelector('.banner-own')).toBeNull();
+      expect(plain.querySelector('.banner-negative .banner-amount')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('30.00 USD');
       TestBed.resetTestingModule();
       expect((await render('USD')).el.querySelector('.banner-own')).toBeNull();
     });

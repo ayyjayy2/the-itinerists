@@ -92,21 +92,19 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   /** My own currency (#429), from Profile; amounts owed also show in it. */
   readonly ownCurrency = computed(() => this.userService.firestoreUser()?.ownCurrency);
   private todayRates = signal<Rates | null>(null);
-  /** "≈ £24.00": a trip-currency amount in my own currency, or null when there's nothing to add. */
-  inOwn(amount: number): string | null {
+  /** "≈ £24.00": a trip-currency amount in my own currency, which Finance leads with once I've set one (#714); null otherwise. */
+  mine(amount: number): string | null {
     const r = inOwnCurrency(amount, this.homeCurrency(), this.ownCurrency(), this.todayRates());
     return r ? `≈ ${money(r.amount, r.currency)}` : null;
   }
-  /** The Pay now amount in my currency, then the person I'm paying's (#688), one line each and
-   *  named when they differ ("≈ £24.00 (you)", "≈ €27.00 (Theo)"); one unnamed line when we share one. */
-  payConverted(name: string, amount: number): string[] {
+  /** Under the Pay now amount (#688): the person I'm paying's currency, "≈ €27.00 (Theo)", when it isn't mine. */
+  payTheirs(name: string, amount: number): string[] {
     const home = this.homeCurrency(), rates = this.todayRates();
-    const mine = inOwnCurrency(amount, home, this.ownCurrency(), rates);
     const theirs = inOwnCurrency(amount, home, this.memberByName().get(name)?.ownCurrency, rates);
-    const line = (r: { amount: number; currency: string }, who = '') => `≈ ${money(r.amount, r.currency)}${who ? ` (${who})` : ''}`;
-    if (theirs && theirs.currency !== mine?.currency) return [...(mine ? [line(mine, 'you')] : []), line(theirs, name)];
-    return mine ? [line(mine)] : [];
+    const mine = inOwnCurrency(amount, home, this.ownCurrency(), rates);
+    return theirs && theirs.currency !== mine?.currency ? [`≈ ${money(theirs.amount, theirs.currency)} (${name})`] : [];
   }
+
 
   private async loadRates(home: string, dates: string[]): Promise<void> {
     this.ratesPending.update(n => n + 1);
