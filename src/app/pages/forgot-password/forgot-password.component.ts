@@ -28,7 +28,7 @@ import { isTooManyAttempts, TOO_MANY_ATTEMPTS_MESSAGE } from '../../utils/user-m
           <p class="reset-hint">Enter the email you sign in with and we'll send a reset link there.</p>
           <form class="auth-form" (ngSubmit)="submit()">
             <div class="form-group">
-              <label for="email">Email</label>
+              <label for="email">Email <span class="label-required" aria-hidden="true">*</span></label>
               <input id="email" type="email" inputmode="email" [(ngModel)]="email" name="email"
                      placeholder="you@example.com" autocomplete="username"
                      autocapitalize="none" spellcheck="false" required />

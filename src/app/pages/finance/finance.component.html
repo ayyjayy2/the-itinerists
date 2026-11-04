@@ -267,7 +267,7 @@
             <input type="date" [(ngModel)]="newEntry.date" />
           </div>
           <div class="form-field">
-            <label>Vendor <span class="required-star">*</span></label>
+            <label>Vendor <span class="label-required" aria-hidden="true">*</span></label>
             <input type="text" [(ngModel)]="newEntry.vendor" placeholder="e.g. The Grey"
                    [class.field-error]="addFormSubmitted() && !newEntry.vendor" />
           </div>
@@ -276,7 +276,7 @@
             <input type="text" [(ngModel)]="newEntry.description" placeholder="What was this for?" />
           </div>
           <div class="form-field">
-            <label>Amount <span class="required-star">*</span></label>
+            <label>Amount <span class="label-required" aria-hidden="true">*</span></label>
             <input type="number" [(ngModel)]="newEntry.amount" min="0" step="0.01" placeholder="0.00"
                    [class.field-error]="addFormSubmitted() && !newEntry.amount" />
           </div>
@@ -504,13 +504,13 @@
                 <div class="form-grid">
                   <div class="form-field"><label>Date</label><input type="date" [(ngModel)]="editEntryDraft.date" /></div>
                   <div class="form-field">
-                    <label>Vendor <span class="required-star">*</span></label>
+                    <label>Vendor <span class="label-required" aria-hidden="true">*</span></label>
                     <input type="text" [(ngModel)]="editEntryDraft.vendor"
                            [class.field-error]="editFormSubmitted() && !editEntryDraft.vendor" />
                   </div>
                   <div class="form-field form-field-full"><label>Description</label><input type="text" [(ngModel)]="editEntryDraft.description" /></div>
                   <div class="form-field">
-                    <label>Amount <span class="required-star">*</span></label>
+                    <label>Amount <span class="label-required" aria-hidden="true">*</span></label>
                     <input type="number" [(ngModel)]="editEntryDraft.amount" min="0" step="0.01"
                            [class.field-error]="editFormSubmitted() && !editEntryDraft.amount" />
                   </div>

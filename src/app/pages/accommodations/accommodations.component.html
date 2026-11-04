@@ -19,7 +19,7 @@
       <p class="add-form-title">New Stay</p>
 
       <div class="form-group">
-        <label>Name <span class="required">*</span></label>
+        <label>Name <span class="label-required" aria-hidden="true">*</span></label>
         <input type="text" [(ngModel)]="newDraft.name" placeholder="e.g. The Alida Hotel" />
       </div>
 
@@ -161,7 +161,7 @@
           <!-- ── Edit card ── -->
           <div class="stay-card card editing">
             <div class="form-group">
-              <label>Name <span class="required">*</span></label>
+              <label>Name <span class="label-required" aria-hidden="true">*</span></label>
               <input type="text" [(ngModel)]="draft.name" />
             </div>
 

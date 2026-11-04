@@ -390,6 +390,9 @@ label {
   margin-bottom: 0.3rem;
 }
 
+// A required field's label ends in a red asterisk (#733); the field itself carries \`required\`.
+.label-required { color: var(--danger); font-weight: 700; }
+
 .form-group   { margin-bottom: 0.9rem; }
 
 // Password field with a show/hide eye (every password field uses it). The eye

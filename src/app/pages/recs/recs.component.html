@@ -13,7 +13,7 @@
       <h3>New Rec</h3>
 
       <div class="form-group">
-        <label>Category</label>
+        <label>Category <span class="label-required" aria-hidden="true">*</span></label>
         @if (!useCustomCategory) {
           <div class="category-row">
             <select [(ngModel)]="form.category">
@@ -44,7 +44,7 @@
       }
 
       <div class="form-group">
-        <label>Title <span class="required">*</span></label>
+        <label>Title <span class="label-required" aria-hidden="true">*</span></label>
         <input type="text" [(ngModel)]="form.title" placeholder="e.g. a spot you love">
       </div>
 
@@ -88,7 +88,7 @@
                 <!-- ── Inline edit ── -->
                 <div class="rec-edit-form">
                   <div class="form-group">
-                    <label>Category</label>
+                    <label>Category <span class="label-required" aria-hidden="true">*</span></label>
                     @if (!editUseCustomCategory) {
                       <div class="category-row">
                         <select [(ngModel)]="editForm.category">
@@ -119,7 +119,7 @@
                   }
 
                   <div class="form-group">
-                    <label>Title <span class="required">*</span></label>
+                    <label>Title <span class="label-required" aria-hidden="true">*</span></label>
                     <input type="text" [(ngModel)]="editForm.title">
                   </div>
 

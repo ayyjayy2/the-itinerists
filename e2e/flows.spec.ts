@@ -131,7 +131,7 @@ test('join from an invite link as a guest, then create an account to add somethi
   await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
   await expect(page.getByPlaceholder("What's happening?")).toHaveCount(0);
   await page.getByLabel('Email').fill('robin@example.com');
-  await page.getByLabel('Password', { exact: true }).fill('Sunshine2026');
+  await page.getByLabel(/^Password \*/).fill('Sunshine2026');
   await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.getByRole('heading', { name: "You're all set" })).toBeVisible();
   await page.getByRole('button', { name: 'Back to the trip' }).click();
