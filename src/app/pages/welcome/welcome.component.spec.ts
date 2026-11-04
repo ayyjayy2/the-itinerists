@@ -47,13 +47,13 @@ describe('WelcomeComponent', () => {
     expect(captions.some(c => /cost|money/i.test(c))).toBeTrue();
   });
 
-  it('says the iPhone app is coming soon, and the browser link is the quiet option', () => {
+  it('says the iPhone app is coming soon, and offers only the preview and the waitlist', () => {
     const { el } = render();
     expect(el.querySelector('.app-card')?.textContent).toContain('Coming soon');
-    const browser = el.querySelector<HTMLAnchorElement>('a.continue-browser')!;
-    expect(browser.getAttribute('href')).toBe('/signup');
-    expect(browser.classList.contains('btn')).toBeFalse();     // a link, not a button
-    expect(el.querySelector<HTMLAnchorElement>('a.sign-in')!.getAttribute('href')).toBe('/login');
+    const links = [...el.querySelectorAll<HTMLAnchorElement>('a[href]')].map(a => a.getAttribute('href'));
+    expect(links).not.toContain('/signup');                     // no "Continue in browser"
+    expect(links).not.toContain('/login');                      // no "Sign in"
+    expect(el.textContent).not.toContain('Already have an account');
   });
 
   it('asks for a real email before adding someone to the launch list', async () => {

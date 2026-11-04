@@ -10,8 +10,8 @@ interface Clip { src: string; poster: string; label: string; }
 /**
  * The first page for people who aren't signed in (website only; the iPhone
  * app and invite links skip it). A few seconds of each key screen, from the
- * demo build's made-up trip, the iPhone app as the headline, and a quieter
- * way to carry on in the browser.
+ * demo build's made-up trip and the iPhone launch list. A preview only: no
+ * sign-up or sign-in links (those pages still open by address).
  */
 @Component({
   selector: 'app-welcome',

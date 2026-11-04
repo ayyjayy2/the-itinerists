@@ -11,6 +11,24 @@
   text-align: center;
 
   > * { width: 100%; max-width: 420px; }
+  > .showcase { max-width: 880px; }
+}
+
+// ── Preview and sign-up: one column on phones (sign-up first, so it shows
+//    without scrolling), two columns side by side from tablet width ───────────
+.showcase {
+  display: flex; flex-direction: column; gap: 1.25rem;
+  .app-card { order: -1; }
+}
+@media (min-width: 760px) {
+
+  .showcase {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center; gap: 2.5rem;
+    // Centred on the phone, not on the phone + caption + dots below it:
+    // the bottom margin matches that caption-and-dots strip (about 5.4rem).
+    .app-card { order: 0; margin-bottom: 5.4rem; }
+  }
 }
 
 .welcome-head {
@@ -79,14 +97,6 @@
   .btn { justify-content: center; width: 100%; }
 }
 
-// ── Quieter options ───────────────────────────────────────────────────────────
-.continue-browser {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-height: 44px; width: auto;
-  color: var(--text-muted); font-weight: 700; text-decoration: none;
-  &:hover { color: var(--text); text-decoration: underline; }
-}
-.have-account { margin: -0.75rem 0 0; color: var(--text); a { font-weight: 800; color: var(--primary-dark); } }
 .legal {
   margin-top: auto; font-size: 0.85rem; color: var(--text-muted);
   a { color: inherit; display: inline-block; padding: 0.6rem 0.25rem; }
