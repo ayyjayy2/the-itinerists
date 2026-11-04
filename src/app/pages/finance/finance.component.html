@@ -253,6 +253,98 @@
     </div>
   }
 
+  <!-- ── Edit Expense Modal (#753: a pop-up, like adding; never inside the sideways-scrolling table) ── -->
+  @if (editingEntry(); as e) {
+    <div class="modal-backdrop" (click)="cancelEditEntry()">
+      <div class="modal-card card" role="dialog" aria-modal="true" aria-labelledby="edit-expense-title" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h4 id="edit-expense-title">Edit expense</h4>
+          <button class="modal-close" (click)="cancelEditEntry()" aria-label="Close">✕</button>
+        </div>
+        <div class="form-grid">
+          <div class="form-field"><label>Date</label><input type="date" [(ngModel)]="editEntryDraft.date" /></div>
+          <div class="form-field">
+            <label for="edit-vendor">Vendor <span class="label-required" aria-hidden="true">*</span></label>
+            <input id="edit-vendor" type="text" [(ngModel)]="editEntryDraft.vendor"
+                   [class.field-error]="editFormSubmitted() && !editEntryDraft.vendor" />
+          </div>
+          <div class="form-field form-field-full"><label for="edit-description">Description</label><input id="edit-description" type="text" [(ngModel)]="editEntryDraft.description" /></div>
+          <div class="form-field">
+            <label>Amount <span class="label-required" aria-hidden="true">*</span></label>
+            <input type="number" [(ngModel)]="editEntryDraft.amount" min="0" step="0.01"
+                   [class.field-error]="editFormSubmitted() && !editEntryDraft.amount" />
+          </div>
+          <div class="form-field">
+            <label>Currency</label>
+            <app-currency-select [value]="editEntryDraft.currency || homeCurrency()" (valueChange)="editEntryDraft.currency = $event" />
+          </div>
+          <div class="form-field">
+            <label>Category</label>
+            <select [(ngModel)]="editEntryDraft.category">
+              <option value="">— none —</option>
+              <option>Activity</option><option>Lodging</option><option>Food</option><option>Drink</option>
+              <option>Transport</option><option>Shopping</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Paid By</label>
+            <select [(ngModel)]="editEntryDraft.paidBy">
+              @for (u of financeUsers(); track u.name) {
+                <option [value]="u.name">{{ u.avatarEmoji }} {{ u.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field form-field-full">
+            <label>Split Among</label>
+            <div class="people-picker">
+              <button type="button" class="people-btn" [class.selected]="isAllSplitSelected(editSplitMap)" (click)="toggleAllSplit(editSplitMap)">All</button>
+              @for (u of financeUsers(); track u.name) {
+                <button type="button" class="people-btn" [class.selected]="editSplitMap[u.name]" (click)="editSplitMap[u.name] = !editSplitMap[u.name]">
+                  {{ u.avatarEmoji }} {{ u.name }}
+                </button>
+              }
+            </div>
+          </div>
+          <div class="form-field form-field-full">
+            <label>Split type</label>
+            <div class="split-mode-toggle">
+              <button type="button" [class.active]="editSplitMode() === 'equal'"      (click)="editSplitMode.set('equal')">Equal</button>
+              <button type="button" [class.active]="editSplitMode() === 'individual'" (click)="editSplitMode.set('individual')">Individual</button>
+            </div>
+          </div>
+          @if (editSplitMode() === 'individual') {
+            <div class="form-field form-field-full">
+              <label>Amount per person</label>
+              <div class="indiv-splits">
+                @for (u of financeUsers(); track u.name) {
+                  @if (editSplitMap[u.name]) {
+                    <div class="indiv-split-row">
+                      <span class="indiv-name">{{ u.avatarEmoji }} {{ u.name }}</span>
+                      <input type="number" [(ngModel)]="editIndivSplits[u.name]" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                  }
+                }
+                <div class="indiv-total" [class.indiv-mismatch]="!editSplitIsValid" [class.indiv-match]="editSplitIsValid && editIndivTotal > 0">
+                  Total: {{ amt(editIndivTotal, editEntryDraft.currency || homeCurrency()) }} / {{ amt(editEntryDraft.amount ?? 0, editEntryDraft.currency || homeCurrency()) }}
+                  @if (!editSplitIsValid) { <span class="indiv-warn">⚠ Must equal total</span> }
+                  @if (editSplitIsValid && editIndivTotal > 0) { <span class="indiv-ok">✓</span> }
+                </div>
+              </div>
+            </div>
+          }
+          <div class="form-field form-field-full"><label>Notes</label><input type="text" [(ngModel)]="editEntryDraft.notes" /></div>
+        </div>
+        <div class="form-actions">
+          <button data-needs-account class="btn btn-danger btn-sm" (click)="deleteEntry(e)">🗑 Delete</button>
+          <div class="form-actions-right">
+            <button class="btn btn-ghost" (click)="cancelEditEntry()">Cancel</button>
+            <button data-needs-account class="btn btn-primary" (click)="saveEditEntry(e.id)" [disabled]="!editSplitIsValid">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- ── Add Expense Modal ── -->
   @if (showAddForm()) {
     <div class="modal-backdrop" (click)="cancelAdd()">
@@ -498,91 +590,6 @@
               <button data-needs-account class="edit-row-btn" (click)="startEditEntry(entry)" title="Edit">✏️</button>
             </div>
 
-            @if (isEditingEntry(entry)) {
-              <div class="inline-entry-form">
-                <h4>Edit Expense</h4>
-                <div class="form-grid">
-                  <div class="form-field"><label>Date</label><input type="date" [(ngModel)]="editEntryDraft.date" /></div>
-                  <div class="form-field">
-                    <label>Vendor <span class="label-required" aria-hidden="true">*</span></label>
-                    <input type="text" [(ngModel)]="editEntryDraft.vendor"
-                           [class.field-error]="editFormSubmitted() && !editEntryDraft.vendor" />
-                  </div>
-                  <div class="form-field form-field-full"><label>Description</label><input type="text" [(ngModel)]="editEntryDraft.description" /></div>
-                  <div class="form-field">
-                    <label>Amount <span class="label-required" aria-hidden="true">*</span></label>
-                    <input type="number" [(ngModel)]="editEntryDraft.amount" min="0" step="0.01"
-                           [class.field-error]="editFormSubmitted() && !editEntryDraft.amount" />
-                  </div>
-                  <div class="form-field">
-                    <label>Currency</label>
-                    <app-currency-select [value]="editEntryDraft.currency || homeCurrency()" (valueChange)="editEntryDraft.currency = $event" />
-                  </div>
-                  <div class="form-field">
-                    <label>Category</label>
-                    <select [(ngModel)]="editEntryDraft.category">
-                      <option value="">— none —</option>
-                      <option>Activity</option><option>Lodging</option><option>Food</option><option>Drink</option>
-                      <option>Transport</option><option>Shopping</option><option>Other</option>
-                    </select>
-                  </div>
-                  <div class="form-field">
-                    <label>Paid By</label>
-                    <select [(ngModel)]="editEntryDraft.paidBy">
-                      @for (u of financeUsers(); track u.name) {
-                        <option [value]="u.name">{{ u.avatarEmoji }} {{ u.name }}</option>
-                      }
-                    </select>
-                  </div>
-                  <div class="form-field form-field-full">
-                    <label>Split Among</label>
-                    <div class="people-picker">
-                      <button type="button" class="people-btn" [class.selected]="isAllSplitSelected(editSplitMap)" (click)="toggleAllSplit(editSplitMap)">All</button>
-                      @for (u of financeUsers(); track u.name) {
-                        <button type="button" class="people-btn" [class.selected]="editSplitMap[u.name]" (click)="editSplitMap[u.name] = !editSplitMap[u.name]">
-                          {{ u.avatarEmoji }} {{ u.name }}
-                        </button>
-                      }
-                    </div>
-                  </div>
-                  <div class="form-field form-field-full">
-                    <label>Split type</label>
-                    <div class="split-mode-toggle">
-                      <button type="button" [class.active]="editSplitMode() === 'equal'"      (click)="editSplitMode.set('equal')">Equal</button>
-                      <button type="button" [class.active]="editSplitMode() === 'individual'" (click)="editSplitMode.set('individual')">Individual</button>
-                    </div>
-                  </div>
-                  @if (editSplitMode() === 'individual') {
-                    <div class="form-field form-field-full">
-                      <label>Amount per person</label>
-                      <div class="indiv-splits">
-                        @for (u of financeUsers(); track u.name) {
-                          @if (editSplitMap[u.name]) {
-                            <div class="indiv-split-row">
-                              <span class="indiv-name">{{ u.avatarEmoji }} {{ u.name }}</span>
-                              <input type="number" [(ngModel)]="editIndivSplits[u.name]" min="0" step="0.01" placeholder="0.00">
-                            </div>
-                          }
-                        }
-                        <div class="indiv-total" [class.indiv-mismatch]="!editSplitIsValid" [class.indiv-match]="editSplitIsValid && editIndivTotal > 0">
-                          Total: {{ amt(editIndivTotal, editEntryDraft.currency || homeCurrency()) }} / {{ amt(editEntryDraft.amount ?? 0, editEntryDraft.currency || homeCurrency()) }}
-                          @if (!editSplitIsValid) { <span class="indiv-warn">⚠ Must equal total</span> }
-                          @if (editSplitIsValid && editIndivTotal > 0) { <span class="indiv-ok">✓</span> }
-                        </div>
-                      </div>
-                    </div>
-                  }
-                  <div class="form-field form-field-full"><label>Notes</label><input type="text" [(ngModel)]="editEntryDraft.notes" /></div>
-                </div>
-                <div class="form-actions">
-                  <button data-needs-account class="btn btn-danger btn-sm" (click)="deleteEntry(entry)">🗑 Delete</button>
-                  <div class="form-actions-right">
-                    <button class="btn btn-ghost" (click)="cancelEditEntry()">Cancel</button>
-                    <button data-needs-account class="btn btn-primary" (click)="saveEditEntry(entry.id)" [disabled]="!editSplitIsValid">Save</button>
-                  </div>
-                </div>
-              </div>
-            }
           }
 
           @if (enrichedEntries().length > 0) {
