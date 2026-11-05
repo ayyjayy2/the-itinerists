@@ -9,7 +9,7 @@ import { AuthService } from '../../services/auth.service';
 import { LocalCacheService } from '../../services/local-cache.service';
 import { BrandComponent } from '../../shared/brand/brand.component';
 import { userMessage } from '../../utils/user-message';
-import { guestName as tidyName, nameClash } from '../../utils/guest';
+import { freeName, guestName as tidyName, nameClash } from '../../utils/guest';
 import { GuestJoin } from '../../services/auth.service';
 
 /**
@@ -81,7 +81,11 @@ export class JoinComponent implements OnInit {
       const joined = await this.authService.joinAsGuest(this.code, this.guestName);
       await this.userService.waitForUser();
       if (joined.clash) {
-        // A guest who left under this name may be them coming back; anyone else, pick another name.
+        // Until they answer, they're on the trip under a placeholder, never the taken name (#787).
+        const hold = freeName(`${tidyName(this.guestName)} (guest)`, joined.uid, joined.members);
+        await this.tripService.renameMe(hold);
+        joined.members = joined.members.map(m => m.uid === joined.uid ? { ...m, displayName: hold } : m);
+        // A guest with this name may be them coming back; anyone else, pick another name.
         this.joined.set(joined);
         this.joining.set(false);
         this.step.set(joined.clash.guest ? 'same-name' : 'rename');
@@ -101,7 +105,7 @@ export class JoinComponent implements OnInit {
     if (!j?.clash || this.joining()) return;
     this.joining.set(true);
     try {
-      if (tidyName(this.guestName) !== j.clash.name) await this.tripService.renameMe(j.clash.name);
+      await this.tripService.renameMe(j.clash.name);
       await this.router.navigate(['/home']);
     } catch (err) {
       this.joining.set(false);
@@ -118,6 +122,8 @@ export class JoinComponent implements OnInit {
     const name = tidyName(this.newName);
     if (!name) { this.nameError.set('Enter your name so the group knows who you are.'); return; }
     const clash = nameClash(name, j.uid, j.members);
+    // A guest's name may be them coming back (#787): ask, as when joining.
+    if (clash?.guest) { this.nameError.set(''); this.joined.set({ ...j, clash }); this.step.set('same-name'); return; }
     if (clash) { this.nameError.set(`Someone on this trip is already called ${clash.name}. Add an initial or a nickname.`); return; }
     this.nameError.set('');
     this.joining.set(true);

@@ -1,4 +1,4 @@
-import { guestAvatar, guestName, nameClash, returnedGuests } from './guest';
+import { freeName, guestAvatar, guestName, nameClash, returnedGuests } from './guest';
 import { BACKGROUND_COLORS } from './avatar-contrast';
 
 describe('guest helpers (#610)', () => {
@@ -60,5 +60,13 @@ describe('returnedGuests', () => {
       { uid: 'acct', displayName: 'Maya', joinedAt: 1 },
       { uid: 'g', displayName: 'Maya', isGuest: true, joinedAt: 2 },
     ])]).toEqual([]);
+  });
+});
+
+describe('freeName (#787)', () => {
+  it('is the name itself when free, else numbered', () => {
+    const members = [{ uid: 'a', displayName: 'Alayna (guest)' }, { uid: 'b', displayName: 'alayna (guest) 2' }];
+    expect(freeName('Robin (guest)', 'me', members)).toBe('Robin (guest)');
+    expect(freeName('Alayna (guest)', 'me', members)).toBe('Alayna (guest) 3');
   });
 });

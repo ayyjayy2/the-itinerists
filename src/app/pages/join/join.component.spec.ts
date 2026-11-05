@@ -12,11 +12,13 @@ describe('JoinComponent', () => {
   let order: string[];
   let replaceState: jasmine.Spy;
   let joinAsGuest: jasmine.Spy;
+  let renameMe: jasmine.Spy;
 
   function setup(signedIn: boolean) {
     order = [];
     replaceState = jasmine.createSpy('replaceState').and.callFake(() => order.push('replaceState'));
     joinAsGuest = jasmine.createSpy('joinAsGuest').and.resolveTo({ uid: 'g', members: [], clash: null });
+    renameMe = jasmine.createSpy('renameMe').and.resolveTo();
     TestBed.configureTestingModule({
       imports: [JoinComponent],
       providers: [
@@ -25,7 +27,7 @@ describe('JoinComponent', () => {
         { provide: Location, useValue: { replaceState } },
         { provide: UserService, useValue: { authReadyPromise: Promise.resolve(), hasUser: () => signedIn, waitForUser: () => Promise.resolve({}) } },
         { provide: AuthService, useValue: { joinAsGuest } },
-        { provide: TripService, useValue: { joinByCode: jasmine.createSpy('joinByCode').and.callFake(() => { order.push('join'); return Promise.resolve(); }) } },
+        { provide: TripService, useValue: { renameMe, joinByCode: jasmine.createSpy('joinByCode').and.callFake(() => { order.push('join'); return Promise.resolve(); }) } },
         { provide: LocalCacheService, useValue: { recoverIfBroken: () => false } },
       ],
     });
@@ -87,6 +89,50 @@ describe('JoinComponent', () => {
     comp.guestName = 'Maya';
     await comp.seeTheTrip();
     expect(comp.step()).toBe('rename');
+  });
+
+  // #787: an unresolved taken name never sits on the trip; a guest's name on Pick another name asks "Is this you?".
+  describe('a taken name', () => {
+    const members = [
+      { uid: 'acct', displayName: 'Alayna' },
+      { uid: 'old', displayName: 'Mariah', isGuest: true },
+      { uid: 'g', displayName: 'Alayna', isGuest: true },
+    ];
+    async function joinAs(name: string, clash: object) {
+      const { fixture, router } = setup(false);
+      const comp = fixture.componentInstance;
+      joinAsGuest.and.resolveTo({ uid: 'g', members, clash });
+      await comp.ngOnInit();
+      comp.guestName = name;
+      await comp.seeTheTrip();
+      return { comp, router };
+    }
+
+    it('holds a placeholder name on the trip until they answer', async () => {
+      const { comp } = await joinAs('Alayna', { uid: 'acct', name: 'Alayna', guest: false });
+      expect(renameMe).toHaveBeenCalledWith('Alayna (guest)');
+      expect(comp.step()).toBe('rename');
+    });
+
+    it('a guest\'s name on Pick another name asks "Is this you?", and Yes takes it', async () => {
+      const { comp, router } = await joinAs('Alayna', { uid: 'acct', name: 'Alayna', guest: false });
+      comp.newName = 'mariah';
+      await comp.rename();
+      expect(comp.step()).toBe('same-name');
+      expect(comp.nameError()).toBe('');
+      await comp.thisIsMe();
+      expect(renameMe).toHaveBeenCalledWith('Mariah');
+      expect(router.navigate).toHaveBeenCalledWith(['/home']);
+    });
+
+    it('someone with an account\'s name on Pick another name still asks for another', async () => {
+      const { comp } = await joinAs('Mariah', { uid: 'old', name: 'Mariah', guest: true });
+      comp.someoneElse();
+      comp.newName = 'alayna';
+      await comp.rename();
+      expect(comp.step()).toBe('rename');
+      expect(comp.nameError()).toContain('already called Alayna');
+    });
   });
 
   it('signed out: "Create an account instead" hands the code to sign-up privately, never in the address', async () => {
