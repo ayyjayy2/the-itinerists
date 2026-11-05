@@ -36,6 +36,11 @@ test('a guest logs out; the planner checks what they were in', async ({ page }) 
   await page.getByRole('button', { name: /^Sign in|^Log in/ }).click();
   await expect(page).toHaveURL(/\/home/);
 
+  // The group hears it on the bell (#788).
+  await page.getByRole('button', { name: 'Group updates' }).click();
+  await expect(page.locator('.bell-dropdown')).toContainText('Robin left the trip');
+  await page.locator('.bell-scrim').click();
+
   await go(page, '/finance');
   const card = page.locator('.leaver-review');
   await expect(card.getByRole('heading')).toHaveText('Robin (guest) left the trip');
