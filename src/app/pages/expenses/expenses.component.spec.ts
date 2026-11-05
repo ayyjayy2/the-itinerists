@@ -82,6 +82,13 @@ describe('ExpensesComponent currencies', () => {
     expect(row).toContain('of €300.00');
   });
 
+  it('shows no category tag for an expense without one (#777)', () => {
+    entries.set([{ ...hotel, category: '' }]);
+    const { el } = render();
+    expect(el.querySelector('.expense-row .exp-tags .chip')).toBeNull();
+    expect(el.querySelector('.expense-row .shared-badge')).not.toBeNull();
+  });
+
   // #724: one total that stands out, in my currency (the trip's if I have none), then every group currency.
   const settle = async () => { const r = render(); await r.fixture.whenStable(); r.fixture.detectChanges(); return r; };
   const text = (el: HTMLElement, sel: string) => el.querySelector(sel)?.textContent!.replace(/\s+/g, ' ').trim() ?? null;
