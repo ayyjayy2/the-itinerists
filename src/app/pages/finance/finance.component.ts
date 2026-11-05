@@ -75,21 +75,31 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       items: leaverItems(m.displayName, everyone, this.entries(), this.itinerary.items(), reviews[m.uid]?.checked ?? []),
     })).filter(l => reviewOpen(reviews[l.uid], l.items.length));
   });
+  /** Whose list is open in the review pop-up (#789): the card itself is just a message. */
+  readonly reviewOpenFor = signal<string | null>(null);
+  readonly openLeaver = computed(() => this.leavers().find(l => l.uid === this.reviewOpenFor()) ?? null);
+  /** "2 expenses and 1 plan". */
+  leaverCount(items: readonly LeaverItem[]): string {
+    const n = (k: LeaverItem['kind']) => items.filter(i => i.kind === k).length;
+    const part = (c: number, one: string) => c ? `${c} ${one}${c === 1 ? '' : 's'}` : '';
+    return [part(n('expense'), 'expense'), part(n('plan'), 'plan')].filter(Boolean).join(' and ');
+  }
   /** The last item saved from the card, for its "Saved" line. */
   readonly leaverSaved = signal<{ uid: string; title: string } | null>(null);
   /** The expense open in the edit pop-up came from the card (so Save checks it off). */
   readonly reviewing = signal<{ uid: string; name: string; id: string; title: string; last: boolean } | null>(null);
 
   leaverLine(name: string, i: LeaverItem): string {
-    if (i.kind === 'plan') return `Plan · ${stopDateRange(i.date, i.date)} · ${name} is going`;
+    if (i.kind === 'plan') return `Plan on ${stopDateRange(i.date, i.date)} · ${name} is going`;
     const parts = [i.ways ? `split ${i.ways} ways` : '', i.share != null ? `${name}’s share ${this.amt(i.share, i.currency)}` : '', i.paid ? `${name} paid` : '']
       .filter(Boolean);
-    return `Expense · ${parts.join(', ')}`;
+    return parts.join(', ');   // no "Expense ·" on every line (#789)
   }
 
   /** Edit from the card: an expense in the edit pop-up here, a plan in Itinerary's edit, then back. */
   editFromReview(l: { uid: string; name: string; items: LeaverItem[] }, i: LeaverItem): void {
     const last = l.items.length === 1;
+    this.reviewOpenFor.set(null);
     if (i.kind === 'plan') {
       this.router.navigate(['/itinerary'], { queryParams: { focus: i.id, edit: 1, review: l.uid, last: last ? 1 : null } });
       return;
@@ -101,6 +111,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async looksRight(l: { uid: string; name: string }): Promise<void> {
+    this.reviewOpenFor.set(null);
     await this.tripService.finishLeaverReview(l.uid);
     this.allChecked(l.name);
   }
@@ -120,6 +131,7 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       queueMicrotask(() => this.allChecked(name));
     } else {
       this.leaverSaved.set({ uid, title });
+      this.reviewOpenFor.set(uid);
     }
   })();
   readonly hasActiveTrip = computed(() => this.tripService.activeTrip() !== null);
@@ -816,11 +828,16 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
       this.reviewing.set(null);
       await this.tripService.checkLeaverItem(r.uid, id);
       if (r.last) this.allChecked(r.name);
-      else this.leaverSaved.set({ uid: r.uid, title: r.title });
+      else { this.leaverSaved.set({ uid: r.uid, title: r.title }); this.reviewOpenFor.set(r.uid); }
     }
   }
 
-  cancelEditEntry(): void { this.editFormSubmitted.set(false); this.editingEntryId.set(null); this.reviewing.set(null); }
+  cancelEditEntry(): void {
+    this.editFormSubmitted.set(false); this.editingEntryId.set(null);
+    const r = this.reviewing();
+    this.reviewing.set(null);
+    if (r) this.reviewOpenFor.set(r.uid);   // back to the review list it came from
+  }
 
   async deleteEntry(e: FinanceEntryDoc): Promise<void> {
     if (!confirm(`Delete "${e.vendor || e.description}"?`)) return;
