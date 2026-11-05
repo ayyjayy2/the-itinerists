@@ -10,22 +10,39 @@
 
   <!-- A guest who logged out (#747): what they're still in, for the group to check -->
   @for (l of leavers(); track l.uid) {
+    <!-- A short message (#789); the list opens in a pop-up -->
     <section class="card leaver-review" role="status">
       <h3>{{ l.name }} (guest) left the trip</h3>
-      @if (leaverSaved()?.uid === l.uid) {
-        <p class="leaver-saved"><app-icon name="check" [size]="15" /> Saved: {{ leaverSaved()!.title }}</p>
-      }
-      <p class="leaver-hint">They’re still in these. Their share counts until you change it, so check each one.</p>
-      <ul>
-        @for (i of l.items; track i.id) {
-          <li>
-            <span><b>{{ i.title }}</b><small>{{ leaverLine(l.name, i) }}</small></span>
-            <button type="button" class="btn btn-ghost btn-sm" (click)="editFromReview(l, i)">Edit</button>
-          </li>
-        }
-      </ul>
-      <div class="leaver-actions"><button type="button" class="btn btn-primary btn-sm" (click)="looksRight(l)">Looks right</button></div>
+      <p class="leaver-hint">{{ l.name }} is still in {{ leaverCount(l.items) }}. Their share counts until you change it.</p>
+      <div class="leaver-actions">
+        <button type="button" class="btn btn-ghost btn-sm" (click)="looksRight(l)">Looks right</button>
+        <button type="button" class="btn btn-primary btn-sm" (click)="reviewOpenFor.set(l.uid)">Review</button>
+      </div>
     </section>
+  }
+
+  @if (openLeaver(); as l) {
+    <div class="modal-backdrop" (click)="reviewOpenFor.set(null)">
+      <div class="modal-card card leaver-sheet" role="dialog" aria-modal="true" aria-labelledby="leaver-sheet-title" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h4 id="leaver-sheet-title">What {{ l.name }} is still in</h4>
+          <button class="modal-close" (click)="reviewOpenFor.set(null)" aria-label="Close">✕</button>
+        </div>
+        @if (leaverSaved()?.uid === l.uid) {
+          <p class="leaver-saved"><app-icon name="check" [size]="15" /> Saved: {{ leaverSaved()!.title }}</p>
+        }
+        <p class="leaver-hint">Edit any that should change. Their share counts until you do.</p>
+        <ul>
+          @for (i of l.items; track i.id) {
+            <li>
+              <span><b>{{ i.title }}</b><small>{{ leaverLine(l.name, i) }}</small></span>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="editFromReview(l, i)">Edit</button>
+            </li>
+          }
+        </ul>
+        <div class="leaver-actions"><button type="button" class="btn btn-primary btn-sm" (click)="looksRight(l)">Looks right</button></div>
+      </div>
+    </div>
   }
 
   @if (settlementEstimated()) {

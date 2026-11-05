@@ -44,9 +44,15 @@ test('a guest logs out; the planner checks what they were in', async ({ page }) 
   await go(page, '/finance');
   const card = page.locator('.leaver-review');
   await expect(card.getByRole('heading')).toHaveText('Robin (guest) left the trip');
-  const rows = card.locator('li');
+  await expect(card).toContainText('Robin is still in');
+  // The list is in a pop-up (#789).
+  await card.getByRole('button', { name: 'Review' }).click();
+  const sheet = page.getByRole('dialog', { name: 'What Robin is still in' });
+  const rows = sheet.locator('li');
+  await expect(rows.first()).toBeVisible();
   const before = await rows.count();
   expect(before).toBeGreaterThan(1);
+  await expect(sheet).not.toContainText('Expense ·');
   const first = (await rows.first().locator('b').textContent())!.trim();
 
   await rows.first().getByRole('button', { name: 'Edit' }).click();
@@ -54,10 +60,11 @@ test('a guest logs out; the planner checks what they were in', async ({ page }) 
   await expect(edit).toContainText('Robin (guest) left the trip');
   await edit.getByRole('button', { name: /Robin/ }).click();   // take Robin out of the split
   await edit.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect(card).toContainText(`Saved: ${first}`);
+  // Back to the list, saying so, one fewer.
+  await expect(sheet).toContainText(`Saved: ${first}`);
   await expect(rows).toHaveCount(before - 1);
 
-  await card.getByRole('button', { name: 'Looks right' }).click();
+  await sheet.getByRole('button', { name: 'Looks right' }).click();
   await expect(card).toHaveCount(0);
   await expect(page.getByText('That’s everything Robin was in, checked.')).toBeVisible();
 

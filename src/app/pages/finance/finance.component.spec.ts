@@ -390,28 +390,39 @@ describe('FinanceComponent: a guest who left', () => {
     return { fixture, comp: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
   }
   const card = (el: HTMLElement) => el.querySelector('.leaver-review') as HTMLElement | null;
-  const rows = (el: HTMLElement) => Array.from(card(el)?.querySelectorAll('li') ?? []).map(li => li.querySelector('b')!.textContent!.trim());
+  const sheet = (el: HTMLElement) => el.querySelector('.leaver-sheet') as HTMLElement | null;
+  const rows = (el: HTMLElement) => Array.from(sheet(el)?.querySelectorAll('li') ?? []).map(li => li.querySelector('b')!.textContent!.trim());
   const button = (root: HTMLElement, text: string) =>
     Array.from(root.querySelectorAll('button')).find(b => b.textContent!.trim() === text) as HTMLButtonElement;
+  const review = (fixture: { detectChanges(): void }, el: HTMLElement) => { button(card(el)!, 'Review').click(); fixture.detectChanges(); };
 
-  it('lists the expenses they are still in, each with Edit', () => {
-    const { el } = create([dinner, taxi, park]);
+  // #789: a short message on Finance; the list is in a pop-up.
+  it('says who left and how many to check, with Review; the list opens in a pop-up', () => {
+    const { fixture, el } = create([dinner, taxi, park]);
     expect(card(el)!.querySelector('h3')!.textContent).toContain('Robin (guest) left the trip');
+    expect(card(el)!.textContent).toContain('still in 2 expenses');
+    expect(card(el)!.querySelector('li')).toBeNull();
+    expect(sheet(el)).toBeNull();
+    review(fixture, el);
+    expect(sheet(el)!.getAttribute('role')).toBe('dialog');
     expect(rows(el)).toEqual(['Elephant Nature Park', 'Dash!']);
-    expect(card(el)!.textContent).toContain('Robin’s share ฿100');
+    expect(sheet(el)!.textContent).toContain('Robin’s share ฿100');
+    expect(sheet(el)!.textContent).not.toContain('Expense ·');
   });
 
-  it('Edit opens the expense\'s edit pop-up; Save takes it off the list and says so', async () => {
+  it('Edit opens the expense\'s edit pop-up; Save brings the list back, saying so, one fewer', async () => {
     const { fixture, comp, el } = create([dinner, park]);
-    button(card(el)!.querySelector('li')!, 'Edit').click();
+    review(fixture, el);
+    button(sheet(el)!.querySelector('li')!, 'Edit').click();
     fixture.detectChanges();
+    expect(sheet(el)).toBeNull();
     expect(comp.editingEntry()?.id).toBe('park');
     await comp.saveEditEntry('park');
     expect(updateEntry).toHaveBeenCalled();
     expect(trips.checkLeaverItem).toHaveBeenCalledWith('Robin', 'park');
     trips.activeTrip.set({ id: 't', name: 'Trip', currency: 'THB', leaverReviews: { Robin: { checked: ['park'] } } });
     fixture.detectChanges();
-    expect(card(el)!.querySelector('.leaver-saved')!.textContent).toContain('Saved: Elephant Nature Park');
+    expect(sheet(el)!.querySelector('.leaver-saved')!.textContent).toContain('Saved: Elephant Nature Park');
     expect(rows(el)).toEqual(['Dash!']);
   });
 
@@ -431,8 +442,9 @@ describe('FinanceComponent: a guest who left', () => {
   });
 
   it('saving the last one says everything is checked', async () => {
-    const { el, comp } = create([dinner]);
-    button(card(el)!, 'Edit').click();
+    const { fixture, el, comp } = create([dinner]);
+    review(fixture, el);
+    button(sheet(el)!, 'Edit').click();
     await comp.saveEditEntry('dinner');
     expect(comp.toast()).toBe('That’s everything Robin was in, checked.');
   });
