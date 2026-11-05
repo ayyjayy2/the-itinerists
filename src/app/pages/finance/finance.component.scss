@@ -897,71 +897,50 @@
 
 // ── Expenses Table ─────────────────────────────────────────────────────────────
 .expenses-table {
-  display: grid;   // every row stretches to the widest, so nothing pokes past the row backgrounds (#753)
   background: var(--card-bg);
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  overflow: auto;
+  overflow: hidden;
   margin-bottom: 1rem;
 }
 
-.table-header,
+// Two-line rows (#762): what it was on the left, the total and each share on the right, ✏️ at the end.
 .table-row {
   display: grid;
-  // Wide enough that every cell fits inside its row (#753): the description had ~50px and amounts spilled out.
-  grid-template-columns: 64px minmax(150px, 1fr) 80px 120px 100px 44px;
-  min-width: 640px;
-}
-
-.table-header {
-  padding: 0.5rem 1rem;
-  background: var(--bg);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 0.4px;
-  border-bottom: 1px solid var(--border);
-  align-items: center;
-  gap: 0.5rem;
-  .r { text-align: right; }
-}
-
-.table-row {
-  padding: 0.6rem 1rem;
+  grid-template-columns: minmax(0, 1fr) auto 44px;
   align-items: start;
+  column-gap: 0.6rem;
+  padding: 0.65rem 0.25rem 0.65rem 0.9rem;
   border-bottom: 1px solid var(--border);
-  gap: 0.5rem;
   font-size: 0.84rem;
   transition: background 0.1s;
 
-  &:last-child { border-bottom: none; }
   &:hover { background: var(--bg); }
   &:hover .edit-row-btn { opacity: 1; }
   &.is-editing { background: var(--bg); }
 }
 
-.date-cell   { color: var(--text-muted); font-size: 0.76rem; padding-top: 0.1rem; }
-.desc-cell   { display: flex; flex-direction: column; gap: 0.2rem; }
-.paidby-cell { font-weight: 600; font-size: 0.83rem; }
-.amount-cell { font-weight: 800; color: var(--text); }
-.r           { text-align: right; }
+.x-main { display: grid; gap: 0.2rem; min-width: 0; overflow-wrap: anywhere; }
+.x-sub  { color: var(--text-muted); font-size: 0.78rem; line-height: 1.35; }
+.x-amt  {
+  display: grid; justify-items: end; gap: 0.1rem; text-align: right;
+  b { font-weight: 800; color: var(--text); white-space: nowrap; }
+  small { color: var(--text-muted); font-size: 0.76rem; white-space: nowrap; }
+}
 
-.pp-cell  { display: flex; align-items: baseline; justify-content: flex-end; gap: 0.1rem; font-weight: 600; color: var(--text-muted); }
 .pp-split { font-size: 0.65rem; color: var(--text-muted); }
 .pp-tbd    { font-size: 0.75rem; color: var(--text-muted); font-style: italic; }
 .pp-custom { font-size: 0.75rem; color: var(--text-muted); font-style: italic; }
 
 .edit-row-btn {
+  width: 44px; height: 44px; margin-top: -0.55rem;
+  display: flex; align-items: center; justify-content: center;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.82rem;
-  padding: 0.1rem;
-  opacity: 0.35;
+  font-size: 0.9rem;
+  opacity: 0.55;
   transition: opacity 0.15s;
-  align-self: start;
-  line-height: 1.6;
 }
 
 .entry-vendor { font-weight: 700; font-size: 0.86rem; }

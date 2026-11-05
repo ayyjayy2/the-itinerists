@@ -123,8 +123,9 @@
 .edit-btn {
   width: 44px; height: 44px; margin-top: -0.6rem;
   display: flex; align-items: center; justify-content: center;
-  opacity: 0.5;
-  font-size: 0.85rem;
+  background: none; border: none; cursor: pointer;   // a plain ✏️, as on Finance (#762)
+  opacity: 0.55;
+  font-size: 0.9rem;
   padding: 0;
   &:hover { opacity: 1; }
 }
