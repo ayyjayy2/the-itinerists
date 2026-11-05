@@ -333,7 +333,15 @@ export class TripService {
 
   /** A guest logging out (#747): they stay on their trips, marked left, so the group can check what they were in. */
   async markGuestLeft(): Promise<void> {
+    const user = this.requireUser();
     await this.updateTripsOnly({ leftAt: Date.now() });
+    // The group hears it on the bell, like someone leaving (#788). Waited for: they sign out next.
+    const tripIds = await runInInjectionContext(this.injector, async () => {
+      const idx = await getDoc(doc(this.firestore, 'userTrips', user.uid));
+      return idx.exists() ? ((idx.data() as UserTripsDoc).tripIds ?? []) : [];
+    });
+    await runInInjectionContext(this.injector, () =>
+      Promise.all(tripIds.map(id => this.logActivity(id, 'member_left', user, user))));
   }
 
   /** The group has saved one of a left guest's expenses or plans from the review card (#747). */
@@ -624,7 +632,7 @@ export class TripService {
     action: ActivityAction,
     target: { uid: string; displayName: string; isTest?: boolean },
     performedBy: { uid: string; displayName: string },
-  ): void {
+  ): Promise<void> {
     const ref = doc(collection(this.firestore, 'trips', tripId, 'activityLog'));
     const entry: ActivityLogEntry = {
       id: ref.id, action,
@@ -632,12 +640,13 @@ export class TripService {
       performedByUid: performedBy.uid, performedByName: performedBy.displayName,
       timestamp: Date.now(),
     };
-    setDoc(ref, entry).catch(err => console.warn('[TripService] activity log failed:', err));
+    const logged = setDoc(ref, entry).catch(err => console.warn('[TripService] activity log failed:', err));
     // The same moment also goes on the bell / Updates feed.
     const map = { member_added: 'joined', member_left: 'left', member_removed: 'kicked', member_restored: 'restored' } as const;
     const kind = map[action];
     const t = memberEvent(kind, target.displayName, target.uid === performedBy.uid);
-    this.events.emit({ kind: 'member', action: kind, itemId: '', path: '/trip-settings', targetUid: target.uid, test: !!target.isTest, ...t }, tripId);
+    const told = this.events.emit({ kind: 'member', action: kind, itemId: '', path: '/trip-settings', targetUid: target.uid, test: !!target.isTest, ...t }, tripId);
+    return Promise.all([logged, told]).then(() => undefined);
   }
 
   private memberSnapshot(user: FirestoreUser, role: TripMember['role'], now: number): TripMember {

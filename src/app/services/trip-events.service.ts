@@ -82,21 +82,21 @@ export class TripEventsService {
    * always starts fresh and ends the item's story.
    * `tripId` is for actions on a trip that is not the active one (join, leave).
    */
-  emit(input: TripEventInput, tripId?: string): void {
+  emit(input: TripEventInput, tripId?: string): Promise<void> {
     const tid = tripId ?? this.tripContext.activeTripId();
     const me  = this.userService.currentUser();
     const uid = me?.uid;
-    if (!tid || !me || !uid) return;
+    if (!tid || !me || !uid) return Promise.resolve();
     const now = Date.now();
     const test = !!(input.test || this.userService.firestoreUser()?.isTest);
     const reuse = input.action === 'removed' ? null : this.collapse.reuse(uid, input.kind, input.itemId, now);
-    runInInjectionContext(this.injector, () => {
+    return runInInjectionContext(this.injector, () => {
       if (reuse) {
-        updateDoc(doc(this.firestore, 'trips', tid, 'events', reuse), {
+        const done = updateDoc(doc(this.firestore, 'trips', tid, 'events', reuse), {
           action: input.action, summary: input.summary, audience: input.audience, timestamp: now, test,
         }).catch(err => console.warn('[TripEvents] update failed:', err));
         this.collapse.remember(uid, input.kind, input.itemId, reuse, now);
-        return;
+        return done;
       }
       const ref = doc(collection(this.firestore, 'trips', tid, 'events'));
       const event: TripEvent = {
@@ -106,13 +106,14 @@ export class TripEventsService {
         audience: input.audience, timestamp: now, test,
         ...(input.targetUid ? { targetUid: input.targetUid } : {}),
       };
-      setDoc(ref, event).catch(err => console.warn('[TripEvents] write failed:', err));
+      const written = setDoc(ref, event).catch(err => console.warn('[TripEvents] write failed:', err));
       // The owner's dashboard counts "things written per day" from `_writes`:
       // kind and action only, never the summary or the item (see firestore.rules).
       addDoc(collection(this.firestore, '_writes'), { uid, tripId: tid, kind: input.kind, action: input.action, at: serverTimestamp() })
         .catch(() => { /* analytics never blocks the change it describes */ });
       if (input.action === 'removed') this.collapse.forget(uid, input.kind, input.itemId);
       else this.collapse.remember(uid, input.kind, input.itemId, ref.id, now);
+      return written;
     });
   }
 }
