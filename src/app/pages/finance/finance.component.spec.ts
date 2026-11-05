@@ -173,6 +173,33 @@ describe('FinanceComponent: settling up', () => {
     expect(links[0].getAttribute('href')).toBe('https://venmo.com/?txn=pay&amount=30.00&note=Lisbon');
   });
 
+  // #772: each person starts folded; Pay now waits inside the row until the trip's last day.
+  describe('folded rows', () => {
+    const row = (el: HTMLElement) => el.querySelector<HTMLButtonElement>('.banner-negative .banner-person-tap')!;
+    const payNow = (el: HTMLElement) => Array.from(el.querySelectorAll('.banner-negative button')).find(b => b.textContent!.trim() === 'Pay now');
+
+    it('starts each person folded', () => {
+      const { el } = create('Theo', new Map(), { endDate: '2099-01-01' });
+      expect(row(el).getAttribute('aria-expanded')).toBe('false');
+      expect(el.querySelector('.banner-negative .net-working')).toBeNull();
+    });
+
+    it('before the last day, Pay now is inside the row', () => {
+      const { fixture, el } = create('Theo', new Map(), { endDate: '2099-01-01' });
+      expect(payNow(el)).withContext('folded').toBeUndefined();
+      row(el).click();
+      fixture.detectChanges();
+      expect(el.querySelector('.banner-negative .net-working')).not.toBeNull();
+      expect(payNow(el)).withContext('opened').toBeTruthy();
+    });
+
+    it('from the last day, Pay now is on the row, folded or not', () => {
+      const { el } = create('Theo', new Map(), { endDate: '2000-01-01' });
+      expect(row(el).getAttribute('aria-expanded')).toBe('false');
+      expect(payNow(el)).toBeTruthy();
+    });
+  });
+
   it('Mark as paid tells the person owed instead of settling it', async () => {
     const { comp } = create('Theo');
     comp.openPay('Theo', 30);

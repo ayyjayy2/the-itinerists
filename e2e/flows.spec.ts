@@ -72,25 +72,24 @@ test('add an expense and see it in the log', async ({ page }) => {
   await expect(page.getByText('Night market').first()).toBeVisible();
 });
 
-test('each balance shows its working, and a tap folds it away (#519)', async ({ page }) => {
+test('each balance starts folded, and a tap shows its working (#519, #772)', async ({ page }) => {
   await page.goto('/finance');
   const maya = page.locator('.banner-positive .banner-person').filter({ hasText: 'Maya' });
   const jo = page.locator('.banner-positive .banner-person').filter({ hasText: 'Jo' });
   await expect(maya.locator('.banner-person-amounts')).toHaveText('฿3,840.00');
-  // Open from the start, so the total's maths is in sight (survey feedback).
-  await expect(maya.locator('.net-working')).toHaveText('(they owe ฿4,000 − you owe ฿160)');
-  await expect(jo.locator('.net-working')).toHaveText('(they owe ฿4,000 − you owe ฿1,600)');
-  await expect(maya).toHaveAttribute('aria-expanded', 'true');
+  // Folded to start (#772): the bigger arrows say there's more.
+  await expect(maya).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('.banner-positive .net-working')).toHaveCount(0);
 
   const name = maya.locator('.banner-person-name');
-  const openTop = (await name.boundingBox())!.y;
-  await maya.click();
-  await expect(maya.locator('.net-working')).toHaveCount(0);
-  await expect(jo.locator('.net-working')).toHaveCount(1);              // only that row folds
-  // Folding and opening happen below the row: the name and total stay put.
-  expect(Math.abs((await name.boundingBox())!.y - openTop)).toBeLessThan(1);
+  const top = (await name.boundingBox())!.y;
   await maya.click();
   await expect(maya.locator('.net-working')).toHaveText('(they owe ฿4,000 − you owe ฿160)');
+  await expect(jo.locator('.net-working')).toHaveCount(0);              // only that row opens
+  // Opening and folding happen below the row: the name and total stay put.
+  expect(Math.abs((await name.boundingBox())!.y - top)).toBeLessThan(1);
+  await maya.click();
+  await expect(maya.locator('.net-working')).toHaveCount(0);
 
   // The group summary shows totals only, opened or not.
   await page.getByRole('button', { name: /Group Summary/ }).click();
@@ -154,6 +153,8 @@ test('pay back from Finance, then the person owed confirms', async ({ page }) =>
   const owe = page.locator('.banner-negative');
   await expect(owe.getByText('You still owe')).toBeVisible();
 
+  // Before the trip's last day Pay now is inside Maya's row (#772): open it first.
+  await owe.locator('.banner-person-tap').filter({ hasText: 'Maya' }).click();
   // Pay now: the amount and the trip as the note, then every app, Maya's handle where she added one.
   await owe.getByRole('button', { name: 'Pay now' }).click();
   const sheet = page.getByRole('dialog', { name: 'Pay Maya' });
