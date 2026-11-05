@@ -51,3 +51,11 @@ export function returnedGuests(members: readonly NamedMember[]): Set<string> {
   }
   return hidden;
 }
+
+/** A name nobody else on the trip has: `base`, else "base 2", "base 3"… (#787: a placeholder while a taken name is settled). */
+export function freeName(base: string, myUid: string, members: readonly NamedMember[]): string {
+  for (let n = 1; ; n++) {
+    const name = n === 1 ? base : `${base} ${n}`;
+    if (!nameClash(name, myUid, members)) return name;
+  }
+}
