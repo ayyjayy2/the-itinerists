@@ -182,6 +182,7 @@ export interface TripMember {
   departureTime?: string;       // e.g. "9:00 AM"
   hiddenPages?: string[];       // pages this member has toggled off, e.g. ["cars", "outfits"]
   leftAt?: number;              // a guest who logged out (#747): they stay on the trip, marked left (unix ms)
+  isGuest?: boolean;            // joined without an account (#776); cleared when they create one
 }
 
 /** Stored at Firestore `/userTrips/{uid}` — fast index of the trips a user belongs to (doc id = uid). */
