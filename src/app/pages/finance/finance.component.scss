@@ -887,26 +887,6 @@
   margin-top: 0.5rem;
 }
 
-.expenses-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 0.85rem;
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-family: var(--font);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-bottom: 0.5rem;
-
-  &:hover { background: var(--card-bg); color: var(--text); }
-}
-
 
 .empty-expenses {
   font-size: 0.85rem;
