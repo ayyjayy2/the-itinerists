@@ -365,14 +365,15 @@ export class FinanceComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   /** Whether that working waits behind a tap on the row or is always in sight. */
   readonly workingShown = NET_WORKING_SHOWN;
-  private foldedWorking = signal<ReadonlySet<string>>(new Set());
+  /** Each person starts folded (#772): the bigger arrows show there's more. */
+  private openWorking = signal<ReadonlySet<string>>(new Set());
   showWorking(key: string): boolean {
-    return this.workingShown === 'always' || !this.foldedWorking().has(key);
+    return this.workingShown === 'always' || this.openWorking().has(key);
   }
   toggleWorking(key: string): void {
-    const folded = new Set(this.foldedWorking());
-    if (!folded.delete(key)) folded.add(key);
-    this.foldedWorking.set(folded);
+    const open = new Set(this.openWorking());
+    if (!open.delete(key)) open.add(key);
+    this.openWorking.set(open);
   }
 
   /**

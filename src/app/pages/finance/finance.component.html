@@ -147,14 +147,15 @@
                 <span class="net-working">({{ w }})</span>
               </div>
             }
-            <!-- Pay them back in a payment app: a low-key hand-off (#532, #666) -->
-            <div class="pay-row" [class.pay-row-tight]="open">
-              @if (waitingOn(p.name)) {
-                <span class="pay-note">Waiting for {{ p.name }} to confirm</span>
-              } @else {
+            <!-- Pay them back in a payment app: a low-key hand-off (#532, #666). Inside the opened
+                 row until the trip's last day, then on the row, when people settle up (#772). -->
+            @if (waitingOn(p.name)) {
+              <div class="pay-row" [class.pay-row-tight]="open"><span class="pay-note">Waiting for {{ p.name }} to confirm</span></div>
+            } @else if (open || remindOpen()) {
+              <div class="pay-row" [class.pay-row-tight]="open">
                 <button type="button" class="pay-link" (click)="openPay(p.name, p.amountHome)">Pay now</button>
-              }
-            </div>
+              </div>
+            }
           }
         </div>
         @if (pendingPay(); as pp) {
