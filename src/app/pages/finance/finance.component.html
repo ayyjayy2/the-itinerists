@@ -255,22 +255,13 @@
       @if (enrichedEntries().length === 0) {
         <p class="empty-expenses">No expenses to show.</p>
       } @else {
+        <!-- Two-line rows (#762, option A): nothing scrolls sideways; what it was on the left, the money on the right -->
         <div class="expenses-table">
-          <div class="table-header">
-            <span>Date</span>
-            <span>Description</span>
-            <span>Paid By</span>
-            <span class="r">Total</span>
-            <span class="r">/pp</span>
-            <span></span>
-          </div>
-
           @for (entry of enrichedEntries(); track entry.id) {
             <div class="table-row" [class.is-editing]="isEditingEntry(entry)" [appFocusTarget]="entry.id">
-              <span class="date-cell">{{ formatDate(entry.date) }}</span>
-              <div class="desc-cell">
-                @if (entry.vendor) { <span class="entry-vendor">{{ entry.vendor }}</span> }
-                <span>{{ entry.description }}</span>
+              <div class="x-main">
+                <span class="entry-vendor">{{ entry.vendor || entry.description }}</span>
+                <small class="x-sub">{{ formatDate(entry.date) }}@if (entry.vendor && entry.description) { · {{ entry.description }}} · paid by {{ entry.paidBy }}</small>
                 @if (entry.notes) { <span class="entry-notes">{{ entry.notes }}</span> }
                 <div class="desc-chips">
                   @if (entry.category) { <span class="chip chip-muted">{{ entry.category }}</span> }
@@ -285,20 +276,20 @@
                   }
                 </div>
               </div>
-              <span class="paidby-cell">{{ entry.paidBy }}</span>
-              <span class="amount-cell r">{{ entry.amount | number:'1.2-2' }} <span class="cur-code">{{ entry.currency }}</span></span>
-              <span class="pp-cell r">
-                @if (entry.isIndivSplit) {
-                  <span class="pp-custom">custom</span>
-                } @else if (entry.amount > 0) {
-                  {{ amt(entry.ppAmount, entry.currency) }}<span class="pp-split">/{{ entry.ppCount }}</span>
-                } @else {
-                  <span class="pp-tbd">TBD</span>
-                }
-              </span>
-              <button data-needs-account class="edit-row-btn" (click)="startEditEntry(entry)" title="Edit">✏️</button>
+              <div class="x-amt">
+                <b>{{ entry.amount | number:'1.2-2' }} <span class="cur-code">{{ entry.currency }}</span></b>
+                <small>
+                  @if (entry.isIndivSplit) {
+                    <span class="pp-custom">custom split</span>
+                  } @else if (entry.amount > 0) {
+                    {{ amt(entry.ppAmount, entry.currency) }}<span class="pp-split">/{{ entry.ppCount }}</span> each
+                  } @else {
+                    <span class="pp-tbd">TBD</span>
+                  }
+                </small>
+              </div>
+              <button data-needs-account class="edit-row-btn" (click)="startEditEntry(entry)" title="Edit" aria-label="Edit">✏️</button>
             </div>
-
           }
 
           @if (enrichedEntries().length > 0) {
