@@ -191,9 +191,10 @@
   }
 
   <!-- ── Group Summary ── -->
-  <button class="group-summary-toggle" (click)="showGroupSummary.set(!showGroupSummary())">
-    <span>👥 Group Summary</span>
-    <span class="gs-caret">{{ showGroupSummary() ? '▲' : '▼' }}</span>
+  <!-- Folding bars (#774): label on the left, ◀ while folded and ▼ when open on the right -->
+  <button class="group-summary-toggle" (click)="showGroupSummary.set(!showGroupSummary())" [attr.aria-expanded]="showGroupSummary()">
+    <span>Group Summary</span>
+    <span class="gs-caret" aria-hidden="true">{{ showGroupSummary() ? '▼' : '◀' }}</span>
   </button>
 
   @if (showGroupSummary()) {
@@ -245,8 +246,9 @@
 
   <!-- ── Expense Log: right below Group Summary, easy to find (#754) ── -->
   <div class="expenses-section">
-    <button class="expenses-toggle" (click)="showExpenses.set(!showExpenses())">
-      <span>{{ showExpenses() ? '▾' : '▸' }} Expenses ({{ entries().length }})</span>
+    <button class="group-summary-toggle expenses-toggle" (click)="showExpenses.set(!showExpenses())" [attr.aria-expanded]="showExpenses()">
+      <span>Expenses ({{ entries().length }})</span>
+      <span class="gs-caret" aria-hidden="true">{{ showExpenses() ? '▼' : '◀' }}</span>
     </button>
 
     @if (showExpenses()) {
