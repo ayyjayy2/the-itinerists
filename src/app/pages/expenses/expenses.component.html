@@ -99,7 +99,7 @@
               @if (exp.vendor && exp.description) { · {{ exp.description }} }
             </span>
             <span class="exp-tags">
-              <span class="chip" [ngClass]="catClass(exp.category)">{{ exp.category }}</span>
+              @if (exp.category) { <span class="chip" [ngClass]="catClass(exp.category)">{{ exp.category }}</span> }
               @if (!exp.isPersonal) { <span class="shared-badge">shared</span> }
             </span>
           </div>
