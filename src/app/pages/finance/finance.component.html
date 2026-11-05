@@ -265,7 +265,7 @@
                 @if (entry.notes) { <span class="entry-notes">{{ entry.notes }}</span> }
                 <div class="desc-chips">
                   @if (entry.category) { <span class="chip chip-muted">{{ entry.category }}</span> }
-                  <span class="chip" [class.chip-primary]="entry.splitAmong === 'All'" [class.chip-highlight]="entry.splitAmong !== 'All'">
+                  <span class="chip" [class.chip-everyone]="entry.splitAmong === 'All'" [class.chip-highlight]="entry.splitAmong !== 'All'">
                     {{ entry.splitAmong === 'All' ? 'Everyone' : entry.splitAmong }}
                   </span>
                   @if (leftOut(entry); as missing) {

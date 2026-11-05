@@ -920,6 +920,9 @@
   &.is-editing { background: var(--bg); }
 }
 
+// "Everyone" is a light tag (#781): the expense's name and cost lead, not the split.
+.chip-everyone { background: var(--primary-tint); color: var(--primary-dark); border-color: transparent; }
+
 .x-main { display: grid; gap: 0.2rem; min-width: 0; overflow-wrap: anywhere; }
 .x-sub  { color: var(--text-muted); font-size: 0.78rem; line-height: 1.35; }
 .x-amt  {
