@@ -66,3 +66,27 @@ test('a guest\'s log-out pop-up: Create account, Log out, or ✕ to stay', async
   await box.getByRole('button', { name: 'Log out' }).click();
   await expect(page).toHaveURL(/\/login/);
 });
+
+/** #782: the guest cards and pop-ups are centred: heading, words and buttons. */
+test('the Create your account card, the guest log-out and the account pop-up are centred', async ({ page }) => {
+  await go(page, '/profile');
+  const centred = (sel: string, buttons: string) => page.locator(sel).first().evaluate((box, buttons) => {
+    const b = box.getBoundingClientRect(), mid = b.left + b.width / 2;
+    const row = box.querySelector(buttons)!.getBoundingClientRect();
+    return { align: getComputedStyle(box.querySelector('h2')!).textAlign, off: Math.abs(row.left + row.width / 2 - mid) };
+  }, buttons);
+
+  let c = await centred('.guest-card', '.account-actions .btn');
+  expect(c.align).toBe('center');
+  expect(c.off).toBeLessThan(4);
+
+  await page.getByRole('button', { name: 'Log Out' }).click();
+  c = await centred('.guest-logout', '.modal-actions');
+  expect(c.align).toBe('center');
+  expect(c.off).toBeLessThan(4);
+  await page.getByRole('dialog', { name: 'Log out as a guest?' }).getByRole('button', { name: 'Create account' }).click();
+
+  c = await centred('.account-sheet', '.actions');
+  expect(c.align).toBe('center');
+  expect(c.off).toBeLessThan(4);
+});
