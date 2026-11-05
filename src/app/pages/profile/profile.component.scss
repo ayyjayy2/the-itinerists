@@ -105,6 +105,8 @@
 .guest-card {
   border-color: var(--primary);
   background: var(--primary-tint);
+  text-align: center;                                  // centred, like the app's other prompts (#782)
+  .account-actions { justify-content: center; }
 }
 
 // ── Modals ────────────────────────────────────────────────────────────────────
@@ -132,7 +134,11 @@
   h2 { margin: 0 0 0.25rem; }
 
   // A guest's log-out pop-up closes from a ✕ in its corner (#742)
-  &.guest-logout { position: relative; h2 { padding-right: 2rem; } }
+  &.guest-logout {
+    position: relative; text-align: center;            // centred, buttons too (#782)
+    h2 { padding-inline: 2rem; }                       // room for the ✕ on both sides keeps the heading centred
+    .modal-actions { justify-content: center; }
+  }
 }
 
 .modal-x {
