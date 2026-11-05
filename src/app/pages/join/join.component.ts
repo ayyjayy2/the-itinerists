@@ -84,7 +84,7 @@ export class JoinComponent implements OnInit {
         // A guest who left under this name may be them coming back; anyone else, pick another name.
         this.joined.set(joined);
         this.joining.set(false);
-        this.step.set(joined.clash.left ? 'same-name' : 'rename');
+        this.step.set(joined.clash.guest ? 'same-name' : 'rename');
         return;
       }
       await this.router.navigate(['/home']);

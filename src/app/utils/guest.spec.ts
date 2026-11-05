@@ -25,16 +25,18 @@ describe('guest helpers (#610)', () => {
   });
 });
 
-/** #768: a guest who joins with a name already on the trip. */
+/** #768, #776: a guest who joins with a name already on the trip. */
 describe('nameClash', () => {
   const members = [
     { uid: 'm', displayName: 'Maya' },
     { uid: 'old', displayName: 'Robin', leftAt: 1 },
-    { uid: 'me', displayName: 'robin' },
+    { uid: 'stayed', displayName: 'Sam', isGuest: true },
+    { uid: 'me', displayName: 'robin', isGuest: true },
   ];
-  it('finds someone else with the same name, whatever the case, and says whether they left', () => {
-    expect(nameClash('robin', 'me', members)).toEqual({ uid: 'old', name: 'Robin', left: true });
-    expect(nameClash(' maya ', 'me', members)).toEqual({ uid: 'm', name: 'Maya', left: false });
+  it('finds someone else with the same name, whatever the case, and says whether they are a guest', () => {
+    expect(nameClash('robin', 'me', members)).toEqual({ uid: 'old', name: 'Robin', guest: true });
+    expect(nameClash('sam', 'me', members)).toEqual({ uid: 'stayed', name: 'Sam', guest: true });   // never logged out (#776)
+    expect(nameClash(' maya ', 'me', members)).toEqual({ uid: 'm', name: 'Maya', guest: false });
   });
   it('is null when the name is free (they never clash with themselves)', () => {
     expect(nameClash('Robin B', 'me', members)).toBeNull();
@@ -43,12 +45,20 @@ describe('nameClash', () => {
 });
 
 describe('returnedGuests', () => {
-  it('is a guest who left and came back under the same name', () => {
+  it('is an earlier guest under a name someone joined with again: shown once, newest kept', () => {
     const back = returnedGuests([
-      { uid: 'old', displayName: 'Robin', leftAt: 1 },
-      { uid: 'new', displayName: 'Robin' },
-      { uid: 'gone', displayName: 'Sam', leftAt: 1 },
+      { uid: 'old', displayName: 'Robin', leftAt: 1, joinedAt: 1 },
+      { uid: 'new', displayName: 'Robin', isGuest: true, joinedAt: 3 },
+      { uid: 'closed', displayName: 'Sam', isGuest: true, joinedAt: 1 },
+      { uid: 'again', displayName: 'sam', isGuest: true, joinedAt: 2 },
+      { uid: 'gone', displayName: 'Jo', leftAt: 1, joinedAt: 1 },
     ]);
-    expect([...back]).toEqual(['old']);
+    expect([...back].sort()).toEqual(['closed', 'old']);
+  });
+  it('never hides someone with an account', () => {
+    expect([...returnedGuests([
+      { uid: 'acct', displayName: 'Maya', joinedAt: 1 },
+      { uid: 'g', displayName: 'Maya', isGuest: true, joinedAt: 2 },
+    ])]).toEqual([]);
   });
 });

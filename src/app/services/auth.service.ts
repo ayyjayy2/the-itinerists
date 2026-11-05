@@ -94,7 +94,7 @@ const AVATAR_COLORS = BACKGROUND_COLORS;
 export interface GuestJoin {
   uid: string;
   members: TripMember[];
-  clash: { uid: string; name: string; left: boolean } | null;
+  clash: { uid: string; name: string; guest: boolean } | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -236,6 +236,8 @@ export class AuthService {
       displayName: userDoc.displayName,
       avatarEmoji, color, avatarLetterColor: letterColor, joinedAt: now,
       inviteCode,
+      // A guest is marked on the trip too (#776), so a returning guest can say "this is me".
+      ...(userDoc.isGuest ? { isGuest: true } : {}),
     };
     await setDoc(doc(this.firestore, 'trips', tripId, 'members', uid), member);
     await setDoc(
@@ -312,6 +314,8 @@ export class AuthService {
     await user.getIdToken(true);
     await setDoc(this.accountRef(user.uid), { authEmail } satisfies PrivateAccount);
     await updateDoc(doc(this.firestore, 'users', user.uid), { isGuest: deleteField() });
+    // No longer a guest on their trips either (#776): nobody can say "this is me" for them now.
+    await this.injector.get(TripService).clearGuestMark().catch(() => {/* best effort */});
     void this.injector.get(EmailConfirmService).send();
   }
 

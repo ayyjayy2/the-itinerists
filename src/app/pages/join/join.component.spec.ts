@@ -69,6 +69,26 @@ describe('JoinComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/home']);
   });
 
+  it('a guest with the same name who never logged out: asks "Is this you?" (#776)', async () => {
+    const { fixture } = setup(false);
+    const comp = fixture.componentInstance;
+    joinAsGuest.and.resolveTo({ uid: 'g', members: [], clash: { uid: 'old', name: 'Mariah', guest: true } });
+    await comp.ngOnInit();
+    comp.guestName = 'Mariah';
+    await comp.seeTheTrip();
+    expect(comp.step()).toBe('same-name');
+  });
+
+  it('someone with an account has the name: pick another (#768)', async () => {
+    const { fixture } = setup(false);
+    const comp = fixture.componentInstance;
+    joinAsGuest.and.resolveTo({ uid: 'g', members: [], clash: { uid: 'm', name: 'Maya', guest: false } });
+    await comp.ngOnInit();
+    comp.guestName = 'Maya';
+    await comp.seeTheTrip();
+    expect(comp.step()).toBe('rename');
+  });
+
   it('signed out: "Create an account instead" hands the code to sign-up privately, never in the address', async () => {
     const { fixture, router } = setup(false);
     await fixture.componentInstance.ngOnInit();

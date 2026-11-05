@@ -326,6 +326,11 @@ export class TripService {
     await this.updateProfileAndTrips({ displayName: name, ...guestAvatar(name) });
   }
 
+  /** A guest who created an account (#776) is no longer marked a guest on their trips. */
+  async clearGuestMark(): Promise<void> {
+    await this.updateTripsOnly({ isGuest: deleteField() });
+  }
+
   /** A guest logging out (#747): they stay on their trips, marked left, so the group can check what they were in. */
   async markGuestLeft(): Promise<void> {
     await this.updateTripsOnly({ leftAt: Date.now() });

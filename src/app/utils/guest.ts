@@ -21,21 +21,33 @@ export function guestName(raw: string): string {
   return raw.trim().replace(/\s+/g, ' ').slice(0, 40);
 }
 
-interface NamedMember { uid: string; displayName: string; leftAt?: number }
+interface NamedMember { uid: string; displayName: string; leftAt?: number; isGuest?: boolean; joinedAt?: number }
 const sameName = (a: string, b: string) => guestName(a).toLowerCase() === guestName(b).toLowerCase();
+const isGuestMember = (m: NamedMember) => !!(m.isGuest || m.leftAt);
 
 /**
  * Someone else on the trip with this name (#768), whatever the case. Expenses
- * and plans name people, so two people can't share one: a match that left as a
- * guest may be them coming back; anyone else means picking another name.
+ * and plans name people, so two people can't share one: a guest with it (logged
+ * out or not, #776) may be them coming back; anyone with an account means
+ * picking another name.
  */
-export function nameClash(name: string, myUid: string, members: readonly NamedMember[]): { uid: string; name: string; left: boolean } | null {
+export function nameClash(name: string, myUid: string, members: readonly NamedMember[]): { uid: string; name: string; guest: boolean } | null {
   const m = members.find(x => x.uid !== myUid && sameName(x.displayName, name));
-  return m ? { uid: m.uid, name: m.displayName, left: !!m.leftAt } : null;
+  return m ? { uid: m.uid, name: m.displayName, guest: isGuestMember(m) } : null;
 }
 
-/** Guests who left and came back under the same name (#768): the same person, so they're shown once and not reviewed. */
+/**
+ * Guests who came back under the same name (#768, #776): the same person, so
+ * only the newest is shown, and the earlier ones aren't reviewed. Someone with
+ * an account is never hidden.
+ */
 export function returnedGuests(members: readonly NamedMember[]): Set<string> {
-  const here = members.filter(m => !m.leftAt);
-  return new Set(members.filter(m => m.leftAt && here.some(h => sameName(h.displayName, m.displayName))).map(m => m.uid));
+  const hidden = new Set<string>();
+  for (const m of members) {
+    if (!isGuestMember(m)) continue;
+    const later = members.some(o => o.uid !== m.uid && sameName(o.displayName, m.displayName)
+      && (!o.leftAt || !!m.leftAt) && (o.joinedAt ?? 0) >= (m.joinedAt ?? 0) && !(m.leftAt && o.leftAt));
+    if (later) hidden.add(m.uid);
+  }
+  return hidden;
 }
