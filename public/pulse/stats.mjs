@@ -533,6 +533,15 @@ export function waitlistStats(entries, from, to) {
   return { total: list.length, inRange: list.filter(r => r.at >= from && r.at < to).length, lastAt, bySource };
 }
 
+/** The Waitlist tab's bar graph (#795): people per source, each bar's length a share of the biggest. */
+export function waitlistSourceBars(bySource) {
+  const max = Math.max(0, ...WAITLIST_SOURCES.map(s => bySource[s] ?? 0));
+  return WAITLIST_SOURCES.map(source => {
+    const n = bySource[source] ?? 0;
+    return { source, n, pct: max ? Math.round((n / max) * 100) : 0 };
+  });
+}
+
 // ── North Star and its drivers (#609) ───────────────────────────────────────
 // The MBA plan's measures, from data Pulse already has: trips and their
 // members, the write log (kind and action only), the usage log and the invite

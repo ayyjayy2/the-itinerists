@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   dayKey, hourIn, startOfDay, stampText, onlineNow, inWindow, usersPerHour, usersPerDay, hourOfDay, hourOfDayDetail, pageStats, offerStats, peopleStats, tripStats,
-  deletionStats, waitlistStats, waitlistList, historyCacheUsable, liveFrom, backfillRange, mergeRows, planItems, northStar,
+  deletionStats, waitlistStats, waitlistList, waitlistSourceBars, historyCacheUsable, liveFrom, backfillRange, mergeRows, planItems, northStar,
 } from '../public/pulse/stats.mjs';
 
 const H = 3_600_000;
@@ -404,6 +404,14 @@ test('waitlistStats: people per source (#763)', () => {
   ], 0, 10);
   assert.equal(s.total, 4);
   assert.deepEqual(s.bySource, { website: 1, instagram: 2, linkedin: 0, survey: 1 });
+});
+
+test('waitlistSourceBars: one bar per source, in order, sized against the biggest (#795)', () => {
+  assert.deepEqual(waitlistSourceBars({ website: 2, instagram: 4, linkedin: 1, survey: 0 }), [
+    { source: 'website', n: 2, pct: 50 }, { source: 'instagram', n: 4, pct: 100 },
+    { source: 'linkedin', n: 1, pct: 25 }, { source: 'survey', n: 0, pct: 0 },
+  ]);
+  assert.deepEqual(waitlistSourceBars({}).map(b => b.pct), [0, 0, 0, 0]);   // nobody yet: no division by zero
 });
 
 // #596: the usage and write logs are append-only, so Pulse keeps them on the

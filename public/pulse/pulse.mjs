@@ -467,6 +467,8 @@ function renderWaitlist() {
   // Where people came from (#763): a filter with the count for each source
   $('waitlistSources').innerHTML = [['all', 'All', wl.total], ...S.WAITLIST_SOURCES.map(k => [k, SOURCE_LABEL[k], wl.bySource[k]])]
     .map(([k, label, n]) => `<button type="button" data-source="${k}" aria-pressed="${waitlistFilter === k}">${label} <span class="num">${n}</span></button>`).join('');
+  $('waitlistBars').innerHTML = S.waitlistSourceBars(wl.bySource).map(b =>
+    `<div class="hbar" role="listitem"><span class="src src-${b.source}">${SOURCE_LABEL[b.source]}</span><div class="track"><div class="fill src-${b.source}" style="width:${b.pct}%"></div></div><span class="num">${b.n}</span></div>`).join('');
   const emails = list.filter(r => r.email).length;
   $('waitlistCopy').disabled = emails === 0;
   $('waitlistCopy').textContent = waitlistFilter === 'all' ? 'Copy emails' : `Copy ${SOURCE_LABEL[waitlistFilter]} emails`;

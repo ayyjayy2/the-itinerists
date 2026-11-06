@@ -181,6 +181,18 @@
   .src-linkedin { background: var(--lavender-tint); color: var(--lavender-dark); }
   .src-survey { background: var(--accent-tint); color: var(--accent-dark); }
   .src-website { background: var(--primary-tint); color: var(--primary-dark); }
+  /* people per source (#795): one bar each, in its tag's colour */
+  .hbars { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; }
+  .hbar { display: grid; grid-template-columns: 6.5rem 1fr 2.5rem; align-items: center; gap: 0.6rem; }
+  .hbar .src { justify-self: start; }
+  .hbar .track { height: 14px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .hbar .fill { height: 100%; border-radius: 999px; padding: 0; transition: width 0.3s; }
+  .hbar .fill.src-website { background: var(--primary); }
+  .hbar .fill.src-instagram { background: var(--highlight); }
+  .hbar .fill.src-linkedin { background: var(--lavender); }
+  .hbar .fill.src-survey { background: var(--accent); }
+  .hbar .num { text-align: right; font-weight: 700; }
+  @media (prefers-reduced-motion: reduce) { .hbar .fill { transition: none; } }
   /* Phones: the joined time goes under each email, so emails don't break mid-word. */
   @media (max-width: 560px) {
     .sources { border-radius: var(--radius-sm); }
@@ -388,6 +400,10 @@
           <div class="tile"><div class="v num" id="waitlistWeek">0</div><div class="l">joined in the last 7 days</div></div>
         </div>
         <p id="waitlistLast"></p>
+      </div>
+      <div class="card">
+        <h2>Where they came from <small>people per source, all time</small></h2>
+        <div class="hbars" id="waitlistBars" role="list" aria-label="People per source"></div>
       </div>
       <div class="card">
         <div class="list-head">
